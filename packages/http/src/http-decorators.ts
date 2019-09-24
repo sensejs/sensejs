@@ -15,14 +15,8 @@ export enum HttpMethod {
     PATCH = 'patch',
 }
 
-export interface ParamMapping {
-    index: number,
-}
-
-
 export interface RequestMapping {
     interceptors: Constructor<unknown>[]
-    paramMapping: ParamMapping[]
     method?: string;
     path?: string;
 }
@@ -66,7 +60,6 @@ function ensureRequestMapping(prototype, method): RequestMapping {
 
     controllerMapping.methods[method] = requestMapping = {
         interceptors: [],
-        paramMapping: []
     };
     return requestMapping;
 }
