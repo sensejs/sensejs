@@ -2,18 +2,18 @@ import {Constructor, ServiceIdentifier} from './interfaces';
 import {Container, decorate, inject, injectable} from 'inversify';
 
 
-interface ParamBindingSpec<T, U> {
-    transform(T): U
 
+export interface Transformer<Input = unknown, Output = Input> {
+    (input: Input): Output
 }
 
-export interface ParamBindingTransformer<Input = unknown, Output = Input> {
-    (input: Input): Output
+export interface ParamBindingOption<T, U> {
+    transform?: Transformer<T, U>
 }
 
 interface ParamBindingMetadata {
     target: ServiceIdentifier<unknown>;
-    transform: ParamBindingTransformer
+    transform: Transformer
 }
 
 interface FunctionParamBindingMetadata {
@@ -31,7 +31,7 @@ interface Invokable {
 
 const ParamBindingKey = Symbol('ParamBindingKey');
 
-export function ensureParamBindingMetadata<T>(prototype: T, target: Function): FunctionParamBindingMetadata {
+function ensureParamBindingMetadata(target: Function): FunctionParamBindingMetadata {
     if (target[ParamBindingKey]) {
         return target[ParamBindingKey];
     }
@@ -49,17 +49,19 @@ export function ensureParamBindingMetadata<T>(prototype: T, target: Function): F
             return target.apply(self, this.args.map((elem, idx) => paramsBindingMetadata[idx].transform(elem)));
         }
     }
-
-    return target[ParamBindingKey] = {
+    const paramBindingMetadata = {
         paramsMetadata: [],
         invoker: Invoker
     };
+
+    Reflect.set(target, ParamBindingKey, paramBindingMetadata);
+    return paramBindingMetadata;
 }
 
 
-export function ParamBinding(target: ServiceIdentifier<unknown>, spec?: ParamBindingSpec<unknown, unknown>) {
+export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBindingOption<unknown, unknown> = {}) {
     return function (prototype, methodName, paramIndex) {
-        const metadata = ensureParamBindingMetadata(prototype, prototype[methodName]);
+        const metadata = ensureParamBindingMetadata(prototype[methodName]);
         if (metadata.paramsMetadata[paramIndex]) {
             throw new ParamBindingError();
         }
@@ -67,11 +69,11 @@ export function ParamBinding(target: ServiceIdentifier<unknown>, spec?: ParamBin
         const parameterDecorator = inject(target) as ParameterDecorator;
         decorate(parameterDecorator, metadata.invoker as Constructor<unknown>, paramIndex);
 
-        metadata.paramsMetadata[paramIndex] = Object.assign({target}, {transform: spec && spec.transform ? spec.transform : x => x});
+        metadata.paramsMetadata[paramIndex] = Object.assign({target}, {transform: option.transform ? option.transform : x => x});
     };
 }
 
-export function getFunctionParamBindingMetadata(method): FunctionParamBindingMetadata {
+export function getFunctionParamBindingMetadata(method: Function): FunctionParamBindingMetadata {
     return Reflect.get(method, ParamBindingKey);
 }
 
