@@ -76,7 +76,7 @@ export const HttpParamBindingSymbolForBody = Symbol('HttpParamBindingSymbolForQu
 export const HttpParamBindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 
-export const RequestMappingMetadataKey = Symbol('ReqeustMappingMetadataKey');
+const RequestMappingMetadataKey = Symbol('ReqeustMappingMetadataKey');
 
 function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMapping) {
     if (Reflect.get(targetMethod, RequestMappingMetadataKey)) {
@@ -135,7 +135,7 @@ export function PUT(path: string) {
 
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
 
-export function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetadata: ControllerMetadata) {
+function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetadata: ControllerMetadata) {
     if (Reflect.get(target, ControllerMetadataKey)) {
         throw new Error('Target constructor is already has controller metadata');
     }
