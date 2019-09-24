@@ -12,10 +12,10 @@ import {
     HttpParamBindingSymbolForBody,
     HttpParamBindingSymbolForPath
 } from './http-decorators';
-import {AbstractHttpInterceptor, HttpApplicationBuilder, HttpContext} from './http-abstract';
+import {AbstractHttpInterceptor, HttpAdaptor, HttpContext} from './http-abstract';
 
 
-export class KoaHttpApplicationBuilder extends HttpApplicationBuilder {
+export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
     private koa = new Koa();
     private globalRouter = new KoaRouter();

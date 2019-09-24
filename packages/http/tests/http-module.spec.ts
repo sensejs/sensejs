@@ -2,14 +2,13 @@ import 'reflect-metadata';
 import {HttpModule} from '../src/http-module';
 import {Controller, GET} from '../src/http-decorators';
 import {inject} from 'inversify';
-import {KoaHttpApplicationBuilder} from '../src/http-koa-integration';
 import supertest from 'supertest';
 import { Component, ApplicationFactory } from '@sensejs/core';
 
 
 describe('HttpModule', () => {
 
-    test('', async () => {
+    test('basic usage', async () => {
 
         const stub = jest.fn();
 
@@ -26,7 +25,7 @@ describe('HttpModule', () => {
             constructor(@inject(MyComponent) private myComponent: MyComponent) {
             }
 
-            @GET('/bar')
+            @GET('/')
             handleRequest() {
                 return this.myComponent.foo();
             }
@@ -39,15 +38,14 @@ describe('HttpModule', () => {
                 listenPort: 3000,
                 listenAddress: '0.0.0.0'
 
-            },
-            httpApplicationBuilder: KoaHttpApplicationBuilder
+            }
         })
         class MyHttpModule {
         }
 
         const app = new ApplicationFactory(MyHttpModule);
         await app.start();
-        await supertest('http://localhost:3000').get('/foo/bar');
+        await supertest('http://localhost:3000').get('/foo');
         expect(stub).toHaveBeenCalled();
         await app.stop();
 

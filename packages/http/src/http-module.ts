@@ -3,7 +3,7 @@ import * as http from 'http';
 import {ControllerMetadata, getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
-import {AbstractHttpInterceptor, HttpApplicationBuilder} from './http-abstract';
+import {AbstractHttpInterceptor, HttpAdaptor} from './http-abstract';
 import { Constructor, ModuleOption, ServiceIdentifier, Component, ComponentScope, ModuleLifecycle, setModuleMetadata, Module } from '@sensejs/core';
 
 
@@ -18,7 +18,7 @@ const defaultHttpConfig = {
 };
 
 export interface BaseHttpModuleOption extends ModuleOption {
-    httpApplicationBuilder: Constructor<HttpApplicationBuilder>
+    httpAdaptorFactory?: (container: Container)=> HttpAdaptor
     inspectors?: Constructor<AbstractHttpInterceptor>[],
 }
 
@@ -36,66 +36,40 @@ export type HttpModuleOption = StaticHttpModuleOption | DynamicHttpModuleOption;
 
 /**
  *
- * @param spec
+ * @param option
  * @constructor
  */
-export function HttpModule(spec: HttpModuleOption = {
+export function HttpModule(option: HttpModuleOption = {
     type: 'static',
     staticHttpConfig: defaultHttpConfig,
-    httpApplicationBuilder: KoaHttpApplicationBuilder
 }) {
 
-
-    /**
-     * Each HttpModule carry an internal dependencies that held the information
-     */
-
-    @Component({scope: ComponentScope.SINGLETON})
-    class HttpRegistry {
-
-        controllers: ControllerMetadata[] = [];
-
-        constructor() {
-        }
-
-        build(container: Container) {
-            const httpApplicationBuilder = new spec.httpApplicationBuilder(container);
-            for (const inspector of spec.inspectors || []) {
-                httpApplicationBuilder.addGlobalInspector(inspector);
-            }
-            for (const controllerMetadata of this.controllers) {
-                if (!controllerMetadata.target) {
-                    throw new Error('Controller metadata target is undefined, likely a bug here');
-                }
-                httpApplicationBuilder.addControllerMapping(controllerMetadata);
-            }
-            return httpApplicationBuilder.build();
-        }
-
-        addController(controllerMetadata: ControllerMetadata) {
-            this.controllers.push(controllerMetadata);
-        }
-
-    }
+    const httpAdaptorFactory = option.httpAdaptorFactory
+        || ((container: Container) => new KoaHttpApplicationBuilder(container));
 
     class HttpModuleLifecycle extends ModuleLifecycle {
 
         private httpServer?: http.Server;
+        private httpAdaptor: HttpAdaptor;
 
-        constructor(container: Container, private readonly httpRegistry: HttpRegistry) {
+        constructor(container: Container) {
             super(container);
-
+            this.httpAdaptor = httpAdaptorFactory(container);
         }
 
         async onCreate(componentList: Constructor<unknown>[]) {
             await super.onCreate(componentList);
-            const httpConfig = spec.type === 'static'
-                ? spec.staticHttpConfig
-                : this.container.get(spec.injectHttpConfig) as HttpConfig;
+            const httpConfig = option.type === 'static'
+                ? option.staticHttpConfig
+                : this.container.get(option.injectHttpConfig) as HttpConfig;
+
+            for (const inspector of option.inspectors || []) {
+                this.httpAdaptor.addGlobalInspector(inspector);
+            }
             componentList.forEach((component) => {
                 const httpControllerMetadata = getHttpControllerMetadata(component);
                 if (httpControllerMetadata) {
-                    this.httpRegistry.addController(httpControllerMetadata);
+                    this.httpAdaptor.addControllerMapping(httpControllerMetadata);
                 }
                 // TODO: Implement other HTTP stuffs, like middleware and interceptor
             });
@@ -107,7 +81,7 @@ export function HttpModule(spec: HttpModuleOption = {
 
         createHttpServer(httpConfig: HttpConfig) {
             return new Promise<http.Server>((resolve, reject) => {
-                const httpServer = http.createServer(this.httpRegistry.build(this.container));
+                const httpServer = http.createServer(this.httpAdaptor.build());
                 httpServer.once('error', reject);
                 httpServer.listen(httpConfig.listenPort, httpConfig.listenAddress, () => {
                     httpServer.removeListener('error', reject);
@@ -126,19 +100,11 @@ export function HttpModule(spec: HttpModuleOption = {
         }
     }
 
-    @Module({
-        components: [HttpRegistry]
-    })
-    class HttpRegistryModule {
-
-    }
-
-
     return function <T>(target: Constructor<T>) {
         setModuleMetadata(target, {
-            requires: (spec.requires || []).concat(HttpRegistryModule),
-            components: spec.components || [],
-            moduleLifecycleFactory: container => new HttpModuleLifecycle(container, container.get(HttpRegistry))
+            requires: (option.requires || []),
+            components: option.components || [],
+            moduleLifecycleFactory: container => new HttpModuleLifecycle(container)
         });
 
     };

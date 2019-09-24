@@ -17,7 +17,7 @@ export abstract class HttpContext {
     abstract bindContextValue(key: any, value: any);
 }
 
-export abstract class HttpApplicationBuilder {
+export abstract class HttpAdaptor {
 
     constructor(protected readonly container: Container) {
     }
