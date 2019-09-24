@@ -15,5 +15,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="logger" />
     <orderEntry type="module" module-name="core" />
+    <orderEntry type="module" module-name="http" />
   </component>
 </module>

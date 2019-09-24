@@ -1,7 +1,7 @@
 import {Container, injectable} from 'inversify';
 import {ControllerMetadata} from './http-decorators';
 import {RequestListener} from "http";
-import {Constructor} from './interfaces';
+import {Constructor} from '@sensejs/core';
 
 export type HttpControllerReturnValueHandler = (value: any) => any;
 

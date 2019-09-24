@@ -3,8 +3,8 @@ import {Body, Controller, DELETE, GET, Header, PATCH, Path, POST, PUT, Query} fr
 import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/http-koa-integration';
 import {Container} from 'inversify';
-import {ParamBinding} from '../src/param-binding';
 import {AbstractHttpInterceptor, HttpContext} from '../src/http-abstract';
+import { ParamBinding } from '@sensejs/core';
 
 describe('KoaHttpApplicationBuilder', () => {
 

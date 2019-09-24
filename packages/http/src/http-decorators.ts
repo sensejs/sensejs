@@ -1,11 +1,11 @@
-import {Constructor} from "./interfaces";
-import {Component} from "./component";
 import {
+    Component,
+    Constructor,
     ensureParamBindingMetadata,
     getFunctionParamBindingMetadata,
     ParamBinding,
     ParamBindingTransformer
-} from './param-binding';
+} from "@sensejs/core";
 
 export enum HttpMethod {
     GET = 'get',
@@ -71,9 +71,9 @@ function ensureRequestMapping(prototype, method): RequestMapping {
     return requestMapping;
 }
 
-const noop : ParamBindingTransformer = (x)=>x;
+const noop: ParamBindingTransformer = (x) => x;
 
-export function Path(name: string, transform: ParamBindingTransformer =noop) {
+export function Path(name: string, transform: ParamBindingTransformer = noop) {
     return ParamBinding(HttpParamBindingSymbolForPath, {
         transform: (pathParam: HttpRequestBuiltinParam) => transform(pathParam[name])
     });
@@ -112,7 +112,7 @@ export interface HttpRequestBuiltinParam {
 export const HttpParamBindingSymbolForHeader = Symbol('HttpParamBindingSymbolForHeader');
 export const HttpParamBindingSymbolForQuery = Symbol('HttpParamBindingSymbolForQuery');
 export const HttpParamBindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
-export const HttpParamBindingSymbolForPath  = Symbol('HttpParamBindingSymbolForQuery');
+export const HttpParamBindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 
 const RequestMappingKey = Symbol('RequestMappingKey');

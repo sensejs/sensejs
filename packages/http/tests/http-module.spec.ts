@@ -1,11 +1,10 @@
 import 'reflect-metadata';
 import {HttpModule} from '../src/http-module';
 import {Controller, GET} from '../src/http-decorators';
-import {Component} from '../src/component';
 import {inject} from 'inversify';
 import {KoaHttpApplicationBuilder} from '../src/http-koa-integration';
-import {ApplicationFactory} from '../src/application-factory';
 import supertest from 'supertest';
+import { Component, ApplicationFactory } from '@sensejs/core';
 
 
 describe('HttpModule', () => {

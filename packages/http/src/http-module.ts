@@ -1,12 +1,10 @@
-import {Component, ComponentScope} from './component';
 import {Container} from 'inversify';
-import {Constructor, ServiceIdentifier} from './interfaces';
-import {Module, ModuleLifecycle, ModuleOption, setModuleMetadata} from './module';
 import * as http from 'http';
 import {ControllerMetadata, getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {AbstractHttpInterceptor, HttpApplicationBuilder} from './http-abstract';
+import { Constructor, ModuleOption, ServiceIdentifier, Component, ComponentScope, ModuleLifecycle, setModuleMetadata, Module } from '@sensejs/core';
 
 
 export interface HttpConfig {

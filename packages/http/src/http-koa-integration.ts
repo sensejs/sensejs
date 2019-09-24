@@ -1,6 +1,6 @@
 import {Container} from 'inversify';
 import {RequestListener} from 'http';
-import {Constructor, ServiceIdentifier} from './interfaces';
+import {Constructor, ServiceIdentifier, invokeMethod} from '@sensejs/core';
 import Koa from 'koa';
 import KoaRouter from 'koa-router';
 import koaBodyParser from 'koa-bodyparser';
@@ -12,7 +12,6 @@ import {
     HttpParamBindingSymbolForBody,
     HttpParamBindingSymbolForPath
 } from './http-decorators';
-import {invokeMethod} from './param-binding';
 import {AbstractHttpInterceptor, HttpApplicationBuilder, HttpContext} from './http-abstract';
 
 
