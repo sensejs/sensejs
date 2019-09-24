@@ -17,51 +17,19 @@ export enum HttpMethod {
 
 export interface RequestMapping {
     interceptors: Constructor<unknown>[]
-    method?: string;
-    path?: string;
+    httpMethod: HttpMethod;
+    path: string;
 }
 
 export interface ControllerMetadata {
-    path?: string;
-    target?: Constructor<unknown>
+    path: string;
+    target: Constructor<unknown>
+    prototype: object;
     interceptors: Constructor<unknown>[]
-    methods: {
-        [method: string]: RequestMapping
-    }
 }
 
 export interface ControllerMappingOption {
     interceptors?: Constructor<unknown>[]
-}
-
-function ensureControllerMetadata(prototype): ControllerMetadata {
-
-    let metadata: ControllerMetadata = Reflect.get(prototype, RequestMappingKey);
-    if (!metadata) {
-        metadata = {
-            interceptors: [],
-            methods: {}
-        };
-        Reflect.set(prototype, RequestMappingKey, metadata);
-    }
-    return metadata;
-}
-
-export function getHttpControllerMetadata(target: Constructor<unknown>): ControllerMetadata {
-    return Reflect.get(target.prototype, RequestMappingKey);
-}
-
-function ensureRequestMapping(prototype, method): RequestMapping {
-    const controllerMapping = ensureControllerMetadata(prototype);
-    let requestMapping = controllerMapping.methods[method];
-    if (requestMapping) {
-        return requestMapping;
-    }
-
-    controllerMapping.methods[method] = requestMapping = {
-        interceptors: [],
-    };
-    return requestMapping;
 }
 
 const noop: ParamBindingTransformer = (x) => x;
@@ -108,7 +76,18 @@ export const HttpParamBindingSymbolForBody = Symbol('HttpParamBindingSymbolForQu
 export const HttpParamBindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 
-const RequestMappingKey = Symbol('RequestMappingKey');
+export const RequestMappingMetadataKey = Symbol('ReqeustMappingMetadataKey');
+
+function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMapping) {
+    if (Reflect.get(targetMethod, RequestMappingMetadataKey)) {
+        throw new Error('target method is already decorated with RequestMapping');
+    }
+    Reflect.set(targetMethod, RequestMappingMetadataKey, requestMappingMetadata);
+}
+
+export function getRequestMappingMetadata(targetMethod: object): RequestMapping | undefined{
+    return Reflect.get(targetMethod, RequestMappingMetadataKey);
+}
 
 export function RequestMapping(httpMethod: HttpMethod, path: string) {
     return function <T extends Object>(prototype: T, method: (keyof T & string)) {
@@ -116,22 +95,20 @@ export function RequestMapping(httpMethod: HttpMethod, path: string) {
         if (typeof targetMethod !== 'function') {
             throw new Error('Request mapping decorator must be applied to a function');
         }
+        // const requestMapping = ensureRequestMapping(prototype, method);
+        setRequestMappingMetadata(targetMethod, {
+            httpMethod,
+            path,
+            interceptors: [] //TODO: Support request maaping interceptor
+        });
         ensureParamBindingMetadata(prototype, targetMethod);
-        const requestMapping = ensureRequestMapping(prototype, method);
         const paramBindingMapping = getFunctionParamBindingMetadata(prototype[method]);
-        if (requestMapping.method || requestMapping.path) {
-            throw new Error('Request mapping decorator already applied');
-        }
-
         for (let i = 0; i < targetMethod.length; i++) {
             // TODO: Further check
             if (!paramBindingMapping.paramsMetadata[i]) {
                 throw new Error(`Parameter at position ${i} is not decorated`);
             }
         }
-
-        requestMapping.method = httpMethod;
-        requestMapping.path = path;
     };
 }
 
@@ -156,25 +133,34 @@ export function PUT(path: string) {
 }
 
 
+const ControllerMetadataKey = Symbol('ControllerMetadataKey');
+
+export function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetadata: ControllerMetadata) {
+    if (Reflect.get(target, ControllerMetadataKey)) {
+        throw new Error('Target constructor is already has controller metadata');
+    }
+    Reflect.set(target, ControllerMetadataKey, controllerMetadata);
+}
+
+export function getHttpControllerMetadata(target: Constructor<unknown>): ControllerMetadata | undefined {
+    return Reflect.get(target, ControllerMetadataKey);
+}
+
 /**
  *
  * @decorator
  */
-export function Controller(path: string, controllerOption?: ControllerMappingOption) {
+export function Controller(path: string, controllerOption: ControllerMappingOption = {}) {
 
     return function <T>(target: Constructor<T>) {
 
         // Decorate target as a component
         Component()(target);
-
-        // TODO: Specify Http Controller Metadata
-        const controllerMapping = ensureControllerMetadata(target.prototype);
-        controllerMapping.target = target;
-        controllerMapping.path = path;
-        if (controllerOption) {
-            if (controllerOption.interceptors) {
-                controllerMapping.interceptors = controllerMapping.interceptors.concat(controllerOption.interceptors);
-            }
-        }
+        setHttpControllerMetadata(target, {
+            target,
+            path,
+            prototype: target.prototype,
+            interceptors: controllerOption.interceptors || []
+        });
     };
 }

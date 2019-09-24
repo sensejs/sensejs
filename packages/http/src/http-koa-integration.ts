@@ -10,7 +10,7 @@ import {
     HttpParamBindingSymbolForHeader,
     HttpParamBindingSymbolForQuery,
     HttpParamBindingSymbolForBody,
-    HttpParamBindingSymbolForPath
+    HttpParamBindingSymbolForPath, getRequestMappingMetadata
 } from './http-decorators';
 import {AbstractHttpInterceptor, HttpAdaptor, HttpContext} from './http-abstract';
 
@@ -22,7 +22,9 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
     addController(controller: Constructor<unknown>) {
         const controllerMapping = getHttpControllerMetadata(controller);
-        return this.addControllerMapping(controllerMapping);
+        if (controllerMapping) {
+            this.addControllerMapping(controllerMapping);
+        }
     }
 
     buildMiddleware(middleware: Constructor<AbstractHttpInterceptor>) {
@@ -46,21 +48,26 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             // TODO: FIX Type conversion
             localRouter.use(this.buildMiddleware(middleware as Constructor<AbstractHttpInterceptor>));
         }
-        for (const [method, mapping] of Object.entries(controllerMapping.methods)) {
-            // TODO: FIX Type conversion
-            const middleware = mapping.interceptors.map(x => this.buildMiddleware(x as Constructor<AbstractHttpInterceptor>));
-            localRouter[mapping.method!](mapping.path, ...middleware, async (ctx) => {
+        for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMapping.prototype))) {
+            const metadata = getRequestMappingMetadata(propertyDescriptor.value);
+            if (!metadata) {
+                continue;
+            }
+            const middleware = metadata.interceptors.map(x => this.buildMiddleware(x as Constructor<AbstractHttpInterceptor>));
+            localRouter[metadata.httpMethod](metadata.path, ...middleware, async (ctx) => {
                 const container = ctx.container;
                 if (!(container instanceof Container)) {
                     throw new Error('ctx.container is not an instance of Container');
                 }
+                // @ts-ignore
                 container.bind(HttpParamBindingSymbolForBody).toConstantValue(ctx.request.body);
                 container.bind(HttpParamBindingSymbolForPath).toConstantValue(ctx.params);
                 const target = container.get<Object>(controllerMapping.target!);
                 const httpContext = container.get<HttpContext>(HttpContext);
                 const returnValueHandler = httpContext.getControllerReturnValueHandler() || (() => null);
-                returnValueHandler(invokeMethod(container, target, target[method]!));
+                returnValueHandler(invokeMethod(container, target, propertyDescriptor.value));
             });
+
 
         }
         this.globalRouter.use(controllerMapping.path!, localRouter.routes(), localRouter.allowedMethods());
