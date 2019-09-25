@@ -20,9 +20,6 @@
     "tslib": "^1.10.0",
     "typescript": "^3.6.2"
   },
-  "dependencies": {
-    "koa-bodyparser": "^4.2.1"
-  },
   "husky": {
     "hooks": {
       "pre-commit": "pnpm recursive run prepare",
