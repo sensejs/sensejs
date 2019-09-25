@@ -3,12 +3,12 @@ import {Container, decorate, inject, injectable} from 'inversify';
 
 
 
-export interface Transformer<Input = unknown, Output = Input> {
+export interface Transformer<Input = any, Output = Input> {
     (input: Input): Output
 }
 
-export interface ParamBindingOption<T, U> {
-    transform?: Transformer<T, U>
+export interface ParamBindingOption {
+    transform?: Transformer
 }
 
 interface ParamBindingMetadata {
@@ -31,7 +31,7 @@ interface Invokable {
 
 const ParamBindingKey = Symbol('ParamBindingKey');
 
-function ensureParamBindingMetadata(target: Function): FunctionParamBindingMetadata {
+export function ensureParamBindingMetadata(target: Function): FunctionParamBindingMetadata {
     if (target[ParamBindingKey]) {
         return target[ParamBindingKey];
     }
@@ -59,7 +59,7 @@ function ensureParamBindingMetadata(target: Function): FunctionParamBindingMetad
 }
 
 
-export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBindingOption<unknown, unknown> = {}) {
+export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBindingOption = {}) {
     return function (prototype, methodName, paramIndex) {
         const metadata = ensureParamBindingMetadata(prototype[methodName]);
         if (metadata.paramsMetadata[paramIndex]) {

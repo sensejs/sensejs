@@ -4,7 +4,7 @@ import {
     ensureParamBindingMetadata,
     getFunctionParamBindingMetadata,
     ParamBinding,
-    ParamBindingTransformer
+    Transformer
 } from "@sensejs/core";
 
 export enum HttpMethod {
@@ -32,27 +32,27 @@ export interface ControllerMappingOption {
     interceptors?: Constructor<unknown>[]
 }
 
-const noop: ParamBindingTransformer = (x) => x;
+const noop: Transformer = (x) => x;
 
-export function Path(name: string, transform: ParamBindingTransformer = noop) {
+export function Path(name: string, transform: Transformer = noop) {
     return ParamBinding(HttpParamBindingSymbolForPath, {
         transform: (pathParam: HttpRequestBuiltinParam) => transform(pathParam[name])
     });
 }
 
-export function Body(transform: ParamBindingTransformer = noop) {
+export function Body(transform: Transformer = noop) {
     return ParamBinding(HttpParamBindingSymbolForBody, {
         transform
     });
 }
 
-export function Query(transform: ParamBindingTransformer = noop) {
+export function Query(transform: Transformer = noop) {
     return ParamBinding(HttpParamBindingSymbolForQuery, {
         transform
     });
 }
 
-export function Header(name: string, transform: ParamBindingTransformer = noop) {
+export function Header(name: string, transform: Transformer = noop) {
     name = name.toLowerCase();
     return ParamBinding(HttpParamBindingSymbolForHeader, {
         transform: (headerSet) => headerSet[name]
@@ -101,8 +101,8 @@ export function RequestMapping(httpMethod: HttpMethod, path: string) {
             path,
             interceptors: [] //TODO: Support request maaping interceptor
         });
-        ensureParamBindingMetadata(prototype, targetMethod);
-        const paramBindingMapping = getFunctionParamBindingMetadata(prototype[method]);
+        ensureParamBindingMetadata(targetMethod);
+        const paramBindingMapping = getFunctionParamBindingMetadata(targetMethod);
         for (let i = 0; i < targetMethod.length; i++) {
             // TODO: Further check
             if (!paramBindingMapping.paramsMetadata[i]) {
