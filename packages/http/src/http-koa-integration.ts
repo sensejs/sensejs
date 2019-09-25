@@ -64,7 +64,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                 container.bind(HttpParamBindingSymbolForPath).toConstantValue(ctx.params);
                 const target = container.get<Object>(controllerMapping.target!);
                 const httpContext = container.get<HttpContext>(HttpContext);
-                const returnValueHandler = httpContext.getControllerReturnValueHandler() || (() => null);
+                const returnValueHandler = httpContext.getControllerReturnValueHandler() || ((value) => ctx.response.body = value);
                 returnValueHandler(invokeMethod(container, target, propertyDescriptor.value));
             });
 
