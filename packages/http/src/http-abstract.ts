@@ -14,7 +14,7 @@ export abstract class HttpContext {
 
     abstract getControllerReturnValueHandler(): HttpControllerReturnValueHandler | undefined
 
-    abstract bindContextValue(key: any, value: any);
+    abstract bindContextValue(key: any, value: any):void;
 }
 
 export abstract class HttpAdaptor {
@@ -22,9 +22,9 @@ export abstract class HttpAdaptor {
     constructor(protected readonly container: Container) {
     }
 
-    abstract addControllerMapping(controllerMapping: ControllerMetadata);
+    abstract addControllerMapping(controllerMapping: ControllerMetadata): this;
 
-    abstract addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>);
+    abstract addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>): this;
 
     abstract build(): RequestListener;
 }

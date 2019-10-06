@@ -36,7 +36,7 @@ const noop: Transformer = (x) => x;
 
 export function Path(name: string, transform: Transformer = noop) {
     return ParamBinding(HttpParamBindingSymbolForPath, {
-        transform: (pathParam: HttpRequestBuiltinParam) => transform(pathParam[name])
+        transform: (pathParam: HttpRequestBuiltinParam) => transform(pathParam.path[name])
     });
 }
 

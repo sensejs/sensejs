@@ -9,19 +9,19 @@ import {inject, optional} from 'inversify';
  * Abstract logger class, also used as inject token
  */
 export abstract class Logger {
-    abstract log(...args: [unknown, ...unknown[]]);
+    abstract log(...args: [unknown, ...unknown[]]):void;
 
-    abstract info(...args: [unknown, ...unknown[]]);
+    abstract info(...args: [unknown, ...unknown[]]):void;
 
-    abstract error(...args: [unknown, ...unknown[]]);
+    abstract error(...args: [unknown, ...unknown[]]):void;
 
-    abstract warn(...args: [unknown, ...unknown[]]);
+    abstract warn(...args: [unknown, ...unknown[]]):void;
 
-    abstract debug(...args: [unknown, ...unknown[]])
+    abstract debug(...args: [unknown, ...unknown[]]):void;
 
-    abstract trace(...args: [unknown, ...unknown[]]);
+    abstract trace(...args: [unknown, ...unknown[]]):void;
 
-    abstract fatal(...args: [unknown, ...unknown[]]);
+    abstract fatal(...args: [unknown, ...unknown[]]):void;
 }
 
 class LoggerImplementation extends Logger {

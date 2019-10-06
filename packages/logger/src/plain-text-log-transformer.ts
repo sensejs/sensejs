@@ -10,7 +10,7 @@ export const LOG_LEVEL_TAG = {
     [LogLevel.DEBUG]: 'debug',
     [LogLevel.FATAL]: 'fatal'
 };
-const plainTextView = (text) => ({text, length: text.length});
+const plainTextView = (text: string) => ({text, length: text.length});
 
 function plainLevel(metadata: RawLogData) {
     return plainTextView(LOG_LEVEL_TAG[metadata.level]);

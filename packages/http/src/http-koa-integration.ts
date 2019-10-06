@@ -30,7 +30,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     buildMiddleware(middleware: Constructor<AbstractHttpInterceptor>) {
         const symbol = Symbol();
         this.container.bind(symbol).to(middleware);
-        return async (ctx, next) => {
+        return async (ctx: any, next: ()=> Promise<void>) => {
             const container = ctx.container;
             if (!(container instanceof Container)) {
                 throw new Error('ctx.container is not an instance of Container');
@@ -42,7 +42,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
     }
 
-    addControllerMapping(controllerMapping: ControllerMetadata): void {
+    addControllerMapping(controllerMapping: ControllerMetadata): this{
         const localRouter = new KoaRouter();
         for (const middleware of controllerMapping.interceptors || []) {
             // TODO: FIX Type conversion
@@ -71,10 +71,12 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
         }
         this.globalRouter.use(controllerMapping.path!, localRouter.routes(), localRouter.allowedMethods());
+        return this;
     }
 
-    addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>): void {
+    addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>): this{
         this.globalRouter.use(this.buildMiddleware(inspector));
+        return this;
     }
 
 

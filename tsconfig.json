@@ -6,6 +6,7 @@
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictNullChecks": true,
+    "strict": true,
     "alwaysStrict": true,
     "module": "commonjs",
     "outDir": "lib/",

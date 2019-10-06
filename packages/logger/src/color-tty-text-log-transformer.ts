@@ -1,6 +1,6 @@
 import colors from 'colors/safe';
 import moment from 'moment';
-import {BasicTextLogTransformer} from './basic-text-log-transformer';
+import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer';
 import {LogLevel, RawLogData} from './definition';
 import {format, formatWithOptions} from 'util';
 
@@ -26,7 +26,7 @@ function logLevelColorMap(level: LogLevel) {
     }
 }
 
-function colorTextView(color, text) {
+function colorTextView(color: (input: string)=>string, text: string) {
     return {
         text: color(text),
         length: text.length
@@ -43,7 +43,7 @@ function boldModuleName(metadata: RawLogData) {
         : colorTextView(colors.grey, '-');
 }
 
-function underlinedTraceId(metadata) {
+function underlinedTraceId(metadata: RawLogData) {
     return metadata.traceId
         ? colorTextView(colors.underline, metadata.traceId)
         : colorTextView(colors.grey, '-');

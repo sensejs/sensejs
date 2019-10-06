@@ -42,42 +42,42 @@ export interface Logger {
      * Log message with severity of trace
      * @param content messages
      */
-    trace(...content: [unknown, ...unknown[]]);
+    trace(...content: [unknown, ...unknown[]]): void;
 
     /**
      * Log message with severity of debug
      * @param content messages
      */
-    debug(...content: [unknown, ...unknown[]]);
+    debug(...content: [unknown, ...unknown[]]): void;
 
     /**
      * alias of info
      * @param content messages
      */
-    log(...content: [unknown, ...unknown[]]);
+    log(...content: [unknown, ...unknown[]]): void;
 
     /**
      * Log message with severity of info
      * @param content messages
      */
-    info(...content: [unknown, ...unknown[]]);
+    info(...content: [unknown, ...unknown[]]): void;
 
     /**
      * Log message with severity of warning
      * @param content messages
      */
-    warn(...content: [unknown, ...unknown[]]);
+    warn(...content: [unknown, ...unknown[]]): void;
 
     /**
      * Log message with severity of error
      * @param content messages
      */
-    error(...content: [unknown, ...unknown[]]);
+    error(...content: [unknown, ...unknown[]]): void;
 
     /**
      * Log message with severity of error
      * @param content messages
      */
-    fatal(...content: [unknown, ...unknown[]]);
+    fatal(...content: [unknown, ...unknown[]]): void;
 
 }

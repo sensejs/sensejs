@@ -2,7 +2,6 @@ import {Constructor, ServiceIdentifier} from './interfaces';
 import {Container, decorate, inject, injectable} from 'inversify';
 
 
-
 export interface Transformer<Input = any, Output = Input> {
     (input: Input): Output
 }
@@ -32,8 +31,9 @@ interface Invokable {
 const ParamBindingKey = Symbol('ParamBindingKey');
 
 export function ensureParamBindingMetadata(target: Function): FunctionParamBindingMetadata {
-    if (target[ParamBindingKey]) {
-        return target[ParamBindingKey];
+    let result = Reflect.get(target, ParamBindingKey);
+    if (typeof result !== 'undefined') {
+        return result;
     }
 
     @injectable()
@@ -49,6 +49,7 @@ export function ensureParamBindingMetadata(target: Function): FunctionParamBindi
             return target.apply(self, this.args.map((elem, idx) => paramsBindingMetadata[idx].transform(elem)));
         }
     }
+
     const paramBindingMetadata = {
         paramsMetadata: [],
         invoker: Invoker
@@ -60,7 +61,7 @@ export function ensureParamBindingMetadata(target: Function): FunctionParamBindi
 
 
 export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBindingOption = {}) {
-    return function (prototype, methodName, paramIndex) {
+    return function (prototype: { [methodName: string]: Function }, methodName: string, paramIndex: number) {
         const metadata = ensureParamBindingMetadata(prototype[methodName]);
         if (metadata.paramsMetadata[paramIndex]) {
             throw new ParamBindingError();
@@ -69,7 +70,8 @@ export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBi
         const parameterDecorator = inject(target) as ParameterDecorator;
         decorate(parameterDecorator, metadata.invoker as Constructor<unknown>, paramIndex);
 
-        metadata.paramsMetadata[paramIndex] = Object.assign({target}, {transform: option.transform ? option.transform : x => x});
+        metadata.paramsMetadata[paramIndex] = Object.assign({target},
+            {transform: option.transform ? option.transform : (x: unknown) => x});
     };
 }
 

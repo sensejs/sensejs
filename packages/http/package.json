@@ -11,12 +11,13 @@
     "@sensejs/core": "~0.0.1",
     "inversify": "^5.0.1",
     "koa": "^2.8.1",
-    "koa-router": "^7.4.0",
-    "koa-bodyparser": "^4.2.1"
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^7.4.0"
   },
   "devDependencies": {
-    "supertest": "^4.0.2",
+    "@types/koa-bodyparser": "^4.3.0",
     "reflect-metadata": "^0.1.13",
+    "supertest": "^4.0.2",
     "tslib": "^1.10.0"
   },
   "peerDependencies": {
