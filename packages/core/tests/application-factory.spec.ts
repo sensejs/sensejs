@@ -95,10 +95,8 @@ describe('ApplicationFactory', () => {
 
         @Module({requires: [FooModule], components: [BarComponent]})
         class BarModule {
-
-            @inject(BarComponent)
-            barComponent: BarComponent;
-
+            constructor(@inject(BarComponent) barComponent: BarComponent) {
+            }
         }
 
         const app = new ApplicationFactory(BarModule);
