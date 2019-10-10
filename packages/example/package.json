@@ -1,12 +1,18 @@
 {
-  "name": "@sensejs/example",
+  "name": "@sensejs/example-http-server",
   "version": "1.0.0",
   "description": "Example",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepare": "tsc"
   },
   "author": "Xingcan LAN <thynson@live.com>",
   "private": true,
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "workspace:^0.0.1",
+    "@sensejs/http": "workspace:^0.0.1",
+    "reflect-metadata": "^0.1.13"
+  }
 }

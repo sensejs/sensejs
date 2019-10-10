@@ -48,6 +48,15 @@ importers:
       reflect-metadata: ^0.1.13
       tslib: ^1.10.0
       uuid: ^3.3.3
+  packages/example:
+    dependencies:
+      '@sensejs/core': 'link:../core'
+      '@sensejs/http': 'link:../http'
+      reflect-metadata: 0.1.13
+    specifiers:
+      '@sensejs/core': 'workspace:^0.0.1'
+      '@sensejs/http': 'workspace:^0.0.1'
+      reflect-metadata: ^0.1.13
   packages/http:
     dependencies:
       '@sensejs/core': 'link:../core'
@@ -3417,7 +3426,6 @@ packages:
     resolution:
       integrity: sha512-wlgPA6cCIIg9gKz0fgAPjnzh4yR/LnXovwuo9hvyGvx3h8nX4+/iLZplfUWasXpqD8BdnGnP5njOFjkUwPzvjA==
   /reflect-metadata/0.1.13:
-    dev: true
     resolution:
       integrity: sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
   /regex-not/1.0.2:
