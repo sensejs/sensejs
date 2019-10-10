@@ -1,0 +1,12 @@
+{
+  "name": "@sensejs/example",
+  "version": "1.0.0",
+  "description": "Example",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Xingcan LAN <thynson@live.com>",
+  "private": true,
+  "license": "ISC"
+}

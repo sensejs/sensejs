@@ -5,15 +5,15 @@ import Koa from 'koa';
 import KoaRouter from 'koa-router';
 import koaBodyParser from 'koa-bodyparser';
 import {
-    ControllerMetadata,
-    getHttpControllerMetadata,
-    getRequestMappingMetadata,
     BindingSymbolForBody,
     BindingSymbolForHeader,
     BindingSymbolForPath,
-    BindingSymbolForQuery
+    BindingSymbolForQuery,
+    ControllerMetadata,
+    getHttpControllerMetadata,
+    getRequestMappingMetadata
 } from './http-decorators';
-import {HttpInterceptor, HttpAdaptor, HttpContext} from './http-abstract';
+import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
 
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
