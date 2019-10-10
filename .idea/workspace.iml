@@ -16,6 +16,6 @@
     <orderEntry type="module" module-name="logger" />
     <orderEntry type="module" module-name="core" />
     <orderEntry type="module" module-name="http" />
-    <orderEntry type="module" module-name="example" />
+    <orderEntry type="module" module-name="http-server" />
   </component>
 </module>
