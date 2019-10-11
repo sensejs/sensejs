@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {Component, ComponentFactory, getComponentMetadata} from '../src/component';
-import {Container, injectable, ContainerModule} from 'inversify';
+import {Container, injectable, ContainerModule, interfaces} from 'inversify';
 import {ComponentMetadata} from '../src/interfaces';
 
 function mockBind<T>(metadata: ComponentMetadata<T>) {
@@ -104,7 +104,7 @@ describe('Component.Factory', () => {
         @Component.Factory({provide: MyComponent})
         class Factory extends ComponentFactory<MyComponent> {
 
-            build(context): MyComponent {
+            build(context: interfaces.Context): MyComponent {
                 return new MyComponent();
             }
         }

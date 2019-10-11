@@ -95,7 +95,7 @@ describe('Http decorators', () => {
         expect(()=> {
             class MyController {
 
-                handleRequest(@Body() @Path('id') data) {
+                handleRequest(@Body() @Path('id') data: any) {
                 }
             }
 
@@ -108,7 +108,7 @@ describe('Http decorators', () => {
             class MyController {
 
                 @GET('/')
-                field;
+                field: any;
             }
 
         }).toThrow();

@@ -29,8 +29,8 @@ describe('LoggerModule', () => {
         @Module({requires: [LoggerModule], components: [FooComponent, BarComponent]})
         class FooModule {
             constructor(
-                @inject(FooComponent) fooComponent,
-                @inject(BarComponent) barComponent
+                @inject(FooComponent) fooComponent: FooComponent,
+                @inject(BarComponent) barComponent: BarComponent
             ) {
 
             }

@@ -203,3 +203,4 @@ fabric.properties
 .vscode
 
 packages/**/lib/
+temp/

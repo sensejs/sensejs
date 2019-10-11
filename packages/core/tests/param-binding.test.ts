@@ -8,7 +8,7 @@ describe('@ParamBinding', () => {
     test('param binding', () => {
 
         class Foo {
-            bar(@ParamBinding(String) param: String, @ParamBinding(Number, {transform: (x) => x + 1 }) number) {
+            bar(@ParamBinding(String) param: String, @ParamBinding(Number, {transform: (x) => x + 1 }) number: number) {
                 return param.repeat(number);
             }
         }
@@ -23,7 +23,7 @@ describe('@ParamBinding', () => {
     test('Duplicated param binding', () => {
         expect(() => {
             class Foo {
-                bar(@ParamBinding(String) @ParamBinding(Number) foo) {
+                bar(@ParamBinding(String) @ParamBinding(Number) foo: any) {
                 }
             }
         }).toThrow(ParamBindingError);
@@ -85,7 +85,7 @@ describe('@ParamBinding', () => {
         const container = new Container();
         container.bind(String).toConstantValue('deadbeef');
         container.bind(Number).toConstantValue(2);
-        let constructor;
+        let constructor: any;
         for (let i = 0; i < 10000; i++) {
             if (i % 100) {
                 container.bind(Symbol()).toConstantValue(i);
@@ -95,7 +95,7 @@ describe('@ParamBinding', () => {
 
                 @injectable()
                 class X {
-                    constructor(@inject(constructor) private empty) {}
+                    constructor(@inject(constructor) private empty: any) {}
                 }
                 container.bind(X).to(X);
                 constructor = X;
@@ -112,9 +112,9 @@ describe('@ParamBinding', () => {
         @Component()
         class Foo {
             bar(@ParamBinding(String, {transform: (x: string)=>x.repeat(2)}) param: String,
-                @ParamBinding(Number, {transform: (x: number)=> x*x}) number,
-                @ParamBinding(Test) test,
-                @ParamBinding(constructor) x) {
+                @ParamBinding(Number, {transform: (x: number)=> x*x}) number: number,
+                @ParamBinding(Test) test: Test,
+                @ParamBinding(constructor) x: any) {
                 return param.repeat(number);
             }
         }
