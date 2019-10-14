@@ -41,11 +41,13 @@ class ExampleHttpController {
 }
 
 const mikroOrmModule = MikroOrmModule({
-  dbName: 'test-mikro-orm',
-  entitiesDirs: ['./entities'],
-  baseDir: __dirname,
-  entities: [Book, Author],
-  entitiesDirsTs: ['../../src/mikro-orm/entities'],
+  mikroOrmOption: {
+    dbName: 'test-mikro-orm',
+    entitiesDirs: ['./entities'],
+    baseDir: __dirname,
+    entities: [Book, Author],
+    entitiesDirsTs: ['../../src/mikro-orm/entities'],
+  }
 });
 
 // @EntryPoint()

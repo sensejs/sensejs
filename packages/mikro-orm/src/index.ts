@@ -1,58 +1,66 @@
-import {Component, Constructor, Module, ModuleOption, RequestContext, RequestInterceptor, ModuleConstructor} from '@sensejs/core';
-import {EntityManager, MikroORM} from 'mikro-orm';
+import {
+  Component,
+  Constructor,
+  Module,
+  ModuleConstructor,
+  ModuleOption,
+  RequestContext,
+  RequestInterceptor,
+} from '@sensejs/core';
+import {Configuration, EntityManager, MikroORM, Options} from 'mikro-orm';
 import {AsyncContainerModule, Container, inject} from 'inversify';
 
 interface MikroOrmModuleOption extends ModuleOption {
-  entities: Constructor<unknown>[];
-  dbName: string;
-  baseDir: string;
-  entitiesDirs: string[];
-  entitiesDirsTs: string[];
+  mikroOrmOption: Options | Configuration;
 }
 
 const EntityRepositoryMetadataKey = Symbol();
 
-function ensureInjectRepositoryToken(entityConstructor: Constructor<unknown>): symbol {
+function ensureInjectRepositoryToken<T extends {}>(entityConstructor: T): symbol {
   let symbol = Reflect.get(entityConstructor, EntityRepositoryMetadataKey);
   if (symbol) {
     return symbol;
   }
-  symbol = Symbol(entityConstructor.name);
-  Reflect.set(entityConstructor, EntityRepositoryMetadataKey, symbol);
+  symbol = Symbol();
+  Reflect.defineProperty(entityConstructor, EntityRepositoryMetadataKey, {
+    value: symbol,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
   return symbol;
 }
 
 function getInjectRepositoryToken(entityConstructor: Constructor<unknown>): symbol | undefined {
-  return Reflect.get(entityConstructor, EntityRepositoryMetadataKey);
+  return Reflect.get(entityConstructor.prototype, EntityRepositoryMetadataKey);
 }
 
 export function InjectRepository(entityConstructor: Constructor<unknown>) {
-  const symbol = ensureInjectRepositoryToken(entityConstructor);
+  const symbol = ensureInjectRepositoryToken(entityConstructor.prototype);
   return inject(symbol);
 }
 
 export class RepositoryRegister {
 
-  constructor(private entityManager: EntityManager, private entities: Constructor<unknown>[]) {
+  constructor(private entityManager: EntityManager) {
 
   }
 
   registerOnContainer(container: Container) {
     const forkedEntityManager = this.entityManager.fork();
     container.bind(EntityManager).toConstantValue(forkedEntityManager);
-    for (const entityClass of this.entities) {
-      container.bind<unknown>(ensureInjectRepositoryToken(entityClass))
-        .toConstantValue(forkedEntityManager.getRepository(entityClass));
+    for (const entityMetadata of Object.values(forkedEntityManager.getMetadata().getAll())) {
+      container.bind<unknown>(ensureInjectRepositoryToken(entityMetadata.prototype))
+        .toConstantValue(forkedEntityManager.getRepository(entityMetadata.className));
     }
-
   }
 
   registerOnHttpInterceptor(httpContext: RequestContext) {
     const forkedEntityManager = this.entityManager.fork();
     httpContext.bindContextValue(EntityManager, forkedEntityManager);
-    for (const entityClass of this.entities) {
-      const symbol = ensureInjectRepositoryToken(entityClass);
-      httpContext.bindContextValue(symbol, forkedEntityManager.getRepository(entityClass));
+    for (const entityMetadata of Object.values(forkedEntityManager.getMetadata().getAll())) {
+      const symbol = ensureInjectRepositoryToken(entityMetadata.prototype);
+      httpContext.bindContextValue(symbol, forkedEntityManager.getRepository(entityMetadata.className));
     }
   }
 }
@@ -87,15 +95,9 @@ export function MikroOrmModule(option: MikroOrmModuleOption): ModuleConstructor 
     async onCreate(): Promise<void> {
       // super.onCreate(container);
       this.ormModule = new AsyncContainerModule(async (bind) => {
-        const ormInstance = await MikroORM.init({
-          entities: option.entities,
-          dbName: option.dbName,
-          baseDir: option.baseDir,
-          entitiesDirs: option.entitiesDirs,
-          entitiesDirsTs: option.entitiesDirsTs,
-        });
+        const ormInstance = await MikroORM.init(option.mikroOrmOption);
         this.ormInstance = ormInstance;
-        bind(RepositoryRegister).toConstantValue(new RepositoryRegister(ormInstance.em, option.entities));
+        bind(RepositoryRegister).toConstantValue(new RepositoryRegister(ormInstance.em));
       });
       return this.container.loadAsync(this.ormModule);
     }
