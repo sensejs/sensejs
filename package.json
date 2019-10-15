@@ -28,7 +28,8 @@
     }
   },
   "scripts": {
-    "coverage-for-ci": "jest --coverage --coverageReporters=text-lcov | coveralls"
+    "test": "jest",
+    "coveralls": "cat coverage/lcov.info | coveralls"
   },
   "jest": {
     "collectCoverageFrom": [

@@ -12,7 +12,7 @@ cache:
     - 'node_modules'
 
 script:
-  - pnpm run coverage-for-ci
+  - pnpm run test -- --coverage
 
 install:
   - pnpm recursive install --frozen-lockfile
@@ -20,3 +20,9 @@ install:
 before_install:
   - curl -L https://unpkg.com/@pnpm/self-installer | node
   - pnpm add -g typescript
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+after_install:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+  - pnpm run coveralls
