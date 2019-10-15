@@ -1,0 +1,24 @@
+language: node_js
+dist: xenial
+
+node_js:
+  - '8'
+  - '10'
+  - '12'
+
+
+cache:
+  directories:
+    - 'node_modules'
+
+script:
+  - pnpx jest --coverage
+
+install:
+  - pnpm recursive install --frozen-lockfile
+
+before_install:
+  - curl -L https://unpkg.com/@pnpm/self-installer | node
+
+after_success:
+  - pnpm run coveralls
