@@ -120,7 +120,7 @@ describe('@ParamBinding', () => {
         }
         container.bind(Foo).toSelf();
 
-        let N = 10000;
+        let N = 1000;
         // 10000 method invoking should be done within 30s
         while(N--) {
             let childContainer = container.createChild();
@@ -130,5 +130,5 @@ describe('@ParamBinding', () => {
             childContainer.bind(Test).toConstantValue(new Test());
             invokeMethod(childContainer, childContainer.get(Foo), Foo.prototype.bar);
         }
-    }, 60000)
+    }, 10000)
 });
