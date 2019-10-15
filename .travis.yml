@@ -12,7 +12,7 @@ cache:
     - 'node_modules'
 
 script:
-  - pnpm run test -- --coverage
+  - pnpm run test:coverage
 
 install:
   - pnpm recursive install --frozen-lockfile
