@@ -31,7 +31,7 @@ describe('HttpModule', () => {
             }
         }
 
-        @HttpModule({
+        const MyHttpModule = HttpModule({
             components: [MyComponent, FooController],
             type: 'static',
             staticHttpConfig: {
@@ -39,9 +39,7 @@ describe('HttpModule', () => {
                 listenAddress: '0.0.0.0'
 
             }
-        })
-        class MyHttpModule {
-        }
+        });
 
         const app = new ApplicationFactory(MyHttpModule);
         await app.start();

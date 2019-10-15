@@ -113,9 +113,6 @@ class LoggerFactory extends ComponentFactory<Logger> {
     }
 }
 
-@Module({
-    components: [LoggerFactory]
-})
-export class LoggerModule {
+export class LoggerModule extends Module({ components: [LoggerFactory] }) {
 
 }

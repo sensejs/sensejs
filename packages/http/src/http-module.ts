@@ -1,10 +1,10 @@
 import {Container} from 'inversify';
 import * as http from 'http';
-import {ControllerMetadata, getHttpControllerMetadata} from './http-decorators';
+import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {AbstractHttpInterceptor, HttpAdaptor} from './http-abstract';
-import { Constructor, ModuleOption, ServiceIdentifier, Component, ComponentScope, ModuleLifecycle, setModuleMetadata, Module } from '@sensejs/core';
+import { Constructor, ModuleOption, ServiceIdentifier, Component, ComponentScope, ModuleLifecycle, setModuleMetadata, Module, ModuleConstructor } from '@sensejs/core';
 
 
 export interface HttpConfig {
@@ -42,46 +42,44 @@ export type HttpModuleOption = StaticHttpModuleOption | DynamicHttpModuleOption;
 export function HttpModule(option: HttpModuleOption = {
     type: 'static',
     staticHttpConfig: defaultHttpConfig,
-}) {
+}): ModuleConstructor {
 
     const httpAdaptorFactory = option.httpAdaptorFactory
         || ((container: Container) => new KoaHttpApplicationBuilder(container));
+    const componentList = option.components || [];
 
-    class HttpModuleLifecycle extends ModuleLifecycle {
+    return class extends Module(option) {
 
         private httpServer?: http.Server;
-        private httpAdaptor: HttpAdaptor;
-
-        constructor(container: Container) {
-            super(container);
-            this.httpAdaptor = httpAdaptorFactory(container);
-        }
-
-        async onCreate(componentList: Constructor<unknown>[]) {
-            await super.onCreate(componentList);
+        // private httpAdaptor?: HttpAdaptor;
+        // constructor(container: Container) {
+        //     super(container);
+        // }
+        async onCreate(container: Container) {
+            await super.onCreate(container);
+            const httpAdaptor = httpAdaptorFactory(container);
             const httpConfig = option.type === 'static'
                 ? option.staticHttpConfig
-                : this.container.get(option.injectHttpConfig) as HttpConfig;
+                : container.get(option.injectHttpConfig) as HttpConfig;
 
             for (const inspector of option.inspectors || []) {
-                this.httpAdaptor.addGlobalInspector(inspector);
+                httpAdaptor.addGlobalInspector(inspector);
             }
             componentList.forEach((component) => {
                 const httpControllerMetadata = getHttpControllerMetadata(component);
                 if (httpControllerMetadata) {
-                    this.httpAdaptor.addControllerMapping(httpControllerMetadata);
+                    httpAdaptor.addControllerMapping(httpControllerMetadata);
                 }
                 // TODO: Implement other HTTP stuffs, like middleware and interceptor
             });
 
-
-            this.httpServer = await this.createHttpServer(httpConfig);
+            this.httpServer = await this.createHttpServer(httpConfig, httpAdaptor);
         }
 
 
-        createHttpServer(httpConfig: HttpConfig) {
+        createHttpServer(httpConfig: HttpConfig, httpAdaptor: HttpAdaptor) {
             return new Promise<http.Server>((resolve, reject) => {
-                const httpServer = http.createServer(this.httpAdaptor.build());
+                const httpServer = http.createServer(httpAdaptor.build());
                 httpServer.once('error', reject);
                 httpServer.listen(httpConfig.listenPort, httpConfig.listenAddress, () => {
                     httpServer.removeListener('error', reject);
@@ -98,15 +96,5 @@ export function HttpModule(option: HttpModuleOption = {
                 return this.httpServer.close(done);
             })();
         }
-    }
-
-    return function <T>(target: Constructor<T>) {
-        setModuleMetadata(target, {
-            requires: (option.requires || []),
-            components: option.components || [],
-            moduleLifecycleFactory: container => new HttpModuleLifecycle(container)
-        });
-
     };
-
 }

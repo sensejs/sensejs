@@ -17,7 +17,7 @@ export interface ComponentOption {
 
 
 export function getComponentMetadata<T>(target: Constructor<T>| Abstract<T>): ComponentMetadata<T> {
-    const result: ComponentMetadata<T> = Reflect.get(target, ComponentMetadataSymbol);
+    const result: ComponentMetadata<T> = Reflect.getMetadata(ComponentMetadataSymbol, target);
     if (!result) {
         throw new Error('Target is not an component');
     }
@@ -55,7 +55,7 @@ export function Component(spec: ComponentOption = {}) {
                 }
             }
         };
-        Reflect.set(target, ComponentMetadataSymbol, metadata);
+        Reflect.defineMetadata(ComponentMetadataSymbol, metadata, target);
     };
 }
 
@@ -116,7 +116,7 @@ Component.Factory = function (spec: ComponentFactorySpec) {
                 // }
             }
         };
-        Reflect.set(target, ComponentMetadataSymbol, metadata);
+        Reflect.defineMetadata(ComponentMetadataSymbol, metadata, target);
     };
 
 };

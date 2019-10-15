@@ -136,14 +136,15 @@ export function PUT(path: string) {
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
 
 function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetadata: ControllerMetadata) {
-    if (Reflect.get(target, ControllerMetadataKey)) {
+    if (Reflect.getMetadata(ControllerMetadataKey, target)) {
         throw new Error('Target constructor is already has controller metadata');
     }
-    Reflect.set(target, ControllerMetadataKey, controllerMetadata);
+    Reflect.defineMetadata(ControllerMetadataKey, controllerMetadata, target);
 }
 
-export function getHttpControllerMetadata(target: Constructor<unknown>): ControllerMetadata | undefined {
-    return Reflect.get(target, ControllerMetadataKey);
+export function getHttpControllerMetadata(target: Object): ControllerMetadata | undefined {
+    return Reflect.getMetadata(ControllerMetadataKey, target);
+    // return Reflect.get(target, ControllerMetadataKey);
 }
 
 /**

@@ -1,31 +1,26 @@
 import {Container} from 'inversify';
-import {getModuleMetadata, ModuleLifecycle, ModuleMetadata} from './module';
+import {getModuleMetadata, ModuleClass, ModuleConstructor, ModuleLifecycle, ModuleMetadata} from './module';
 import {Constructor} from './interfaces';
 
 export class ModuleInstance {
 
     private setupPromise?: Promise<void>;
     private destroyPromise?: Promise<void>;
-    private moduleLifecycle?: ModuleLifecycle;
-    private internalInstance?: Object;
+    private moduleLifecycle?: ModuleClass;
 
-    constructor(readonly moduleClass: Constructor<unknown>,
-                private readonly container: Container,
-                private readonly moduleMetadata: ModuleMetadata = getModuleMetadata(moduleClass)) {
+    constructor(readonly moduleClass: ModuleConstructor,
+                private readonly container: Container) {
     }
 
     private async performSetup() {
-
-        this.moduleLifecycle = this.moduleMetadata
-            .moduleLifecycleFactory(this.container);
-        await this.moduleLifecycle.onCreate(this.moduleMetadata.components);
         this.container.bind(this.moduleClass).toSelf().inSingletonScope();
-        this.internalInstance = this.container.get<Object>(this.moduleClass);
+        this.moduleLifecycle = this.container.get(this.moduleClass);
+        await this.moduleLifecycle!.onCreate(this.container);
     }
 
     private async performDestroy() {
         if (this.moduleLifecycle) {
-            await this.moduleLifecycle.onDestroy();
+            await this.moduleLifecycle.onDestroy(this.container);
         }
         this.container.unbind(this.moduleClass);
     }

@@ -30,32 +30,29 @@ describe('ApplicationFactory', () => {
         }
 
         function ModuleDecoratorA() {
-            return function <T>(target: Constructor<T>) {
-                setModuleMetadata(target, {
-                    requires: [],
-                    components: [],
-                    moduleLifecycleFactory: container => {
-                        return new ModuleALifecycle(container);
-                    }
-                });
+            return class ModuleA extends Module() {
+
             };
+            // return function <T>(target: Constructor<T>) {
+            //     setModuleMetadata(target, {
+            //         requires: [],
+            //         components: [],
+            //         moduleLifecycleFactory: container => {
+            //             return new ModuleALifecycle(container);
+            //         }
+            //     });
+            // };
         }
 
 
-        @ModuleDecoratorA()
-        class ModuleA {
+        const ModuleA = ModuleDecoratorA();
 
-        }
-
-        @Module({requires: [ModuleA]})
-        class ModuleB {
-
-        }
+        const ModuleB = Module({requires: [ModuleA]})
 
         const app = new ApplicationFactory(ModuleB);
-        const spyOnCreateForB = jest.spyOn(ModuleLifecycle.prototype, 'onCreate');
-        const spyOnDestroyForA = jest.spyOn(ModuleALifecycle.prototype, 'onDestroy');
-        jest.spyOn(ModuleLifecycle.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
+        const spyOnCreateForB = jest.spyOn(ModuleB.prototype, 'onCreate');
+        const spyOnDestroyForA = jest.spyOn(ModuleA.prototype, 'onDestroy');
+        jest.spyOn(ModuleB.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
         const startPromise = app.start();
         expect(spyOnCreateForB).not.toHaveBeenCalled();
         mockedModuleEvent.emit('create');
@@ -75,10 +72,10 @@ describe('ApplicationFactory', () => {
         class FooComponent {
         }
 
-        @Module({components: [FooComponent]})
-        class FooModule {
-
-        }
+        const FooModule = Module({components: [FooComponent]});
+        // class FooModule {
+        //
+        // }
 
 
         const barComponentStub = jest.fn();
@@ -93,11 +90,11 @@ describe('ApplicationFactory', () => {
 
         }
 
-        @Module({requires: [FooModule], components: [BarComponent]})
-        class BarModule {
-            constructor(@inject(BarComponent) barComponent: BarComponent) {
-            }
-        }
+        class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {};
+        // class BarModule {
+        //     constructor(@inject(BarComponent) barComponent: BarComponent) {
+        //     }
+        // }
 
         const app = new ApplicationFactory(BarModule);
         await app.start();

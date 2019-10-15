@@ -26,18 +26,18 @@ describe('LoggerModule', () => {
             }
         }
 
-        @Module({requires: [LoggerModule], components: [FooComponent, BarComponent]})
-        class FooModule {
-            constructor(
-                @inject(FooComponent) fooComponent: FooComponent,
-                @inject(BarComponent) barComponent: BarComponent
-            ) {
-
-            }
-
+        // const FooModule = Module({requires: [LoggerModule], components: [FooComponent, BarComponent]})
+        class FooModule extends Module({requires: [LoggerModule], components: [FooComponent, BarComponent]}) {
         }
 
-        await new ApplicationFactory(FooModule).start();
+        class MainModule extends Module({requires: [FooModule]}) {
+            constructor(@inject(FooComponent) fooComponent: FooComponent,
+                        @inject(BarComponent) barComponent: BarComponent) {
+                super();
+            }
+        }
+
+        await new ApplicationFactory(Module({requires:[FooModule]})).start();
 
     });
 });

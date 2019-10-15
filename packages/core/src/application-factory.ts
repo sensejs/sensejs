@@ -1,22 +1,18 @@
 import {Container} from 'inversify';
-import {getModuleMetadata} from './module';
-import {Constructor} from './interfaces';
+import {getModuleMetadata, ModuleConstructor} from './module';
 import {ModuleInstance} from './module-instance';
 
 
 export class ApplicationFactory {
 
     private readonly container: Container = new Container({skipBaseClassChecks: true});
-    private readonly moduleInstanceMap: Map<Constructor<unknown>, ModuleInstance> = new Map();
-    private readonly moduleDependencyMap: Map<Constructor<unknown>, Constructor<unknown>[]> = new Map();
-    private readonly moduleReferencedMap: Map<Constructor<unknown>, Constructor<unknown>[]> = new Map();
+    private readonly moduleInstanceMap: Map<ModuleConstructor, ModuleInstance> = new Map();
+    private readonly moduleDependencyMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
+    private readonly moduleReferencedMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
 
 
-    public static async create(module: Constructor<unknown>) {
 
-    }
-
-    public constructor(private entryModule: Constructor<unknown>) {
+    public constructor(private entryModule: ModuleConstructor) {
 
         const moduleClasses = [entryModule];
 
@@ -55,7 +51,7 @@ export class ApplicationFactory {
 
     public start() {
 
-        const startModule = async (module: Constructor<unknown>) => {
+        const startModule = async (module: ModuleConstructor) => {
 
             let moduleInstance = this.moduleInstanceMap.get(module);
             if (!moduleInstance) {
@@ -73,7 +69,7 @@ export class ApplicationFactory {
         return startModule(this.entryModule);
     }
 
-    public stop() {
+    public async stop() {
         const stopModule = async (moduleInstance: ModuleInstance) => {
 
             // let moduleContext = this.moduleContextMap.get(module);
@@ -87,8 +83,6 @@ export class ApplicationFactory {
         };
 
         return Promise.all(Array.from(this.moduleInstanceMap.values()).map(stopModule));
-
-
     }
 
 
