@@ -1,6 +1,5 @@
 import {Container} from 'inversify';
-import {getModuleMetadata, ModuleClass, ModuleConstructor, ModuleLifecycle, ModuleMetadata} from './module';
-import {Constructor} from './interfaces';
+import {ModuleClass, ModuleConstructor} from './module';
 
 export class ModuleInstance {
 

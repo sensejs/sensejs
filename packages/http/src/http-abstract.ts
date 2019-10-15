@@ -14,7 +14,7 @@ export abstract class HttpContext {
 
     abstract getControllerReturnValueHandler(): HttpControllerReturnValueHandler | undefined
 
-    abstract bindContextValue(key: any, value: any):void;
+    abstract bindContextValue(key: any, value: any): void;
 }
 
 export abstract class HttpAdaptor {

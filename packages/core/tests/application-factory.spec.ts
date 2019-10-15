@@ -1,10 +1,9 @@
 import 'reflect-metadata';
 import {ApplicationFactory} from '../src/application-factory';
-import {Module, ModuleLifecycle, setModuleMetadata} from '../src/module';
-import {Constructor, ServiceIdentifier} from '../src/interfaces';
+import {Module} from '../src/module';
 import {EventEmitter} from 'events';
 import {Component} from '../src/component';
-import {inject} from 'inversify';
+import {inject, Container} from 'inversify';
 
 
 describe('ApplicationFactory', () => {
@@ -19,35 +18,15 @@ describe('ApplicationFactory', () => {
             mockedModuleEvent.once('destroy', done);
         });
 
-        class ModuleALifecycle extends ModuleLifecycle {
+        class ModuleA extends Module() {
 
-            async onCreate(componentList: ServiceIdentifier<unknown>[]): Promise<void> {
+            async onCreate(container: Container): Promise<void> {
+                super.onCreate(container);
                 await mockedALifecycleCreated;
             }
-
-            async onDestroy(): Promise<any> {
-            }
         }
 
-        function ModuleDecoratorA() {
-            return class ModuleA extends Module() {
-
-            };
-            // return function <T>(target: Constructor<T>) {
-            //     setModuleMetadata(target, {
-            //         requires: [],
-            //         components: [],
-            //         moduleLifecycleFactory: container => {
-            //             return new ModuleALifecycle(container);
-            //         }
-            //     });
-            // };
-        }
-
-
-        const ModuleA = ModuleDecoratorA();
-
-        const ModuleB = Module({requires: [ModuleA]})
+        const ModuleB = Module({requires: [ModuleA]});
 
         const app = new ApplicationFactory(ModuleB);
         const spyOnCreateForB = jest.spyOn(ModuleB.prototype, 'onCreate');
@@ -90,7 +69,8 @@ describe('ApplicationFactory', () => {
 
         }
 
-        class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {};
+        class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {
+        };
         // class BarModule {
         //     constructor(@inject(BarComponent) barComponent: BarComponent) {
         //     }

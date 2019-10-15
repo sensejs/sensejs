@@ -4,7 +4,7 @@ import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {AbstractHttpInterceptor, HttpAdaptor} from './http-abstract';
-import { Constructor, ModuleOption, ServiceIdentifier, Component, ComponentScope, ModuleLifecycle, setModuleMetadata, Module, ModuleConstructor } from '@sensejs/core';
+import {Constructor, Module, ModuleConstructor, ModuleOption, ServiceIdentifier} from '@sensejs/core';
 
 
 export interface HttpConfig {
@@ -18,7 +18,7 @@ const defaultHttpConfig = {
 };
 
 export interface BaseHttpModuleOption extends ModuleOption {
-    httpAdaptorFactory?: (container: Container)=> HttpAdaptor
+    httpAdaptorFactory?: (container: Container) => HttpAdaptor
     inspectors?: Constructor<AbstractHttpInterceptor>[],
 }
 
@@ -51,10 +51,7 @@ export function HttpModule(option: HttpModuleOption = {
     return class extends Module(option) {
 
         private httpServer?: http.Server;
-        // private httpAdaptor?: HttpAdaptor;
-        // constructor(container: Container) {
-        //     super(container);
-        // }
+
         async onCreate(container: Container) {
             await super.onCreate(container);
             const httpAdaptor = httpAdaptorFactory(container);
@@ -77,7 +74,7 @@ export function HttpModule(option: HttpModuleOption = {
         }
 
 
-        createHttpServer(httpConfig: HttpConfig, httpAdaptor: HttpAdaptor) {
+        private createHttpServer(httpConfig: HttpConfig, httpAdaptor: HttpAdaptor) {
             return new Promise<http.Server>((resolve, reject) => {
                 const httpServer = http.createServer(httpAdaptor.build());
                 httpServer.once('error', reject);

@@ -11,7 +11,6 @@ export class ApplicationFactory {
     private readonly moduleReferencedMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
 
 
-
     public constructor(private entryModule: ModuleConstructor) {
 
         const moduleClasses = [entryModule];

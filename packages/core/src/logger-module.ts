@@ -9,19 +9,19 @@ import {inject, optional} from 'inversify';
  * Abstract logger class, also used as inject token
  */
 export abstract class Logger {
-    abstract log(...args: [unknown, ...unknown[]]):void;
+    abstract log(...args: [unknown, ...unknown[]]): void;
 
-    abstract info(...args: [unknown, ...unknown[]]):void;
+    abstract info(...args: [unknown, ...unknown[]]): void;
 
-    abstract error(...args: [unknown, ...unknown[]]):void;
+    abstract error(...args: [unknown, ...unknown[]]): void;
 
-    abstract warn(...args: [unknown, ...unknown[]]):void;
+    abstract warn(...args: [unknown, ...unknown[]]): void;
 
-    abstract debug(...args: [unknown, ...unknown[]]):void;
+    abstract debug(...args: [unknown, ...unknown[]]): void;
 
-    abstract trace(...args: [unknown, ...unknown[]]):void;
+    abstract trace(...args: [unknown, ...unknown[]]): void;
 
-    abstract fatal(...args: [unknown, ...unknown[]]):void;
+    abstract fatal(...args: [unknown, ...unknown[]]): void;
 }
 
 class LoggerImplementation extends Logger {
@@ -77,6 +77,7 @@ class TraceIdFactory extends ComponentFactory<String> {
         return this.uuid;
     }
 }
+
 class BaseLogger {
 }
 
@@ -89,8 +90,6 @@ class BaseFactory extends ComponentFactory<String> {
         return this.uuid;
     }
 }
-
-
 
 
 @Component.Factory({provide: Logger, scope: ComponentScope.REQUEST})
@@ -113,6 +112,6 @@ class LoggerFactory extends ComponentFactory<Logger> {
     }
 }
 
-export class LoggerModule extends Module({ components: [LoggerFactory] }) {
+export class LoggerModule extends Module({components: [LoggerFactory]}) {
 
 }
