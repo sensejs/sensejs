@@ -43,7 +43,6 @@ export class ApplicationFactory {
                 }
             }
             this.moduleDependencyMap.set(moduleClass, moduleDependencies);
-            // this.container.bind(moduleClass).to(moduleClass).inSingletonScope();
         }
 
     }
@@ -70,8 +69,6 @@ export class ApplicationFactory {
 
     public async stop() {
         const stopModule = async (moduleInstance: ModuleInstance) => {
-
-            // let moduleContext = this.moduleContextMap.get(module);
             const referencedModules = this.moduleReferencedMap.get(moduleInstance.moduleClass);
             if (referencedModules) {
                 await Promise.all(referencedModules
@@ -83,6 +80,5 @@ export class ApplicationFactory {
 
         return Promise.all(Array.from(this.moduleInstanceMap.values()).map(stopModule));
     }
-
 
 }

@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 import {Component, ComponentFactory, getComponentMetadata} from '../src/component';
-import {Container, injectable, ContainerModule, interfaces} from 'inversify';
+import {Container, injectable, AsyncContainerModule, interfaces} from 'inversify';
 import {ComponentMetadata} from '../src/interfaces';
 
-function mockBind<T>(metadata: ComponentMetadata<T>) {
+async function mockBind<T>(metadata: ComponentMetadata<T>) {
     let container = new Container();
     const bindSpy = jest.spyOn(container, 'bind');
-    container.load(new ContainerModule((bind, unbind, isBound, rebind)=> {
-        metadata.onBind(bind, unbind, isBound, rebind);
+    container.load(new AsyncContainerModule(async (bind, unbind, isBound, rebind)=> {
+        await metadata.onBind(bind, unbind, isBound, rebind);
     }));
     return bindSpy;
 
@@ -17,13 +17,13 @@ function mockBind<T>(metadata: ComponentMetadata<T>) {
 describe('Component', () => {
 
 
-    test('getComponent', () => {
+    test('getComponent', async () => {
         @Component()
         class MyComponent {
         }
 
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
+        const bindSpy = await mockBind(metadata);
         expect(bindSpy).toHaveBeenCalledWith(MyComponent);
 
         class NonComponent {
@@ -34,19 +34,19 @@ describe('Component', () => {
 
     });
 
-    test('Component using string as id', () => {
+    test('Component using string as id', async () => {
         const id = Date.now().toString();
 
         @Component({id})
         class MyComponent {
         }
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
+        const bindSpy = await mockBind(metadata);
         expect(bindSpy).toHaveBeenCalledWith(id);
 
     });
 
-    test('Component using symbol as id', () => {
+    test('Component using symbol as id', async () => {
         const id = Symbol();
 
         @Component({id})
@@ -54,11 +54,11 @@ describe('Component', () => {
         }
 
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
+        const bindSpy = await mockBind(metadata);
         expect(bindSpy).toHaveBeenCalledWith(id);
     });
 
-    test('Component using symbol as id', () => {
+    test('Component using symbol as id', async () => {
         abstract class BaseClass {
 
         }
@@ -67,16 +67,16 @@ describe('Component', () => {
         class MyComponent extends BaseClass {
         }
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
+        const bindSpy = await mockBind(metadata);
         expect(bindSpy).toHaveBeenCalledWith(BaseClass);
 
     });
-    test('Component explicit using self as component id', () => {
+    test('Component explicit using self as component id', async () => {
         @Component({id: MyComponent})
         class MyComponent {
         }
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
+        const bindSpy = await mockBind(metadata);
         expect(bindSpy).toHaveBeenCalledWith(MyComponent);
 
     });

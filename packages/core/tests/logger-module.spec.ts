@@ -1,10 +1,9 @@
 import 'reflect-metadata';
-import {Module, ModuleLifecycle, setModuleMetadata} from '../src/module';
-import {Logger, LoggerModule, TraceId} from '../src/logger-module';
+import {Module} from '../src/module';
+import {Logger, LoggerModule} from '../src/logger-module';
 import {Component} from '../src/component';
-import {inject, Container} from 'inversify';
+import {inject} from 'inversify';
 import {ApplicationFactory} from '../src/application-factory';
-import {Constructor, Abstract} from '../src/interfaces';
 
 
 describe('LoggerModule', () => {
@@ -26,7 +25,6 @@ describe('LoggerModule', () => {
             }
         }
 
-        // const FooModule = Module({requires: [LoggerModule], components: [FooComponent, BarComponent]})
         class FooModule extends Module({requires: [LoggerModule], components: [FooComponent, BarComponent]}) {
         }
 
@@ -37,7 +35,7 @@ describe('LoggerModule', () => {
             }
         }
 
-        await new ApplicationFactory(Module({requires:[FooModule]})).start();
+        await new ApplicationFactory(Module({requires: [FooModule]})).start();
 
     });
 });

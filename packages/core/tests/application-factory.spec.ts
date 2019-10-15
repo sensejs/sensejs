@@ -3,7 +3,7 @@ import {ApplicationFactory} from '../src/application-factory';
 import {Module} from '../src/module';
 import {EventEmitter} from 'events';
 import {Component} from '../src/component';
-import {inject, Container} from 'inversify';
+import {Container, inject} from 'inversify';
 
 
 describe('ApplicationFactory', () => {
@@ -52,29 +52,19 @@ describe('ApplicationFactory', () => {
         }
 
         const FooModule = Module({components: [FooComponent]});
-        // class FooModule {
-        //
-        // }
-
 
         const barComponentStub = jest.fn();
 
         @Component()
         class BarComponent {
             constructor(@inject(FooComponent) private fooComponent: FooComponent) {
-
                 barComponentStub();
-
             }
 
         }
 
         class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {
-        };
-        // class BarModule {
-        //     constructor(@inject(BarComponent) barComponent: BarComponent) {
-        //     }
-        // }
+        }
 
         const app = new ApplicationFactory(BarModule);
         await app.start();
