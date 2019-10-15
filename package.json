@@ -27,6 +27,9 @@
       "pre-push": "pnpx jest"
     }
   },
+  "scripts": {
+    "coverage-for-ci": "jest --coverage --coverageReporters=text-lcov | coveralls"
+  },
   "jest": {
     "collectCoverageFrom": [
       "packages/*/src/**/*.ts"
