@@ -1,6 +1,9 @@
 import {Container} from 'inversify';
 import {ModuleClass, ModuleConstructor} from './module';
 
+/**
+ * @private
+ */
 export class ModuleInstance {
 
     private setupPromise?: Promise<void>;

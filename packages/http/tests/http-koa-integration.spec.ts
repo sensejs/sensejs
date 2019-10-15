@@ -4,7 +4,7 @@ import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/http-koa-integration';
 import {Container} from 'inversify';
 import {AbstractHttpInterceptor, HttpContext} from '../src/http-abstract';
-import { ParamBinding } from '@sensejs/core';
+import {ParamBinding} from '@sensejs/core';
 
 describe('KoaHttpApplicationBuilder', () => {
 

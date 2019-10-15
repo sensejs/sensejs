@@ -1,9 +1,6 @@
 import 'reflect-metadata';
-import {Module} from '../src/module';
-import {Logger, LoggerModule} from '../src/logger-module';
-import {Component} from '../src/component';
+import {ApplicationFactory, Component, Logger, LoggerModule, Module} from '../src';
 import {inject} from 'inversify';
-import {ApplicationFactory} from '../src/application-factory';
 
 
 describe('LoggerModule', () => {

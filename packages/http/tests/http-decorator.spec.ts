@@ -10,7 +10,7 @@ import {
     DELETE,
     getHttpControllerMetadata,
     Header, PUT
-} from "../src/http-decorators";
+} from '../src/http-decorators';
 describe('Http decorators', () => {
     test('metadata', () => {
 

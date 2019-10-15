@@ -3,7 +3,7 @@ import {HttpModule} from '../src/http-module';
 import {Controller, GET} from '../src/http-decorators';
 import {inject} from 'inversify';
 import supertest from 'supertest';
-import { Component, ApplicationFactory } from '@sensejs/core';
+import {ApplicationFactory, Component} from '@sensejs/core';
 
 
 describe('HttpModule', () => {

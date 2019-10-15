@@ -3,12 +3,14 @@ import {AsyncContainerModule, Container, decorate, injectable} from 'inversify';
 import {getComponentMetadata} from './component';
 
 
-export interface ModuleClass {
-    // readonly container: Container;
+@injectable()
+export abstract class ModuleClass {
 
-    onCreate(container: Container): Promise<void>;
+    async onCreate(container: Container): Promise<void> {
+    }
 
-    onDestroy(container: Container): Promise<void>;
+    async onDestroy(container: Container): Promise<void> {
+    }
 }
 
 export type ModuleConstructor = Constructor<ModuleClass>;

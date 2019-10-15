@@ -1,8 +1,6 @@
 import 'reflect-metadata';
-import {ApplicationFactory} from '../src/application-factory';
-import {Module} from '../src/module';
 import {EventEmitter} from 'events';
-import {Component} from '../src/component';
+import {ApplicationFactory, Component, Module} from '../src';
 import {Container, inject} from 'inversify';
 
 

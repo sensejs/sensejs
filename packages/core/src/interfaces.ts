@@ -1,6 +1,8 @@
 import {interfaces} from 'inversify';
 
-export type Constructor<T> = interfaces.Newable<T>;
+export interface Constructor<T> {
+    new (...args: any[]): T
+}
 
 export interface Abstract<T> extends Function {
     prototype: T

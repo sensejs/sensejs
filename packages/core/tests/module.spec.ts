@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import {Container} from 'inversify';
-import {getModuleMetadata, Module, ModuleClass} from '../src/module';
-import {Component} from '../src/component';
+import {Component, getModuleMetadata, Module, ModuleClass} from '../src';
 
 describe('Module', () => {
 
@@ -13,7 +12,7 @@ describe('Module', () => {
 
         const TestModule = Module({components: [TestComponent]});
 
-        const metadata = getModuleMetadata(TestModule);
+        getModuleMetadata(TestModule);
         const container = new Container();
         await new TestModule().onCreate(container);
         expect(container.get(TestComponent)).toBeInstanceOf(TestComponent);
@@ -21,7 +20,7 @@ describe('Module', () => {
     });
 
     test('getModuleMetadata', () => {
-        class NonModule implements ModuleClass {
+        class NonModule extends ModuleClass {
             async onCreate(container: Container): Promise<void> {
             }
 
