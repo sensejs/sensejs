@@ -1,0 +1,21 @@
+{
+  "name": "@sensejs/mikro-orm",
+  "version": "0.0.1",
+  "description": "Mikro-ORM integration for sensejs",
+  "scripts": {},
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "workspace:*",
+    "inversify": "^5.0.1",
+    "mikro-orm": "^3.0.0-alpha.41"
+  },
+  "devDependencies": {
+    "@types/bson": "^4.0.0",
+    "@types/mongodb": "^3.3.3",
+    "bson": "^4.0.2",
+    "mongodb": "^3.3.2"
+  }
+}
