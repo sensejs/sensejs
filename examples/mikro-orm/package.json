@@ -1,0 +1,26 @@
+{
+  "name": "@sensejs/mikro-orm-example",
+  "version": "1.0.0",
+  "description": "Example",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "prepare": "tsc"
+  },
+  "author": "Xingcan LAN <thynson@live.com>",
+  "private": true,
+  "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "workspace:0.0.6",
+    "@sensejs/http": "workspace:0.0.6",
+    "@sensejs/mikro-orm": "workspace:^0.0.1",
+    "bson": "^4.0.2",
+    "mikro-orm": "3.0.0-alpha.41",
+    "mongodb": "^3.3.2",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/bson": "^4.0.0",
+    "@types/mongodb": "^3.3.6"
+  }
+}
