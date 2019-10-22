@@ -1,30 +1,27 @@
 import 'reflect-metadata';
-import {Component, ComponentFactory, getComponentMetadata} from '../src/component';
-import {Container, injectable, ContainerModule, interfaces} from 'inversify';
-import {ComponentMetadata} from '../src/interfaces';
+import {Component, ComponentFactory, ComponentMetadata, getComponentMetadata} from '../src';
+import {AsyncContainerModule, Container, injectable, interfaces} from 'inversify';
 
-function mockBind<T>(metadata: ComponentMetadata<T>) {
-    let container = new Container();
-    const bindSpy = jest.spyOn(container, 'bind');
-    container.load(new ContainerModule((bind, unbind, isBound, rebind)=> {
-        metadata.onBind(bind, unbind, isBound, rebind);
+async function mockBind<T>(metadata: ComponentMetadata<T>) {
+    const container: Container = new Container({skipBaseClassChecks: true});
+    container.load(new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
+        await metadata.onBind(bind, unbind, isBound, rebind);
     }));
-    return bindSpy;
-
+    return container;
 }
 
 
 describe('Component', () => {
 
 
-    test('getComponent', () => {
+    test('getComponent', async () => {
         @Component()
         class MyComponent {
         }
 
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
-        expect(bindSpy).toHaveBeenCalledWith(MyComponent);
+        const container = await mockBind(metadata);
+        expect(container.get(MyComponent)).toBeInstanceOf(MyComponent);
 
         class NonComponent {
         }
@@ -34,19 +31,20 @@ describe('Component', () => {
 
     });
 
-    test('Component using string as id', () => {
+    test('Component using string as id', async () => {
         const id = Date.now().toString();
 
         @Component({id})
         class MyComponent {
         }
+
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
-        expect(bindSpy).toHaveBeenCalledWith(id);
+        const container = await mockBind(metadata);
+        expect(container.get(id)).toBeInstanceOf(MyComponent);
 
     });
 
-    test('Component using symbol as id', () => {
+    test('Component using symbol as id', async () => {
         const id = Symbol();
 
         @Component({id})
@@ -54,11 +52,11 @@ describe('Component', () => {
         }
 
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
-        expect(bindSpy).toHaveBeenCalledWith(id);
+        const container = await mockBind(metadata);
+        expect(container.get(id)).toBeInstanceOf(MyComponent);
     });
 
-    test('Component using symbol as id', () => {
+    test('Component using symbol as id', async () => {
         abstract class BaseClass {
 
         }
@@ -66,18 +64,20 @@ describe('Component', () => {
         @Component({id: BaseClass})
         class MyComponent extends BaseClass {
         }
+
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
-        expect(bindSpy).toHaveBeenCalledWith(BaseClass);
+        const container = await mockBind(metadata);
+        expect(container.get(BaseClass)).toBeInstanceOf(MyComponent);
 
     });
-    test('Component explicit using self as component id', () => {
+    test('Component explicit using self as component id', async () => {
         @Component({id: MyComponent})
         class MyComponent {
         }
+
         const metadata = getComponentMetadata(MyComponent);
-        const bindSpy = mockBind(metadata);
-        expect(bindSpy).toHaveBeenCalledWith(MyComponent);
+        const container = await mockBind(metadata);
+        expect(container.get(MyComponent)).toBeInstanceOf(MyComponent);
 
     });
 
@@ -95,25 +95,3 @@ describe('Component', () => {
     });
 });
 
-describe('Component.Factory', () => {
-    test('Factory', () => {
-
-        @injectable()
-        class MyComponent {}
-
-        @Component.Factory({provide: MyComponent})
-        class Factory extends ComponentFactory<MyComponent> {
-
-            build(context: interfaces.Context): MyComponent {
-                return new MyComponent();
-            }
-        }
-
-        const metadata = getComponentMetadata(Factory);
-        const bindSpy = mockBind(metadata);
-
-        expect(bindSpy).toHaveBeenCalledWith(Factory);
-        expect(bindSpy).toHaveBeenCalledWith(MyComponent);
-    });
-
-});

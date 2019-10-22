@@ -3,7 +3,7 @@ import {HttpModule} from '../src/http-module';
 import {Controller, GET} from '../src/http-decorators';
 import {inject} from 'inversify';
 import supertest from 'supertest';
-import { Component, ApplicationFactory } from '@sensejs/core';
+import {ApplicationFactory, Component} from '@sensejs/core';
 
 
 describe('HttpModule', () => {
@@ -31,7 +31,7 @@ describe('HttpModule', () => {
             }
         }
 
-        @HttpModule({
+        const MyHttpModule = HttpModule({
             components: [MyComponent, FooController],
             type: 'static',
             staticHttpConfig: {
@@ -39,9 +39,7 @@ describe('HttpModule', () => {
                 listenAddress: '0.0.0.0'
 
             }
-        })
-        class MyHttpModule {
-        }
+        });
 
         const app = new ApplicationFactory(MyHttpModule);
         await app.start();

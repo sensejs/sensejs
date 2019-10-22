@@ -1,14 +1,13 @@
 import 'reflect-metadata';
-import {invokeMethod, ParamBinding, ParamBindingError, ParamBindingResolvingError} from '../src/param-binding';
+import {Component, invokeMethod, ParamBinding, ParamBindingError, ParamBindingResolvingError} from '../src';
 import {Container, inject, injectable} from 'inversify';
-import {Component} from '../src/component';
 
 describe('@ParamBinding', () => {
 
     test('param binding', () => {
 
         class Foo {
-            bar(@ParamBinding(String) param: String, @ParamBinding(Number, {transform: (x) => x + 1 }) number: number) {
+            bar(@ParamBinding(String) param: String, @ParamBinding(Number, {transform: (x) => x + 1}) number: number) {
                 return param.repeat(number);
             }
         }
@@ -39,7 +38,7 @@ describe('@ParamBinding', () => {
 
         let container = new Container();
         container.bind(String).toConstantValue('deadbeef');
-        expect(()=> invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
+        expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
     });
 
     test('Missing @ParamBinding', () => {
@@ -52,7 +51,7 @@ describe('@ParamBinding', () => {
 
         let container = new Container();
         container.bind(String).toConstantValue('deadbeef');
-        expect(()=> invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
+        expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
     });
 
     test('Inconsistent param binding', () => {
@@ -75,7 +74,7 @@ describe('@ParamBinding', () => {
 
     });
 
-    test('Performance test', ()=> {
+    test('Performance test', () => {
 
         @Component()
         class Test {
@@ -95,34 +94,40 @@ describe('@ParamBinding', () => {
 
                 @injectable()
                 class X {
-                    constructor(@inject(constructor) private empty: any) {}
+                    constructor(@inject(constructor) private empty: any) {
+                    }
                 }
+
                 container.bind(X).to(X);
                 constructor = X;
             } else {
                 @injectable()
                 class X {
-                    constructor() {}
+                    constructor() {
+                    }
                 }
+
                 container.bind(X).to(X);
                 constructor = X;
 
             }
         }
+
         @Component()
         class Foo {
-            bar(@ParamBinding(String, {transform: (x: string)=>x.repeat(2)}) param: String,
-                @ParamBinding(Number, {transform: (x: number)=> x*x}) number: number,
+            bar(@ParamBinding(String, {transform: (x: string) => x.repeat(2)}) param: String,
+                @ParamBinding(Number, {transform: (x: number) => x * x}) number: number,
                 @ParamBinding(Test) test: Test,
                 @ParamBinding(constructor) x: any) {
                 return param.repeat(number);
             }
         }
+
         container.bind(Foo).toSelf();
 
         let N = 1000;
         // 10000 method invoking should be done within 30s
-        while(N--) {
+        while (N--) {
             let childContainer = container.createChild();
             for (let i = 0; i < 1000; i++) {
                 childContainer.bind(Symbol()).toConstantValue(i);
@@ -130,5 +135,5 @@ describe('@ParamBinding', () => {
             childContainer.bind(Test).toConstantValue(new Test());
             invokeMethod(childContainer, childContainer.get(Foo), Foo.prototype.bar);
         }
-    }, 10000)
+    }, 10000);
 });

@@ -1,10 +1,7 @@
 import 'reflect-metadata';
-import {ApplicationFactory} from '../src/application-factory';
-import {Module, ModuleLifecycle, setModuleMetadata} from '../src/module';
-import {Constructor, ServiceIdentifier} from '../src/interfaces';
 import {EventEmitter} from 'events';
-import {Component} from '../src/component';
-import {inject} from 'inversify';
+import {ApplicationFactory, Component, Module} from '../src';
+import {Container, inject} from 'inversify';
 
 
 describe('ApplicationFactory', () => {
@@ -19,43 +16,20 @@ describe('ApplicationFactory', () => {
             mockedModuleEvent.once('destroy', done);
         });
 
-        class ModuleALifecycle extends ModuleLifecycle {
+        class ModuleA extends Module() {
 
-            async onCreate(componentList: ServiceIdentifier<unknown>[]): Promise<void> {
+            async onCreate(container: Container): Promise<void> {
+                super.onCreate(container);
                 await mockedALifecycleCreated;
             }
-
-            async onDestroy(): Promise<any> {
-            }
         }
 
-        function ModuleDecoratorA() {
-            return function <T>(target: Constructor<T>) {
-                setModuleMetadata(target, {
-                    requires: [],
-                    components: [],
-                    moduleLifecycleFactory: container => {
-                        return new ModuleALifecycle(container);
-                    }
-                });
-            };
-        }
-
-
-        @ModuleDecoratorA()
-        class ModuleA {
-
-        }
-
-        @Module({requires: [ModuleA]})
-        class ModuleB {
-
-        }
+        const ModuleB = Module({requires: [ModuleA]});
 
         const app = new ApplicationFactory(ModuleB);
-        const spyOnCreateForB = jest.spyOn(ModuleLifecycle.prototype, 'onCreate');
-        const spyOnDestroyForA = jest.spyOn(ModuleALifecycle.prototype, 'onDestroy');
-        jest.spyOn(ModuleLifecycle.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
+        const spyOnCreateForB = jest.spyOn(ModuleB.prototype, 'onCreate');
+        const spyOnDestroyForA = jest.spyOn(ModuleA.prototype, 'onDestroy');
+        jest.spyOn(ModuleB.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
         const startPromise = app.start();
         expect(spyOnCreateForB).not.toHaveBeenCalled();
         mockedModuleEvent.emit('create');
@@ -75,28 +49,19 @@ describe('ApplicationFactory', () => {
         class FooComponent {
         }
 
-        @Module({components: [FooComponent]})
-        class FooModule {
-
-        }
-
+        const FooModule = Module({components: [FooComponent]});
 
         const barComponentStub = jest.fn();
 
         @Component()
         class BarComponent {
             constructor(@inject(FooComponent) private fooComponent: FooComponent) {
-
                 barComponentStub();
-
             }
 
         }
 
-        @Module({requires: [FooModule], components: [BarComponent]})
-        class BarModule {
-            constructor(@inject(BarComponent) barComponent: BarComponent) {
-            }
+        class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {
         }
 
         const app = new ApplicationFactory(BarModule);

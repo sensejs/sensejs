@@ -1,16 +1,17 @@
 import {Container} from 'inversify';
 import {RequestListener} from 'http';
-import {Constructor, ServiceIdentifier, invokeMethod} from '@sensejs/core';
+import {Constructor, invokeMethod, ServiceIdentifier} from '@sensejs/core';
 import Koa from 'koa';
 import KoaRouter from 'koa-router';
 import koaBodyParser from 'koa-bodyparser';
 import {
     ControllerMetadata,
     getHttpControllerMetadata,
-    HttpParamBindingSymbolForHeader,
-    HttpParamBindingSymbolForQuery,
+    getRequestMappingMetadata,
     HttpParamBindingSymbolForBody,
-    HttpParamBindingSymbolForPath, getRequestMappingMetadata
+    HttpParamBindingSymbolForHeader,
+    HttpParamBindingSymbolForPath,
+    HttpParamBindingSymbolForQuery
 } from './http-decorators';
 import {AbstractHttpInterceptor, HttpAdaptor, HttpContext} from './http-abstract';
 
@@ -30,7 +31,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     buildMiddleware(middleware: Constructor<AbstractHttpInterceptor>) {
         const symbol = Symbol();
         this.container.bind(symbol).to(middleware);
-        return async (ctx: any, next: ()=> Promise<void>) => {
+        return async (ctx: any, next: () => Promise<void>) => {
             const container = ctx.container;
             if (!(container instanceof Container)) {
                 throw new Error('ctx.container is not an instance of Container');
@@ -42,7 +43,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
     }
 
-    addControllerMapping(controllerMapping: ControllerMetadata): this{
+    addControllerMapping(controllerMapping: ControllerMetadata): this {
         const localRouter = new KoaRouter();
         for (const middleware of controllerMapping.interceptors || []) {
             // TODO: FIX Type conversion
@@ -74,7 +75,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
         return this;
     }
 
-    addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>): this{
+    addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>): this {
         this.globalRouter.use(this.buildMiddleware(inspector));
         return this;
     }
@@ -86,7 +87,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             const childContainer = this.container.createChild();
             ctx.container = childContainer;
             const context = new KoaHttpContext(childContainer);
-            context.setControllerReturnValueHandler((value)=> {
+            context.setControllerReturnValueHandler((value) => {
                 ctx.response.status = 200;
                 ctx.response.body = value;
             });
