@@ -55,7 +55,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                 continue;
             }
             const middleware = metadata.interceptors.map(x => this.buildMiddleware(x as Constructor<AbstractHttpInterceptor>));
-            localRouter[metadata.httpMethod](metadata.path, ...middleware, async (ctx) => {
+            localRouter[metadata.httpMethod](metadata.path, ...middleware, async (ctx: any) => {
                 const container = ctx.container;
                 if (!(container instanceof Container)) {
                     throw new Error('ctx.container is not an instance of Container');
