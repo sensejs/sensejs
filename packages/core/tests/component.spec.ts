@@ -95,25 +95,3 @@ describe('Component', () => {
     });
 });
 
-describe('Component.Factory', () => {
-    test('Factory', async () => {
-
-        @injectable()
-        class MyComponent {
-        }
-
-        @Component.Factory({provide: MyComponent})
-        class Factory extends ComponentFactory<MyComponent> {
-
-            build(context: interfaces.Context): MyComponent {
-                return new MyComponent();
-            }
-        }
-
-        const metadata = getComponentMetadata(Factory);
-        const container = await mockBind(metadata);
-
-        expect(container.get(MyComponent)).toBeInstanceOf(MyComponent);
-    });
-
-});

@@ -1,5 +1,5 @@
-import {Abstract, Constructor} from './interfaces';
-import {AsyncContainerModule, Container, decorate, injectable} from 'inversify';
+import {Abstract, ComponentFactory, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
+import {AsyncContainerModule, Container, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 
 
@@ -24,7 +24,11 @@ export interface ModuleOption {
     /**
      * Components provided by this module
      */
-    components?: (Constructor<unknown> | Abstract<unknown>)[]
+    components?: (Constructor<unknown> | Abstract<unknown>)[],
+
+    factories?: FactoryProvider<unknown>[],
+
+    constants?: ConstantProvider<unknown>[],
 }
 
 export interface ModuleMetadata {
@@ -56,11 +60,26 @@ export function setModuleMetadata(module: ModuleConstructor, metadata: ModuleMet
 
 export function Module(spec: ModuleOption = {}): ModuleConstructor {
     const componentList = spec.components || [];
+    const factories = spec.factories || [];
+    const constants = spec.constants || [];
+
     const containerModule = new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
+        constants.forEach((constantProvider)=> {
+            bind(constantProvider.provide).toConstantValue(constantProvider.value);
+        })
         await Promise.all(
             componentList
                 .map(getComponentMetadata)
-                .map(metadata => metadata.onBind(bind, unbind, isBound, rebind)));
+                .map(async metadata => {
+                    metadata.onBind(bind, unbind, isBound, rebind)
+                }));
+        factories.forEach((factoryProvider)=> {
+            const {provide, scope, factory} = factoryProvider;
+            bind(factoryProvider.provide).toDynamicValue((context: interfaces.Context) => {
+                const factoryInstance = context.container.resolve<ComponentFactory<unknown>>(factory);
+                return factoryInstance.build(context);
+            })
+        });
     });
 
     const moduleConstructor: ModuleConstructor = (class implements ModuleClass {

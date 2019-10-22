@@ -1,5 +1,6 @@
 import 'reflect-metadata';
-import {ApplicationFactory, Component, Logger, LoggerModule, Module} from '../src';
+import {Logger} from '@sensejs/logger';
+import {ApplicationFactory, Component, InjectLogger, LoggerModule, Module} from '../src';
 import {inject} from 'inversify';
 
 
@@ -9,14 +10,14 @@ describe('LoggerModule', () => {
 
         @Component()
         class FooComponent {
-            constructor(@inject(Logger) private logger: Logger) {
+            constructor(@InjectLogger private logger: Logger) {
                 this.logger.info('foo');
             }
         }
 
         @Component()
         class BarComponent {
-            constructor(@inject(Logger) private logger: Logger,
+            constructor(@InjectLogger private logger: Logger,
                         @inject(FooComponent) private barComponent: FooComponent) {
                 this.logger.info('bar');
             }
