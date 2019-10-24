@@ -69,6 +69,7 @@ export class RepositoryRegister {
 export class SenseHttpInterceptor extends RequestInterceptor {
 
   constructor(
+    @inject(EntityManager) private entityManager: EntityManager,
     @inject(RepositoryRegister) private repositoryRegister: RepositoryRegister,
   ) {
     super();
@@ -77,6 +78,7 @@ export class SenseHttpInterceptor extends RequestInterceptor {
   async intercept(context: RequestContext, next: () => Promise<unknown>) {
     this.repositoryRegister.registerOnHttpInterceptor(context);
     await next();
+    await this.entityManager.flush();
   }
 
 }
