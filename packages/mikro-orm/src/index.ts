@@ -17,22 +17,17 @@ interface MikroOrmModuleOption extends ModuleOption {
 const EntityRepositoryMetadataKey = Symbol();
 
 function ensureInjectRepositoryToken<T extends {}>(entityConstructor: T): symbol {
-  let symbol = Reflect.get(entityConstructor, EntityRepositoryMetadataKey);
+  let symbol = Reflect.getMetadata(EntityRepositoryMetadataKey, entityConstructor);
   if (symbol) {
     return symbol;
   }
   symbol = Symbol();
-  Reflect.defineProperty(entityConstructor, EntityRepositoryMetadataKey, {
-    value: symbol,
-    enumerable: false,
-    configurable: false,
-    writable: false,
-  });
+  Reflect.defineMetadata(EntityRepositoryMetadataKey, symbol, entityConstructor);
   return symbol;
 }
 
 function getInjectRepositoryToken(entityConstructor: Constructor<unknown>): symbol | undefined {
-  return Reflect.get(entityConstructor.prototype, EntityRepositoryMetadataKey);
+  return Reflect.getMetadata(EntityRepositoryMetadataKey, entityConstructor.prototype);
 }
 
 export function InjectRepository(entityConstructor: Constructor<unknown>) {
