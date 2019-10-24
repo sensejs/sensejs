@@ -2,8 +2,13 @@ import {LogLevel, LogTransport, RawLogData} from './definition';
 import {ColorTtyTextLogTransformer} from './color-tty-text-log-transformer';
 import {PlainTextLogTransformer} from './plain-text-log-transformer';
 
-function defaultLogFormatter(writeStream: NodeJS.WriteStream) {
-    if (writeStream.isTTY) {
+function checkIsTty(writableStream: NodeJS.WritableStream): boolean{
+    let ws = writableStream as NodeJS.WriteStream;
+    return ws.isTTY === true;
+}
+
+function defaultLogFormatter(writeStream: NodeJS.WritableStream) {
+    if (checkIsTty(writeStream)) {
         return new ColorTtyTextLogTransformer();
     } else {
         return new PlainTextLogTransformer();
@@ -13,7 +18,7 @@ function defaultLogFormatter(writeStream: NodeJS.WriteStream) {
 export class StreamLogTransport implements LogTransport {
     private _lastWriteFlushed = Promise.resolve();
 
-    constructor(private _writeStream: NodeJS.WriteStream,
+    constructor(private _writeStream: NodeJS.WritableStream,
                 private _levels: LogLevel[],
                 private _transformer = defaultLogFormatter(_writeStream)) {
     }
