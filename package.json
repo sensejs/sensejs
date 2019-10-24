@@ -29,7 +29,6 @@
   },
   "scripts": {
     "test": "jest",
-    "test:coverage": "jest --coverage",
     "pretest": "pnpm recursive run prepare",
     "coveralls": "cat coverage/lcov.info | coveralls"
   }
