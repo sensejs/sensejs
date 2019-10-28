@@ -33,7 +33,7 @@ describe('LoggerModule', () => {
             }
         }
 
-        await new ApplicationFactory(Module({requires: [FooModule]})).start();
+        await new ApplicationFactory(Module({requires: [MainModule]})).start();
 
     });
 });

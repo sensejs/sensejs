@@ -1,4 +1,4 @@
-import {Abstract, ComponentFactory, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
+import {Abstract, ComponentFactory, ComponentScope, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
 import {AsyncContainerModule, Container, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 
@@ -66,19 +66,30 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
     const containerModule = new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
         constants.forEach((constantProvider)=> {
             bind(constantProvider.provide).toConstantValue(constantProvider.value);
-        })
+        });
         await Promise.all(
             componentList
                 .map(getComponentMetadata)
                 .map(async metadata => {
                     metadata.onBind(bind, unbind, isBound, rebind)
                 }));
-        factories.forEach((factoryProvider)=> {
+        factories.forEach((factoryProvider: FactoryProvider<unknown>)=> {
             const {provide, scope, factory} = factoryProvider;
-            bind(factoryProvider.provide).toDynamicValue((context: interfaces.Context) => {
+            const binding = bind(provide).toDynamicValue((context: interfaces.Context) => {
                 const factoryInstance = context.container.resolve<ComponentFactory<unknown>>(factory);
                 return factoryInstance.build(context);
-            })
+            });
+            switch(scope) {
+            case ComponentScope.REQUEST:
+                binding.inRequestScope();
+                break;
+            case ComponentScope.SINGLETON:
+                binding.inSingletonScope();
+                break;
+            default:
+                binding.inTransientScope();
+                break;
+            }
         });
     });
 
