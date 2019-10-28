@@ -1,12 +1,15 @@
 import {Logger, LogLevel, LogTransport, RawLogData} from './definition';
 import {StreamLogTransport} from './stream-log-transport';
 
-const MODULE_NAME_RULE = /^[_a-zA-Z][-_0-9a-zA-Z]{0,31}$/;
-const TRACE_ID_RULE = /^[-+/_a-zA-Z0-9]{0,36}$/;
+const MODULE_NAME_RULE = /^[_a-zA-Z][-.=_0-9a-zA-Z]{0,31}$/;
+const TRACE_ID_RULE = /^[-.+/=_a-zA-Z0-9]{0,36}$/;
 
 function createLogger(logTransports: LogTransport[], initModuleName: string, initTraceId: string = ''): Logger {
 
     return function deriveLogger(this: void, moduleName: string, traceId: string): Logger {
+        if (moduleName && !MODULE_NAME_RULE.test(moduleName)) {
+            throw new Error(`Invalid module name, need to match regexp ${MODULE_NAME_RULE}`);
+        }
         if (traceId && !TRACE_ID_RULE.test(traceId)) {
             throw new Error(`Invalid traceId, need to match regexp ${TRACE_ID_RULE}`);
         }
@@ -100,9 +103,6 @@ export class LoggerFactory {
     }
 
     setModuleName(label: string) {
-        if (!MODULE_NAME_RULE.test(label)) {
-            throw new Error(`Invalid log label, need to match regexp ${MODULE_NAME_RULE}`);
-        }
         return new LoggerFactory(label, this._logTransports);
     }
 

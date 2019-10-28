@@ -1,4 +1,11 @@
-import {ColorTtyTextLogTransformer, LoggerFactory, LogLevel, PlainTextLogTransformer, StreamLogTransport} from '../src';
+import {
+    BasicTextLogTransformer,
+    ColorTtyTextLogTransformer,
+    LoggerFactory,
+    LogLevel, LogTransformer,
+    PlainTextLogTransformer, RawLogData,
+    StreamLogTransport
+} from '../src';
 import {Writable} from 'stream';
 
 class MockLogTransport extends StreamLogTransport {
@@ -76,6 +83,11 @@ describe('Logger', () => {
         logger.log('...');
         assertTransportModuleAndTranceID(newModuleName, newTraceId);
 
+        // Invalid module name
+        expect(()=> logger('*')).toThrow();
+
+        // Invalid trace id
+        expect(()=> logger(null, '*')).toThrow();
     });
 
 
@@ -121,6 +133,72 @@ describe('Logger', () => {
                 }
             }
         }
+    });
+
+    describe('StreamLogTransport', () => {
+        test('log level filter', async () => {
+            const levels = [LogLevel.FATAL, LogLevel.ERROR, LogLevel.WARN];
+            const mockWriter = jest.fn((chunk, encoding, callback) => {
+                return callback();
+            });
+            const mockOutput = new Writable({
+                write: mockWriter
+            });
+            Object.defineProperty(mockOutput, 'isTty', {value: true});
+            const transport = new StreamLogTransport(mockOutput, levels);
+            await transport.write({
+                timestamp: Date.now(),
+                level: LogLevel.DEBUG,
+                module: '',
+                traceId: '',
+                messages: ['message']
+            });
+            expect(mockWriter).not.toHaveBeenCalled();
+            await transport.write({
+                timestamp: Date.now(),
+                level: LogLevel.ERROR,
+                module: '',
+                traceId: '',
+                messages: ['message']
+            });
+            expect(mockWriter).toHaveBeenCalled();
+        });
+
+        test('streaming', async ()=> {
+            const levels = [LogLevel.ERROR];
+            const bufferedCallback: ((e?: Error) => void)[] = [];
+            const mockWriter = jest.fn((chunk, encoding, callback) => {
+                bufferedCallback.push(callback);
+            });
+            const mockOutput = new Writable({
+                highWaterMark: 1,
+                write: mockWriter,
+            });
+            const transport = new StreamLogTransport(mockOutput, levels);
+            const p1 = transport.write({
+                timestamp: Date.now(),
+                level: LogLevel.ERROR,
+                module: '',
+                traceId: '',
+                messages: ['1']
+            });
+            expect(mockWriter).toHaveBeenCalledTimes(1);
+
+            const p2 = transport.write({
+                timestamp: Date.now(),
+                level: LogLevel.ERROR,
+                module: '',
+                traceId: '',
+                messages: ['message']
+            });
+            expect(mockWriter).toHaveBeenCalledTimes(1);
+            bufferedCallback.shift()!();
+            await p1;
+            bufferedCallback.shift()!();
+            await p2;
+
+
+        })
     });
 
 });
