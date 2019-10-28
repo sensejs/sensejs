@@ -1,4 +1,4 @@
-import {Logger, LogLevel, LogTransport, RawLogData} from './definition';
+import {Logger, LogLevel, LogTransport} from './definition';
 import {StreamLogTransport} from './stream-log-transport';
 
 const MODULE_NAME_RULE = /^[_a-zA-Z][-.=_0-9a-zA-Z]{0,31}$/;
@@ -13,82 +13,30 @@ function createLogger(logTransports: LogTransport[], initModuleName: string, ini
         if (traceId && !TRACE_ID_RULE.test(traceId)) {
             throw new Error(`Invalid traceId, need to match regexp ${TRACE_ID_RULE}`);
         }
-        const doLog = (rawLogData: RawLogData) => {
-            logTransports.forEach((transport) => transport.write(rawLogData));
+        const doLog = (level: LogLevel) => {
+            const timestamp = Date.now();
+            return (...messages: [unknown, ...unknown[]]) => {
+                logTransports.forEach((transport) => transport.write({
+                    timestamp,
+                    level,
+                    module: moduleName,
+                    traceId,
+                    messages
+                }));
+            };
         };
         const logger = (newModuleName: string | null, newTraceId?: string): Logger => {
             return deriveLogger(newModuleName || moduleName, newTraceId ? newTraceId : traceId);
         };
 
         return Object.assign(logger, {
-            trace: (...messages: [unknown, ...unknown[]]) => {
-                return doLog({
-                    timestamp: Date.now(),
-                    level: LogLevel.TRACE,
-                    module: moduleName,
-                    traceId,
-                    messages
-                })
-            },
-            debug: (...messages: [unknown, ...unknown[]]) => {
-                return doLog({
-                    timestamp: Date.now(),
-                    level: LogLevel.DEBUG,
-                    module: moduleName,
-                    traceId,
-                    messages
-                });
-            },
-
-            info: (...messages: [unknown, ...unknown[]]) => {
-                doLog({
-                    timestamp: Date.now(),
-                    level: LogLevel.INFO,
-                    module: moduleName,
-                    traceId,
-                    messages
-                });
-            },
-
-            log: (...messages: [unknown, ...unknown[]]) => {
-                doLog({
-                    timestamp: Date.now(),
-                    level: LogLevel.INFO,
-                    module: moduleName,
-                    traceId,
-                    messages
-                });
-            },
-
-            warn: (...messages: [unknown, ...unknown[]]) => {
-                doLog({
-                    timestamp: Date.now(),
-                    level: LogLevel.WARN,
-                    module: moduleName,
-                    traceId,
-                    messages
-                });
-            },
-
-            error: (...messages: [unknown, ...unknown[]]) => {
-                doLog({
-                    timestamp: Date.now(),
-                    level: LogLevel.ERROR,
-                    module: moduleName,
-                    traceId,
-                    messages
-                });
-            },
-
-            fatal: (...messages: [unknown, ...unknown[]]) => {
-                doLog({
-                    timestamp: Date.now(),
-                    level: LogLevel.FATAL,
-                    module: moduleName,
-                    traceId,
-                    messages
-                });
-            }
+            trace: doLog(LogLevel.TRACE),
+            debug: doLog(LogLevel.DEBUG),
+            info: doLog(LogLevel.INFO),
+            log: doLog(LogLevel.INFO),
+            warn: doLog(LogLevel.WARN),
+            error: doLog(LogLevel.ERROR),
+            fatal: doLog(LogLevel.FATAL)
         });
     }(initModuleName, initTraceId);
 }
