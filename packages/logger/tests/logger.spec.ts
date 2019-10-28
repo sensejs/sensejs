@@ -81,55 +81,46 @@ describe('Logger', () => {
 
     test('Plain text transformer', () => {
         const transformer = new PlainTextLogTransformer();
-        const regexp = /^\+ ([^ ]+) (\w+) (\<[^ >]+\>|-) (\{[^ }]+\}|-) \| .+/;
-        expect(transformer.format({
-            level: LogLevel.TRACE,
-            timestamp: Date.now(),
-            module: 'module',
-            traceId: 'traceId',
-            messages: ['message']
-        }).toString()).toMatch(regexp);
-        expect(transformer.format({
-            level: LogLevel.TRACE,
-            timestamp: Date.now(),
-            module: '',
-            traceId: 'traceId',
-            messages: ['message']
-        }).toString()).toMatch(regexp);
-        expect(transformer.format({
-            level: LogLevel.TRACE,
-            timestamp: Date.now(),
-            module: 'module',
-            traceId: '',
-            messages: ['message']
-        }).toString()).toMatch(regexp);
+        const regexp = /^\+\s+([^ ]+)\s+(\w+)\s+(\<[^ >]+\>|-)\s+(\{[^ }]+\}|-)\s+\| .+/;
+        for (const level of Object.values(LogLevel)) {
+            if (typeof level !== 'number') {
+                continue;
+            }
+            for (const module of ['', 'module']) {
+                for (const traceId of ['', 'traceId']) {
 
+                    expect(transformer.format({
+                        timestamp: Date.now(),
+                        level,
+                        module,
+                        traceId,
+                        messages: ['message']
+                    }).toString()).toMatch(regexp);
+                }
+            }
+        }
     });
 
     test('Color text transformer', () => {
         const transformer = new ColorTtyTextLogTransformer();
-        transformer.format({
-            level: LogLevel.TRACE,
-            timestamp: Date.now(),
-            module: 'module',
-            traceId: 'traceId',
-            messages: ['message']
-        }).toString();
-        transformer.format({
-            level: LogLevel.TRACE,
-            timestamp: Date.now(),
-            module: '',
-            traceId: 'traceId',
-            messages: ['message']
-        }).toString();
 
-        transformer.format({
-            level: LogLevel.TRACE,
-            timestamp: Date.now(),
-            module: 'module',
-            traceId: '',
-            messages: ['message']
-        }).toString();
+        for (const level of Object.values(LogLevel)) {
+            if (typeof level !== 'number') {
+                continue;
+            }
+            for (const module of ['', 'module']) {
+                for (const traceId of ['', 'traceId']) {
+
+                    transformer.format({
+                        timestamp: Date.now(),
+                        level,
+                        module,
+                        traceId,
+                        messages: ['message']
+                    }).toString();
+                }
+            }
+        }
     });
 
 });
