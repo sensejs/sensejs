@@ -64,22 +64,22 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
     const constants = spec.constants || [];
 
     const containerModule = new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
-        constants.forEach((constantProvider)=> {
+        constants.forEach((constantProvider) => {
             bind(constantProvider.provide).toConstantValue(constantProvider.value);
         });
         await Promise.all(
             componentList
                 .map(getComponentMetadata)
                 .map(async metadata => {
-                    metadata.onBind(bind, unbind, isBound, rebind)
+                    return metadata.onBind(bind, unbind, isBound, rebind);
                 }));
-        factories.forEach((factoryProvider: FactoryProvider<unknown>)=> {
+        factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
             const {provide, scope, factory} = factoryProvider;
             const binding = bind(provide).toDynamicValue((context: interfaces.Context) => {
                 const factoryInstance = context.container.resolve<ComponentFactory<unknown>>(factory);
                 return factoryInstance.build(context);
             });
-            switch(scope) {
+            switch (scope) {
             case ComponentScope.REQUEST:
                 binding.inRequestScope();
                 break;

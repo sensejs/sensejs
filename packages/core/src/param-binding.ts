@@ -32,7 +32,7 @@ const ParamBindingKey = Symbol('ParamBindingKey');
 
 export function ensureParamBindingMetadata(target: any): FunctionParamBindingMetadata {
     if (typeof target !== 'function') {
-        throw new TypeError('@ParamBinding target is not a function')
+        throw new TypeError('@ParamBinding target is not a function');
     }
     let result = Reflect.get(target, ParamBindingKey);
     if (typeof result !== 'undefined') {
@@ -64,7 +64,7 @@ export function ensureParamBindingMetadata(target: any): FunctionParamBindingMet
 
 
 export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBindingOption = {}) {
-    return function<T , M extends keyof T> (prototype: T, methodName: M, paramIndex: number) {
+    return function <T, M extends keyof T>(prototype: T, methodName: M, paramIndex: number) {
         const metadata = ensureParamBindingMetadata(prototype[methodName]);
         if (metadata.paramsMetadata[paramIndex]) {
             throw new ParamBindingError();

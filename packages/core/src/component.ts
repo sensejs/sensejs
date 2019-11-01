@@ -1,5 +1,5 @@
-import {decorate, injectable, interfaces} from 'inversify';
-import {Abstract, Constructor, ComponentMetadata, ServiceIdentifier, ComponentScope, ComponentFactory} from './interfaces';
+import {decorate, injectable} from 'inversify';
+import {Abstract, ComponentMetadata, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
 
 const ComponentMetadataSymbol = Symbol('ComponentSpec');
 
@@ -10,7 +10,7 @@ export interface ComponentOption {
 }
 
 
-export function getComponentMetadata<T>(target: Constructor<T>| Abstract<T>): ComponentMetadata<T> {
+export function getComponentMetadata<T>(target: Constructor<T> | Abstract<T>): ComponentMetadata<T> {
     const result: ComponentMetadata<T> = Reflect.getMetadata(ComponentMetadataSymbol, target);
     if (!result) {
         throw new Error('Target is not an component');

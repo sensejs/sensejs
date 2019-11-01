@@ -36,7 +36,7 @@ const noop: Transformer = (x) => x;
 
 export function Path(name: string, transform: Transformer = noop) {
     return ParamBinding(HttpParamBindingSymbolForPath, {
-        transform: (pathParam: {[name: string]: string}) => transform(pathParam[name])
+        transform: (pathParam: { [name: string]: string }) => transform(pathParam[name])
     });
 }
 
@@ -85,7 +85,7 @@ function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata:
     Reflect.set(targetMethod, RequestMappingMetadataKey, requestMappingMetadata);
 }
 
-export function getRequestMappingMetadata(targetMethod: object): RequestMapping | undefined{
+export function getRequestMappingMetadata(targetMethod: object): RequestMapping | undefined {
     return Reflect.get(targetMethod, RequestMappingMetadataKey);
 }
 

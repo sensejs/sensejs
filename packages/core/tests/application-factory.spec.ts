@@ -58,7 +58,6 @@ describe('ApplicationFactory', () => {
             constructor(@inject(FooComponent) private fooComponent: FooComponent) {
                 barComponentStub();
             }
-
         }
 
         class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {

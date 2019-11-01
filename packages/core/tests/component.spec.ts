@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import {Component, ComponentFactory, ComponentMetadata, getComponentMetadata} from '../src';
-import {AsyncContainerModule, Container, injectable, interfaces} from 'inversify';
+import {Component, ComponentMetadata, getComponentMetadata} from '../src';
+import {AsyncContainerModule, Container} from 'inversify';
 
 async function mockBind<T>(metadata: ComponentMetadata<T>) {
     const container: Container = new Container({skipBaseClassChecks: true});
@@ -10,9 +10,7 @@ async function mockBind<T>(metadata: ComponentMetadata<T>) {
     return container;
 }
 
-
 describe('Component', () => {
-
 
     test('getComponent', async () => {
         @Component()

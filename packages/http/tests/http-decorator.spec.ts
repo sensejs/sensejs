@@ -2,15 +2,17 @@ import 'reflect-metadata';
 import {
     Body,
     Controller,
-    GET,
-    Path,
-    Query,
-    POST,
-    PATCH,
     DELETE,
+    GET,
     getHttpControllerMetadata,
-    Header, PUT
+    Header,
+    PATCH,
+    Path,
+    POST,
+    PUT,
+    Query
 } from '../src/http-decorators';
+
 describe('Http decorators', () => {
     test('metadata', () => {
 
@@ -45,8 +47,8 @@ describe('Http decorators', () => {
         expect(getHttpControllerMetadata(FooController)).not.toBeUndefined();
     });
 
-    test('throw error when lack of param mapping', ()=> {
-        expect(()=> {
+    test('throw error when lack of param mapping', () => {
+        expect(() => {
             @Controller('/foo')
             class MyController {
 
@@ -57,7 +59,7 @@ describe('Http decorators', () => {
 
         }).toThrow();
 
-        expect(()=> {
+        expect(() => {
             class MyController {
 
                 @GET('/:id')
@@ -69,7 +71,7 @@ describe('Http decorators', () => {
     });
 
     test('throw error when apply decorator multiple times', () => {
-        expect(()=> {
+        expect(() => {
             @Controller('/foo')
             @Controller('/foo')
             class MyController {
@@ -81,7 +83,7 @@ describe('Http decorators', () => {
 
         }).toThrow();
 
-        expect(()=> {
+        expect(() => {
             class MyController {
 
                 @GET('/')
@@ -92,7 +94,7 @@ describe('Http decorators', () => {
 
         }).toThrow();
 
-        expect(()=> {
+        expect(() => {
             class MyController {
 
                 handleRequest(@Body() @Path('id') data: any) {
@@ -102,9 +104,9 @@ describe('Http decorators', () => {
         }).toThrow();
     });
 
-    test('throw error when misapplied', ()=> {
+    test('throw error when misapplied', () => {
 
-        expect(()=> {
+        expect(() => {
             class MyController {
 
                 @GET('/')
