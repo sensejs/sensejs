@@ -6,6 +6,10 @@ import {getComponentMetadata} from './component';
 @injectable()
 export abstract class ModuleClass {
 
+    // constructor(private container: Container) {
+    //
+    // }
+
     async onCreate(container: Container): Promise<void> {
     }
 
@@ -13,7 +17,7 @@ export abstract class ModuleClass {
     }
 }
 
-export type ModuleConstructor = Constructor<ModuleClass>;
+export type ModuleConstructor = Constructor<ModuleClass, []>;
 
 export interface ModuleOption {
     /**
@@ -93,7 +97,8 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
         });
     });
 
-    const moduleConstructor: ModuleConstructor = (class implements ModuleClass {
+
+    const moduleConstructor: ModuleConstructor = (class extends ModuleClass {
 
         async onCreate(container: Container) {
             return container.loadAsync(containerModule);
