@@ -15,7 +15,7 @@ export enum HttpMethod {
     PATCH = 'patch',
 }
 
-export interface RequestMapping {
+export interface RequestMappingMetadata {
     interceptors: Constructor<unknown>[]
     httpMethod: HttpMethod;
     path: string;
@@ -32,7 +32,7 @@ export interface ControllerMetadata {
     interceptors: Constructor<unknown>[]
 }
 
-export interface ControllerMappingOption {
+export interface ControllerOption {
     interceptors?: Constructor<unknown>[]
 }
 
@@ -82,24 +82,31 @@ export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
 
-function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMapping) {
+function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMappingMetadata) {
     if (Reflect.getMetadata(RequestMappingMetadataKey, targetMethod)) {
         throw new Error('target method is already decorated with RequestMapping');
     }
     Reflect.defineMetadata(RequestMappingMetadataKey, requestMappingMetadata, targetMethod);
 }
 
-export function getRequestMappingMetadata(targetMethod: object): RequestMapping | undefined {
+export function getRequestMappingMetadata(targetMethod: object): RequestMappingMetadata | undefined {
     return Reflect.getMetadata(RequestMappingMetadataKey, targetMethod);
 }
 
+/**
+ * RequestMapping decorator, mapping HTTP request into target method
+ *
+ * @param httpMethod
+ * @param path
+ * @param option
+ * @decorator
+ */
 export function RequestMapping(httpMethod: HttpMethod, path: string, option: RequestMappingOption = {}) {
     return function <T extends Object>(prototype: T, method: (keyof T & string)) {
         const targetMethod = prototype[method];
         if (typeof targetMethod !== 'function') {
             throw new Error('Request mapping decorator must be applied to a function');
         }
-        // const requestMapping = ensureRequestMapping(prototype, method);
         setRequestMappingMetadata(targetMethod, {
             httpMethod,
             path,
@@ -116,22 +123,52 @@ export function RequestMapping(httpMethod: HttpMethod, path: string, option: Req
     };
 }
 
+/**
+ * HTTP request mapping shortcut for get method
+ * @param path
+ * @param option
+ * @decorator
+ */
 export function GET(path: string, option?: RequestMappingOption) {
     return RequestMapping(HttpMethod.GET, path, option);
 }
 
+/**
+ * HTTP request mapping shortcut for post method
+ * @param path
+ * @param option
+ * @decorator
+ */
 export function POST(path: string, option?: RequestMappingOption) {
     return RequestMapping(HttpMethod.POST, path, option);
 }
 
+/**
+ * HTTP request mapping shortcut for patch method
+ * @param path
+ * @param option
+ * @decorator
+ */
 export function PATCH(path: string, option?: RequestMappingOption) {
     return RequestMapping(HttpMethod.PATCH, path, option);
 }
 
+/**
+ * HTTP request mapping shortcut for delete method
+ * @param path
+ * @param option
+ * @decorator
+ */
 export function DELETE(path: string, option?: RequestMappingOption) {
     return RequestMapping(HttpMethod.DELETE, path, option);
 }
 
+/**
+ * HTTP request mapping shortcut for put method
+ * @param path
+ * @param option
+ * @decorator
+ */
 export function PUT(path: string, option?: RequestMappingOption) {
     return RequestMapping(HttpMethod.PUT, path, option);
 }
@@ -151,10 +188,10 @@ export function getHttpControllerMetadata(target: Object): ControllerMetadata | 
 }
 
 /**
- *
+ * Controller decorator, indicates http adaptor to scan its method for routing request
  * @decorator
  */
-export function Controller(path: string, controllerOption: ControllerMappingOption = {}) {
+export function Controller(path: string, controllerOption: ControllerOption = {}) {
 
     return function <T>(target: Constructor<T>) {
 
