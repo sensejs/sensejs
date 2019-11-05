@@ -19,7 +19,7 @@ describe('KoaHttpApplicationBuilder', () => {
             }
         });
     };
-    test('param binding', async () => {
+    test('custom param binding', async () => {
 
         const stubForGet = jest.fn(),
             stubForPost = jest.fn(),
@@ -95,7 +95,7 @@ describe('KoaHttpApplicationBuilder', () => {
 
     });
 
-    test('', async () => {
+    test('builtin param binding', async () => {
         const timestamp = Date.now().toString();
         const stub = jest.fn();
 
