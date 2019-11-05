@@ -83,14 +83,14 @@ export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
 
 function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMapping) {
-    if (Reflect.get(targetMethod, RequestMappingMetadataKey)) {
+    if (Reflect.getMetadata(RequestMappingMetadataKey, targetMethod)) {
         throw new Error('target method is already decorated with RequestMapping');
     }
-    Reflect.set(targetMethod, RequestMappingMetadataKey, requestMappingMetadata);
+    Reflect.defineMetadata(RequestMappingMetadataKey, requestMappingMetadata, targetMethod);
 }
 
 export function getRequestMappingMetadata(targetMethod: object): RequestMapping | undefined {
-    return Reflect.get(targetMethod, RequestMappingMetadataKey);
+    return Reflect.getMetadata(RequestMappingMetadataKey, targetMethod);
 }
 
 export function RequestMapping(httpMethod: HttpMethod, path: string, option: RequestMappingOption = {}) {
@@ -148,7 +148,6 @@ function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetad
 
 export function getHttpControllerMetadata(target: Object): ControllerMetadata | undefined {
     return Reflect.getMetadata(ControllerMetadataKey, target);
-    // return Reflect.get(target, ControllerMetadataKey);
 }
 
 /**
