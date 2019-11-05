@@ -8,10 +8,10 @@ import {
     ControllerMetadata,
     getHttpControllerMetadata,
     getRequestMappingMetadata,
-    HttpParamBindingSymbolForBody,
-    HttpParamBindingSymbolForHeader,
-    HttpParamBindingSymbolForPath,
-    HttpParamBindingSymbolForQuery
+    BindingSymbolForBody,
+    BindingSymbolForHeader,
+    BindingSymbolForPath,
+    BindingSymbolForQuery
 } from './http-decorators';
 import {AbstractHttpInterceptor, HttpAdaptor, HttpContext} from './http-abstract';
 
@@ -61,8 +61,8 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                     throw new Error('ctx.container is not an instance of Container');
                 }
                 // @ts-ignore
-                container.bind(HttpParamBindingSymbolForBody).toConstantValue(ctx.request.body);
-                container.bind(HttpParamBindingSymbolForPath).toConstantValue(ctx.params);
+                container.bind(BindingSymbolForBody).toConstantValue(ctx.request.body);
+                container.bind(BindingSymbolForPath).toConstantValue(ctx.params);
                 const target = container.get<Object>(controllerMapping.target!);
                 const httpContext = container.get<HttpContext>(HttpContext);
                 const returnValueHandler = httpContext.getControllerReturnValueHandler() || ((value) => ctx.response.body = value);
@@ -92,8 +92,8 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                 ctx.response.body = value;
             });
             childContainer.bind(HttpContext).toConstantValue(context);
-            childContainer.bind(HttpParamBindingSymbolForHeader).toConstantValue(ctx.headers);
-            childContainer.bind(HttpParamBindingSymbolForQuery).toConstantValue(ctx.query);
+            childContainer.bind(BindingSymbolForHeader).toConstantValue(ctx.headers);
+            childContainer.bind(BindingSymbolForQuery).toConstantValue(ctx.query);
             next();
         });
         this.koa.use(this.globalRouter.routes());

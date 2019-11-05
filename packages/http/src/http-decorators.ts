@@ -35,26 +35,26 @@ export interface ControllerMappingOption {
 const noop: Transformer = (x) => x;
 
 export function Path(name: string, transform: Transformer = noop) {
-    return ParamBinding(HttpParamBindingSymbolForPath, {
+    return ParamBinding(BindingSymbolForPath, {
         transform: (pathParam: { [name: string]: string }) => transform(pathParam[name])
     });
 }
 
 export function Body(transform: Transformer = noop) {
-    return ParamBinding(HttpParamBindingSymbolForBody, {
+    return ParamBinding(BindingSymbolForBody, {
         transform
     });
 }
 
 export function Query(transform: Transformer = noop) {
-    return ParamBinding(HttpParamBindingSymbolForQuery, {
+    return ParamBinding(BindingSymbolForQuery, {
         transform
     });
 }
 
 export function Header(name: string, transform: Transformer = noop) {
     name = name.toLowerCase();
-    return ParamBinding(HttpParamBindingSymbolForHeader, {
+    return ParamBinding(BindingSymbolForHeader, {
         transform: (headerSet) => headerSet[name]
     });
 }
@@ -70,10 +70,10 @@ export interface HttpRequestBuiltinParam {
     }
 }
 
-export const HttpParamBindingSymbolForHeader = Symbol('HttpParamBindingSymbolForHeader');
-export const HttpParamBindingSymbolForQuery = Symbol('HttpParamBindingSymbolForQuery');
-export const HttpParamBindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
-export const HttpParamBindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
+export const BindingSymbolForHeader = Symbol('HttpParamBindingSymbolForHeader');
+export const BindingSymbolForQuery = Symbol('HttpParamBindingSymbolForQuery');
+export const BindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
+export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 
 const RequestMappingMetadataKey = Symbol('ReqeustMappingMetadataKey');
