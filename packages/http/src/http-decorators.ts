@@ -21,6 +21,10 @@ export interface RequestMapping {
     path: string;
 }
 
+export interface RequestMappingOption {
+    interceptors?: Constructor<unknown>[]
+}
+
 export interface ControllerMetadata {
     path: string;
     target: Constructor<unknown>
@@ -76,7 +80,7 @@ export const BindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
 export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 
-const RequestMappingMetadataKey = Symbol('ReqeustMappingMetadataKey');
+const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
 
 function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMapping) {
     if (Reflect.get(targetMethod, RequestMappingMetadataKey)) {
@@ -89,7 +93,7 @@ export function getRequestMappingMetadata(targetMethod: object): RequestMapping 
     return Reflect.get(targetMethod, RequestMappingMetadataKey);
 }
 
-export function RequestMapping(httpMethod: HttpMethod, path: string) {
+export function RequestMapping(httpMethod: HttpMethod, path: string, option: RequestMappingOption = {}) {
     return function <T extends Object>(prototype: T, method: (keyof T & string)) {
         const targetMethod = prototype[method];
         if (typeof targetMethod !== 'function') {
@@ -99,7 +103,7 @@ export function RequestMapping(httpMethod: HttpMethod, path: string) {
         setRequestMappingMetadata(targetMethod, {
             httpMethod,
             path,
-            interceptors: [] //TODO: Support request maaping interceptor
+            interceptors: option.interceptors || []
         });
         ensureParamBindingMetadata(targetMethod);
         const paramBindingMapping = getFunctionParamBindingMetadata(targetMethod);
