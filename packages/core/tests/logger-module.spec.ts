@@ -1,12 +1,29 @@
 import 'reflect-metadata';
-import {Logger} from '@sensejs/logger';
-import {ApplicationFactory, Component, InjectLogger, LoggerModule, Module} from '../src';
+import {Logger, LoggerFactory} from '@sensejs/logger';
+import {
+    ApplicationFactory,
+    Component,
+    InjectLogger,
+    LoggerBuilder,
+    LoggerFactorySymbol,
+    LoggerModule,
+    Module
+} from '../src';
 import {inject} from 'inversify';
 
 
 describe('LoggerModule', () => {
 
     test('Logger', async () => {
+
+        class MockLoggerFactory extends LoggerFactory {
+
+            constructor() {
+                super('', []);
+            }
+
+
+        }
 
         @Component()
         class FooComponent {
@@ -23,10 +40,11 @@ describe('LoggerModule', () => {
             }
         }
 
-        class FooModule extends Module({requires: [LoggerModule], components: [FooComponent, BarComponent]}) {
-        }
-
-        class MainModule extends Module({requires: [FooModule]}) {
+        class MainModule extends Module({
+            requires: [LoggerModule],
+            components: [FooComponent, BarComponent],
+            constants: [{provide: LoggerFactorySymbol, value: new MockLoggerFactory()}]
+        }) {
             constructor(@inject(FooComponent) fooComponent: FooComponent,
                         @inject(BarComponent) barComponent: BarComponent) {
                 super();
