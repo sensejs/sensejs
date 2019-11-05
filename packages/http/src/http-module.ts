@@ -3,7 +3,7 @@ import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
-import {AbstractHttpInterceptor, HttpAdaptor} from './http-abstract';
+import {HttpInterceptor, HttpAdaptor} from './http-abstract';
 import {Constructor, Module, ModuleConstructor, ModuleOption, ServiceIdentifier} from '@sensejs/core';
 
 
@@ -19,7 +19,7 @@ const defaultHttpConfig = {
 
 export interface BaseHttpModuleOption extends ModuleOption {
     httpAdaptorFactory?: (container: Container) => HttpAdaptor
-    inspectors?: Constructor<AbstractHttpInterceptor>[],
+    inspectors?: Constructor<HttpInterceptor>[],
 }
 
 export interface StaticHttpModuleOption extends BaseHttpModuleOption {

@@ -24,14 +24,18 @@ export abstract class HttpAdaptor {
 
     abstract addControllerMapping(controllerMapping: ControllerMetadata): this;
 
-    abstract addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>): this;
+    abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
 
     abstract build(): RequestListener;
 }
 
 @injectable()
-export abstract class AbstractHttpInterceptor {
+export abstract class HttpInterceptor {
 
-    abstract intercept(context: HttpContext, next: () => Promise<void>): Promise<void>;
+    async beforeRequest(context: HttpContext): Promise<void> {
+    }
+
+    async afterRequest(context: HttpContext): Promise<void> {
+    }
 
 }

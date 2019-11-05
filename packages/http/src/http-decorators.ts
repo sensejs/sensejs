@@ -116,24 +116,24 @@ export function RequestMapping(httpMethod: HttpMethod, path: string, option: Req
     };
 }
 
-export function GET(path: string) {
-    return RequestMapping(HttpMethod.GET, path);
+export function GET(path: string, option?: RequestMappingOption) {
+    return RequestMapping(HttpMethod.GET, path, option);
 }
 
-export function POST(path: string) {
-    return RequestMapping(HttpMethod.POST, path);
+export function POST(path: string, option?: RequestMappingOption) {
+    return RequestMapping(HttpMethod.POST, path, option);
 }
 
-export function PATCH(path: string) {
-    return RequestMapping(HttpMethod.PATCH, path);
+export function PATCH(path: string, option?: RequestMappingOption) {
+    return RequestMapping(HttpMethod.PATCH, path, option);
 }
 
-export function DELETE(path: string) {
-    return RequestMapping(HttpMethod.DELETE, path);
+export function DELETE(path: string, option?: RequestMappingOption) {
+    return RequestMapping(HttpMethod.DELETE, path, option);
 }
 
-export function PUT(path: string) {
-    return RequestMapping(HttpMethod.PUT, path);
+export function PUT(path: string, option?: RequestMappingOption) {
+    return RequestMapping(HttpMethod.PUT, path, option);
 }
 
 

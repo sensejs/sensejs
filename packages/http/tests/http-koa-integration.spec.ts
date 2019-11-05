@@ -3,11 +3,22 @@ import {Body, Controller, DELETE, GET, Header, PATCH, Path, POST, PUT, Query} fr
 import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/http-koa-integration';
 import {Container} from 'inversify';
-import {AbstractHttpInterceptor, HttpContext} from '../src/http-abstract';
-import {ParamBinding} from '@sensejs/core';
+import {HttpInterceptor, HttpContext} from '../src/http-abstract';
+import {ParamBinding, Constructor} from '@sensejs/core';
 
 describe('KoaHttpApplicationBuilder', () => {
 
+    const makeMockInterceptor = (stub: jest.Mock<any>, symbol: Symbol): Constructor<HttpInterceptor> => {
+        return (class extends HttpInterceptor {
+            async beforeRequest(context: HttpContext): Promise<void> {
+                stub('before');
+                context.bindContextValue(symbol, Math.random());
+            }
+            async afterRequest(context: HttpContext): Promise<void> {
+                stub('after');
+            }
+        });
+    };
     test('param binding', async () => {
 
         const stubForGet = jest.fn(),
@@ -15,25 +26,24 @@ describe('KoaHttpApplicationBuilder', () => {
             stubForDelete = jest.fn(),
             stubForPatch = jest.fn(),
             stubForPut = jest.fn();
-        const stubForA = jest.fn();
-        const symbol = Symbol();
+        const stubForA = jest.fn(), stubForB = jest.fn(), stubForC = jest.fn();
+        const symbolA = Symbol('A'), symbolB = Symbol('B'), symbolC = Symbol('C');
 
-        class InterceptorA extends AbstractHttpInterceptor {
-            intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
-                stubForA();
-                context.bindContextValue(symbol, Math.random());
-                return next();
-            }
-        }
+        const InterceptorA = makeMockInterceptor(stubForA, symbolA);
+        const InterceptorB = makeMockInterceptor(stubForB, symbolB);
+        const InterceptorC = makeMockInterceptor(stubForC, symbolC);
 
         @Controller('/', {
-            interceptors: [InterceptorA]
+            interceptors: [InterceptorB]
         })
         class FooController {
 
-            @GET('/')
+            @GET('/', {interceptors: [InterceptorC]})
             get(@ParamBinding(HttpContext) ctx: HttpContext,
-                @ParamBinding(symbol) number: number) {
+                @ParamBinding(symbolA) numberA: number,
+                @ParamBinding(symbolB) numberB: number,
+                @ParamBinding(symbolC) numberC: number,
+                ) {
                 stubForGet(ctx);
             }
 
@@ -61,6 +71,7 @@ describe('KoaHttpApplicationBuilder', () => {
         const container = new Container();
         container.bind(FooController).toSelf();
         const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder(container);
+        koaHttpApplicationBuilder.addGlobalInspector(InterceptorA);
         koaHttpApplicationBuilder.addController(FooController);
         const koaHttpApplication = koaHttpApplicationBuilder.build();
         const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
@@ -75,7 +86,12 @@ describe('KoaHttpApplicationBuilder', () => {
         expect(stubForPut).toBeCalled();
         expect(stubForPost).toBeCalled();
         expect(stubForPatch).toBeCalled();
-        expect(stubForA).toBeCalled();
+        expect(stubForA).toBeCalledWith('before');
+        expect(stubForB).toBeCalledWith('before');
+        expect(stubForC).toBeCalledWith('before');
+        expect(stubForA).toBeCalledWith('after');
+        expect(stubForB).toBeCalledWith('after');
+        expect(stubForC).toBeCalledWith('after');
 
     });
 

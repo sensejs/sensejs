@@ -13,7 +13,7 @@ import {
     BindingSymbolForPath,
     BindingSymbolForQuery
 } from './http-decorators';
-import {AbstractHttpInterceptor, HttpAdaptor, HttpContext} from './http-abstract';
+import {HttpInterceptor, HttpAdaptor, HttpContext} from './http-abstract';
 
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
@@ -28,7 +28,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
         }
     }
 
-    buildMiddleware(middleware: Constructor<AbstractHttpInterceptor>) {
+    buildMiddleware(middleware: Constructor<HttpInterceptor>) {
         const symbol = Symbol();
         this.container.bind(symbol).to(middleware);
         return async (ctx: any, next: () => Promise<void>) => {
@@ -36,9 +36,11 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             if (!(container instanceof Container)) {
                 throw new Error('ctx.container is not an instance of Container');
             }
-            const interceptor = container.get<AbstractHttpInterceptor>(symbol);
+            const interceptor = container.get<HttpInterceptor>(symbol);
             const httpContext = container.get<HttpContext>(HttpContext);
-            await interceptor.intercept(httpContext, next);
+            await interceptor.beforeRequest(httpContext);
+            await next();
+            await interceptor.afterRequest(httpContext);
         };
 
     }
@@ -47,15 +49,15 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
         const localRouter = new KoaRouter();
         for (const middleware of controllerMapping.interceptors || []) {
             // TODO: FIX Type conversion
-            localRouter.use(this.buildMiddleware(middleware as Constructor<AbstractHttpInterceptor>));
+            localRouter.use(this.buildMiddleware(middleware as Constructor<HttpInterceptor>));
         }
         for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMapping.prototype))) {
-            const metadata = getRequestMappingMetadata(propertyDescriptor.value);
-            if (!metadata) {
+            const requestMapping = getRequestMappingMetadata(propertyDescriptor.value);
+            if (!requestMapping) {
                 continue;
             }
-            const middleware = metadata.interceptors.map(x => this.buildMiddleware(x as Constructor<AbstractHttpInterceptor>));
-            localRouter[metadata.httpMethod](metadata.path, ...middleware, async (ctx: any) => {
+            const middleware = requestMapping.interceptors.map(x => this.buildMiddleware(x as Constructor<HttpInterceptor>));
+            localRouter[requestMapping.httpMethod](requestMapping.path, ...middleware, async (ctx: any) => {
                 const container = ctx.container;
                 if (!(container instanceof Container)) {
                     throw new Error('ctx.container is not an instance of Container');
@@ -75,7 +77,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
         return this;
     }
 
-    addGlobalInspector(inspector: Constructor<AbstractHttpInterceptor>): this {
+    addGlobalInspector(inspector: Constructor<HttpInterceptor>): this {
         this.globalRouter.use(this.buildMiddleware(inspector));
         return this;
     }
