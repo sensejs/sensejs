@@ -12,6 +12,7 @@ export class ApplicationFactory {
 
 
     public constructor(private entryModule: ModuleConstructor) {
+        this.container.bind(Container).toDynamicValue(() => this.container.createChild()).inRequestScope();
 
         const moduleClasses = [entryModule];
 

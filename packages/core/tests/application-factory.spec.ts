@@ -18,8 +18,7 @@ describe('ApplicationFactory', () => {
 
         class ModuleA extends Module() {
 
-            async onCreate(container: Container): Promise<void> {
-                super.onCreate(container);
+            async onCreate(): Promise<void> {
                 await mockedALifecycleCreated;
             }
         }

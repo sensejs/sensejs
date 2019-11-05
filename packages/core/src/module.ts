@@ -1,23 +1,18 @@
 import {Abstract, ComponentFactory, ComponentScope, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
-import {AsyncContainerModule, Container, decorate, injectable, interfaces} from 'inversify';
+import {AsyncContainerModule, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 
-
 @injectable()
-export abstract class ModuleClass {
+export class ModuleClass {
 
-    // constructor(private container: Container) {
-    //
-    // }
-
-    async onCreate(container: Container): Promise<void> {
+    async onCreate(): Promise<void> {
     }
 
-    async onDestroy(container: Container): Promise<void> {
+    async onDestroy(): Promise<void> {
     }
 }
 
-export type ModuleConstructor = Constructor<ModuleClass, []>;
+export type ModuleConstructor = Constructor<ModuleClass>;
 
 export interface ModuleOption {
     /**
@@ -37,6 +32,7 @@ export interface ModuleOption {
 
 export interface ModuleMetadata {
     requires: ModuleConstructor[];
+    containerModule: AsyncContainerModule;
 }
 
 const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
@@ -99,18 +95,11 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
 
 
     const moduleConstructor: ModuleConstructor = (class extends ModuleClass {
-
-        async onCreate(container: Container) {
-            return container.loadAsync(containerModule);
-        }
-
-        async onDestroy(container: Container) {
-            return container.unload(containerModule);
-        }
     });
 
     setModuleMetadata(moduleConstructor, {
         requires: spec.requires || [],
+        containerModule
     });
     return moduleConstructor;
 }

@@ -1,4 +1,4 @@
-import {Container} from 'inversify';
+import {Container, inject} from 'inversify';
 import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
@@ -48,16 +48,21 @@ export function HttpModule(option: HttpModuleOption = {
         || ((container: Container) => new KoaHttpApplicationBuilder(container));
     const componentList = option.components || [];
 
-    return class extends Module(option) {
+    class HttpModule extends Module(option) {
 
         private httpServer?: http.Server;
+        private container: Container;
 
-        async onCreate(container: Container) {
-            await super.onCreate(container);
-            const httpAdaptor = httpAdaptorFactory(container);
+        constructor(@inject(Container) container: Container) {
+            super();
+            this.container = container;
+        }
+
+        async onCreate() {
+            const httpAdaptor = httpAdaptorFactory(this.container);
             const httpConfig = option.type === 'static'
                 ? option.staticHttpConfig
-                : container.get(option.injectHttpConfig) as HttpConfig;
+                : this.container.get(option.injectHttpConfig) as HttpConfig;
 
             for (const inspector of option.inspectors || []) {
                 httpAdaptor.addGlobalInspector(inspector);
@@ -94,4 +99,5 @@ export function HttpModule(option: HttpModuleOption = {
             })();
         }
     };
+    return HttpModule;
 }

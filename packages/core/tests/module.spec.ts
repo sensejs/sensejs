@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {Container, inject} from 'inversify';
 import {Component, ComponentFactory, getModuleMetadata, Module, ModuleClass} from '../src';
+import {ModuleInstance} from '../src/module-instance';
 
 describe('Module', () => {
 
@@ -43,7 +44,8 @@ describe('Module', () => {
 
         getModuleMetadata(TestModule);
         const container = new Container();
-        await new TestModule().onCreate(container);
+        await new ModuleInstance(TestModule, container).onSetup();
+        await new TestModule().onCreate();
         expect(container.get(TestComponent)).toBeInstanceOf(TestComponent);
         expect(componentSpy).toHaveBeenCalledWith(constant, -constant);
 
@@ -55,14 +57,14 @@ describe('Module', () => {
 
     test('getModuleMetadata', () => {
         class NonModule extends ModuleClass {
-            async onCreate(container: Container): Promise<void> {
+            async onCreate(): Promise<void> {
             }
 
-            async onDestroy(container: Container): Promise<void> {
+            async onDestroy(): Promise<void> {
             }
         }
 
-        expect(() => getModuleMetadata(NonModule)).toThrow();
+        expect(() => new ModuleInstance(NonModule, new Container())).toThrow();
     });
 
 });
