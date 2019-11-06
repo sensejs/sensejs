@@ -14,6 +14,7 @@ import {
     getRequestMappingMetadata
 } from './http-decorators';
 import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
+import {Readable} from 'stream';
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
@@ -42,7 +43,6 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             const pipelineConstructor = this.createInterceptorPipeline(interceptors);
             this.container.bind(pipelineConstructor).toSelf();
 
-            // const middleware = requestMapping.interceptors.map((x) => this.buildMiddleware(x));
             localRouter[requestMapping.httpMethod](requestMapping.path, async (ctx: any) => {
                 const container = ctx.container;
                 if (!(container instanceof Container)) {
@@ -55,11 +55,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                 const httpContext = container.get<HttpContext>(HttpContext);
                 const interceptorPipeline = container.get(pipelineConstructor);
                 await interceptorPipeline.beforeRequest(httpContext);
-
-                const returnValueHandler = httpContext.getControllerReturnValueHandler()
-                    || ((value) => ctx.response.body = value);
-                returnValueHandler(await invokeMethod(container, target, propertyDescriptor.value));
-
+                httpContext.responseValue = await invokeMethod(container, target, propertyDescriptor.value);
                 await interceptorPipeline.afterRequest(httpContext);
 
             });
@@ -81,14 +77,11 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             const childContainer = this.container.createChild();
             ctx.container = childContainer;
             const context = new KoaHttpContext(childContainer);
-            context.setControllerReturnValueHandler((value) => {
-                ctx.response.status = 200;
-                ctx.response.body = value;
-            });
             childContainer.bind(HttpContext).toConstantValue(context);
             childContainer.bind(BindingSymbolForHeader).toConstantValue(ctx.headers);
             childContainer.bind(BindingSymbolForQuery).toConstantValue(ctx.query);
-            next();
+            await next();
+            ctx.response.body = context.responseValue;
         });
         koa.use(this.globalRouter.routes());
         return koa.callback();
@@ -136,20 +129,11 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 }
 
 export class KoaHttpContext extends HttpContext {
+    responseValue?: object | Buffer | Readable;
     responseStatusCode: number = 404;
-
-    private returnValueHandler?: (value: any) => void;
 
     constructor(private readonly container: Container) {
         super();
-    }
-
-    setControllerReturnValueHandler(handler: (value: any) => void) {
-        this.returnValueHandler = handler;
-    }
-
-    getControllerReturnValueHandler() {
-        return this.returnValueHandler;
     }
 
     bindContextValue(key: any, value: any) {

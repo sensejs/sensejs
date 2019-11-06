@@ -2,16 +2,13 @@ import {Container, injectable} from 'inversify';
 import {ControllerMetadata} from './http-decorators';
 import {RequestListener} from 'http';
 import {Constructor} from '@sensejs/core';
-
-export type HttpControllerReturnValueHandler = (value: any) => any;
+import {Readable} from 'stream';
 
 export abstract class HttpContext {
 
     abstract responseStatusCode: number;
 
-    abstract setControllerReturnValueHandler(handler: (value: any) => void): void;
-
-    abstract getControllerReturnValueHandler(): HttpControllerReturnValueHandler | undefined;
+    abstract responseValue?: object | Buffer | Readable;
 
     abstract bindContextValue(key: any, value: any): void;
 }
