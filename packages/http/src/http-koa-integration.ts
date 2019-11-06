@@ -18,7 +18,6 @@ import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
-    private koa = new Koa();
     private globalRouter = new KoaRouter();
 
     addController(controller: Constructor<unknown>) {
@@ -84,8 +83,9 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
 
     build(): RequestListener {
-        this.koa.use(koaBodyParser());
-        this.koa.use(async (ctx, next) => {
+        const koa = new Koa();
+        koa.use(koaBodyParser());
+        koa.use(async (ctx, next) => {
             const childContainer = this.container.createChild();
             ctx.container = childContainer;
             const context = new KoaHttpContext(childContainer);
@@ -98,8 +98,8 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             childContainer.bind(BindingSymbolForQuery).toConstantValue(ctx.query);
             next();
         });
-        this.koa.use(this.globalRouter.routes());
-        return this.koa.callback();
+        koa.use(this.globalRouter.routes());
+        return koa.callback();
     }
 
 }
