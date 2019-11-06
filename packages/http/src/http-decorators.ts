@@ -5,7 +5,7 @@ import {
     getFunctionParamBindingMetadata,
     ParamBinding,
     Transformer
-} from "@sensejs/core";
+} from '@sensejs/core';
 import {HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
@@ -17,24 +17,24 @@ export enum HttpMethod {
 }
 
 export interface RequestMappingMetadata {
-    interceptors: Constructor<HttpInterceptor>[]
+    interceptors: Constructor<HttpInterceptor>[];
     httpMethod: HttpMethod;
     path: string;
 }
 
 export interface RequestMappingOption {
-    interceptors?: Constructor<HttpInterceptor>[]
+    interceptors?: Constructor<HttpInterceptor>[];
 }
 
 export interface ControllerMetadata {
     path: string;
-    target: Constructor<unknown>
+    target: Constructor<unknown>;
     prototype: object;
-    interceptors: Constructor<HttpInterceptor>[]
+    interceptors: Constructor<HttpInterceptor>[];
 }
 
 export interface ControllerOption {
-    interceptors?: Constructor<HttpInterceptor>[]
+    interceptors?: Constructor<HttpInterceptor>[];
 }
 
 const noop: Transformer = (x) => x;
@@ -69,17 +69,16 @@ export interface HttpRequestBuiltinParam {
     query: unknown;
     path: {
         [key: string]: string
-    },
+    };
     header: {
         [key: string]: string
-    }
+    };
 }
 
 export const BindingSymbolForHeader = Symbol('HttpParamBindingSymbolForHeader');
 export const BindingSymbolForQuery = Symbol('HttpParamBindingSymbolForQuery');
 export const BindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
 export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
-
 
 const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
 
@@ -103,7 +102,7 @@ export function getRequestMappingMetadata(targetMethod: object): RequestMappingM
  * @decorator
  */
 export function RequestMapping(httpMethod: HttpMethod, path: string, option: RequestMappingOption = {}) {
-    return function <T extends Object>(prototype: T, method: (keyof T & string)) {
+    return <T extends {}>(prototype: T, method: (keyof T & string)) => {
         const targetMethod = prototype[method];
         if (typeof targetMethod !== 'function') {
             throw new Error('Request mapping decorator must be applied to a function');
@@ -174,7 +173,6 @@ export function PUT(path: string, option?: RequestMappingOption) {
     return RequestMapping(HttpMethod.PUT, path, option);
 }
 
-
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
 
 function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetadata: ControllerMetadata) {
@@ -184,7 +182,7 @@ function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetad
     Reflect.defineMetadata(ControllerMetadataKey, controllerMetadata, target);
 }
 
-export function getHttpControllerMetadata(target: Object): ControllerMetadata | undefined {
+export function getHttpControllerMetadata(target: object): ControllerMetadata | undefined {
     return Reflect.getMetadata(ControllerMetadataKey, target);
 }
 
@@ -194,7 +192,7 @@ export function getHttpControllerMetadata(target: Object): ControllerMetadata | 
  */
 export function Controller(path: string, controllerOption: ControllerOption = {}) {
 
-    return function <T>(target: Constructor<T>) {
+    return <T>(target: Constructor<T>) => {
 
         // Decorate target as a component
         Component()(target);

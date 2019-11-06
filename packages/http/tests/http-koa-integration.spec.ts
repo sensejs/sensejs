@@ -102,7 +102,6 @@ describe('KoaHttpApplicationBuilder', () => {
         @Controller('/foo')
         class FooController {
 
-
             @POST('/:path')
             post(@Body() httpBody: object,
                  @Path('path') urlPath: string,

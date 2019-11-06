@@ -11,7 +11,6 @@ import {
 } from '../src';
 import {inject} from 'inversify';
 
-
 describe('LoggerModule', () => {
 
     test('Logger', async () => {
@@ -21,8 +20,6 @@ describe('LoggerModule', () => {
             constructor() {
                 super('', []);
             }
-
-
         }
 
         @Component()

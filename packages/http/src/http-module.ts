@@ -6,10 +6,9 @@ import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {HttpInterceptor, HttpAdaptor} from './http-abstract';
 import {Constructor, Module, ModuleConstructor, ModuleOption, ServiceIdentifier} from '@sensejs/core';
 
-
 export interface HttpConfig {
     listenAddress: string;
-    listenPort: number,
+    listenPort: number;
 }
 
 const defaultHttpConfig = {
@@ -18,17 +17,17 @@ const defaultHttpConfig = {
 };
 
 export interface BaseHttpModuleOption extends ModuleOption {
-    httpAdaptorFactory?: (container: Container) => HttpAdaptor
-    inspectors?: Constructor<HttpInterceptor>[],
+    httpAdaptorFactory?: (container: Container) => HttpAdaptor;
+    inspectors?: Constructor<HttpInterceptor>[];
 }
 
 export interface StaticHttpModuleOption extends BaseHttpModuleOption {
-    type: 'static'
+    type: 'static';
     staticHttpConfig: HttpConfig;
 }
 
 export interface DynamicHttpModuleOption extends BaseHttpModuleOption {
-    type: 'injected'
+    type: 'injected';
     injectHttpConfig: ServiceIdentifier<unknown>;
 }
 
@@ -78,6 +77,14 @@ export function HttpModule(option: HttpModuleOption = {
             this.httpServer = await this.createHttpServer(httpConfig, httpAdaptor);
         }
 
+        async onDestroy() {
+            return promisify((done: (e?: Error) => void) => {
+                if (!this.httpServer) {
+                    return done();
+                }
+                return this.httpServer.close(done);
+            })();
+        }
 
         private createHttpServer(httpConfig: HttpConfig, httpAdaptor: HttpAdaptor) {
             return new Promise<http.Server>((resolve, reject) => {
@@ -89,15 +96,6 @@ export function HttpModule(option: HttpModuleOption = {
                 });
             });
         }
-
-        async onDestroy() {
-            return promisify((done: (e?: Error) => void) => {
-                if (!this.httpServer) {
-                    return done();
-                }
-                return this.httpServer.close(done);
-            })();
-        }
-    };
+    }
     return HttpModule;
 }

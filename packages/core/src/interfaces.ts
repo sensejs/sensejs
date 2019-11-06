@@ -1,5 +1,4 @@
-import {interfaces, injectable} from 'inversify';
-
+import {injectable, interfaces} from 'inversify';
 
 export enum ComponentScope {
     SINGLETON,
@@ -18,30 +17,29 @@ export abstract class ComponentFactory<T> {
 export type ServiceIdentifier<T> = interfaces.ServiceIdentifier<T>;
 
 export interface Constructor<T> extends Function {
-    new(...args: any[]): T
+    new(...args: any[]): T;
 }
 
 export interface Abstract<T> extends Function {
-    prototype: T
+    prototype: T;
 }
 
 /**
  *
  */
 export interface FactoryProvider<T> {
-    provide: ServiceIdentifier<T>,
-    factory: Constructor<ComponentFactory<T>>
-    scope?: ComponentScope
+    provide: ServiceIdentifier<T>;
+    factory: Constructor<ComponentFactory<T>>;
+    scope?: ComponentScope;
 }
 
 /**
  * Provide an constant in singleton scope
  */
 export interface ConstantProvider<T> {
-    provide: ServiceIdentifier<T>,
-    value: T
+    provide: ServiceIdentifier<T>;
+    value: T;
 }
-
 
 /**
  * Component metadata
@@ -54,4 +52,3 @@ export interface ComponentMetadata<T> {
            isBound: interfaces.IsBound,
            rebind: interfaces.Rebind): Promise<void>;
 }
-

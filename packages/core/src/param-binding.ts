@@ -1,18 +1,17 @@
 import {Constructor, ServiceIdentifier} from './interfaces';
 import {Container, decorate, inject, injectable} from 'inversify';
 
-
 export interface Transformer<Input = any, Output = Input> {
-    (input: Input): Output
+    (input: Input): Output;
 }
 
 export interface ParamBindingOption {
-    transform?: Transformer
+    transform?: Transformer;
 }
 
 interface ParamBindingMetadata {
     target: ServiceIdentifier<unknown>;
-    transform: Transformer
+    transform: Transformer;
 }
 
 interface FunctionParamBindingMetadata {
@@ -53,18 +52,17 @@ export function ensureParamBindingMetadata(target: any): FunctionParamBindingMet
         }
     }
 
-    const paramBindingMetadata = {
+    result = {
         paramsMetadata: [],
         invoker: Invoker
     };
 
-    Reflect.set(target, ParamBindingKey, paramBindingMetadata);
-    return paramBindingMetadata;
+    Reflect.set(target, ParamBindingKey, result);
+    return result;
 }
 
-
 export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBindingOption = {}) {
-    return function <T, M extends keyof T>(prototype: T, methodName: M, paramIndex: number) {
+    return <T, M extends keyof T>(prototype: T, methodName: M, paramIndex: number) => {
         const metadata = ensureParamBindingMetadata(prototype[methodName]);
         if (metadata.paramsMetadata[paramIndex]) {
             throw new ParamBindingError();
@@ -100,11 +98,10 @@ export function invokeMethod<T>(container: Container, target: T, method: (this: 
         throw new ParamBindingResolvingError();
     }
 
-    if (metadata.paramsMetadata.length != method.length) {
+    if (metadata.paramsMetadata.length !== method.length) {
         throw new ParamBindingResolvingError();
     }
-    let invoker = resolveInvoker(container, metadata.invoker);
+    const invoker = resolveInvoker(container, metadata.invoker);
 
     return invoker.call(metadata.paramsMetadata, target);
 }
-

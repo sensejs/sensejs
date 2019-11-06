@@ -2,14 +2,12 @@ import {Container} from 'inversify';
 import {getModuleMetadata, ModuleConstructor} from './module';
 import {ModuleInstance} from './module-instance';
 
-
 export class ApplicationFactory {
 
     private readonly container: Container = new Container({skipBaseClassChecks: true});
     private readonly moduleInstanceMap: Map<ModuleConstructor, ModuleInstance> = new Map();
     private readonly moduleDependencyMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
     private readonly moduleReferencedMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
-
 
     public constructor(private entryModule: ModuleConstructor) {
         this.container.bind(Container).toDynamicValue(() => this.container.createChild()).inRequestScope();
@@ -57,7 +55,7 @@ export class ApplicationFactory {
 
                 const dependencies = this.moduleDependencyMap.get(module);
                 if (dependencies) {
-                    await Promise.all(dependencies.map(module => startModule(module)));
+                    await Promise.all(dependencies.map(startModule));
                 }
                 moduleInstance = new ModuleInstance(module, this.container);
                 this.moduleInstanceMap.set(module, moduleInstance);
@@ -74,7 +72,7 @@ export class ApplicationFactory {
             if (referencedModules) {
                 await Promise.all(referencedModules
                     .map((module) => this.moduleInstanceMap.get(module))
-                    .map(module => module && stopModule(module)));
+                    .map((module) => module && stopModule(module)));
             }
             await moduleInstance.onDestroy();
         };

@@ -26,7 +26,6 @@ describe('Module', () => {
 
         const componentSpy = jest.fn();
 
-
         @Component()
         class TestComponent {
             constructor(@inject(ConstantSymbol) constantValue: number,
@@ -34,7 +33,6 @@ describe('Module', () => {
                 componentSpy(constantValue, factoryValue);
             }
         }
-
 
         const TestModule = Module({
             components: [TestComponent],

@@ -13,6 +13,7 @@ cache:
 
 script:
   - pnpm run test -- --coverage
+  - pnpm run lint
 
 install:
   - pnpm recursive install --frozen-lockfile

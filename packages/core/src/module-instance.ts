@@ -15,20 +15,6 @@ export class ModuleInstance {
                 private readonly container: Container) {
     }
 
-    private async performSetup() {
-        this.container.bind(this.moduleClass).toSelf().inSingletonScope();
-        await this.container.loadAsync(this.moduleMetadata.containerModule);
-        this.moduleLifecycle = this.container.get(this.moduleClass);
-        await this.moduleLifecycle!.onCreate();
-    }
-
-    private async performDestroy() {
-        if (this.moduleLifecycle) {
-            await this.moduleLifecycle.onDestroy();
-        }
-        this.container.unload(this.moduleMetadata.containerModule);
-    }
-
     async onSetup() {
         if (this.setupPromise) {
             return this.setupPromise;
@@ -44,6 +30,20 @@ export class ModuleInstance {
         }
         this.destroyPromise = this.performDestroy();
         return this.destroyPromise;
-
     }
+
+    private async performSetup() {
+        this.container.bind(this.moduleClass).toSelf().inSingletonScope();
+        await this.container.loadAsync(this.moduleMetadata.containerModule);
+        this.moduleLifecycle = this.container.get(this.moduleClass);
+        await this.moduleLifecycle!.onCreate();
+    }
+
+    private async performDestroy() {
+        if (this.moduleLifecycle) {
+            await this.moduleLifecycle.onDestroy();
+        }
+        this.container.unload(this.moduleMetadata.containerModule);
+    }
+
 }

@@ -20,7 +20,6 @@ class MockLogTransport extends StreamLogTransport {
 
 describe('Logger', () => {
 
-
     test('Logger usage', () => {
         const mockLogTransport = new MockLogTransport();
         const writeSpy = jest.spyOn(mockLogTransport, 'write');
@@ -84,12 +83,11 @@ describe('Logger', () => {
         assertTransportModuleAndTranceID(newModuleName, newTraceId);
 
         // Invalid module name
-        expect(()=> logger('*')).toThrow();
+        expect(() => logger('*')).toThrow();
 
         // Invalid trace id
-        expect(()=> logger(null, '*')).toThrow();
+        expect(() => logger(null, '*')).toThrow();
     });
-
 
     test('Plain text transformer', () => {
         const transformer = new PlainTextLogTransformer();
@@ -164,7 +162,7 @@ describe('Logger', () => {
             expect(mockWriter).toHaveBeenCalled();
         });
 
-        test('streaming', async ()=> {
+        test('streaming', async () => {
             const levels = [LogLevel.ERROR];
             const bufferedCallback: ((e?: Error) => void)[] = [];
             const mockWriter = jest.fn((chunk, encoding, callback) => {
@@ -197,8 +195,7 @@ describe('Logger', () => {
             bufferedCallback.shift()!();
             await p2;
 
-
-        })
+        });
     });
 
 });

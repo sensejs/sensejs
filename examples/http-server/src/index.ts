@@ -24,5 +24,4 @@ const httpModule = HttpModule({
     components: [ExampleHttpController]
 });
 
-
 new ApplicationFactory(httpModule).start();

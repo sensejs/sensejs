@@ -26,7 +26,7 @@ export interface LogTransport {
 
     write(rawLogData: RawLogData): Promise<any>;
 
-    flush(): Promise<void>
+    flush(): Promise<void>;
 }
 
 export interface Logger {

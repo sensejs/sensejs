@@ -3,16 +3,15 @@ import {EventEmitter} from 'events';
 import {ApplicationFactory, Component, Module} from '../src';
 import {Container, inject} from 'inversify';
 
-
 describe('ApplicationFactory', () => {
     test('lifecycle', async () => {
 
-        let mockedModuleEvent = new EventEmitter();
-        let mockedALifecycleCreated = new Promise<void>((done) => {
+        const mockedModuleEvent = new EventEmitter();
+        const mockedALifecycleCreated = new Promise<void>((done) => {
             mockedModuleEvent.once('create', done);
         });
 
-        let mockedBLifecycleDestroyed = new Promise<void>((done) => {
+        const mockedBLifecycleDestroyed = new Promise<void>((done) => {
             mockedModuleEvent.once('destroy', done);
         });
 
@@ -64,7 +63,6 @@ describe('ApplicationFactory', () => {
 
         const app = new ApplicationFactory(BarModule);
         await app.start();
-
 
     });
 });

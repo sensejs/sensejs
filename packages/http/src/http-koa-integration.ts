@@ -15,7 +15,6 @@ import {
 } from './http-decorators';
 import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
 
-
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
     private globalRouter = new KoaRouter();
@@ -54,7 +53,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             if (!requestMapping) {
                 continue;
             }
-            const middleware = requestMapping.interceptors.map(x => this.buildMiddleware(x));
+            const middleware = requestMapping.interceptors.map((x) => this.buildMiddleware(x));
             localRouter[requestMapping.httpMethod](requestMapping.path, ...middleware, async (ctx: any) => {
                 const container = ctx.container;
                 if (!(container instanceof Container)) {
@@ -63,12 +62,12 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                 // @ts-ignore
                 container.bind(BindingSymbolForBody).toConstantValue(ctx.request.body);
                 container.bind(BindingSymbolForPath).toConstantValue(ctx.params);
-                const target = container.get<Object>(controllerMapping.target!);
+                const target = container.get<object>(controllerMapping.target!);
                 const httpContext = container.get<HttpContext>(HttpContext);
-                const returnValueHandler = httpContext.getControllerReturnValueHandler() || ((value) => ctx.response.body = value);
+                const returnValueHandler = httpContext.getControllerReturnValueHandler()
+                    || ((value) => ctx.response.body = value);
                 returnValueHandler(invokeMethod(container, target, propertyDescriptor.value));
             });
-
 
         }
         this.globalRouter.use(controllerMapping.path!, localRouter.routes(), localRouter.allowedMethods());
@@ -79,7 +78,6 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
         this.globalRouter.use(this.buildMiddleware(inspector));
         return this;
     }
-
 
     build(): RequestListener {
         const koa = new Koa();
@@ -104,9 +102,9 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 }
 
 export class KoaHttpContext extends HttpContext {
+    responseStatusCode: number = 404;
 
     private returnValueHandler?: (value: any) => void;
-    responseStatusCode: number = 404;
 
     constructor(private readonly container: Container) {
         super();
@@ -128,4 +126,3 @@ export class KoaHttpContext extends HttpContext {
         return this.container.get<T>(key);
     }
 }
-

@@ -67,4 +67,3 @@ export const defaultLoggerFactory = new LoggerFactory('', [
     new StreamLogTransport(process.stdout, [LogLevel.TRACE, LogLevel.DEBUG, LogLevel.INFO]),
     new StreamLogTransport(process.stderr, [LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL]),
 ]);
-

@@ -24,7 +24,10 @@ describe('Http decorators', () => {
             }
 
             @POST('/')
-            noParam(@Body() body: Object, @Query() query: Object, @Path('id') path: string, @Header('cookie') cookie: string) {
+            noParam(@Body() body: object,
+                    @Query() query: object,
+                    @Path('id') path: string,
+                    @Header('cookie') cookie: string) {
 
             }
 
@@ -53,7 +56,7 @@ describe('Http decorators', () => {
             class MyController {
 
                 @GET('/')
-                handleRequest(body: Object) {
+                handleRequest(body: object) {
                 }
             }
 
@@ -63,7 +66,7 @@ describe('Http decorators', () => {
             class MyController {
 
                 @GET('/:id')
-                handleRequest(body: Object, @Path('id') path: string) {
+                handleRequest(body: object, @Path('id') path: string) {
                 }
             }
 

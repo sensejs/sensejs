@@ -5,7 +5,6 @@ import {inject} from 'inversify';
 import supertest from 'supertest';
 import {ApplicationFactory, Component} from '@sensejs/core';
 
-
 describe('HttpModule', () => {
 
     test('basic usage', async () => {
@@ -46,7 +45,6 @@ describe('HttpModule', () => {
         await supertest('http://localhost:3000').get('/foo');
         expect(stub).toHaveBeenCalled();
         await app.stop();
-
 
     });
 });

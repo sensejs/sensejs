@@ -8,7 +8,6 @@ export const LoggerFactorySymbol = Symbol();
 const LoggerSymbol = Symbol();
 export const InjectLogger = inject(LoggerSymbol);
 
-
 export class LoggerBuilder extends ComponentFactory<LoggerInterface> {
 
     @inject(TraceId)
@@ -25,7 +24,8 @@ export class LoggerBuilder extends ComponentFactory<LoggerInterface> {
         const parent = parentRequest ? parentRequest.serviceIdentifier : null;
         const moduleName = parent === null ? '' :
             typeof parent === 'symbol' ? parent.toString() :
-                typeof parent === 'string' ? parent : (parent as Function).name;
+                typeof parent === 'string' ? parent :
+                    typeof parent === 'function' ? parent.name : '';
 
         return this.loggerFactory.setModuleName(moduleName).build(this.traceId);
     }
@@ -38,4 +38,3 @@ export const LoggerModule = Module({
         factory: LoggerBuilder
     }]
 });
-

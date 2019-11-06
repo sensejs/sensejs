@@ -7,12 +7,12 @@ describe('@ParamBinding', () => {
     test('param binding', () => {
 
         class Foo {
-            bar(@ParamBinding(String) param: String, @ParamBinding(Number, {transform: (x) => x + 1}) number: number) {
+            bar(@ParamBinding(String) param: string, @ParamBinding(Number, {transform: (x) => x + 1}) number: number) {
                 return param.repeat(number);
             }
         }
 
-        let container = new Container();
+        const container = new Container();
         const constValue = 'deadbeef';
         container.bind(String).toConstantValue(constValue);
         container.bind(Number).toConstantValue(2);
@@ -31,12 +31,12 @@ describe('@ParamBinding', () => {
     test('Missing @ParamBinding', () => {
 
         class Foo {
-            bar(param: String) {
+            bar(param: string) {
                 return param;
             }
         }
 
-        let container = new Container();
+        const container = new Container();
         container.bind(String).toConstantValue('deadbeef');
         expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
     });
@@ -44,24 +44,24 @@ describe('@ParamBinding', () => {
     test('Missing @ParamBinding', () => {
 
         class Foo {
-            bar(param: String) {
+            bar(param: string) {
                 return param;
             }
         }
 
-        let container = new Container();
+        const container = new Container();
         container.bind(String).toConstantValue('deadbeef');
         expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
     });
 
     test('Inconsistent param binding', () => {
         class Foo {
-            bar(undecorated: String, param: String) {
+            bar(undecorated: string, param: string) {
                 return param;
             }
         }
 
-        let container = new Container();
+        const container = new Container();
 
         container.bind(String).toConstantValue('deadbeef');
         expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
@@ -115,7 +115,7 @@ describe('@ParamBinding', () => {
 
         @Component()
         class Foo {
-            bar(@ParamBinding(String, {transform: (x: string) => x.repeat(2)}) param: String,
+            bar(@ParamBinding(String, {transform: (x: string) => x.repeat(2)}) param: string,
                 @ParamBinding(Number, {transform: (x: number) => x * x}) number: number,
                 @ParamBinding(Test) test: Test,
                 @ParamBinding(constructor) x: any) {
@@ -128,7 +128,7 @@ describe('@ParamBinding', () => {
         let N = 1000;
         // 10000 method invoking should be done within 30s
         while (N--) {
-            let childContainer = container.createChild();
+            const childContainer = container.createChild();
             for (let i = 0; i < 1000; i++) {
                 childContainer.bind(Symbol()).toConstantValue(i);
             }

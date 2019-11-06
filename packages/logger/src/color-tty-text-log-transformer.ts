@@ -1,6 +1,6 @@
 import colors from 'colors/safe';
 import moment from 'moment';
-import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer';
+import {BasicTextLogTransformer} from './basic-text-log-transformer';
 import {LogLevel, RawLogData} from './definition';
 import {format, formatWithOptions} from 'util';
 
@@ -11,22 +11,22 @@ const availableFormat = formatWithOptions
 
 function logLevelColorMap(level: LogLevel) {
     switch (level) {
-        case LogLevel.TRACE:
-            return colors.blue;
-        case LogLevel.DEBUG:
-            return colors.cyan;
-        case LogLevel.INFO:
-            return colors.green;
-        case LogLevel.WARN:
-            return colors.yellow;
-        case LogLevel.ERROR:
-            return colors.magenta;
-        case LogLevel.FATAL:
-            return colors.red;
+    case LogLevel.TRACE:
+        return colors.blue;
+    case LogLevel.DEBUG:
+        return colors.cyan;
+    case LogLevel.INFO:
+        return colors.green;
+    case LogLevel.WARN:
+        return colors.yellow;
+    case LogLevel.ERROR:
+        return colors.magenta;
+    case LogLevel.FATAL:
+        return colors.red;
     }
 }
 
-function colorTextView(color: (input: string)=>string, text: string) {
+function colorTextView(color: (input: string) => string, text: string) {
     return {
         text: color(text),
         length: text.length
@@ -51,7 +51,6 @@ function underlinedTraceId(metadata: RawLogData) {
 
 export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
 
-
     getMetadataView() {
         return [
             timestampColoredBySeverity,
@@ -59,7 +58,6 @@ export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
             underlinedTraceId,
         ];
     }
-
 
     getEventMark(rawData: RawLogData): string {
         return logLevelColorMap(rawData.level)(super.getEventMark(rawData));

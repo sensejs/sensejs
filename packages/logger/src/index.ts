@@ -7,4 +7,3 @@ export {PlainTextLogTransformer} from './plain-text-log-transformer';
 export {StreamLogTransport} from './stream-log-transport';
 export {LoggerFactory, defaultLoggerFactory} from './logger-factory';
 export default defaultLoggerFactory.build();
-

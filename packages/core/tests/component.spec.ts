@@ -26,7 +26,6 @@ describe('Component', () => {
 
         expect(() => getComponentMetadata(NonComponent)).toThrow();
 
-
     });
 
     test('Component using string as id', async () => {
@@ -92,4 +91,3 @@ describe('Component', () => {
         }).toThrow();
     });
 });
-

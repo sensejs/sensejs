@@ -1,4 +1,12 @@
-import {Abstract, ComponentFactory, ComponentScope, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
+import {
+    Abstract,
+    ComponentFactory,
+    ComponentMetadata,
+    ComponentScope,
+    ConstantProvider,
+    Constructor,
+    FactoryProvider
+} from './interfaces';
 import {AsyncContainerModule, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 
@@ -18,16 +26,16 @@ export interface ModuleOption {
     /**
      * Dependencies of this module, must be decorated
      */
-    requires?: ModuleConstructor[],
+    requires?: ModuleConstructor[];
 
     /**
      * Components provided by this module
      */
-    components?: (Constructor<unknown> | Abstract<unknown>)[],
+    components?: (Constructor<unknown> | Abstract<unknown>)[];
 
-    factories?: FactoryProvider<unknown>[],
+    factories?: FactoryProvider<unknown>[];
 
-    constants?: ConstantProvider<unknown>[],
+    constants?: ConstantProvider<unknown>[];
 }
 
 export interface ModuleMetadata {
@@ -57,7 +65,6 @@ export function setModuleMetadata(module: ModuleConstructor, metadata: ModuleMet
     Reflect.defineMetadata(MODULE_REFLECT_SYMBOL, metadata, module);
 }
 
-
 export function Module(spec: ModuleOption = {}): ModuleConstructor {
     const componentList = spec.components || [];
     const factories = spec.factories || [];
@@ -70,7 +77,7 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
         await Promise.all(
             componentList
                 .map(getComponentMetadata)
-                .map(async metadata => {
+                .map(async (metadata: ComponentMetadata<unknown>) => {
                     return metadata.onBind(bind, unbind, isBound, rebind);
                 }));
         factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
@@ -93,7 +100,6 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
         });
     });
 
-
     const moduleConstructor: ModuleConstructor = (class extends ModuleClass {
     });
 
@@ -103,5 +109,3 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
     });
     return moduleConstructor;
 }
-
-

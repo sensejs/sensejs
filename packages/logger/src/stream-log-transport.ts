@@ -4,7 +4,7 @@ import {PlainTextLogTransformer} from './plain-text-log-transformer';
 import {Transform} from 'stream';
 
 function checkIsTty(writableStream: NodeJS.WritableStream): boolean {
-    let ws = writableStream as NodeJS.WriteStream;
+    const ws = writableStream as NodeJS.WriteStream;
     return ws.isTTY === true;
 }
 
@@ -68,6 +68,5 @@ export class StreamLogTransport implements LogTransport {
     flush(): Promise<void> {
         return this._lastWriteFlushed;
     }
-
 
 }
