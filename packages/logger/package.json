@@ -2,8 +2,10 @@
   "name": "@sensejs/logger",
   "version": "0.0.1",
   "description": "",
+  "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "scripts": {
+    "test": "jest",
     "prepare": "tsc"
   },
   "author": "",
