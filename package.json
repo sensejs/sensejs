@@ -34,6 +34,6 @@
     "lint": "tslint --project .",
     "pretest": "pnpm recursive run prepare",
     "coveralls": "cat coverage/lcov.info | coveralls",
-    "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx np"
+    "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx np --contents=lib"
   }
 }
