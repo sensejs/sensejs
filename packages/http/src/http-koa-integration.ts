@@ -47,15 +47,14 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     addControllerMapping(controllerMapping: ControllerMetadata): this {
         const localRouter = new KoaRouter();
         for (const middleware of controllerMapping.interceptors || []) {
-            // TODO: FIX Type conversion
-            localRouter.use(this.buildMiddleware(middleware as Constructor<HttpInterceptor>));
+            localRouter.use(this.buildMiddleware(middleware));
         }
         for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMapping.prototype))) {
             const requestMapping = getRequestMappingMetadata(propertyDescriptor.value);
             if (!requestMapping) {
                 continue;
             }
-            const middleware = requestMapping.interceptors.map(x => this.buildMiddleware(x as Constructor<HttpInterceptor>));
+            const middleware = requestMapping.interceptors.map(x => this.buildMiddleware(x));
             localRouter[requestMapping.httpMethod](requestMapping.path, ...middleware, async (ctx: any) => {
                 const container = ctx.container;
                 if (!(container instanceof Container)) {

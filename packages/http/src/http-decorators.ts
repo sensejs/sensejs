@@ -6,6 +6,7 @@ import {
     ParamBinding,
     Transformer
 } from "@sensejs/core";
+import {HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
     GET = 'get',
@@ -16,24 +17,24 @@ export enum HttpMethod {
 }
 
 export interface RequestMappingMetadata {
-    interceptors: Constructor<unknown>[]
+    interceptors: Constructor<HttpInterceptor>[]
     httpMethod: HttpMethod;
     path: string;
 }
 
 export interface RequestMappingOption {
-    interceptors?: Constructor<unknown>[]
+    interceptors?: Constructor<HttpInterceptor>[]
 }
 
 export interface ControllerMetadata {
     path: string;
     target: Constructor<unknown>
     prototype: object;
-    interceptors: Constructor<unknown>[]
+    interceptors: Constructor<HttpInterceptor>[]
 }
 
 export interface ControllerOption {
-    interceptors?: Constructor<unknown>[]
+    interceptors?: Constructor<HttpInterceptor>[]
 }
 
 const noop: Transformer = (x) => x;
