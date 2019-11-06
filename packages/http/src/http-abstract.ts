@@ -34,7 +34,7 @@ export abstract class HttpInterceptor {
     async beforeRequest(context: HttpContext): Promise<void> {
     }
 
-    async afterRequest(context: HttpContext): Promise<void> {
+    async afterRequest(context: HttpContext, e?: Error): Promise<void> {
     }
 
 }

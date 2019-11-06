@@ -70,6 +70,9 @@ describe('KoaHttpApplicationBuilder', () => {
 
         const container = new Container();
         container.bind(FooController).toSelf();
+        container.bind(InterceptorA).toSelf();
+        container.bind(InterceptorB).toSelf();
+        container.bind(InterceptorC).toSelf();
         const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder(container);
         koaHttpApplicationBuilder.addGlobalInspector(InterceptorA);
         koaHttpApplicationBuilder.addController(FooController);

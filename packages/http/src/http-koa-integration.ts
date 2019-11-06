@@ -1,4 +1,4 @@
-import {Container} from 'inversify';
+import {Container, decorate, inject, injectable} from 'inversify';
 import {RequestListener} from 'http';
 import {Constructor, invokeMethod, ServiceIdentifier} from '@sensejs/core';
 import Koa from 'koa';
@@ -18,6 +18,7 @@ import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
     private globalRouter = new KoaRouter();
+    private globalInterceptors: Constructor<HttpInterceptor>[] = [];
 
     addController(controller: Constructor<unknown>) {
         const controllerMapping = getHttpControllerMetadata(controller);
@@ -26,35 +27,23 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
         }
     }
 
-    buildMiddleware(middleware: Constructor<HttpInterceptor>) {
-        const symbol = Symbol();
-        this.container.bind(symbol).to(middleware);
-        return async (ctx: any, next: () => Promise<void>) => {
-            const container = ctx.container;
-            if (!(container instanceof Container)) {
-                throw new Error('ctx.container is not an instance of Container');
-            }
-            const interceptor = container.get<HttpInterceptor>(symbol);
-            const httpContext = container.get<HttpContext>(HttpContext);
-            await interceptor.beforeRequest(httpContext);
-            await next();
-            await interceptor.afterRequest(httpContext);
-        };
-
-    }
-
     addControllerMapping(controllerMapping: ControllerMetadata): this {
         const localRouter = new KoaRouter();
-        for (const middleware of controllerMapping.interceptors || []) {
-            localRouter.use(this.buildMiddleware(middleware));
-        }
         for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMapping.prototype))) {
             const requestMapping = getRequestMappingMetadata(propertyDescriptor.value);
             if (!requestMapping) {
                 continue;
             }
-            const middleware = requestMapping.interceptors.map((x) => this.buildMiddleware(x));
-            localRouter[requestMapping.httpMethod](requestMapping.path, ...middleware, async (ctx: any) => {
+            const interceptors = [
+                ...this.globalInterceptors,
+                ...controllerMapping.interceptors,
+                ...requestMapping.interceptors
+            ];
+            const pipelineConstructor = this.createInterceptorPipeline(interceptors);
+            this.container.bind(pipelineConstructor).toSelf();
+
+            // const middleware = requestMapping.interceptors.map((x) => this.buildMiddleware(x));
+            localRouter[requestMapping.httpMethod](requestMapping.path, async (ctx: any) => {
                 const container = ctx.container;
                 if (!(container instanceof Container)) {
                     throw new Error('ctx.container is not an instance of Container');
@@ -62,11 +51,17 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                 // @ts-ignore
                 container.bind(BindingSymbolForBody).toConstantValue(ctx.request.body);
                 container.bind(BindingSymbolForPath).toConstantValue(ctx.params);
-                const target = container.get<object>(controllerMapping.target!);
+                const target = container.get<object>(controllerMapping.target);
                 const httpContext = container.get<HttpContext>(HttpContext);
+                const interceptorPipeline = container.get(pipelineConstructor);
+                await interceptorPipeline.beforeRequest(httpContext);
+
                 const returnValueHandler = httpContext.getControllerReturnValueHandler()
                     || ((value) => ctx.response.body = value);
                 returnValueHandler(invokeMethod(container, target, propertyDescriptor.value));
+
+                await interceptorPipeline.afterRequest(httpContext);
+
             });
 
         }
@@ -75,7 +70,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     }
 
     addGlobalInspector(inspector: Constructor<HttpInterceptor>): this {
-        this.globalRouter.use(this.buildMiddleware(inspector));
+        this.globalInterceptors.push(inspector);
         return this;
     }
 
@@ -97,6 +92,45 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
         });
         koa.use(this.globalRouter.routes());
         return koa.callback();
+    }
+
+    private createInterceptorPipeline(interceptorConstructors: Constructor<HttpInterceptor>[]) {
+        @injectable()
+        class Pipeline {
+            private readonly interceptorsForRequest: HttpInterceptor[];
+            private readonly interceptorsForResponse: HttpInterceptor[] = [];
+
+            constructor(...interceptors: HttpInterceptor[]) {
+                this.interceptorsForRequest = interceptors;
+            }
+
+            async beforeRequest(httpContext: HttpContext) {
+                for (const interceptor of this.interceptorsForRequest) {
+                    await interceptor.beforeRequest(httpContext);
+                    this.interceptorsForResponse.unshift(interceptor);
+                }
+            }
+
+            async afterRequest(httpContext: HttpContext, e?: Error) {
+
+                for (const interceptor of this.interceptorsForResponse.reverse()) {
+                    try {
+                        await interceptor.afterRequest(httpContext, e);
+                        e = undefined;
+                    } catch (cascadeError) {
+                        e = cascadeError;
+                    }
+                }
+            }
+        }
+
+        interceptorConstructors.forEach((interceptorConstructor, idx) => {
+            const paramDecorator = inject(interceptorConstructor) as ParameterDecorator;
+            decorate(paramDecorator, Pipeline, idx);
+        });
+
+        return Pipeline;
+
     }
 
 }
