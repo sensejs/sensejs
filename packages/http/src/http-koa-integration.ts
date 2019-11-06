@@ -81,7 +81,12 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
             childContainer.bind(BindingSymbolForHeader).toConstantValue(ctx.headers);
             childContainer.bind(BindingSymbolForQuery).toConstantValue(ctx.query);
             await next();
-            ctx.response.body = context.responseValue;
+            if (typeof ctx.response.body !== 'undefined') {
+                ctx.response.body = context.responseValue;
+            }
+            if (typeof context.responseStatusCode !== 'undefined') {
+                ctx.response.status = context.responseStatusCode;
+            }
         });
         koa.use(this.globalRouter.routes());
         return koa.callback();
