@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/http",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "",
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
@@ -9,7 +9,7 @@
     "prepare": "tsc"
   },
   "dependencies": {
-    "@sensejs/core": "~0.0.1",
+    "@sensejs/core": "~0.0.0",
     "inversify": "^5.0.1",
     "koa": "^2.8.1",
     "koa-bodyparser": "^4.2.1",
