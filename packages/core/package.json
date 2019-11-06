@@ -8,7 +8,10 @@
     "test": "jest",
     "prepare": "tsc"
   },
-  "author": "",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
     "@sensejs/logger": "~0.0.0",

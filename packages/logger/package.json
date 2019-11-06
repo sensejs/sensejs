@@ -8,7 +8,10 @@
     "test": "jest",
     "prepare": "tsc"
   },
-  "author": "",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
     "colors": "^1.3.3",

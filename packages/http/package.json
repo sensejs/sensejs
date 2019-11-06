@@ -8,6 +8,9 @@
     "test": "jest",
     "prepare": "tsc"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@sensejs/core": "~0.0.0",
     "inversify": "^5.0.1",
@@ -28,6 +31,6 @@
     "reflect-metadata": "^0.1.13",
     "tslib": "^1.10.0"
   },
-  "author": "",
+  "author": "LAN Xingcan",
   "license": "ISC"
 }
