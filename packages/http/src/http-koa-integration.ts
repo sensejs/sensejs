@@ -58,7 +58,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
                 const returnValueHandler = httpContext.getControllerReturnValueHandler()
                     || ((value) => ctx.response.body = value);
-                returnValueHandler(invokeMethod(container, target, propertyDescriptor.value));
+                returnValueHandler(await invokeMethod(container, target, propertyDescriptor.value));
 
                 await interceptorPipeline.afterRequest(httpContext);
 
