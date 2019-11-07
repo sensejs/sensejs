@@ -48,6 +48,6 @@
     "pretest": "pnpm recursive run prepare",
     "coveralls": "cat coverage/lcov.info | coveralls",
     "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx np",
-    "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\""
+    "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\""
   }
 }
