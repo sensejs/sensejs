@@ -17,5 +17,6 @@
     <orderEntry type="module" module-name="core" />
     <orderEntry type="module" module-name="http" />
     <orderEntry type="module" module-name="http-server" />
+    <orderEntry type="module" module-name="typeorm" />
   </component>
 </module>
