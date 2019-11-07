@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {EventEmitter} from 'events';
 import {ApplicationFactory, Component, Module} from '../src';
-import {Container, inject} from 'inversify';
+import {inject} from 'inversify';
 
 describe('ApplicationFactory', () => {
     test('lifecycle', async () => {
@@ -24,7 +24,9 @@ describe('ApplicationFactory', () => {
 
         const ModuleB = Module({requires: [ModuleA]});
 
-        const app = new ApplicationFactory(ModuleB);
+        const ModuleC = Module({requires: [ModuleA, ModuleB]});
+
+        const app = new ApplicationFactory(ModuleC);
         const spyOnCreateForB = jest.spyOn(ModuleB.prototype, 'onCreate');
         const spyOnDestroyForA = jest.spyOn(ModuleA.prototype, 'onDestroy');
         jest.spyOn(ModuleB.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);

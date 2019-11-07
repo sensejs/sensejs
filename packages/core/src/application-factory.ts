@@ -25,7 +25,7 @@ export class ApplicationFactory {
 
             for (const dependencyModuleClass of moduleDependencies) {
                 if (this.moduleDependencyMap.get(dependencyModuleClass)) {
-                    throw new Error('Circle dependency detected');
+                    continue;
                 }
                 if (moduleClasses.indexOf(dependencyModuleClass) < 0) {
                     moduleClasses.push(dependencyModuleClass);
@@ -53,12 +53,12 @@ export class ApplicationFactory {
             let moduleInstance = this.moduleInstanceMap.get(module);
             if (!moduleInstance) {
 
+                moduleInstance = new ModuleInstance(module, this.container);
+                this.moduleInstanceMap.set(module, moduleInstance);
                 const dependencies = this.moduleDependencyMap.get(module);
                 if (dependencies) {
                     await Promise.all(dependencies.map(startModule));
                 }
-                moduleInstance = new ModuleInstance(module, this.container);
-                this.moduleInstanceMap.set(module, moduleInstance);
             }
             return moduleInstance.onSetup();
         };
