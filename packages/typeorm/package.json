@@ -2,7 +2,10 @@
   "name": "@sensejs/typeorm",
   "version": "0.0.0",
   "description": "",
-  "files": ["lib", "README.md"],
+  "files": [
+    "lib",
+    "README.md"
+  ],
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "scripts": {
@@ -17,14 +20,38 @@
   "dependencies": {
     "@sensejs/core": "~0.0.0",
     "@sensejs/http": "~0.0.0",
-    "inversify": "^5.0.1"
+    "inversify": "^5.0.1",
+    "typeorm": "0.2.20"
   },
   "devDependencies": {
-    "tslib": "^1.10.0",
-    "typeorm": "0.2.20"
+    "tslib": "^1.10.0"
   },
   "peerDependencies": {
     "tslib": "^1.10.0",
-    "typeorm": "0.2.20"
+    "typeorm": "0.2.20",
+    "mongodb": "^3.2.0",
+    "mysql2": "^2.0.0",
+    "pg": "^7.10.0",
+    "sqlite": "^3.0.0"
+  },
+  "metaPeerDependencies": {
+    "tslib": {
+      "optional": true
+    },
+    "typeorm": {
+      "optional": true
+    },
+    "mongodb": {
+      "optional": true
+    },
+    "mysql2": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "sqlite": {
+      "optional": true
+    }
   }
 }
