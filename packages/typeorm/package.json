@@ -1,0 +1,24 @@
+{
+  "name": "@sensejs/typeorm",
+  "version": "0.0.0",
+  "description": "",
+  "files": ["lib", "README.md"],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "prepare": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC",
+  "devDependencies": {
+    "tslib": "^1.10.0"
+  },
+  "peerDependencies": {
+    "tslib": "^1.10.0",
+    "typeorm": "0.2.20"
+  }
+}
