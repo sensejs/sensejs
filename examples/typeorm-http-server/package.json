@@ -1,5 +1,5 @@
 {
-  "name": "@sensejs/example-http-server",
+  "name": "@sensejs/example-typeorm-http-server",
   "version": "1.0.0",
   "description": "Example",
   "main": "index.js",
