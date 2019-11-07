@@ -1,4 +1,4 @@
-import {Component, ComponentFactory, Constructor, Module, ModuleConstructor} from '@sensejs/core';
+import {Component, ComponentFactory, ComponentScope, Constructor, Module, ModuleConstructor} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from '@sensejs/http';
 import {Connection, ConnectionOptions, createConnection} from 'typeorm';
 import {inject} from 'inversify';
@@ -15,46 +15,29 @@ function ensureInjectRepositoryToken<T extends {}>(entityConstructor: T): symbol
         return symbol;
     }
     symbol = Symbol();
-    Reflect.defineMetadata(EntityRepositoryMetadataKey, {
-        value: symbol,
-        enumerable: false,
-        configurable: false,
-        writable: false
-    }, entityConstructor);
+    Reflect.defineMetadata(EntityRepositoryMetadataKey, symbol, entityConstructor);
     return symbol;
 }
 
-function getInjectRepositoryToken(entityConstructor: Constructor<unknown>): symbol | undefined {
-    return Reflect.getMetadata(EntityRepositoryMetadataKey, entityConstructor.prototype);
-}
-
 export function InjectRepository(entityConstructor: Constructor<unknown>) {
-    const symbol = ensureInjectRepositoryToken(entityConstructor.prototype);
+    const symbol = ensureInjectRepositoryToken(entityConstructor);
     return inject(symbol);
-}
-
-export class RepositoryRegister {
-
-    registerOnHttpContext(httpContext: HttpContext, connection: Connection) {
-        for (const entityMetadata of connection.entityMetadatas) {
-            httpContext.bindContextValue(ensureInjectRepositoryToken(entityMetadata.target),
-                connection.getRepository(entityMetadata.target));
-        }
-    }
 }
 
 @Component()
 export class SenseHttpInterceptor extends HttpInterceptor {
 
     constructor(
-        @inject(Connection) private connection: Connection,
-        @inject(RepositoryRegister) private repositoryRegister: RepositoryRegister
+        @inject(Connection) private connection: Connection
     ) {
         super();
     }
 
     async beforeRequest(context: HttpContext) {
-        await this.repositoryRegister.registerOnHttpContext(context, this.connection);
+        for (const entityMetadata of this.connection.entityMetadatas) {
+            context.bindContextValue(ensureInjectRepositoryToken(entityMetadata.target),
+                this.connection.getRepository(entityMetadata.target));
+        }
     }
 
     async afterRequest(context: HttpContext) {
@@ -62,42 +45,42 @@ export class SenseHttpInterceptor extends HttpInterceptor {
     }
 }
 
-@Component()
-class TypeOrmConnectionWrapper extends ComponentFactory<Connection> {
-    private typeOrmConnection?: Connection;
-
-    async connect(option: TypeOrmModuleOption): Promise<Connection> {
-        this.typeOrmConnection = await createConnection(option.typeOrmOption);
-        return this.typeOrmConnection;
-    }
-
-    getAllEntityMetadata() {
-        return this.build().entityMetadatas;
-    }
-
-    build(): Connection {
-        if (!this.typeOrmConnection) {
-            throw new Error('TypeORM connection is not yet setup');
-        }
-        return this.typeOrmConnection;
-    }
-
-    async close() {
-        if (this.typeOrmConnection) {
-            await this.typeOrmConnection.close();
-            delete this.typeOrmConnection;
-        }
-    }
-}
-
 export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
+    @Component({scope: ComponentScope.SINGLETON})
+    class TypeOrmConnectionFactory extends ComponentFactory<Connection> {
+        private typeOrmConnection?: Connection;
+
+        async connect(option: TypeOrmModuleOption): Promise<Connection> {
+            this.typeOrmConnection = await createConnection(option.typeOrmOption);
+            return this.typeOrmConnection;
+        }
+
+        getAllEntityMetadata() {
+            return this.build().entityMetadatas;
+        }
+
+        build(): Connection {
+            if (!this.typeOrmConnection) {
+                throw new Error('TypeORM connection is not yet setup');
+            }
+            return this.typeOrmConnection;
+        }
+
+        async close() {
+            if (this.typeOrmConnection) {
+                await this.typeOrmConnection.close();
+                delete this.typeOrmConnection;
+            }
+        }
+    }
 
     class TypeOrmConnectionModule extends Module({
         components: [SenseHttpInterceptor],
-        factories: [{provide: Connection, factory: TypeOrmConnectionWrapper}]
+        // TODO: Factory scope is not correctly defined, set scope to ComponentScope.SINGLETON for work-around
+        factories: [{provide: Connection, scope: ComponentScope.SINGLETON, factory: TypeOrmConnectionFactory}]
     }) {
 
-        constructor(@inject(TypeOrmConnectionWrapper) private typeOrmConnectionFactory: TypeOrmConnectionWrapper) {
+        constructor(@inject(TypeOrmConnectionFactory) private typeOrmConnectionFactory: TypeOrmConnectionFactory) {
             super();
         }
 
