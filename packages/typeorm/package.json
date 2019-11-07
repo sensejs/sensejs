@@ -24,34 +24,14 @@
     "typeorm": "0.2.20"
   },
   "devDependencies": {
-    "tslib": "^1.10.0"
+    "tslib": "^1.10.0",
+    "sqlite3": "^4.1.0",
+    "supertest": "^4.0.2",
+    "@types/supertest": "^2.0.8"
   },
   "peerDependencies": {
     "tslib": "^1.10.0",
     "typeorm": "0.2.20",
-    "mongodb": "^3.2.0",
-    "mysql2": "^2.0.0",
-    "pg": "^7.10.0",
-    "sqlite": "^3.0.0"
-  },
-  "metaPeerDependencies": {
-    "tslib": {
-      "optional": true
-    },
-    "typeorm": {
-      "optional": true
-    },
-    "mongodb": {
-      "optional": true
-    },
-    "mysql2": {
-      "optional": true
-    },
-    "pg": {
-      "optional": true
-    },
-    "sqlite": {
-      "optional": true
-    }
+    "sqlite3": "^4.1.0"
   }
 }
