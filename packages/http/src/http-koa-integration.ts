@@ -51,10 +51,10 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
                 // @ts-ignore
                 container.bind(BindingSymbolForBody).toConstantValue(ctx.request.body);
                 container.bind(BindingSymbolForPath).toConstantValue(ctx.params);
-                const target = container.get<object>(controllerMapping.target);
                 const httpContext = container.get<HttpContext>(HttpContext);
                 const interceptorPipeline = container.get(pipelineConstructor);
                 await interceptorPipeline.beforeRequest(httpContext);
+                const target = container.get<object>(controllerMapping.target);
                 httpContext.responseValue = await invokeMethod(container, target, propertyDescriptor.value);
                 await interceptorPipeline.afterRequest(httpContext);
 
