@@ -4,7 +4,7 @@ SENSE.JS
 [![Maintainability](https://api.codeclimate.com/v1/badges/6211de1ecc0f42993cf1/maintainability)](https://codeclimate.com/github/sensejs/workspace/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/6211de1ecc0f42993cf1/test_coverage)](https://codeclimate.com/github/sensejs/workspace/test_coverage)
 
-SENSE.JS is a framework not only for web.
+SENSE.JS is a flexible IoC Framework.
 
 This framework aims to provide an enterprise Typescript framework, based on 
 [inversify-js] to provide the ability of Dependency Injection, providing common components
@@ -17,7 +17,7 @@ Hello world
 -------
 
 ```typescript
-import {Application, HttpModule, Controller} from '@thynson/framework'
+import {Application, HttpModule, Controller} from '@sensejs/framework'
 
 @Controller()
 class WebController
