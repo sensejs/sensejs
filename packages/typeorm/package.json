@@ -14,8 +14,14 @@
   },
   "author": "LAN Xingcan",
   "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "~0.0.0",
+    "@sensejs/http": "~0.0.0",
+    "inversify": "^5.0.1"
+  },
   "devDependencies": {
-    "tslib": "^1.10.0"
+    "tslib": "^1.10.0",
+    "typeorm": "0.2.20"
   },
   "peerDependencies": {
     "tslib": "^1.10.0",
