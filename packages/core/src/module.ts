@@ -82,10 +82,7 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
                 }));
         factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
             const {provide, scope, factory} = factoryProvider;
-            const binding = bind(provide).toDynamicValue((context: interfaces.Context) => {
-                const factoryInstance = context.container.resolve<ComponentFactory<unknown>>(factory);
-                return factoryInstance.build(context);
-            });
+            const binding = bind(factory).toSelf();
             switch (scope) {
             case ComponentScope.REQUEST:
                 binding.inRequestScope();
@@ -97,6 +94,10 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
                 binding.inTransientScope();
                 break;
             }
+            bind(provide).toDynamicValue((context: interfaces.Context) => {
+                const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
+                return factoryInstance.build(context);
+            });
         });
     });
 
