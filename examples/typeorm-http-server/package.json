@@ -1,0 +1,21 @@
+{
+  "name": "@sensejs/example-http-server",
+  "version": "1.0.0",
+  "description": "Example",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "prepare": "tsc"
+  },
+  "author": "Xingcan LAN <thynson@live.com>",
+  "private": true,
+  "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "workspace:^0.0.0",
+    "@sensejs/http": "workspace:^0.0.0",
+    "@sensejs/typeorm": "workspace:^0.0.0",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.2.20",
+    "sqlite3": "^4.1.0"
+  }
+}
