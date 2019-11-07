@@ -45,6 +45,7 @@ const typeOrmModule = TypeOrmModule({
     typeOrmOption: {
         type: 'sqlite',
         database: 'tmp.db',
+        synchronize: true,
         entities: [Book, Author],
     }
 });
