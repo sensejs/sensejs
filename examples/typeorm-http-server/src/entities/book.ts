@@ -1,4 +1,4 @@
-import {Column, Entity, ManyToOne, PrimaryColumn} from 'typeorm';
+import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {Author} from './author';
 
 @Entity()
@@ -11,7 +11,7 @@ export class Book {
         return result;
     }
 
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
     id?: number;
 
     @Column()

@@ -1,5 +1,5 @@
 
-import {Entity, PrimaryColumn, Column} from 'typeorm';
+import {Entity, PrimaryGeneratedColumn, Column} from 'typeorm';
 import {Book} from './book';
 
 @Entity()
@@ -11,7 +11,7 @@ export class Author {
         return author;
     }
 
-    @PrimaryColumn()
+    @PrimaryGeneratedColumn()
     id?: string;
 
     @Column()
