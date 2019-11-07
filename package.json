@@ -14,7 +14,9 @@
     "coveralls": "^3.0.7",
     "husky": "^3.0.5",
     "jest": "^24.9.0",
+    "lint-staged": "^9.4.2",
     "np": "^5.1.2",
+    "prettier": "^1.18.2",
     "reflect-metadata": "^0.1.13",
     "source-map-support": "^0.5.13",
     "ts-jest": "^24.0.2",
@@ -25,15 +27,27 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pnpm recursive run prepare",
+      "pre-commit": "lint-staged && pnpm recursive run prepare",
       "pre-push": "pnpx jest"
     }
+  },
+  "lint-staged": {
+    "*.js": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.ts?(x)": [
+      "pnpm run prettier",
+      "git add"
+    ]
   },
   "scripts": {
     "test": "jest",
     "lint": "tslint --project .",
+    "rprepare": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",
     "coveralls": "cat coverage/lcov.info | coveralls",
-    "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx np"
+    "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx np",
+    "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\""
   }
 }
