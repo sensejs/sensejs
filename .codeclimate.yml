@@ -14,6 +14,12 @@ checks:
     config:
       threshold: 5
 
+exclude_patterns:
+  - "**/.idea/*"
+  - "examples/*"
+  - "jest.config.js"
+  - "pnpmfile.js"
+
 engines:
   duplication:
     enabled: true
