@@ -1,17 +1,5 @@
 import 'reflect-metadata';
-import {
-  Body,
-  Controller,
-  DELETE,
-  GET,
-  getHttpControllerMetadata,
-  Header,
-  PATCH,
-  Path,
-  POST,
-  PUT,
-  Query,
-} from '../src/http-decorators';
+import {Body, Controller, DELETE, GET, getHttpControllerMetadata, Header, PATCH, Path, POST, PUT, Query} from '../src';
 
 describe('Http decorators', () => {
   test('metadata', () => {

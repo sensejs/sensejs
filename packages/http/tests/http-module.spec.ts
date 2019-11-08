@@ -1,9 +1,8 @@
-import 'reflect-metadata';
-import {HttpModule} from '../src/http-module';
-import {Controller, GET} from '../src/http-decorators';
-import {inject} from 'inversify';
-import supertest from 'supertest';
 import {ApplicationFactory, Component} from '@sensejs/core';
+import {inject} from 'inversify';
+import 'reflect-metadata';
+import supertest from 'supertest';
+import {Controller, GET, HttpModule} from '../src';
 
 describe('HttpModule', () => {
   test('basic usage', async () => {

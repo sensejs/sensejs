@@ -1,10 +1,23 @@
-import 'reflect-metadata';
-import {Body, Controller, DELETE, GET, Header, PATCH, Path, POST, PUT, Query} from '../src/http-decorators';
-import supertest from 'supertest';
-import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/http-koa-integration';
+import {Constructor, ParamBinding} from '@sensejs/core';
 import {Container} from 'inversify';
-import {HttpInterceptor, HttpContext} from '../src/http-abstract';
-import {ParamBinding, Constructor} from '@sensejs/core';
+import 'reflect-metadata';
+import supertest from 'supertest';
+import {
+  Body,
+  Controller,
+  DELETE,
+  GET,
+  Header,
+  HttpContext,
+  HttpInterceptor,
+  KoaHttpApplicationBuilder,
+  KoaHttpContext,
+  PATCH,
+  Path,
+  POST,
+  PUT,
+  Query,
+} from '../src';
 
 describe('KoaHttpApplicationBuilder', () => {
   const makeMockInterceptor = (stub: jest.Mock<any>, symbol: Symbol): Constructor<HttpInterceptor> => {
@@ -13,6 +26,7 @@ describe('KoaHttpApplicationBuilder', () => {
         stub('before');
         context.bindContextValue(symbol, Math.random());
       }
+
       async afterRequest(context: HttpContext): Promise<void> {
         stub('after');
       }
