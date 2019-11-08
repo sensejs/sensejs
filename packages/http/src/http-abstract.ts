@@ -1,7 +1,7 @@
 import {Container, injectable} from 'inversify';
 import {ControllerMetadata} from './http-decorators';
 import {RequestListener} from 'http';
-import {Constructor} from '@sensejs/core';
+import {Constructor, RequestInterceptor} from '@sensejs/core';
 import {Readable} from 'stream';
 
 export abstract class HttpContext {
@@ -12,6 +12,12 @@ export abstract class HttpContext {
   abstract bindContextValue(key: any, value: any): void;
 }
 
+export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {
+  intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
+    return next();
+  }
+}
+
 export abstract class HttpAdaptor {
   constructor(protected readonly container: Container) {}
 
@@ -20,11 +26,4 @@ export abstract class HttpAdaptor {
   abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
 
   abstract build(): RequestListener;
-}
-
-@injectable()
-export abstract class HttpInterceptor {
-  async beforeRequest(context: HttpContext): Promise<void> {}
-
-  async afterRequest(context: HttpContext, e?: Error): Promise<void> {}
 }

@@ -1,7 +1,7 @@
 import {Component, ComponentFactory, ComponentScope, Constructor, Module, ModuleConstructor} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from '@sensejs/http';
-import {Connection, ConnectionOptions, createConnection} from 'typeorm';
 import {inject} from 'inversify';
+import {Connection, ConnectionOptions, createConnection} from 'typeorm';
 
 export interface TypeOrmModuleOption {
   typeOrmOption: ConnectionOptions;
@@ -30,16 +30,15 @@ export class SenseHttpInterceptor extends HttpInterceptor {
     super();
   }
 
-  async beforeRequest(context: HttpContext) {
+  async intercept(context: HttpContext, next: () => Promise<void>) {
     for (const entityMetadata of this.connection.entityMetadatas) {
       context.bindContextValue(
         ensureInjectRepositoryToken(entityMetadata.target),
         this.connection.getRepository(entityMetadata.target),
       );
     }
+    return next();
   }
-
-  async afterRequest(context: HttpContext) {}
 }
 
 export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {

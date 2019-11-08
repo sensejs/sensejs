@@ -1,9 +1,11 @@
-import {Container, decorate, inject, injectable} from 'inversify';
+import {composeRequestInterceptor, Constructor, invokeMethod, ServiceIdentifier} from '@sensejs/core';
 import {RequestListener} from 'http';
-import {Constructor, invokeMethod, ServiceIdentifier} from '@sensejs/core';
+import {Container} from 'inversify';
 import Koa from 'koa';
-import KoaRouter from 'koa-router';
 import koaBodyParser from 'koa-bodyparser';
+import KoaRouter from 'koa-router';
+import {Readable} from 'stream';
+import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
 import {
   BindingSymbolForBody,
   BindingSymbolForHeader,
@@ -13,8 +15,6 @@ import {
   getHttpControllerMetadata,
   getRequestMappingMetadata,
 } from './http-decorators';
-import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
-import {Readable} from 'stream';
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
   private globalRouter = new KoaRouter();
@@ -27,38 +27,36 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     }
   }
 
-  addControllerMapping(controllerMapping: ControllerMetadata): this {
+  addControllerMapping(controllerMetadata: ControllerMetadata): this {
     const localRouter = new KoaRouter();
-    for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMapping.prototype))) {
-      const requestMapping = getRequestMappingMetadata(propertyDescriptor.value);
-      if (!requestMapping) {
+    for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMetadata.prototype))) {
+      const requestMappingMetadata = getRequestMappingMetadata(propertyDescriptor.value);
+      if (!requestMappingMetadata) {
         continue;
       }
       const interceptors = [
         ...this.globalInterceptors,
-        ...controllerMapping.interceptors,
-        ...requestMapping.interceptors,
+        ...controllerMetadata.interceptors,
+        ...requestMappingMetadata.interceptors,
       ];
-      const pipelineConstructor = this.createInterceptorPipeline(interceptors);
-      this.container.bind(pipelineConstructor).toSelf();
+      const composedInterceptor = this.createComposedInterceptor(interceptors);
 
-      localRouter[requestMapping.httpMethod](requestMapping.path, async (ctx: any) => {
+      localRouter[requestMappingMetadata.httpMethod](requestMappingMetadata.path, async (ctx: any) => {
         const container = ctx.container;
         if (!(container instanceof Container)) {
           throw new Error('ctx.container is not an instance of Container');
         }
-        // @ts-ignore
         container.bind(BindingSymbolForBody).toConstantValue(ctx.request.body);
         container.bind(BindingSymbolForPath).toConstantValue(ctx.params);
         const httpContext = container.get<HttpContext>(HttpContext);
-        const interceptorPipeline = container.get(pipelineConstructor);
-        await interceptorPipeline.beforeRequest(httpContext);
-        const target = container.get<object>(controllerMapping.target);
-        httpContext.responseValue = await invokeMethod(container, target, propertyDescriptor.value);
-        await interceptorPipeline.afterRequest(httpContext);
+        const interceptor = container.get(composedInterceptor);
+        await interceptor.intercept(httpContext, async () => {
+          const target = container.get<object>(controllerMetadata.target);
+          httpContext.responseValue = await invokeMethod(container, target, propertyDescriptor.value);
+        });
       });
     }
-    this.globalRouter.use(controllerMapping.path!, localRouter.routes(), localRouter.allowedMethods());
+    this.globalRouter.use(controllerMetadata.path!, localRouter.routes(), localRouter.allowedMethods());
     return this;
   }
 
@@ -89,41 +87,8 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return koa.callback();
   }
 
-  private createInterceptorPipeline(interceptorConstructors: Constructor<HttpInterceptor>[]) {
-    @injectable()
-    class Pipeline {
-      private readonly interceptorsForRequest: HttpInterceptor[];
-      private readonly interceptorsForResponse: HttpInterceptor[] = [];
-
-      constructor(...interceptors: HttpInterceptor[]) {
-        this.interceptorsForRequest = interceptors;
-      }
-
-      async beforeRequest(httpContext: HttpContext) {
-        for (const interceptor of this.interceptorsForRequest) {
-          await interceptor.beforeRequest(httpContext);
-          this.interceptorsForResponse.unshift(interceptor);
-        }
-      }
-
-      async afterRequest(httpContext: HttpContext, e?: Error) {
-        for (const interceptor of this.interceptorsForResponse.reverse()) {
-          try {
-            await interceptor.afterRequest(httpContext, e);
-            e = undefined;
-          } catch (cascadeError) {
-            e = cascadeError;
-          }
-        }
-      }
-    }
-
-    interceptorConstructors.forEach((interceptorConstructor, idx) => {
-      const paramDecorator = inject(interceptorConstructor) as ParameterDecorator;
-      decorate(paramDecorator, Pipeline, idx);
-    });
-
-    return Pipeline;
+  private createComposedInterceptor(interceptorConstructors: Constructor<HttpInterceptor>[]) {
+    return composeRequestInterceptor(this.container, interceptorConstructors);
   }
 }
 

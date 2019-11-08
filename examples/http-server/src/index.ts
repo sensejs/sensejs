@@ -1,20 +1,20 @@
-import 'reflect-metadata';
-import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, Query} from '@sensejs/http';
 import {ApplicationFactory, Component, ParamBinding} from '@sensejs/core';
+import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, Query} from '@sensejs/http';
+import 'reflect-metadata';
 
 @Component()
 class Interceptor extends HttpInterceptor {
   timestamp?: number;
-  async beforeRequest(context: HttpContext): Promise<void> {
+
+  async intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
     const date = new Date();
     context.bindContextValue(Date, date);
     this.timestamp = date.getTime();
-    return undefined;
-  }
-
-  async afterRequest(context: HttpContext, e?: Error): Promise<void> {
+    await next();
     (context.responseValue as any).duration = Date.now() - this.timestamp!;
   }
+
+  async afterRequest(context: HttpContext, e?: Error): Promise<void> {}
 }
 
 @Controller('/example', {interceptors: [Interceptor]})
