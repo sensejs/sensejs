@@ -9,10 +9,7 @@ export class ApplicationFactory {
   private readonly moduleReferencedMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
 
   public constructor(private entryModule: ModuleConstructor) {
-    this.container
-      .bind(Container)
-      .toDynamicValue(() => this.container.createChild())
-      .inRequestScope();
+    this.container.bind(Container).toConstantValue(this.container);
 
     const moduleClasses = [entryModule];
 

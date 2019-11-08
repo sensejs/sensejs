@@ -19,6 +19,7 @@ const defaultHttpConfig = {
 export interface BaseHttpModuleOption extends ModuleOption {
   httpAdaptorFactory?: (container: Container) => HttpAdaptor;
   inspectors?: Constructor<HttpInterceptor>[];
+  serverIdentifier?: ServiceIdentifier<unknown>;
 }
 
 export interface StaticHttpModuleOption extends BaseHttpModuleOption {
@@ -76,6 +77,10 @@ export function HttpModule(
       });
 
       this.httpServer = await this.createHttpServer(httpConfig, httpAdaptor);
+
+      if (option.serverIdentifier) {
+        this.container.bind(option.serverIdentifier).toConstantValue(this.httpServer);
+      }
     }
 
     async onDestroy() {
