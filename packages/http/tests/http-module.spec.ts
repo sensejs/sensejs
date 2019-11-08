@@ -4,6 +4,9 @@ import supertest from 'supertest';
 import {Controller, GET, HttpModule} from '../src';
 
 describe('HttpModule', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
   test('basic usage', async () => {
     const stub = jest.fn();
 
