@@ -1,5 +1,12 @@
-import {Component, invokeMethod, ParamBinding, ParamBindingError, ParamBindingResolvingError} from '../src';
 import {Container, inject, injectable} from 'inversify';
+import {
+  Component,
+  invokeMethod,
+  ParamBinding,
+  ParamBindingError,
+  ParamBindingResolvingError,
+  validateFunctionParamBindingMetadata,
+} from '../src';
 
 describe('@ParamBinding', () => {
   test('param binding', () => {
@@ -14,6 +21,19 @@ describe('@ParamBinding', () => {
     container.bind(String).toConstantValue(constValue);
     container.bind(Number).toConstantValue(2);
     expect(invokeMethod(container, new Foo(), Foo.prototype.bar)).toBe(constValue.repeat(3));
+  });
+
+  test('Validate param binding', () => {
+    class Foo {
+      shouldOkay(@ParamBinding(String) foo: any) {}
+
+      shouldFail(foo: any) {}
+
+      noParam() {}
+    }
+    expect(() => validateFunctionParamBindingMetadata(Foo.prototype.shouldOkay)).not.toThrow();
+    expect(() => validateFunctionParamBindingMetadata(Foo.prototype.shouldFail)).toThrow();
+    expect(() => validateFunctionParamBindingMetadata(Foo.prototype.noParam)).not.toThrow();
   });
 
   test('Duplicated param binding', () => {

@@ -78,6 +78,16 @@ export function getFunctionParamBindingMetadata(method: Function): FunctionParam
   return Reflect.getMetadata(PARAM_BINDING_KEY, method);
 }
 
+export function validateFunctionParamBindingMetadata(method: Function): FunctionParamBindingMetadata {
+  const paramBindingMapping = ensureParamBindingMetadata(method);
+  for (let i = 0; i < method.length; i++) {
+    if (!paramBindingMapping.paramsMetadata[i]) {
+      throw new Error(`Parameter at position ${i} is not decorated`);
+    }
+  }
+  return paramBindingMapping;
+}
+
 export class ParamBindingResolvingError extends Error {}
 
 function resolveInvoker(container: Container, invokerConstructor: Constructor<Invokable>) {

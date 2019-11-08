@@ -5,6 +5,7 @@ import {
   getFunctionParamBindingMetadata,
   ParamBinding,
   Transformer,
+  validateFunctionParamBindingMetadata,
 } from '@sensejs/core';
 import {HttpInterceptor} from './http-abstract';
 
@@ -107,19 +108,12 @@ export function RequestMapping(httpMethod: HttpMethod, path: string, option: Req
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
+    validateFunctionParamBindingMetadata(targetMethod);
     setRequestMappingMetadata(targetMethod, {
       httpMethod,
       path,
       interceptors: option.interceptors || [],
     });
-    ensureParamBindingMetadata(targetMethod);
-    const paramBindingMapping = getFunctionParamBindingMetadata(targetMethod);
-    for (let i = 0; i < targetMethod.length; i++) {
-      // TODO: Further check
-      if (!paramBindingMapping.paramsMetadata[i]) {
-        throw new Error(`Parameter at position ${i} is not decorated`);
-      }
-    }
   };
 }
 
