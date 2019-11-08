@@ -11,4 +11,5 @@ module.exports = {
     '^@sensejs/([a-zA-Z0-9_-]+)$': '<rootDir>/packages/$1/',
   },
   setupFiles: ['./jest-setup.js'],
+  resetMocks: true,
 };
