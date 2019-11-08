@@ -25,13 +25,13 @@ interface Invokable {
   call(paramsBindingMetadata: ParamBindingMetadata[], self: any): any;
 }
 
-const ParamBindingKey = Symbol('ParamBindingKey');
+const PARAM_BINDING_KEY = Symbol('PARAM_BINDING_KEY');
 
 export function ensureParamBindingMetadata(target: any): FunctionParamBindingMetadata {
   if (typeof target !== 'function') {
-    throw new TypeError('@ParamBinding target is not a function');
+    throw new TypeError('Decorated target for @ParamBinding is not a function');
   }
-  let result = Reflect.get(target, ParamBindingKey);
+  let result = Reflect.getMetadata(PARAM_BINDING_KEY, target);
   if (typeof result !== 'undefined') {
     return result;
   }
@@ -54,7 +54,7 @@ export function ensureParamBindingMetadata(target: any): FunctionParamBindingMet
     invoker: Invoker,
   };
 
-  Reflect.set(target, ParamBindingKey, result);
+  Reflect.defineMetadata(PARAM_BINDING_KEY, result, target);
   return result;
 }
 
@@ -64,7 +64,6 @@ export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBi
     if (metadata.paramsMetadata[paramIndex]) {
       throw new ParamBindingError();
     }
-    // XXX: Why return value of inject() cannot be converted to ParameterDecorator?
     const parameterDecorator = inject(target) as ParameterDecorator;
     decorate(parameterDecorator, metadata.invoker as Constructor<unknown>, paramIndex);
 
@@ -76,7 +75,7 @@ export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBi
 }
 
 export function getFunctionParamBindingMetadata(method: Function): FunctionParamBindingMetadata {
-  return Reflect.get(method, ParamBindingKey);
+  return Reflect.getMetadata(PARAM_BINDING_KEY, method);
 }
 
 export class ParamBindingResolvingError extends Error {}
