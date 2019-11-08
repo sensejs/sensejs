@@ -1,5 +1,5 @@
 import {ApplicationFactory, Component, ParamBinding} from '@sensejs/core';
-import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, Query} from '@sensejs/http';
+import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, Query, HttpConfigType} from '@sensejs/http';
 import 'reflect-metadata';
 
 @Component()
@@ -31,7 +31,7 @@ class ExampleHttpController {
 }
 
 const httpModule = HttpModule({
-  type: 'static',
+  type: HttpConfigType.static,
   staticHttpConfig: {
     listenPort: 3000,
     listenAddress: '0.0.0.0',

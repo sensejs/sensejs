@@ -11,6 +11,11 @@ export interface HttpConfig {
   listenPort: number;
 }
 
+export enum HttpConfigType {
+  static,
+  injected,
+}
+
 const defaultHttpConfig = {
   listenAddress: '0.0.0.0',
   listenPort: 3000,
@@ -23,12 +28,12 @@ export interface BaseHttpModuleOption extends ModuleOption {
 }
 
 export interface StaticHttpModuleOption extends BaseHttpModuleOption {
-  type: 'static';
+  type: HttpConfigType.static;
   staticHttpConfig: HttpConfig;
 }
 
 export interface DynamicHttpModuleOption extends BaseHttpModuleOption {
-  type: 'injected';
+  type: HttpConfigType.injected;
   injectHttpConfig: ServiceIdentifier<unknown>;
 }
 
@@ -41,7 +46,7 @@ export type HttpModuleOption = StaticHttpModuleOption | DynamicHttpModuleOption;
  */
 export function HttpModule(
   option: HttpModuleOption = {
-    type: 'static',
+    type: HttpConfigType.static,
     staticHttpConfig: defaultHttpConfig,
   },
 ): ModuleConstructor {
@@ -61,7 +66,7 @@ export function HttpModule(
     async onCreate() {
       const httpAdaptor = httpAdaptorFactory(this.container);
       const httpConfig =
-        option.type === 'static'
+        option.type === HttpConfigType.static
           ? option.staticHttpConfig
           : (this.container.get(option.injectHttpConfig) as HttpConfig);
 

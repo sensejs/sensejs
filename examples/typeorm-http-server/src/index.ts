@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {Body, Controller, GET, HttpModule, Path, POST, Query} from '@sensejs/http';
+import {Body, Controller, GET, HttpModule, Path, POST, Query, HttpConfigType} from '@sensejs/http';
 import {ApplicationFactory} from '@sensejs/core';
 
 import {Author} from './entities/author';
@@ -49,7 +49,7 @@ const typeOrmModule = TypeOrmModule({
 });
 
 const httpModule = HttpModule({
-  type: 'static',
+  type: HttpConfigType.static,
   requires: [typeOrmModule],
   staticHttpConfig: {
     listenPort: 3000,

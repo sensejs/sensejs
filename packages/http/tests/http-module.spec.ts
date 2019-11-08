@@ -1,7 +1,7 @@
-import {ApplicationFactory, Component, ModuleClass, Module} from '@sensejs/core';
+import {ApplicationFactory, Component, Module} from '@sensejs/core';
 import {inject, Container} from 'inversify';
 import supertest from 'supertest';
-import {Controller, GET, HttpModule} from '../src';
+import {Controller, GET, HttpModule, HttpConfigType} from '../src';
 
 describe('HttpModule', () => {
   afterEach(() => {
@@ -30,7 +30,7 @@ describe('HttpModule', () => {
 
     const MyHttpModule = HttpModule({
       components: [MyComponent, FooController],
-      type: 'static',
+      type: HttpConfigType.static,
       staticHttpConfig: {
         listenPort: 3000,
         listenAddress: '0.0.0.0',
@@ -50,7 +50,7 @@ describe('HttpModule', () => {
 
     const MyHttpModule = HttpModule({
       serverIdentifier,
-      type: 'static',
+      type: HttpConfigType.static,
       staticHttpConfig: {
         listenPort: 3000,
         listenAddress: '0.0.0.0',
