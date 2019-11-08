@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import {Component, invokeMethod, ParamBinding, ParamBindingError, ParamBindingResolvingError} from '../src';
 import {Container, inject, injectable} from 'inversify';
 

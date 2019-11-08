@@ -1,7 +1,6 @@
 import {ApplicationFactory, Module} from '@sensejs/core';
 import {Controller, GET, HttpInterceptor, KoaHttpContext} from '@sensejs/http';
 import {Container, inject} from 'inversify';
-import 'reflect-metadata';
 import {Column, Entity, PrimaryGeneratedColumn, Repository} from 'typeorm';
 import {InjectRepository, SenseHttpInterceptor, TypeOrmModule} from '../src';
 

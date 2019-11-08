@@ -1,5 +1,4 @@
 import {Container} from 'inversify';
-import 'reflect-metadata';
 import {composeRequestInterceptor, RequestInterceptor} from '../src';
 
 describe('Interceptor', () => {

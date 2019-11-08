@@ -1,6 +1,5 @@
 import {ApplicationFactory, Component} from '@sensejs/core';
 import {inject} from 'inversify';
-import 'reflect-metadata';
 import supertest from 'supertest';
 import {Controller, GET, HttpModule} from '../src';
 

@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import {EventEmitter} from 'events';
 import {ApplicationFactory, Component, Module} from '../src';
 import {inject} from 'inversify';

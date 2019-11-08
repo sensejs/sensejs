@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import {Component, ComponentMetadata, getComponentMetadata} from '../src';
 import {AsyncContainerModule, Container} from 'inversify';
 

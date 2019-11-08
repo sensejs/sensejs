@@ -1,6 +1,5 @@
 import {Constructor, ParamBinding} from '@sensejs/core';
 import {Container} from 'inversify';
-import 'reflect-metadata';
 import supertest from 'supertest';
 import {
   Body,

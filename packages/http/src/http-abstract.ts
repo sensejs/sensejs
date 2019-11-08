@@ -1,8 +1,8 @@
-import {Container, injectable} from 'inversify';
-import {ControllerMetadata} from './http-decorators';
-import {RequestListener} from 'http';
 import {Constructor, RequestInterceptor} from '@sensejs/core';
+import {RequestListener} from 'http';
+import {Container} from 'inversify';
 import {Readable} from 'stream';
+import {ControllerMetadata} from './http-decorators';
 
 export abstract class HttpContext {
   abstract responseStatusCode: number;

@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import {Logger, LoggerFactory} from '@sensejs/logger';
 import {
   ApplicationFactory,

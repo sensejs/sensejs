@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import {Container, inject} from 'inversify';
 import {Component, ComponentFactory, getModuleMetadata, Module, ModuleClass} from '../src';
 import {ModuleInstance} from '../src/module-instance';
