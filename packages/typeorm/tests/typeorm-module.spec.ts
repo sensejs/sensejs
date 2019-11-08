@@ -1,9 +1,9 @@
-import 'reflect-metadata';
-import {Controller, GET, HttpInterceptor, KoaHttpContext} from '@sensejs/http';
-import {InjectRepository, SenseHttpInterceptor, TypeOrmModule} from '../src';
-import {Column, Entity, PrimaryGeneratedColumn, Repository} from 'typeorm';
 import {ApplicationFactory, Module} from '@sensejs/core';
+import {Controller, GET, HttpInterceptor, KoaHttpContext} from '@sensejs/http';
 import {Container, inject} from 'inversify';
+import 'reflect-metadata';
+import {Column, Entity, PrimaryGeneratedColumn, Repository} from 'typeorm';
+import {InjectRepository, SenseHttpInterceptor, TypeOrmModule} from '../src';
 
 describe('TypeOrmModule', () => {
   test('common case', async () => {
@@ -54,7 +54,7 @@ describe('TypeOrmModule', () => {
 
       async onCreate() {
         const context = new KoaHttpContext(this.container);
-        await this.interceptor.beforeRequest(context);
+        await this.interceptor.intercept(context, () => Promise.resolve());
         const controller = this.container.get(ExampleHttpController);
         const name = `test_${Date.now()}`;
         await controller.createBook(name);

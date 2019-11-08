@@ -22,12 +22,10 @@ import {
 describe('KoaHttpApplicationBuilder', () => {
   const makeMockInterceptor = (stub: jest.Mock<any>, symbol: Symbol): Constructor<HttpInterceptor> => {
     return class extends HttpInterceptor {
-      async beforeRequest(context: HttpContext): Promise<void> {
+      async intercept(context: HttpContext, next: () => Promise<void>) {
         stub('before');
         context.bindContextValue(symbol, Math.random());
-      }
-
-      async afterRequest(context: HttpContext): Promise<void> {
+        await next();
         stub('after');
       }
     };
