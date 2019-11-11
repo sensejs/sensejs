@@ -1,12 +1,16 @@
 import {Container, decorate, inject, injectable} from 'inversify';
-import {Abstract} from './interfaces';
+import {Abstract, ServiceIdentifier} from './interfaces';
+
+export abstract class RequestContext {
+  abstract bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void;
+}
 
 @injectable()
-export abstract class RequestInterceptor<Context> {
+export abstract class RequestInterceptor<Context extends RequestContext = RequestContext> {
   abstract intercept(context: Context, next: () => Promise<void>): Promise<void>;
 }
 
-export function composeRequestInterceptor<Context>(
+export function composeRequestInterceptor<Context extends RequestContext>(
   container: Container,
   interceptors: Abstract<RequestInterceptor<Context>>[],
 ): Abstract<RequestInterceptor<Context>> {

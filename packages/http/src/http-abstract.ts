@@ -1,15 +1,13 @@
-import {Constructor, RequestInterceptor} from '@sensejs/core';
+import {Constructor, RequestInterceptor, RequestContext} from '@sensejs/core';
 import {RequestListener} from 'http';
 import {Container} from 'inversify';
 import {Readable} from 'stream';
 import {ControllerMetadata} from './http-decorators';
 
-export abstract class HttpContext {
+export abstract class HttpContext extends RequestContext {
   abstract responseStatusCode: number;
 
   abstract responseValue?: object | Buffer | Readable;
-
-  abstract bindContextValue(key: any, value: any): void;
 }
 
 export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {

@@ -2,7 +2,7 @@ import {ApplicationFactory, Module} from '@sensejs/core';
 import {Controller, GET, HttpInterceptor, KoaHttpContext} from '@sensejs/http';
 import {Container, inject} from 'inversify';
 import {Column, Entity, PrimaryGeneratedColumn, Repository} from 'typeorm';
-import {InjectRepository, SenseHttpInterceptor, TypeOrmModule} from '../src';
+import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '../src';
 
 describe('TypeOrmModule', () => {
   test('common case', async () => {
@@ -45,7 +45,7 @@ describe('TypeOrmModule', () => {
 
     class FooModule extends Module({components: [ExampleHttpController], requires: [typeOrmModule]}) {
       constructor(
-        @inject(SenseHttpInterceptor) private interceptor: HttpInterceptor,
+        @inject(TypeOrmSupportInterceptor) private interceptor: HttpInterceptor,
         @inject(Container) private container: Container,
       ) {
         super();

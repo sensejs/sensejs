@@ -4,7 +4,7 @@ import {ApplicationFactory} from '@sensejs/core';
 
 import {Author} from './entities/author';
 import {Book} from './entities/book';
-import {InjectRepository, SenseHttpInterceptor, TypeOrmModule} from '@sensejs/typeorm';
+import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '@sensejs/typeorm';
 import {Repository} from 'typeorm';
 
 @Controller('/example')
@@ -55,7 +55,7 @@ const httpModule = HttpModule({
     listenPort: 3000,
     listenAddress: '0.0.0.0',
   },
-  inspectors: [SenseHttpInterceptor],
+  inspectors: [TypeOrmSupportInterceptor],
   components: [ExampleHttpController],
 });
 

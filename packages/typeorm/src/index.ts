@@ -1,5 +1,13 @@
-import {Component, ComponentFactory, ComponentScope, Constructor, Module, ModuleConstructor} from '@sensejs/core';
-import {HttpContext, HttpInterceptor} from '@sensejs/http';
+import {
+  Component,
+  ComponentFactory,
+  ComponentScope,
+  Constructor,
+  Module,
+  ModuleConstructor,
+  RequestContext,
+  RequestInterceptor,
+} from '@sensejs/core';
 import {inject} from 'inversify';
 import {Connection, ConnectionOptions, createConnection} from 'typeorm';
 
@@ -25,12 +33,12 @@ export function InjectRepository(entityConstructor: Constructor<unknown>) {
 }
 
 @Component()
-export class SenseHttpInterceptor extends HttpInterceptor {
+export class TypeOrmSupportInterceptor extends RequestInterceptor {
   constructor(@inject(Connection) private connection: Connection) {
     super();
   }
 
-  async intercept(context: HttpContext, next: () => Promise<void>) {
+  async intercept(context: RequestContext, next: () => Promise<void>) {
     for (const entityMetadata of this.connection.entityMetadatas) {
       context.bindContextValue(
         ensureInjectRepositoryToken(entityMetadata.target),
@@ -71,7 +79,7 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
   }
 
   class TypeOrmConnectionModule extends Module({
-    components: [SenseHttpInterceptor],
+    components: [TypeOrmSupportInterceptor],
     // TODO: Factory scope is not correctly defined, set scope to ComponentScope.SINGLETON for work-around
     factories: [{provide: Connection, scope: ComponentScope.SINGLETON, factory: TypeOrmConnectionFactory}],
   }) {
