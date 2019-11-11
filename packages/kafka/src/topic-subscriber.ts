@@ -33,8 +33,9 @@ export interface TopicSubscriberOption {
 }
 
 export class TopicSubscriber {
-  _listenPromise?: Promise<unknown>;
-  _consumerGroupPipeline: ConsumerGroupPipeline;
+  private _openPromise?: Promise<unknown>;
+  private _runningPromise?: Promise<unknown>;
+  private _consumerGroupPipeline: ConsumerGroupPipeline;
 
   constructor(options: TopicSubscriberOption) {
     const {
@@ -71,17 +72,13 @@ export class TopicSubscriber {
     this._consumerGroupPipeline = new ConsumerGroupPipeline(pipelineOption);
   }
 
-  /**
-   * Start consuming
-   * @returns {Promise}
-   */
-  async listen() {
-    if (this._listenPromise) {
-      return;
+  async open() {
+    if (this._openPromise) {
+      return this._openPromise;
     }
-    const startedPromise = this._consumerGroupPipeline.start();
-    this._listenPromise = this._consumerGroupPipeline.wait();
-    return startedPromise.then(() => this._listenPromise);
+    this._openPromise = this._consumerGroupPipeline.start();
+    this._runningPromise = this._consumerGroupPipeline.wait();
+    return this._openPromise;
   }
 
   /**
@@ -89,10 +86,9 @@ export class TopicSubscriber {
    * @returns {Promise}
    */
   close() {
-    if (!this._listenPromise) {
-      return;
+    if (this._runningPromise) {
+      delete this._runningPromise;
     }
-    delete this._listenPromise;
     return this._consumerGroupPipeline.close();
   }
 }

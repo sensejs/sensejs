@@ -24,7 +24,6 @@ export interface KafkaSubscribeModuleOption extends ModuleOption {
 export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): ModuleConstructor {
   class KafkaSubscriberModule extends Module(option) {
     private consumerGroup?: ConsumerGroup;
-    private runningPromise?: Promise<unknown>;
 
     constructor(@inject(Container) private container: Container) {
       super();
@@ -44,20 +43,16 @@ export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): Module
         this.consumerGroup.subscribe(option.topic, option.messageConsumer, option.consumeOption, option.fetchOption);
       }
 
-      this.runningPromise = this.consumerGroup.listen();
+      await this.consumerGroup.open();
     }
 
     async onDestroy(): Promise<void> {
-      if (!this.consumerGroup) {
-        return;
+      if (this.consumerGroup) {
+        const consumerGroup = this.consumerGroup;
+        delete this.consumerGroup;
+        await consumerGroup.close();
       }
-      const consumerGroup = this.consumerGroup;
-      delete this.consumerGroup;
-      await consumerGroup.close();
-      if (this.runningPromise) {
-        await this.runningPromise;
-        delete this.runningPromise;
-      }
+      return super.onDestroy();
     }
 
     private scanController() {
@@ -67,7 +62,7 @@ export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): Module
         if (!controllerMetadata) {
           continue;
         }
-        for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(component))) {
+        for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(component.prototype))) {
           const subscribeMetadata = getSubscribeTopicMetadata(propertyDescriptor.value);
 
           if (!subscribeMetadata) {
@@ -93,6 +88,7 @@ export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): Module
             messageConsumer: async (message: Message) => {
               const container = this.container.createChild();
               const context = new SubscribeContext(container, message);
+              container.bind(SubscribeContext).toConstantValue(context);
               const interceptor = container.get(composedInterceptor);
               await interceptor.intercept(context, async () => {
                 const target = container.get<object>(controllerMetadata.target);

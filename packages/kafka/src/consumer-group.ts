@@ -5,6 +5,7 @@ export class ConsumerGroup {
   private readonly _options: ConnectOption;
   private _topicOptions: Map<string, TopicSubscriberOption> = new Map();
   private _consumers: TopicSubscriber[] = [];
+  private _openPromise?: Promise<unknown>;
   private _listenPromise?: Promise<unknown>;
 
   /**
@@ -40,30 +41,27 @@ export class ConsumerGroup {
     return this;
   }
 
-  /**
-   *
-   * @returns {Promise}
-   */
-  listen() {
-    if (this._listenPromise) {
-      return this._listenPromise;
+  async open() {
+    if (this._openPromise) {
+      return this._openPromise;
     }
-    this._listenPromise = this._performListen();
-    return this._listenPromise;
+    this._openPromise = this._performOpen();
+    return this._openPromise;
   }
 
   async close() {
-    if (this._listenPromise === null) {
-      return;
-    }
-    await Promise.all(this._consumers.map((consumer) => consumer.close()));
+    await Promise.all([this._listenPromise].concat(this._consumers.map((consumer) => consumer.close())));
     this._consumers.splice(0);
   }
 
-  private _performListen() {
+  private _performOpen() {
     for (const option of this._topicOptions.values()) {
       this._consumers.push(new TopicSubscriber(option));
     }
-    return Promise.all(this._consumers.map((consumer) => consumer.listen()));
+    return Promise.all(
+      this._consumers.map((consumer) => {
+        return consumer.open();
+      }),
+    );
   }
 }

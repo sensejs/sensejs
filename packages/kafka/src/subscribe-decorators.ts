@@ -53,20 +53,13 @@ export function getSubscribeControllerMetadata(constructor: {}): SubscribeContro
   return Reflect.getMetadata(SUBSCRIBE_CONTROLLER_METADATA_KEY, constructor);
 }
 
-export function KafkaSubscribeController(option: SubscribeControllerOption = {}) {
-  return <T>(constructor: Constructor<T>) => {
-    const metadata: SubscribeControllerMetadata = Object.assign({target: constructor, interceptors: []}, option);
-    setSubscribeControllerMetadata(constructor, metadata);
-  };
-}
-
 export function SubscribeTopic(topic: string, option: SubscribeTopicOption = {}) {
   return <T extends {}>(prototype: T, method: keyof T & string) => {
     const targetMethod = prototype[method];
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    const paramBindingMetadata = validateFunctionParamBindingMetadata(targetMethod);
+    validateFunctionParamBindingMetadata(targetMethod);
     const metadata: SubscribeTopicMetadata = Object.assign({interceptors: []}, option, {topic});
     setSubscribeTopicMetadata(targetMethod, metadata);
   };
@@ -75,7 +68,7 @@ export function SubscribeTopic(topic: string, option: SubscribeTopicOption = {})
 export function SubscribeController(option: SubscribeControllerOption = {}) {
   return (constructor: Constructor<{}>) => {
     const metadata: SubscribeControllerMetadata = Object.assign({target: constructor, interceptors: []}, option);
-    Component()(constructor);
     setSubscribeControllerMetadata(constructor, metadata);
+    Component()(constructor);
   };
 }
