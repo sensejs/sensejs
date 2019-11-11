@@ -1,0 +1,35 @@
+{
+  "name": "@sensejs/redis",
+  "version": "0.0.0",
+  "description": "",
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "prepare": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Chalin Shi",
+  "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "~0.0.0",
+    "@sensejs/http": "~0.0.0",
+    "@types/ioredis": "^4.0.18",
+    "inversify": "^5.0.1",
+    "ioredis": "^4.14.1"
+  },
+  "devDependencies": {
+    "@types/supertest": "^2.0.8",
+    "supertest": "^4.0.2",
+    "tslib": "^1.10.0"
+  },
+  "peerDependencies": {
+    "tslib": "^1.10.0"
+  }
+}
