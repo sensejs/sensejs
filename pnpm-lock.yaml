@@ -140,6 +140,26 @@ importers:
       colors: ^1.4.0
       moment: ^2.24.0
       tslib: ^1.10.0
+  packages/redis:
+    dependencies:
+      '@sensejs/core': 'link:../core'
+      '@sensejs/http': 'link:../http'
+      '@types/ioredis': 4.0.19
+      inversify: 5.0.1
+      ioredis: 4.14.1
+    devDependencies:
+      '@types/supertest': 2.0.8
+      supertest: 4.0.2
+      tslib: 1.10.0
+    specifiers:
+      '@sensejs/core': ~0.0.0
+      '@sensejs/http': ~0.0.0
+      '@types/ioredis': ^4.0.18
+      '@types/supertest': ^2.0.8
+      inversify: ^5.0.1
+      ioredis: ^4.14.1
+      supertest: ^4.0.2
+      tslib: ^1.10.0
   packages/typeorm:
     dependencies:
       '@sensejs/core': 'link:../core'
@@ -639,6 +659,12 @@ packages:
   /@types/http-assert/1.5.1:
     resolution:
       integrity: sha512-PGAK759pxyfXE78NbKxyfRcWYA/KwW17X290cNev/qAsn9eQIxkH4shoNBafH37wewhDG/0p1cHPbK6+SzZjWQ==
+  /@types/ioredis/4.0.19:
+    dependencies:
+      '@types/node': 12.12.7
+    dev: false
+    resolution:
+      integrity: sha512-kBewWNiNiEIOagoT7YDD928eRbyfk9d8ZVxAspNhS09EDP25ym/W7MRjgQcczpobeIIA4JPHAAE6BzQE5HXLDw==
   /@types/istanbul-lib-coverage/2.0.1:
     dev: true
     resolution:
@@ -1468,6 +1494,12 @@ packages:
       node: '>=0.8'
     resolution:
       integrity: sha1-2jCcwmPfFZlMaIypAheco8fNfH4=
+  /cluster-key-slot/1.1.0:
+    dev: false
+    engines:
+      node: '>=0.10.0'
+    resolution:
+      integrity: sha512-2Nii8p3RwAPiFwsnZvukotvow2rIHM+yQ6ZcBXGHdniadkYGZYiGmkHJIbZPIV9nfv7m/U1IPMVVcAhoWFeklw==
   /co-body/6.0.0:
     dependencies:
       inflation: 2.0.0
@@ -2815,6 +2847,22 @@ packages:
     dev: false
     resolution:
       integrity: sha512-Ieh06s48WnEYGcqHepdsJUIJUXpwH5o5vodAX+DK2JA/gjy4EbEcQZxw+uFfzysmKjiLXGYwNG3qDZsKVMcINQ==
+  /ioredis/4.14.1:
+    dependencies:
+      cluster-key-slot: 1.1.0
+      debug: 4.1.1
+      denque: 1.4.1
+      lodash.defaults: 4.2.0
+      lodash.flatten: 4.4.0
+      redis-commands: 1.5.0
+      redis-errors: 1.2.0
+      redis-parser: 3.0.0
+      standard-as-callback: 2.0.1
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-94W+X//GHM+1GJvDk6JPc+8qlM7Dul+9K+lg3/aHixPN7ZGkW6qlvX0DG6At9hWtH2v3B32myfZqWoANUJYGJA==
   /is-accessor-descriptor/0.1.6:
     dependencies:
       kind-of: 3.2.2
@@ -3940,10 +3988,18 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==
+  /lodash.defaults/4.2.0:
+    dev: false
+    resolution:
+      integrity: sha1-0JF4cW/+pN3p5ft7N/bwgCJ0WAw=
   /lodash.find/4.6.0:
     dev: true
     resolution:
       integrity: sha1-ywcE1Hq3F4n/oN6Ll92Sb7iLE7E=
+  /lodash.flatten/4.4.0:
+    dev: false
+    resolution:
+      integrity: sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=
   /lodash.get/4.4.2:
     dev: true
     resolution:
@@ -5058,6 +5114,24 @@ packages:
       node: '>= 0.10'
     resolution:
       integrity: sha1-hSBLVNuoLVdC4oyWdW70OvUOM4Q=
+  /redis-commands/1.5.0:
+    dev: false
+    resolution:
+      integrity: sha512-6KxamqpZ468MeQC3bkWmCB1fp56XL64D4Kf0zJSwDZbVLLm7KFkoIcHrgRvQ+sk8dnhySs7+yBg94yIkAK7aJg==
+  /redis-errors/1.2.0:
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-62LSrbFeTq9GEMBK/hUpOEJQq60=
+  /redis-parser/3.0.0:
+    dependencies:
+      redis-errors: 1.2.0
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha1-tm2CjNyv5rS4pCin3vTGvKwxyLQ=
   /reflect-metadata/0.1.13:
     resolution:
       integrity: sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
@@ -5619,6 +5693,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-MTX+MeG5U994cazkjd/9KNAapsHnibjMLnfXodlkXw76JEea0UiNzrqidzo1emMwk7w5Qhc9jd4Bn9TBb1MFwA==
+  /standard-as-callback/2.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-NQOxSeB8gOI5WjSaxjBgog2QFw55FV8TkS6Y07BiB3VJ8xNTvUYm0wl0s8ObgQ5NhdpnNfigMIKjgPESzgr4tg==
   /static-extend/0.1.2:
     dependencies:
       define-property: 0.2.5
