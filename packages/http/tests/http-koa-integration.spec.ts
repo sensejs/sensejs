@@ -19,7 +19,7 @@ import {
 } from '../src';
 
 describe('KoaHttpApplicationBuilder', () => {
-  const makeMockInterceptor = (stub: jest.Mock<any>, symbol: Symbol): Constructor<HttpInterceptor> => {
+  const makeMockInterceptor = (stub: jest.Mock<any>, symbol: symbol): Constructor<HttpInterceptor> => {
     return class extends HttpInterceptor {
       async intercept(context: HttpContext, next: () => Promise<void>) {
         stub('before');
