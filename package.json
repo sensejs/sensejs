@@ -7,20 +7,20 @@
   "license": "ISC",
   "private": true,
   "devDependencies": {
-    "@types/jest": "^24.0.15",
-    "@types/koa": "^2.0.49",
+    "@types/jest": "^24.0.22",
+    "@types/koa": "^2.0.52",
     "@types/koa-router": "^7.0.42",
-    "@types/node": "^12.6.8",
+    "@types/node": "^12.12.7",
     "coveralls": "^3.0.7",
-    "husky": "^3.0.5",
+    "husky": "^3.0.9",
     "jest": "^24.9.0",
     "lint-staged": "^9.4.2",
-    "np": "^5.1.2",
-    "prettier": "^1.18.2",
+    "prettier": "^1.19.1",
     "reflect-metadata": "^0.1.13",
-    "source-map-support": "^0.5.13",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0",
+    "release-it": "^12.4.3",
+    "source-map-support": "^0.5.16",
+    "ts-jest": "^24.1.0",
+    "ts-node": "^8.5.0",
     "tslib": "^1.10.0",
     "tslint": "^5.20.1",
     "typescript": "^3.7.2"
@@ -47,7 +47,7 @@
     "rprepare": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",
     "coveralls": "cat coverage/lcov.info | coveralls",
-    "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx np",
+    "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx release-it -c `pwd`/.release-it.yaml --non-interactive",
     "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\""
   }
 }
