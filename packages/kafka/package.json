@@ -1,0 +1,32 @@
+{
+  "name": "@sensejs/kafka",
+  "version": "0.0.0",
+  "description": "",
+  "files": [
+    "lib",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "~0.0.0",
+    "inversify": "^5.0.1",
+    "kafka-pipeline": "^3.0.1",
+    "kafka-node": "git+https://github.com/thynson/kafka-node.git#7fd49714142c37af33d1d9c392f09eec5cfc97e5"
+  },
+  "devDependencies": {
+    "tslib": "^1.10.0"
+  },
+  "peerDependencies": {
+    "tslib": "^1.10.0",
+    "reflect-metadata": "^0.1.13"
+  }
+}
