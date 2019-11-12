@@ -2,7 +2,7 @@ import {ParamBinding, RequestContext, ServiceIdentifier, Transformer} from '@sen
 import {Container} from 'inversify';
 import {Message} from 'kafka-node';
 
-export class SubscribeContext extends RequestContext {
+export class ConsumingContext extends RequestContext {
   constructor(private readonly container: Container, readonly message: Message) {
     super();
   }
@@ -13,9 +13,9 @@ export class SubscribeContext extends RequestContext {
 }
 
 export function InjectSubscribeContext(transform: Transformer = (x) => x) {
-  return ParamBinding(SubscribeContext, {transform});
+  return ParamBinding(ConsumingContext, {transform});
 }
 
 export function Message() {
-  return InjectSubscribeContext((x: SubscribeContext) => x.message);
+  return InjectSubscribeContext((x: ConsumingContext) => x.message);
 }

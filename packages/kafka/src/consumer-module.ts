@@ -9,21 +9,21 @@ import {
 } from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import {Message} from 'kafka-node';
-import {ConsumerGroup} from './consumer-group';
-import {SubscribeContext} from './subscribe-context';
-import {getSubscribeControllerMetadata, getSubscribeTopicMetadata} from './subscribe-decorators';
-import {ConnectOption, ConsumeOption, FetchOption, TopicSubscriberOption} from './topic-subscriber';
+import {MessageConsumer} from './message-consumer';
+import {ConsumingContext} from './consuming-context';
+import {getSubscribeControllerMetadata, getSubscribeTopicMetadata} from './consuming-decorators';
+import {ConnectOption, ConsumeOption, FetchOption, TopicConsumerOption} from './message-consume-manager';
 
-export interface KafkaSubscribeModuleOption extends ModuleOption {
+export interface KafkaConsumerModuleOption extends ModuleOption {
   kafkaConnectOption: ConnectOption;
   defaultFetchOption?: FetchOption;
   defaultConsumeOption?: ConsumeOption;
   globalInterceptors?: Abstract<RequestInterceptor>[];
 }
 
-export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): ModuleConstructor {
-  class KafkaSubscriberModule extends Module(option) {
-    private consumerGroup?: ConsumerGroup;
+export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
+  class KafkaConsumerModule extends Module(option) {
+    private consumerGroup?: MessageConsumer;
 
     constructor(@inject(Container) private container: Container) {
       super();
@@ -37,10 +37,10 @@ export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): Module
         return;
       }
 
-      this.consumerGroup = new ConsumerGroup(option.kafkaConnectOption);
+      this.consumerGroup = new MessageConsumer(option.kafkaConnectOption);
 
       for (const option of map.values()) {
-        this.consumerGroup.subscribe(option.topic, option.messageConsumer, option.consumeOption, option.fetchOption);
+        this.consumerGroup.subscribe(option.topic, option.consumeCallback, option.consumeOption, option.fetchOption);
       }
 
       await this.consumerGroup.open();
@@ -56,7 +56,7 @@ export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): Module
     }
 
     private scanController() {
-      const map = new Map<string, TopicSubscriberOption>();
+      const map = new Map<string, TopicConsumerOption>();
       for (const component of option.components || []) {
         const controllerMetadata = getSubscribeControllerMetadata(component);
         if (!controllerMetadata) {
@@ -85,10 +85,10 @@ export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): Module
             fetchOption: option.defaultFetchOption,
             consumeOption: option.defaultConsumeOption,
             topic,
-            messageConsumer: async (message: Message) => {
+            consumeCallback: async (message: Message) => {
               const container = this.container.createChild();
-              const context = new SubscribeContext(container, message);
-              container.bind(SubscribeContext).toConstantValue(context);
+              const context = new ConsumingContext(container, message);
+              container.bind(ConsumingContext).toConstantValue(context);
               const interceptor = container.get(composedInterceptor);
               await interceptor.intercept(context, async () => {
                 const target = container.get<object>(controllerMetadata.target);
@@ -102,5 +102,5 @@ export function KafkaSubscribeModule(option: KafkaSubscribeModuleOption): Module
     }
   }
 
-  return KafkaSubscriberModule;
+  return KafkaConsumerModule;
 }

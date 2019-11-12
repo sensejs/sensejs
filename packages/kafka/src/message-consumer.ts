@@ -1,10 +1,16 @@
-import {MessageConsumer} from 'kafka-pipeline';
-import {ConnectOption, ConsumeOption, FetchOption, TopicSubscriber, TopicSubscriberOption} from './topic-subscriber';
+import {MessageConsumer as MessageConsumeCallback} from 'kafka-pipeline';
+import {
+  ConnectOption,
+  ConsumeOption,
+  FetchOption,
+  MessageConsumeManager,
+  TopicConsumerOption,
+} from './message-consume-manager';
 
-export class ConsumerGroup {
+export class MessageConsumer {
   private readonly _options: ConnectOption;
-  private _topicOptions: Map<string, TopicSubscriberOption> = new Map();
-  private _consumers: TopicSubscriber[] = [];
+  private _topicOptions: Map<string, TopicConsumerOption> = new Map();
+  private _consumers: MessageConsumeManager[] = [];
   private _openPromise?: Promise<unknown>;
   private _listenPromise?: Promise<unknown>;
 
@@ -27,13 +33,13 @@ export class ConsumerGroup {
    */
   subscribe(
     topic: string,
-    messageConsumer: MessageConsumer,
+    messageConsumeCallback: MessageConsumeCallback,
     consumeOption: ConsumeOption = {},
     fetchOption: FetchOption = {},
   ) {
     this._topicOptions.set(topic, {
       topic,
-      messageConsumer,
+      consumeCallback: messageConsumeCallback,
       consumeOption,
       connectOption: this._options,
       fetchOption,
@@ -56,7 +62,7 @@ export class ConsumerGroup {
 
   private _performOpen() {
     for (const option of this._topicOptions.values()) {
-      this._consumers.push(new TopicSubscriber(option));
+      this._consumers.push(new MessageConsumeManager(option));
     }
     return Promise.all(
       this._consumers.map((consumer) => {

@@ -1,6 +1,6 @@
 'use strict';
 
-import {ConsumerGroupPipeline, MessageConsumer} from 'kafka-pipeline';
+import {ConsumerGroupPipeline, MessageConsumer as ConsumeCallback} from 'kafka-pipeline';
 
 export interface ConsumeOption {
   consumeConcurrency?: number;
@@ -24,23 +24,23 @@ export interface ConnectOption {
   heartbeatInterval?: number;
 }
 
-export interface TopicSubscriberOption {
+export interface TopicConsumerOption {
   connectOption: ConnectOption;
   consumeOption?: ConsumeOption;
   fetchOption?: FetchOption;
   topic: string;
-  messageConsumer: MessageConsumer;
+  consumeCallback: ConsumeCallback;
 }
 
-export class TopicSubscriber {
+export class MessageConsumeManager {
   private _openPromise?: Promise<unknown>;
   private _runningPromise?: Promise<unknown>;
   private _consumerGroupPipeline: ConsumerGroupPipeline;
 
-  constructor(options: TopicSubscriberOption) {
+  constructor(options: TopicConsumerOption) {
     const {
       topic,
-      messageConsumer,
+      consumeCallback,
       connectOption: {groupId, kafkaHost, sessionTimeout, heartbeatInterval},
       consumeOption,
       fetchOption: {
@@ -55,7 +55,7 @@ export class TopicSubscriber {
 
     const pipelineOption: ConsumerGroupPipeline.Option = Object.assign({}, consumeOption, {
       topic,
-      messageConsumer,
+      messageConsumer: consumeCallback,
       consumerGroupOption: {
         encoding,
         keyEncoding,

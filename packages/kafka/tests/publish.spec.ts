@@ -51,7 +51,7 @@ import {ApplicationFactory, Module} from '@sensejs/core';
 import {inject} from 'inversify';
 import {ProduceRequest} from 'kafka-node';
 import {KafkaPublishModule} from '../src';
-import {MessageProducer} from '../src/message-publisher';
+import {MessageProducer} from '../src/message-producer';
 const mockController = new EventEmitter();
 
 describe('MessageProducerModule', () => {
@@ -71,9 +71,9 @@ describe('MessageProducerModule', () => {
     class Foo extends Module({requires: [WrappedKafkaModule]}) {
       constructor(@inject(MessageProducer) messageProducer: MessageProducer) {
         super();
-        messageProducer.sendMessage('topic', '1', 'key');
-        messageProducer.sendMessage('topic', '2', 'key');
-        messageProducer.sendMessage('topic', '3', 'key');
+        messageProducer.produceMessage('topic', '1', 'key');
+        messageProducer.produceMessage('topic', '2', 'key');
+        messageProducer.produceMessage('topic', '3', 'key');
       }
     }
 

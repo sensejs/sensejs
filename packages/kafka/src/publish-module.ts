@@ -1,5 +1,5 @@
 import {Component, ComponentFactory, ComponentScope, Module, ModuleConstructor} from '@sensejs/core';
-import {MessageProducer, ProducerOption} from './message-publisher';
+import {MessageProducer, ProducerOption} from './message-producer';
 import {inject} from 'inversify';
 
 export interface KafkaPublishModuleOption {

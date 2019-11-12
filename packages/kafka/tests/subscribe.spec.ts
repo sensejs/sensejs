@@ -33,9 +33,9 @@ jest.mock('kafka-pipeline', (): unknown => {
 import {ApplicationFactory, RequestInterceptor, ParamBinding, Component} from '@sensejs/core';
 import {EventEmitter} from 'events';
 import {ConsumerGroupPipeline} from 'kafka-pipeline';
-import {KafkaSubscribeModule} from '../src';
-import {InjectSubscribeContext, Message, SubscribeContext} from '../src/subscribe-context';
-import {SubscribeController, SubscribeTopic} from '../src/subscribe-decorators';
+import {KafkaConsumerModule} from '../src';
+import {InjectSubscribeContext, Message, ConsumingContext} from '../src/consuming-context';
+import {SubscribeController, SubscribeTopic} from '../src/consuming-decorators';
 
 const mockController = new EventEmitter();
 
@@ -78,8 +78,8 @@ describe('Subscriber', () => {
       symbolC = Symbol();
     const makeInterceptor = (symbol: symbol) => {
       @Component()
-      class Interceptor extends RequestInterceptor<SubscribeContext> {
-        async intercept(context: SubscribeContext, next: () => Promise<void>): Promise<void> {
+      class Interceptor extends RequestInterceptor<ConsumingContext> {
+        async intercept(context: ConsumingContext, next: () => Promise<void>): Promise<void> {
           context.bindContextValue(symbol, Math.random());
           await next();
         }
@@ -94,7 +94,7 @@ describe('Subscriber', () => {
     class Controller {
       @SubscribeTopic('foo', {interceptors: [interceptorC]})
       foo(
-        @InjectSubscribeContext() ctx: SubscribeContext,
+        @InjectSubscribeContext() ctx: ConsumingContext,
         @ParamBinding(symbolA) global: any,
         @ParamBinding(symbolB) controller: any,
         @ParamBinding(symbolC) fromTopic: any,
@@ -104,7 +104,7 @@ describe('Subscriber', () => {
       }
     }
 
-    const module = KafkaSubscribeModule({
+    const module = KafkaConsumerModule({
       components: [Controller, interceptorA, interceptorB, interceptorC],
       kafkaConnectOption: {kafkaHost: 'any', groupId: ''},
       globalInterceptors: [interceptorA],

@@ -37,7 +37,7 @@ export class MessageProducer {
    * @param key
    * @returns {Promise}
    */
-  async sendMessage(topic: string, messages: MessageContent, key?: MessageContent) {
+  async produceMessage(topic: string, messages: MessageContent, key?: MessageContent) {
     if (!this._initialized) {
       throw new Error('not connected or closed');
     }
