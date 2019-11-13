@@ -1,5 +1,5 @@
 import {Logger, LoggerFactory} from '@sensejs/logger';
-import {Application, Component, InjectLogger, LoggerBuilder, LoggerFactorySymbol, LoggerModule, Module} from '../src';
+import {Context, Component, InjectLogger, LoggerBuilder, LoggerFactorySymbol, LoggerModule, Module} from '../src';
 import {inject} from 'inversify';
 
 describe('LoggerModule', () => {
@@ -34,6 +34,6 @@ describe('LoggerModule', () => {
       }
     }
 
-    await new Application(Module({requires: [MainModule]})).start();
+    await new Context(Module({requires: [MainModule]})).start();
   });
 });

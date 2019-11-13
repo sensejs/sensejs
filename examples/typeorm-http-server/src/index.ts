@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {Application} from '@sensejs/core';
+import {EntryPoint} from '@sensejs/core';
 import {Body, Controller, GET, HttpConfigType, HttpModule, Path, POST, Query} from '@sensejs/http';
 import {InjectRepository, TypeOrmModule, TypeOrmSupportInterceptor} from '@sensejs/typeorm';
 import {Repository} from 'typeorm';
@@ -48,7 +48,8 @@ const typeOrmModule = TypeOrmModule({
   },
 });
 
-const httpModule = HttpModule({
+@EntryPoint()
+class ExampleApp extends HttpModule({
   type: HttpConfigType.static,
   requires: [typeOrmModule],
   staticHttpConfig: {
@@ -57,6 +58,4 @@ const httpModule = HttpModule({
   },
   inspectors: [TypeOrmSupportInterceptor],
   components: [ExampleHttpController],
-});
-
-new Application(httpModule).start();
+}) {}

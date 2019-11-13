@@ -2,7 +2,7 @@ import {Container} from 'inversify';
 import {getModuleMetadata, ModuleConstructor} from './module';
 import {ModuleInstance} from './module-instance';
 
-export class Application {
+export class Context {
   private readonly container: Container = new Container({skipBaseClassChecks: true});
   private readonly moduleInstanceMap: Map<ModuleConstructor, ModuleInstance> = new Map();
   private readonly moduleDependencyMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
@@ -45,20 +45,14 @@ export class Application {
   }
 
   public async start() {
-    try {
-      await this.startModule(this.entryModule);
-    } catch (e) {
-      // Clean up all module if any error occurred during starting up
-      await this.stop();
-      throw e;
-    }
+    await this.startModule(this.entryModule);
   }
 
-  public async stop() {
-    return Promise.all(Array.from(this.moduleInstanceMap.values()).map((module) => this.stopModule(module)));
+  public async stop(): Promise<void> {
+    await Promise.all(Array.from(this.moduleInstanceMap.values()).map((module) => this.stopModule(module)));
   }
 
-  async startModule(module: ModuleConstructor) {
+  private async startModule(module: ModuleConstructor) {
     let moduleInstance = this.moduleInstanceMap.get(module);
     if (!moduleInstance) {
       moduleInstance = new ModuleInstance(module, this.container);
@@ -68,10 +62,10 @@ export class Application {
         await Promise.all(dependencies.map((dep) => this.startModule(dep)));
       }
     }
-    return moduleInstance.onSetup();
+    await moduleInstance.onSetup();
   }
 
-  async stopModule(moduleInstance: ModuleInstance) {
+  private async stopModule(moduleInstance: ModuleInstance) {
     const referencedModules = this.moduleReferencedMap.get(moduleInstance.moduleClass);
     if (referencedModules) {
       await Promise.all(

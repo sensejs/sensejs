@@ -1,5 +1,6 @@
-import {Application, Component, ParamBinding} from '@sensejs/core';
-import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, Query, HttpConfigType} from '@sensejs/http';
+import 'reflect-metadata';
+import {Component, EntryPoint, ParamBinding} from '@sensejs/core';
+import {Controller, GET, HttpConfigType, HttpContext, HttpInterceptor, HttpModule, Query} from '@sensejs/http';
 
 @Component()
 class Interceptor extends HttpInterceptor {
@@ -27,13 +28,12 @@ class ExampleHttpController {
   }
 }
 
-const httpModule = HttpModule({
+@EntryPoint()
+class App extends HttpModule({
   type: HttpConfigType.static,
   staticHttpConfig: {
     listenPort: 3000,
     listenAddress: '0.0.0.0',
   },
   components: [ExampleHttpController, Interceptor],
-});
-
-new Application(httpModule).start();
+}) {}
