@@ -1,6 +1,10 @@
 import {
   Abstract,
+  Component,
+  ComponentFactory,
+  ComponentScope,
   composeRequestInterceptor,
+  Constructor,
   invokeMethod,
   Module,
   ModuleConstructor,
@@ -8,12 +12,14 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {Container, inject} from 'inversify';
+import {Container, decorate, inject} from 'inversify';
 import {Message} from 'kafka-node';
 import {MessageConsumer} from './message-consumer';
 import {ConsumingContext} from './consuming-context';
 import {getSubscribeControllerMetadata, getSubscribeTopicMetadata} from './consuming-decorators';
 import {ConnectOption, ConsumeOption, FetchOption, TopicConsumerOption} from './message-consume-manager';
+import merge from 'lodash.merge';
+import {createConfigHelperFactory} from './utility';
 
 export interface KafkaConsumerOption {
   kafkaConnectOption: ConnectOption;
@@ -21,38 +27,50 @@ export interface KafkaConsumerOption {
   defaultConsumeOption?: ConsumeOption;
 }
 
-export interface StaticKafkaConsumerModuleOption extends ModuleOption {
-  type: 'static';
+export interface KafkaConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Abstract<RequestInterceptor>[];
-  kafkaConsumerOption: KafkaConsumerOption;
+  defaultKafkaConsumerOption?: {
+    kafkaConnectOption?: Partial<ConnectOption>;
+    defaultFetchOption?: Partial<FetchOption>;
+    defaultConsumeOption?: Partial<ConsumeOption>;
+  };
+  injectOptionFrom?: ServiceIdentifier<unknown>;
 }
-
-export interface InjectedKafkaConsumerModuleOption extends ModuleOption {
-  type: 'injected';
-  globalInterceptors?: Abstract<RequestInterceptor>[];
-  injectedSymbol: ServiceIdentifier<KafkaConsumerOption>;
-}
-
-export type KafkaConsumerModuleOption = StaticKafkaConsumerModuleOption | InjectedKafkaConsumerModuleOption;
 
 export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
-  const injectSymbol = option.type === 'static' ? Symbol() : option.injectedSymbol;
-  const configConstants = option.type === 'static' ? [{provide: injectSymbol, value: option.kafkaConsumerOption}] : [];
-  const constants = (option.constants ?? []).concat(configConstants);
-  option = Object.assign({}, option, {constants});
+  const ConfigFactory = createConfigHelperFactory(
+    option.defaultKafkaConsumerOption,
+    option.injectOptionFrom,
+    (fallback, injected) => {
+      const {kafkaConnectOption, ...rest} = merge({}, fallback, injected);
+      const {kafkaHost, groupId} = kafkaConnectOption ?? {};
+      if (typeof kafkaHost === 'undefined') {
+        throw new TypeError('kafkaHost not provided');
+      }
 
-  class KafkaConsumerModule extends Module(option) {
+      if (typeof groupId === 'undefined') {
+        throw new TypeError('groupId not provided');
+      }
+      return {kafkaConnectOption: {kafkaHost, groupId}, ...rest};
+    },
+  );
+  const configSymbol = Symbol();
+
+  class KafkaConsumerModule extends Module({
+    requires: [Module(option)],
+    factories: [{provide: configSymbol, factory: ConfigFactory}],
+  }) {
     private consumerGroup?: MessageConsumer;
 
     constructor(
       @inject(Container) private container: Container,
-      @inject(injectSymbol) private config: KafkaConsumerOption,
+      @inject(configSymbol) private config: KafkaConsumerOption,
     ) {
       super();
     }
 
     async onCreate(): Promise<void> {
-      super.onCreate();
+      await super.onCreate();
       const map = this.scanController();
 
       if (map.size < 0) {

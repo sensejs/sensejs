@@ -1,78 +1,61 @@
-import {
-  Component,
-  ComponentFactory,
-  ComponentScope,
-  Module,
-  ModuleConstructor,
-  ModuleOption,
-  ServiceIdentifier,
-} from '@sensejs/core';
+import {ComponentScope, Module, ModuleConstructor, ModuleOption, ServiceIdentifier} from '@sensejs/core';
 import {MessageProducer, ProducerOption} from './message-producer';
 import {inject} from 'inversify';
+import merge from 'lodash.merge';
+import {AbstractConnectionFactory, createConfigHelperFactory, createConnectionFactory} from './utility';
 
-export interface StaticKafkaPublishModuleOption extends ModuleOption {
-  type: 'static';
-  kafkaProducerOption: ProducerOption;
+export interface KafkaPublishModuleOption extends ModuleOption {
+  kafkaProducerOption?: Partial<ProducerOption>;
+  injectOptionFrom?: ServiceIdentifier<unknown>;
 }
 
-export interface InjectedKafkaPublishModuleOption extends ModuleOption {
-  type: 'injected';
-  injectedSymbol: ServiceIdentifier<StaticKafkaPublishModuleOption>;
-}
-
-export type KafkaPublishModuleOption = StaticKafkaPublishModuleOption | InjectedKafkaPublishModuleOption;
-
-export function KafkaPublishModule(option: KafkaPublishModuleOption): ModuleConstructor {
-  @Component()
-  class KafkaProducerConnectionFactory extends ComponentFactory<MessageProducer> {
-    private messageProducer?: MessageProducer;
-
-    build(): MessageProducer {
-      if (this.messageProducer) {
-        return this.messageProducer;
+export function KafkaProducerModule(option: KafkaPublishModuleOption): ModuleConstructor {
+  const ConfigFactory = createConfigHelperFactory<ProducerOption>(
+    option.kafkaProducerOption,
+    option.injectOptionFrom,
+    (fallback, injected) => {
+      const {kafkaHost, ...rest} = merge({}, fallback, injected);
+      if (typeof kafkaHost === 'undefined') {
+        throw new TypeError('kafkaHost not provided');
       }
-      throw new Error('messageProducer not connected yet');
-    }
+      return {kafkaHost, ...rest};
+    },
+  );
 
-    async connect(option: ProducerOption): Promise<MessageProducer> {
+  const configSymbol = Symbol();
+
+  const ConnectionFactory = createConnectionFactory<MessageProducer, ProducerOption>(
+    async (option) => {
       const messageProducer = new MessageProducer(option);
       await messageProducer.initialize();
-      this.messageProducer = messageProducer;
-      return this.messageProducer;
-    }
+      return messageProducer;
+    },
+    async (producer) => {
+      await producer.close();
+    },
+  );
 
-    async close() {
-      if (this.messageProducer) {
-        const messageProducer = this.messageProducer;
-        delete this.messageProducer;
-        await messageProducer.close();
-      }
-    }
-  }
-
-  const injectSymbol = option.type === 'static' ? Symbol() : option.injectedSymbol;
-  const configConstants = option.type === 'static' ? [{provide: injectSymbol, value: option.kafkaProducerOption}] : [];
-  const constants = (option.constants ?? []).concat(configConstants);
-  const factories = (option.factories ?? []).concat([
-    {provide: MessageProducer, factory: KafkaProducerConnectionFactory, scope: ComponentScope.SINGLETON},
-  ]);
-  option = Object.assign({}, option, {factories, constants});
-
-  class KafkaPublishModule extends Module(option) {
+  class KafkaPublishModule extends Module({
+    requires: [Module(option)],
+    factories: [
+      {provide: configSymbol, factory: ConfigFactory, scope: ComponentScope.SINGLETON},
+      {provide: MessageProducer, factory: ConnectionFactory, scope: ComponentScope.SINGLETON},
+    ],
+  }) {
     constructor(
-      @inject(KafkaProducerConnectionFactory) private factory: KafkaProducerConnectionFactory,
-      @inject(injectSymbol) private config: ProducerOption,
+      @inject(ConnectionFactory) private factory: AbstractConnectionFactory<MessageProducer, ProducerOption>,
+      @inject(configSymbol) private config: ProducerOption,
     ) {
       super();
     }
 
     async onCreate(): Promise<void> {
-      super.onCreate();
+      await super.onCreate();
       await this.factory.connect(this.config);
     }
 
     async onDestroy(): Promise<void> {
-      await this.factory.close();
+      await this.factory.disconnect();
       return super.onDestroy();
     }
   }

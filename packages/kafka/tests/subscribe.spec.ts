@@ -7,6 +7,7 @@ jest.mock('kafka-pipeline', (): unknown => {
     constructor(option: any) {
       this.topics = this.topics.concat(option.topic);
       this.messageConsumer = option.messageConsumer;
+      mockController.emit('MockConsumerGroupPipeline:constructor', [option]);
     }
 
     async close(): Promise<void> {
@@ -107,8 +108,7 @@ describe('Subscriber', () => {
 
     const module = KafkaConsumerModule({
       components: [Controller, interceptorA, interceptorB, interceptorC],
-      type: 'static',
-      kafkaConsumerOption: {
+      defaultKafkaConsumerOption: {
         kafkaConnectOption: {kafkaHost: 'any', groupId: ''},
       },
       globalInterceptors: [interceptorA],
@@ -123,10 +123,10 @@ describe('Subscriber', () => {
   });
 
   test('injected config', async () => {
-    const kafkaHost = new Date().toISOString(); // for randome string
+    const kafkaHost = new Date().toISOString(); // for random string
     const groupId = new Date().toISOString();
-    // @ts-ignore
-    jest.spyOn(ConsumerGroupPipeline, 'constructor');
+    const stub = jest.fn();
+    mockController.once('MockConsumerGroupPipeline:constructor', stub);
 
     @SubscribeController()
     class Controller {
@@ -141,28 +141,33 @@ describe('Subscriber', () => {
           value: {
             kafkaConnectOption: {
               kafkaHost,
-              groupId,
             },
           },
         },
       ],
     });
+
     class MyKafkaModule extends KafkaConsumerModule({
       components: [Controller],
       requires: [ConfigModule],
-      type: 'injected',
-      injectedSymbol: 'config.consumer',
+      defaultKafkaConsumerOption: {
+        kafkaConnectOption: {
+          groupId,
+        },
+      },
+      injectOptionFrom: 'config.consumer',
     }) {}
 
     const moduleRoot = new ModuleRoot(MyKafkaModule);
-    moduleRoot.start().then(() => {
-      expect(ConsumerGroupPipeline.constructor).toHaveBeenCalledWith(
+    await moduleRoot.start().then(() => {
+      expect(stub).toHaveBeenCalledWith([
         expect.objectContaining({
-          kafkaHost,
-          groupId,
+          consumerGroupOption: expect.objectContaining({
+            kafkaHost,
+            groupId,
+          }),
         }),
-      );
+      ]);
     });
-    mockController.once('MyKafkaModule.onCreate', () => mockController.emit('KafkaClient:ready'));
   });
 });
