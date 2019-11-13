@@ -30,11 +30,11 @@ jest.mock('kafka-pipeline', (): unknown => {
 
   return {ConsumerGroupPipeline: MockConsumerGroupPipeline};
 });
-import {ModuleRoot, RequestInterceptor, ParamBinding, Component} from '@sensejs/core';
+import {Component, Module, ModuleRoot, ParamBinding, RequestInterceptor} from '@sensejs/core';
 import {EventEmitter} from 'events';
 import {ConsumerGroupPipeline} from 'kafka-pipeline';
 import {KafkaConsumerModule} from '../src';
-import {InjectSubscribeContext, Message, ConsumingContext} from '../src/consuming-context';
+import {ConsumingContext, InjectSubscribeContext, Message} from '../src/consuming-context';
 import {SubscribeController, SubscribeTopic} from '../src/consuming-decorators';
 
 const mockController = new EventEmitter();
@@ -84,6 +84,7 @@ describe('Subscriber', () => {
           await next();
         }
       }
+
       return Interceptor;
     };
     const interceptorA = makeInterceptor(symbolA),
@@ -106,7 +107,10 @@ describe('Subscriber', () => {
 
     const module = KafkaConsumerModule({
       components: [Controller, interceptorA, interceptorB, interceptorC],
-      kafkaConnectOption: {kafkaHost: 'any', groupId: ''},
+      type: 'static',
+      kafkaConsumerOption: {
+        kafkaConnectOption: {kafkaHost: 'any', groupId: ''},
+      },
       globalInterceptors: [interceptorA],
     });
     const moduleRoot = new ModuleRoot(module);
@@ -116,5 +120,49 @@ describe('Subscriber', () => {
     await moduleRoot.stop();
     expect(fooSpy).toBeCalled();
     expect(stopSpy).toBeCalled();
+  });
+
+  test('injected config', async () => {
+    const kafkaHost = new Date().toISOString(); // for randome string
+    const groupId = new Date().toISOString();
+    // @ts-ignore
+    jest.spyOn(ConsumerGroupPipeline, 'constructor');
+
+    @SubscribeController()
+    class Controller {
+      @SubscribeTopic('foo')
+      foo() {}
+    }
+
+    const ConfigModule = Module({
+      constants: [
+        {
+          provide: 'config.consumer',
+          value: {
+            kafkaConnectOption: {
+              kafkaHost,
+              groupId,
+            },
+          },
+        },
+      ],
+    });
+    class MyKafkaModule extends KafkaConsumerModule({
+      components: [Controller],
+      requires: [ConfigModule],
+      type: 'injected',
+      injectedSymbol: 'config.consumer',
+    }) {}
+
+    const moduleRoot = new ModuleRoot(MyKafkaModule);
+    moduleRoot.start().then(() => {
+      expect(ConsumerGroupPipeline.constructor).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kafkaHost,
+          groupId,
+        }),
+      );
+    });
+    mockController.once('MyKafkaModule.onCreate', () => mockController.emit('KafkaClient:ready'));
   });
 });

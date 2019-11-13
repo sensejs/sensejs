@@ -6,6 +6,7 @@ import {
   ModuleConstructor,
   ModuleOption,
   RequestInterceptor,
+  ServiceIdentifier,
 } from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import {Message} from 'kafka-node';
@@ -14,18 +15,39 @@ import {ConsumingContext} from './consuming-context';
 import {getSubscribeControllerMetadata, getSubscribeTopicMetadata} from './consuming-decorators';
 import {ConnectOption, ConsumeOption, FetchOption, TopicConsumerOption} from './message-consume-manager';
 
-export interface KafkaConsumerModuleOption extends ModuleOption {
+export interface KafkaConsumerOption {
   kafkaConnectOption: ConnectOption;
   defaultFetchOption?: FetchOption;
   defaultConsumeOption?: ConsumeOption;
-  globalInterceptors?: Abstract<RequestInterceptor>[];
 }
 
+export interface StaticKafkaConsumerModuleOption extends ModuleOption {
+  type: 'static';
+  globalInterceptors?: Abstract<RequestInterceptor>[];
+  kafkaConsumerOption: KafkaConsumerOption;
+}
+
+export interface InjectedKafkaConsumerModuleOption extends ModuleOption {
+  type: 'injected';
+  globalInterceptors?: Abstract<RequestInterceptor>[];
+  injectedSymbol: ServiceIdentifier<KafkaConsumerOption>;
+}
+
+export type KafkaConsumerModuleOption = StaticKafkaConsumerModuleOption | InjectedKafkaConsumerModuleOption;
+
 export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
+  const injectSymbol = option.type === 'static' ? Symbol() : option.injectedSymbol;
+  const configConstants = option.type === 'static' ? [{provide: injectSymbol, value: option.kafkaConsumerOption}] : [];
+  const constants = (option.constants ?? []).concat(configConstants);
+  option = Object.assign({}, option, {constants});
+
   class KafkaConsumerModule extends Module(option) {
     private consumerGroup?: MessageConsumer;
 
-    constructor(@inject(Container) private container: Container) {
+    constructor(
+      @inject(Container) private container: Container,
+      @inject(injectSymbol) private config: KafkaConsumerOption,
+    ) {
       super();
     }
 
@@ -37,7 +59,7 @@ export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleCo
         return;
       }
 
-      this.consumerGroup = new MessageConsumer(option.kafkaConnectOption);
+      this.consumerGroup = new MessageConsumer(this.config.kafkaConnectOption);
 
       for (const option of map.values()) {
         this.consumerGroup.subscribe(option.topic, option.consumeCallback, option.consumeOption, option.fetchOption);
@@ -81,9 +103,9 @@ export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleCo
           ]);
 
           map.set(topic, {
-            connectOption: option.kafkaConnectOption,
-            fetchOption: option.defaultFetchOption,
-            consumeOption: option.defaultConsumeOption,
+            connectOption: this.config.kafkaConnectOption,
+            fetchOption: this.config.defaultFetchOption,
+            consumeOption: this.config.defaultConsumeOption,
             topic,
             consumeCallback: async (message: Message) => {
               const container = this.container.createChild();

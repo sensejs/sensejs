@@ -1,10 +1,26 @@
-import {Component, ComponentFactory, ComponentScope, Module, ModuleConstructor} from '@sensejs/core';
+import {
+  Component,
+  ComponentFactory,
+  ComponentScope,
+  Module,
+  ModuleConstructor,
+  ModuleOption,
+  ServiceIdentifier,
+} from '@sensejs/core';
 import {MessageProducer, ProducerOption} from './message-producer';
 import {inject} from 'inversify';
 
-export interface KafkaPublishModuleOption {
+export interface StaticKafkaPublishModuleOption extends ModuleOption {
+  type: 'static';
   kafkaProducerOption: ProducerOption;
 }
+
+export interface InjectedKafkaPublishModuleOption extends ModuleOption {
+  type: 'injected';
+  injectedSymbol: ServiceIdentifier<StaticKafkaPublishModuleOption>;
+}
+
+export type KafkaPublishModuleOption = StaticKafkaPublishModuleOption | InjectedKafkaPublishModuleOption;
 
 export function KafkaPublishModule(option: KafkaPublishModuleOption): ModuleConstructor {
   @Component()
@@ -34,16 +50,25 @@ export function KafkaPublishModule(option: KafkaPublishModuleOption): ModuleCons
     }
   }
 
-  class KafkaPublishModule extends Module({
-    factories: [{provide: MessageProducer, factory: KafkaProducerConnectionFactory, scope: ComponentScope.SINGLETON}],
-  }) {
-    constructor(@inject(KafkaProducerConnectionFactory) private factory: KafkaProducerConnectionFactory) {
+  const injectSymbol = option.type === 'static' ? Symbol() : option.injectedSymbol;
+  const configConstants = option.type === 'static' ? [{provide: injectSymbol, value: option.kafkaProducerOption}] : [];
+  const constants = (option.constants ?? []).concat(configConstants);
+  const factories = (option.factories ?? []).concat([
+    {provide: MessageProducer, factory: KafkaProducerConnectionFactory, scope: ComponentScope.SINGLETON},
+  ]);
+  option = Object.assign({}, option, {factories, constants});
+
+  class KafkaPublishModule extends Module(option) {
+    constructor(
+      @inject(KafkaProducerConnectionFactory) private factory: KafkaProducerConnectionFactory,
+      @inject(injectSymbol) private config: ProducerOption,
+    ) {
       super();
     }
 
     async onCreate(): Promise<void> {
       super.onCreate();
-      await this.factory.connect(option.kafkaProducerOption);
+      await this.factory.connect(this.config);
     }
 
     async onDestroy(): Promise<void> {

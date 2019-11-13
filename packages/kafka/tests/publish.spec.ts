@@ -52,7 +52,7 @@ jest.mock('kafka-node', () => {
   };
 });
 
-import {ModuleRoot, Module} from '@sensejs/core';
+import {Module, ModuleRoot} from '@sensejs/core';
 import {inject} from 'inversify';
 import {ProduceRequest} from 'kafka-node';
 import {KafkaPublishModule} from '../src';
@@ -64,6 +64,7 @@ describe('MessageProducerModule', () => {
     const spy = jest.spyOn(MockHighLevelProducer.prototype, 'send');
 
     class WrappedKafkaModule extends KafkaPublishModule({
+      type: 'static',
       kafkaProducerOption: {kafkaHost: ''},
     }) {
       onCreate() {
@@ -114,5 +115,38 @@ describe('MessageProducerModule', () => {
     });
     mockController.emit('Producer:sent');
     await moduleRoot.stop();
+  });
+
+  test('injected config', async () => {
+    const kafkaHost = new Date().toISOString();
+
+    // @ts-ignore
+    jest.spyOn(MockKafkaClient, 'constructor');
+
+    const ConfigModule = Module({
+      constants: [{provide: 'config.kafkaProducer', value: {kafkaHost}}],
+    });
+
+    class MyKafkaModule extends KafkaPublishModule({
+      requires: [ConfigModule],
+      type: 'injected',
+      injectedSymbol: 'config.kafkaProducer',
+    }) {
+      onCreate() {
+        const promise = super.onCreate();
+        mockController.emit('MyKafkaModule.onCreate');
+        return promise;
+      }
+    }
+
+    const moduleRoot = new ModuleRoot(MyKafkaModule);
+    moduleRoot.start().then(() => {
+      expect(MockKafkaClient.constructor).toHaveBeenCalledWith(
+        expect.objectContaining({
+          kafkaHost,
+        }),
+      );
+    });
+    mockController.once('MyKafkaModule.onCreate', () => mockController.emit('KafkaClient:ready'));
   });
 });
