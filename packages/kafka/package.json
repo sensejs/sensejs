@@ -9,7 +9,8 @@
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "scripts": {
-    "prepare": "tsc"
+    "prepare": "tsc",
+    "cleanup": "rm -rf ./lib"
   },
   "publishConfig": {
     "access": "public"

@@ -110,7 +110,10 @@ export class MessageProducer {
           highLevelProducer.send([chunk], callback);
         },
         writev: (chunks: {chunk: ProduceRequest}[], callback) => {
-          highLevelProducer.send(chunks.map((x) => x.chunk), callback);
+          highLevelProducer.send(
+            chunks.map((x) => x.chunk),
+            callback,
+          );
         },
       });
     }));

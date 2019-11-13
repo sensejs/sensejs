@@ -32,7 +32,12 @@ class MockHighLevelProducer extends EventEmitter {
       mockController.once('Producer:sent', done);
       mockController.emit('Producer.sendRequest');
     });
-    this.sendPromise = this.sendPromise.then(() => result).then(() => cb(null, null), (e) => cb(e, null));
+    this.sendPromise = this.sendPromise
+      .then(() => result)
+      .then(
+        () => cb(null, null),
+        (e) => cb(e, null),
+      );
   }
 
   close(callback: Function) {

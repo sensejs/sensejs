@@ -45,7 +45,10 @@ export function ensureParamBindingMetadata(target: any): FunctionParamBindingMet
     }
 
     call(paramsBindingMetadata: ParamBindingMetadata[], self: any) {
-      return target.apply(self, this.args.map((elem, idx) => paramsBindingMetadata[idx].transform(elem)));
+      return target.apply(
+        self,
+        this.args.map((elem, idx) => paramsBindingMetadata[idx].transform(elem)),
+      );
     }
   }
 

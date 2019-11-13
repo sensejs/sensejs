@@ -9,8 +9,8 @@
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "scripts": {
-    "test": "jest",
-    "prepare": "tsc"
+    "prepare": "tsc",
+    "cleanup": "rm -rf ./lib"
   },
   "publishConfig": {
     "access": "public"
