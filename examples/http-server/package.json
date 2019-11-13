@@ -11,8 +11,8 @@
   "private": true,
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:^0.0.0",
-    "@sensejs/http": "workspace:^0.0.0",
+    "@sensejs/core": "workspace:*",
+    "@sensejs/http": "workspace:*",
     "reflect-metadata": "^0.1.13"
   }
 }

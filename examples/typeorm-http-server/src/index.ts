@@ -1,11 +1,11 @@
 import 'reflect-metadata';
-import {Body, Controller, GET, HttpModule, Path, POST, Query, HttpConfigType} from '@sensejs/http';
 import {ApplicationFactory} from '@sensejs/core';
+import {Body, Controller, GET, HttpConfigType, HttpModule, Path, POST, Query} from '@sensejs/http';
+import {InjectRepository, TypeOrmModule, TypeOrmSupportInterceptor} from '@sensejs/typeorm';
+import {Repository} from 'typeorm';
 
 import {Author} from './entities/author';
 import {Book} from './entities/book';
-import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '@sensejs/typeorm';
-import {Repository} from 'typeorm';
 
 @Controller('/example')
 class ExampleHttpController {

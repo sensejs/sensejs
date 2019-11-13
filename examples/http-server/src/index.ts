@@ -1,6 +1,6 @@
+import 'reflect-metadata';
 import {ApplicationFactory, Component, ParamBinding} from '@sensejs/core';
 import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, Query, HttpConfigType} from '@sensejs/http';
-import 'reflect-metadata';
 
 @Component()
 class Interceptor extends HttpInterceptor {
@@ -13,8 +13,6 @@ class Interceptor extends HttpInterceptor {
     await next();
     (context.responseValue as any).duration = Date.now() - this.timestamp!;
   }
-
-  async afterRequest(context: HttpContext, e?: Error): Promise<void> {}
 }
 
 @Controller('/example', {interceptors: [Interceptor]})

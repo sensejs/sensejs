@@ -11,9 +11,9 @@
   "private": true,
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:^0.0.0",
-    "@sensejs/http": "workspace:^0.0.0",
-    "@sensejs/typeorm": "workspace:^0.0.0",
+    "@sensejs/core": "workspace:*",
+    "@sensejs/http": "workspace:*",
+    "@sensejs/typeorm": "workspace:*",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.20",
     "sqlite3": "^4.1.0",

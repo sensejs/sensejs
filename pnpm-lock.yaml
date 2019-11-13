@@ -42,8 +42,8 @@ importers:
       '@sensejs/http': 'link:../../packages/http'
       reflect-metadata: 0.1.13
     specifiers:
-      '@sensejs/core': 'workspace:^0.0.0'
-      '@sensejs/http': 'workspace:^0.0.0'
+      '@sensejs/core': 'workspace:*'
+      '@sensejs/http': 'workspace:*'
       reflect-metadata: ^0.1.13
   examples/typeorm-http-server:
     dependencies:
@@ -55,9 +55,9 @@ importers:
       tslib: 1.10.0
       typeorm: 0.2.20_sqlite3@4.1.0
     specifiers:
-      '@sensejs/core': 'workspace:^0.0.0'
-      '@sensejs/http': 'workspace:^0.0.0'
-      '@sensejs/typeorm': 'workspace:^0.0.0'
+      '@sensejs/core': 'workspace:*'
+      '@sensejs/http': 'workspace:*'
+      '@sensejs/typeorm': 'workspace:*'
       reflect-metadata: ^0.1.13
       sqlite3: ^4.1.0
       tslib: ^1.10.0
