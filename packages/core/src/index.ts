@@ -1,4 +1,4 @@
-export * from './application-factory';
+export * from './application';
 export * from './interfaces';
 export * from './component';
 export * from './module';

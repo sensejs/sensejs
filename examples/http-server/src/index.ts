@@ -1,5 +1,4 @@
-import 'reflect-metadata';
-import {ApplicationFactory, Component, ParamBinding} from '@sensejs/core';
+import {Application, Component, ParamBinding} from '@sensejs/core';
 import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, Query, HttpConfigType} from '@sensejs/http';
 
 @Component()
@@ -37,4 +36,4 @@ const httpModule = HttpModule({
   components: [ExampleHttpController, Interceptor],
 });
 
-new ApplicationFactory(httpModule).start();
+new Application(httpModule).start();

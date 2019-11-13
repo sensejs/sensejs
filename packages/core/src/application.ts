@@ -2,7 +2,7 @@ import {Container} from 'inversify';
 import {getModuleMetadata, ModuleConstructor} from './module';
 import {ModuleInstance} from './module-instance';
 
-export class ApplicationFactory {
+export class Application {
   private readonly container: Container = new Container({skipBaseClassChecks: true});
   private readonly moduleInstanceMap: Map<ModuleConstructor, ModuleInstance> = new Map();
   private readonly moduleDependencyMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
@@ -44,36 +44,42 @@ export class ApplicationFactory {
     }
   }
 
-  public start() {
-    const startModule = async (module: ModuleConstructor) => {
-      let moduleInstance = this.moduleInstanceMap.get(module);
-      if (!moduleInstance) {
-        moduleInstance = new ModuleInstance(module, this.container);
-        this.moduleInstanceMap.set(module, moduleInstance);
-        const dependencies = this.moduleDependencyMap.get(module);
-        if (dependencies) {
-          await Promise.all(dependencies.map(startModule));
-        }
-      }
-      return moduleInstance.onSetup();
-    };
-
-    return startModule(this.entryModule);
+  public async start() {
+    try {
+      await this.startModule(this.entryModule);
+    } catch (e) {
+      // Clean up all module if any error occurred during starting up
+      await this.stop();
+      throw e;
+    }
   }
 
   public async stop() {
-    const stopModule = async (moduleInstance: ModuleInstance) => {
-      const referencedModules = this.moduleReferencedMap.get(moduleInstance.moduleClass);
-      if (referencedModules) {
-        await Promise.all(
-          referencedModules
-            .map((module) => this.moduleInstanceMap.get(module))
-            .map((module) => module && stopModule(module)),
-        );
-      }
-      await moduleInstance.onDestroy();
-    };
+    return Promise.all(Array.from(this.moduleInstanceMap.values()).map((module) => this.stopModule(module)));
+  }
 
-    return Promise.all(Array.from(this.moduleInstanceMap.values()).map(stopModule));
+  async startModule(module: ModuleConstructor) {
+    let moduleInstance = this.moduleInstanceMap.get(module);
+    if (!moduleInstance) {
+      moduleInstance = new ModuleInstance(module, this.container);
+      this.moduleInstanceMap.set(module, moduleInstance);
+      const dependencies = this.moduleDependencyMap.get(module);
+      if (dependencies) {
+        await Promise.all(dependencies.map((dep) => this.startModule(dep)));
+      }
+    }
+    return moduleInstance.onSetup();
+  }
+
+  async stopModule(moduleInstance: ModuleInstance) {
+    const referencedModules = this.moduleReferencedMap.get(moduleInstance.moduleClass);
+    if (referencedModules) {
+      await Promise.all(
+        referencedModules
+          .map((module) => this.moduleInstanceMap.get(module))
+          .map((module) => module && this.stopModule(module)),
+      );
+    }
+    await moduleInstance.onDestroy();
   }
 }
