@@ -56,7 +56,7 @@ describe('ModuleRoot', () => {
 
     class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {}
 
-    const app = new ModuleRoot(BarModule);
-    await app.start();
+    const moduleRoot = new ModuleRoot(BarModule);
+    await moduleRoot.start();
   });
 });

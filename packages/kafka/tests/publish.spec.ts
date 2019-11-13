@@ -82,7 +82,7 @@ describe('MessageProducerModule', () => {
       }
     }
 
-    const app = new ModuleRoot(Foo);
+    const moduleRoot = new ModuleRoot(Foo);
 
     // Wait till first send request
     await new Promise((done) => {
@@ -93,7 +93,7 @@ describe('MessageProducerModule', () => {
         );
         done();
       });
-      app.start();
+      moduleRoot.start();
     });
 
     // Wait till the second send request
@@ -113,6 +113,6 @@ describe('MessageProducerModule', () => {
       mockController.emit('Producer:sent');
     });
     mockController.emit('Producer:sent');
-    await app.stop();
+    await moduleRoot.stop();
   });
 });

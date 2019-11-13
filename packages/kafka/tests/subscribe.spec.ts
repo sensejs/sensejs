@@ -109,11 +109,11 @@ describe('Subscriber', () => {
       kafkaConnectOption: {kafkaHost: 'any', groupId: ''},
       globalInterceptors: [interceptorA],
     });
-    const app = new ModuleRoot(module);
-    await app.start();
+    const moduleRoot = new ModuleRoot(module);
+    await moduleRoot.start();
     expect(startSpy).toBeCalled();
     mockController.emit('message:foo', {topic: ''});
-    await app.stop();
+    await moduleRoot.stop();
     expect(fooSpy).toBeCalled();
     expect(stopSpy).toBeCalled();
   });

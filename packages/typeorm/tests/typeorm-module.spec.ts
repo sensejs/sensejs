@@ -67,9 +67,9 @@ describe('TypeOrmModule', () => {
       async onDestroy() {}
     }
 
-    const app = new ModuleRoot(FooModule);
-    await app.start();
-    await app.stop();
+    const moduleRoot = new ModuleRoot(FooModule);
+    await moduleRoot.start();
+    await moduleRoot.stop();
     expect(spy).toBeCalled();
   });
 });
