@@ -1,4 +1,4 @@
-import {Context} from './context';
+import {ModuleRoot} from './module-root';
 import {ModuleConstructor} from './module';
 
 interface ExitOption {
@@ -72,7 +72,7 @@ function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOpt
 
 export async function runModule(entryModule: ModuleConstructor, runOption: Partial<RunOption> = {}): Promise<never> {
   const actualRunOption = Object.assign({}, defaultRunOption, runOption);
-  const appContext = new Context(entryModule);
+  const appContext = new ModuleRoot(entryModule);
   let stopPromise: Promise<void>;
   const runUntilExit = new Promise<number>((resolve) => {
     let exitCode = 0;

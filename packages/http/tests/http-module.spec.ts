@@ -1,4 +1,4 @@
-import {ApplicationFactory, Component, Module} from '@sensejs/core';
+import {ModuleRoot, Component, Module} from '@sensejs/core';
 import {inject, Container} from 'inversify';
 import supertest from 'supertest';
 import {Controller, GET, HttpModule, HttpConfigType} from '../src';
@@ -37,7 +37,7 @@ describe('HttpModule', () => {
       },
     });
 
-    const app = new ApplicationFactory(MyHttpModule);
+    const app = new ModuleRoot(MyHttpModule);
     await app.start();
     await supertest('http://localhost:3000').get('/foo');
     expect(stub).toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe('HttpModule', () => {
       }
     }
 
-    const app = new ApplicationFactory(TestModule);
+    const app = new ModuleRoot(TestModule);
     await app.start();
     await app.stop();
 

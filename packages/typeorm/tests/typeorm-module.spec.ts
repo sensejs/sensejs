@@ -1,4 +1,4 @@
-import {ApplicationFactory, Module} from '@sensejs/core';
+import {ModuleRoot, Module} from '@sensejs/core';
 import {Controller, GET, HttpInterceptor, KoaHttpContext} from '@sensejs/http';
 import {Container, inject} from 'inversify';
 import {Column, Entity, PrimaryGeneratedColumn, Repository} from 'typeorm';
@@ -67,7 +67,7 @@ describe('TypeOrmModule', () => {
       async onDestroy() {}
     }
 
-    const app = new ApplicationFactory(FooModule);
+    const app = new ModuleRoot(FooModule);
     await app.start();
     await app.stop();
     expect(spy).toBeCalled();

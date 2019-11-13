@@ -2,7 +2,7 @@ import {Container} from 'inversify';
 import {getModuleMetadata, ModuleConstructor} from './module';
 import {ModuleInstance} from './module-instance';
 
-export class Context {
+export class ModuleRoot {
   private readonly container: Container = new Container({skipBaseClassChecks: true});
   private readonly moduleInstanceMap: Map<ModuleConstructor, ModuleInstance> = new Map();
   private readonly moduleDependencyMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();

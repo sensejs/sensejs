@@ -52,7 +52,7 @@ jest.mock('kafka-node', () => {
   };
 });
 
-import {ApplicationFactory, Module} from '@sensejs/core';
+import {ModuleRoot, Module} from '@sensejs/core';
 import {inject} from 'inversify';
 import {ProduceRequest} from 'kafka-node';
 import {KafkaPublishModule} from '../src';
@@ -82,7 +82,7 @@ describe('MessageProducerModule', () => {
       }
     }
 
-    const app = new ApplicationFactory(Foo);
+    const app = new ModuleRoot(Foo);
 
     // Wait till first send request
     await new Promise((done) => {

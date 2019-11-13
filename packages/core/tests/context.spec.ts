@@ -1,8 +1,8 @@
 import {EventEmitter} from 'events';
-import {Context, Component, Module} from '../src';
+import {ModuleRoot, Component, Module} from '../src';
 import {inject} from 'inversify';
 
-describe('Contxt', () => {
+describe('ModuleRoot', () => {
   test('lifecycle', async () => {
     const mockedModuleEvent = new EventEmitter();
     const mockedALifecycleCreated = new Promise<void>((done) => {
@@ -23,7 +23,7 @@ describe('Contxt', () => {
 
     const ModuleC = Module({requires: [ModuleA, ModuleB]});
 
-    const app = new Context(ModuleC);
+    const app = new ModuleRoot(ModuleC);
     const spyOnCreateForB = jest.spyOn(ModuleB.prototype, 'onCreate');
     const spyOnDestroyForA = jest.spyOn(ModuleA.prototype, 'onDestroy');
     jest.spyOn(ModuleB.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
@@ -56,7 +56,7 @@ describe('Contxt', () => {
 
     class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {}
 
-    const app = new Context(BarModule);
+    const app = new ModuleRoot(BarModule);
     await app.start();
   });
 });

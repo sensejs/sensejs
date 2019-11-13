@@ -30,7 +30,7 @@ jest.mock('kafka-pipeline', (): unknown => {
 
   return {ConsumerGroupPipeline: MockConsumerGroupPipeline};
 });
-import {ApplicationFactory, RequestInterceptor, ParamBinding, Component} from '@sensejs/core';
+import {ModuleRoot, RequestInterceptor, ParamBinding, Component} from '@sensejs/core';
 import {EventEmitter} from 'events';
 import {ConsumerGroupPipeline} from 'kafka-pipeline';
 import {KafkaConsumerModule} from '../src';
@@ -109,7 +109,7 @@ describe('Subscriber', () => {
       kafkaConnectOption: {kafkaHost: 'any', groupId: ''},
       globalInterceptors: [interceptorA],
     });
-    const app = new ApplicationFactory(module);
+    const app = new ModuleRoot(module);
     await app.start();
     expect(startSpy).toBeCalled();
     mockController.emit('message:foo', {topic: ''});
