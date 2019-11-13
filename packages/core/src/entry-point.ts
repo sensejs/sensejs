@@ -72,19 +72,23 @@ function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOpt
 
 export async function runModule(entryModule: ModuleConstructor, runOption: Partial<RunOption> = {}): Promise<never> {
   const actualRunOption = Object.assign({}, defaultRunOption, runOption);
-  const appContext = new ModuleRoot(entryModule);
+  const moduleRoot = new ModuleRoot(entryModule);
   let stopPromise: Promise<void>;
   const runUntilExit = new Promise<number>((resolve) => {
     let exitCode = 0;
+    const stopModuleRoot = async () => {
+      try {
+        await moduleRoot.stop();
+      } catch (e) {
+        exitCode = actualRunOption.errorExitOption.exitCode;
+      } finally {
+        resolve(exitCode);
+      }
+    };
     const stopApp = (option: ExitOption) => {
       exitCode = option.exitCode;
       if (!stopPromise) {
-        stopPromise = appContext
-          .stop()
-          .catch(() => {
-            exitCode = actualRunOption.errorExitOption.exitCode;
-          })
-          .finally(() => resolve(exitCode));
+        stopPromise = stopModuleRoot();
       }
       if (option.timeout > 0) {
         setTimeout(() => {
@@ -94,7 +98,7 @@ export async function runModule(entryModule: ModuleConstructor, runOption: Parti
     };
     setupEventEmitter(actualRunOption, stopApp);
 
-    appContext.start().catch(() => {
+    moduleRoot.start().catch(() => {
       stopApp(actualRunOption.errorExitOption);
     });
   });
