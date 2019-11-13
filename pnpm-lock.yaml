@@ -1,7 +1,7 @@
 importers:
   .:
     devDependencies:
-      '@types/jest': 24.0.22
+      '@types/jest': 24.0.23
       '@types/koa': 2.0.52
       '@types/koa-router': 7.0.42
       '@types/node': 12.12.7
@@ -19,7 +19,7 @@ importers:
       tslint: 5.20.1_typescript@3.7.2
       typescript: 3.7.2
     specifiers:
-      '@types/jest': ^24.0.22
+      '@types/jest': ^24.0.23
       '@types/koa': ^2.0.52
       '@types/koa-router': ^7.0.42
       '@types/node': ^12.12.7
@@ -74,7 +74,7 @@ importers:
       reflect-metadata: 0.1.13
       tslib: 1.10.0
     specifiers:
-      '@sensejs/logger': ~0.0.0
+      '@sensejs/logger': 'workspace:*'
       '@types/superagent': ^4.1.3
       '@types/supertest': ^2.0.8
       '@types/uuid': ^3.4.5
@@ -98,7 +98,7 @@ importers:
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': ~0.0.0
+      '@sensejs/core': 'workspace:*'
       '@types/koa': ^2.0.51
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.0.42
@@ -115,14 +115,14 @@ importers:
       '@sensejs/core': 'link:../core'
       inversify: 5.0.1
       kafka-node: github.com/thynson/kafka-node/7fd49714142c37af33d1d9c392f09eec5cfc97e5
-      kafka-pipeline: 3.0.1_kafka-node@4.1.3
+      kafka-pipeline: 3.0.2_kafka-node@4.1.3
     devDependencies:
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': ~0.0.0
+      '@sensejs/core': 'workspace:*'
       inversify: ^5.0.1
       kafka-node: 'git+https://github.com/thynson/kafka-node.git#7fd49714142c37af33d1d9c392f09eec5cfc97e5'
-      kafka-pipeline: ^3.0.1
+      kafka-pipeline: ^3.0.2
       tslib: ^1.10.0
   packages/logger:
     dependencies:
@@ -137,17 +137,17 @@ importers:
   packages/typeorm:
     dependencies:
       '@sensejs/core': 'link:../core'
-      '@sensejs/http': 'link:../http'
       inversify: 5.0.1
       typeorm: 0.2.20_sqlite3@4.1.0
     devDependencies:
+      '@sensejs/http': 'link:../http'
       '@types/supertest': 2.0.8
       sqlite3: 4.1.0
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': ~0.0.0
-      '@sensejs/http': ~0.0.0
+      '@sensejs/core': 'workspace:*'
+      '@sensejs/http': 'workspace:*'
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       sqlite3: ^4.1.0
@@ -650,16 +650,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-UpYjBi8xefVChsCoBpKShdxTllC9pwISirfoZsUa2AAdQg/Jd2KQGtSbw+ya7GPo7x/wAPlH6JBhKhAsXUEZNA==
-  /@types/jest-diff/20.0.1:
-    dev: true
-    resolution:
-      integrity: sha512-yALhelO3i0hqZwhjtcr6dYyaLoCHbAMshwtj6cGxTvHZAKXHsYGdff6E8EPw3xLKY0ELUTQ69Q1rQiJENnccMA==
-  /@types/jest/24.0.22:
+  /@types/jest/24.0.23:
     dependencies:
-      '@types/jest-diff': 20.0.1
+      jest-diff: 24.9.0
     dev: true
     resolution:
-      integrity: sha512-t2OvhNZnrNjlzi2i0/cxbLVM59WN15I2r1Qtb7wDv28PnV9IzrPtagFRey/S9ezdLD0zyh1XGMQIEQND2YEfrw==
+      integrity: sha512-L7MBvwfNpe7yVPTXLn32df/EK+AMBFAFvZrRuArGs7npEWnlziUXK+5GMIUTI4NIuwok3XibsjXCs5HxviYXjg==
   /@types/keygrip/1.0.1:
     resolution:
       integrity: sha1-/1QEYtL7TQqIRBzq8n0oewHD2Hg=
@@ -765,10 +761,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-K8/LfZq2duW33XW/tFwEAfnZlqIfVsoyRB3kfXdPXYhl0nfM8mmh7GS0jg7WrX2Dgq/0Ha/pR1PaR+BvmWwjiQ==
-  /abab/2.0.2:
+  /abab/2.0.3:
     dev: true
     resolution:
-      integrity: sha512-2scffjvioEmNz0OyDSLGWDfKCVwaKc6l9Pm9kOIREU13ClXZvHpg/nRL5xyjSSSLhOnXqft2HpsAzNEEA8cFFg==
+      integrity: sha512-tsFzPpcttalNjFBCFMqsKYQcWxxen1pgJR56by//QwvJc4/OUS3kPOOttx2tSIfjsylB0pYu7f5D3K1RCxUnUg==
   /abbrev/1.1.1:
     resolution:
       integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
@@ -1659,7 +1655,7 @@ packages:
       integrity: sha1-hTz6D3y+L+1d4gMmuN1YEDX24vA=
   /data-urls/1.1.0:
     dependencies:
-      abab: 2.0.2
+      abab: 2.0.3
       whatwg-mimetype: 2.3.0
       whatwg-url: 7.1.0
     dev: true
@@ -2280,7 +2276,7 @@ packages:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
-      mime-types: 2.1.24
+      mime-types: 2.1.25
     engines:
       node: '>= 0.12'
     resolution:
@@ -2509,7 +2505,7 @@ packages:
       node: '>=0.4.7'
     hasBin: true
     optionalDependencies:
-      uglify-js: 3.6.8
+      uglify-js: 3.6.9
     resolution:
       integrity: sha512-C29UoFzHe9yM61lOsIlCE5/mQVGrnIOrOq7maQl76L7tYPCgC1og0Ajt6uWnX4ZTxBPnjw+CUvawphwCfJgUnA==
   /har-schema/2.0.0:
@@ -3591,7 +3587,7 @@ packages:
       integrity: sha1-peZUwuWi3rXyAdls77yoDA7y9RM=
   /jsdom/11.12.0:
     dependencies:
-      abab: 2.0.2
+      abab: 2.0.3
       acorn: 5.7.3
       acorn-globals: 4.3.4
       array-equal: 1.0.0
@@ -3663,15 +3659,15 @@ packages:
       '0': node >=0.6.0
     resolution:
       integrity: sha1-MT5mvB5cwG5Di8G3SZwuXFastqI=
-  /kafka-pipeline/3.0.1_kafka-node@4.1.3:
+  /kafka-pipeline/3.0.2_kafka-node@4.1.3:
     dependencies:
       bluebird: 3.7.1
       kafka-node: github.com/thynson/kafka-node/7fd49714142c37af33d1d9c392f09eec5cfc97e5
     dev: false
     peerDependencies:
-      kafka-node: 'git+https://github.com/thynson/kafka-node.git#803555ebb0a774d53a294995e9ef97dc07ac60ed'
+      kafka-node: 'git+https://github.com/thynson/kafka-node.git#7fd49714142c37af33d1d9c392f09eec5cfc97e5'
     resolution:
-      integrity: sha512-oI2VYPK09mXi9mA4X63y5rlaYTmWmFj8iBhq2M6MnNUkNdxFZi7p/QHkn9V35uxXKq/N4YzAfe2zImz2OxMAHQ==
+      integrity: sha512-Tlzu9UWPd8x/VE0Me1rCiOkSmXRWYT+Jge8i0cuCpKyK5eJCA5ccTn3p8tPo2bX9bayLhIFvcGYGCIqK/Dv/ww==
   /keygrip/1.1.0:
     dependencies:
       tsscmp: 1.0.6
@@ -4121,6 +4117,11 @@ packages:
       node: '>= 0.6'
     resolution:
       integrity: sha512-jYdeOMPy9vnxEqFRRo6ZvTZ8d9oPb+k18PKoYNYUe2stVEBPPwsln/qWzdbmaIvnhZ9v2P+CuecK+fpUfsV2mA==
+  /mime-db/1.42.0:
+    engines:
+      node: '>= 0.6'
+    resolution:
+      integrity: sha512-UbfJCR4UAVRNgMpfImz05smAXK7+c+ZntjaA26ANtkXLlOe947Aag5zdIcKQULAiF9Cq4WxBi9jUs5zkA84bYQ==
   /mime-types/2.1.24:
     dependencies:
       mime-db: 1.40.0
@@ -4128,6 +4129,13 @@ packages:
       node: '>= 0.6'
     resolution:
       integrity: sha512-WaFHS3MCl5fapm3oLxU4eYDw77IQM2ACcxQ9RIxfaC3ooc6PFuBMGZZsYpvoXS5D5QTWPieo1jjLdAm3TBP3cQ==
+  /mime-types/2.1.25:
+    dependencies:
+      mime-db: 1.42.0
+    engines:
+      node: '>= 0.6'
+    resolution:
+      integrity: sha512-5KhStqB5xpTAeGqKBAMgwaYMnQik7teQN4IAzC7npDv6kzeU6prfkR67bc87J1kWMPGkoaZSq1npmexMgkmEVg==
   /mime/1.6.0:
     dev: true
     engines:
@@ -5149,7 +5157,7 @@ packages:
       is-typedarray: 1.0.0
       isstream: 0.1.2
       json-stringify-safe: 5.0.1
-      mime-types: 2.1.24
+      mime-types: 2.1.25
       oauth-sign: 0.9.0
       performance-now: 2.1.0
       qs: 6.5.2
@@ -6140,7 +6148,7 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-ml7V7JfiN2Xwvcer+XAf2csGO1bPBdRbFCkYBczNZggrBZ9c7G3riSUeJmqEU5uOtXNPMhE3n+R4FA/3YOAWOQ==
-  /uglify-js/3.6.8:
+  /uglify-js/3.6.9:
     dependencies:
       commander: 2.20.3
       source-map: 0.6.1
@@ -6150,7 +6158,7 @@ packages:
     hasBin: true
     optional: true
     resolution:
-      integrity: sha512-XhHJ3S3ZyMwP8kY1Gkugqx3CJh2C3O0y8NPiSxtm1tyD/pktLAkFZsFGpuNfTZddKDQ/bbDBLAd2YyA1pbi8HQ==
+      integrity: sha512-pcnnhaoG6RtrvHJ1dFncAe8Od6Nuy30oaJ82ts6//sGSXOP5UjBMEthiProjXmMNHOfd93sqlkztifFMcb+4yw==
   /union-value/1.0.1:
     dependencies:
       arr-union: 3.1.0
