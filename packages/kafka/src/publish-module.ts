@@ -1,8 +1,16 @@
-import {ComponentScope, Module, ModuleConstructor, ModuleOption, ServiceIdentifier} from '@sensejs/core';
+import {
+  AbstractConnectionFactory,
+  ComponentScope,
+  createConfigHelperFactory,
+  createConnectionFactory,
+  Module,
+  ModuleConstructor,
+  ModuleOption,
+  ServiceIdentifier,
+} from '@sensejs/core';
 import {MessageProducer, ProducerOption} from './message-producer';
 import {inject} from 'inversify';
 import merge from 'lodash.merge';
-import {AbstractConnectionFactory, createConfigHelperFactory, createConnectionFactory} from './utility';
 
 export interface KafkaPublishModuleOption extends ModuleOption {
   kafkaProducerOption?: Partial<ProducerOption>;

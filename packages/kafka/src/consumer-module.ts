@@ -1,10 +1,7 @@
 import {
   Abstract,
-  Component,
-  ComponentFactory,
-  ComponentScope,
   composeRequestInterceptor,
-  Constructor,
+  createConfigHelperFactory,
   invokeMethod,
   Module,
   ModuleConstructor,
@@ -12,14 +9,13 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {Container, decorate, inject} from 'inversify';
+import {Container, inject} from 'inversify';
 import {Message} from 'kafka-node';
 import {MessageConsumer} from './message-consumer';
 import {ConsumingContext} from './consuming-context';
 import {getSubscribeControllerMetadata, getSubscribeTopicMetadata} from './consuming-decorators';
 import {ConnectOption, ConsumeOption, FetchOption, TopicConsumerOption} from './message-consume-manager';
 import merge from 'lodash.merge';
-import {createConfigHelperFactory} from './utility';
 
 export interface KafkaConsumerOption {
   kafkaConnectOption: ConnectOption;

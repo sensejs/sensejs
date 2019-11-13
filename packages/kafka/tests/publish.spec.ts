@@ -141,7 +141,10 @@ describe('MessageProducerModule', () => {
     }) {
       onCreate() {
         const promise = super.onCreate();
-        mockController.emit('Producer:ready');
+        // let producer emit ready only after the constructor had been called
+        mockController.once('Producer:constructor', () => {
+          mockController.emit('Producer:ready');
+        });
         return promise;
       }
     }
