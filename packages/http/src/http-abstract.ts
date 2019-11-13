@@ -1,37 +1,27 @@
-import {Container, injectable} from 'inversify';
-import {ControllerMetadata} from './http-decorators';
+import {Constructor, RequestInterceptor, RequestContext} from '@sensejs/core';
 import {RequestListener} from 'http';
-import {Constructor} from '@sensejs/core';
+import {Container} from 'inversify';
 import {Readable} from 'stream';
+import {ControllerMetadata} from './http-decorators';
 
-export abstract class HttpContext {
+export abstract class HttpContext extends RequestContext {
+  abstract responseStatusCode: number;
 
-    abstract responseStatusCode: number;
+  abstract responseValue?: object | Buffer | Readable;
+}
 
-    abstract responseValue?: object | Buffer | Readable;
-
-    abstract bindContextValue(key: any, value: any): void;
+export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {
+  intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
+    return next();
+  }
 }
 
 export abstract class HttpAdaptor {
+  constructor(protected readonly container: Container) {}
 
-    constructor(protected readonly container: Container) {
-    }
+  abstract addControllerMapping(controllerMapping: ControllerMetadata): this;
 
-    abstract addControllerMapping(controllerMapping: ControllerMetadata): this;
+  abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
 
-    abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
-
-    abstract build(): RequestListener;
-}
-
-@injectable()
-export abstract class HttpInterceptor {
-
-    async beforeRequest(context: HttpContext): Promise<void> {
-    }
-
-    async afterRequest(context: HttpContext, e?: Error): Promise<void> {
-    }
-
+  abstract build(): RequestListener;
 }

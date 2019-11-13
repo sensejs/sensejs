@@ -5,8 +5,10 @@
       <module fileurl="file://$PROJECT_DIR$/packages/core/.idea/core.iml" filepath="$PROJECT_DIR$/packages/core/.idea/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/http/.idea/http.iml" filepath="$PROJECT_DIR$/packages/http/.idea/http.iml" />
       <module fileurl="file://$PROJECT_DIR$/examples/http-server/.idea/http-server.iml" filepath="$PROJECT_DIR$/examples/http-server/.idea/http-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/kafka/.idea/kafka.iml" filepath="$PROJECT_DIR$/packages/kafka/.idea/kafka.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/logger/.idea/logger.iml" filepath="$PROJECT_DIR$/packages/logger/.idea/logger.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/typeorm/.idea/typeorm.iml" filepath="$PROJECT_DIR$/packages/typeorm/.idea/typeorm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/examples/typeorm-http-server/.idea/typeorm-http-server.iml" filepath="$PROJECT_DIR$/examples/typeorm-http-server/.idea/typeorm-http-server.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/workspace.iml" filepath="$PROJECT_DIR$/.idea/workspace.iml" />
     </modules>
   </component>

@@ -18,8 +18,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "~0.0.0",
-    "@sensejs/http": "~0.0.0",
+    "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
     "typeorm": "0.2.20"
   },
@@ -27,7 +26,8 @@
     "tslib": "^1.10.0",
     "sqlite3": "^4.1.0",
     "supertest": "^4.0.2",
-    "@types/supertest": "^2.0.8"
+    "@types/supertest": "^2.0.8",
+    "@sensejs/http": "workspace:*"
   },
   "peerDependencies": {
     "tslib": "^1.10.0",

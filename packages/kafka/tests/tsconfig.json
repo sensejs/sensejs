@@ -1,0 +1,12 @@
+{
+  "extends": "../../../tsconfig",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "lib",
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "**/*.ts",
+    "../src/**/*.ts"
+  ]
+}

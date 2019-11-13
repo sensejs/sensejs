@@ -18,13 +18,13 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "~0.0.0",
-    "@sensejs/http": "~0.0.0",
-    "@types/ioredis": "^4.0.18",
+    "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
     "ioredis": "^4.14.1"
   },
   "devDependencies": {
+    "@sensejs/http": "workspace:*",
+    "@types/ioredis": "^4.0.18",
     "@types/supertest": "^2.0.8",
     "supertest": "^4.0.2",
     "tslib": "^1.10.0"
