@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import Redis from 'ioredis';
 import {Container, inject} from 'inversify';
 import {Controller} from '@sensejs/http';
-import {ApplicationFactory, Module} from '@sensejs/core';
+import {ModuleRoot, Module} from '@sensejs/core';
 import {RedisModule, InjectRedis, RedisModuleOptions} from '../src';
 
 describe('RedisModule', () => {
@@ -97,7 +97,7 @@ describe('RedisModule', () => {
       async onDestroy() {}
     }
 
-    const app = new ApplicationFactory(FooModule);
+    const app = new ModuleRoot(FooModule);
     await app.start();
     await app.stop();
 
@@ -144,7 +144,7 @@ describe('RedisModule', () => {
       async onDestroy() {}
     }
 
-    const app = new ApplicationFactory(FooModule);
+    const app = new ModuleRoot(FooModule);
     await app.start();
     await app.stop();
     expect(spy).toBeCalled();

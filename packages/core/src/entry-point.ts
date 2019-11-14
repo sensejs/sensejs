@@ -103,7 +103,7 @@ export async function runModule(entryModule: ModuleConstructor, runOption: Parti
     });
   });
 
-  process.exit(await runUntilExit);
+  return process.exit(await runUntilExit);
 }
 
 let entryPointCalled = false;
