@@ -21,7 +21,7 @@ import {
   SubscribeControllerMetadata,
   SubscribeTopicMetadata,
 } from './consuming-decorators';
-import {ConnectOption, ConsumeOption, FetchOption, TopicConsumerOption} from './message-consume-manager';
+import {ConnectOption, ConsumeOption, FetchOption} from './message-consume-manager';
 
 export interface KafkaConsumerOption extends ConnectOption, FetchOption, ConsumeOption {}
 
@@ -51,19 +51,22 @@ function mergeConnectOption(
 }
 
 function createSubscriberTopicModule(
-  module: ModuleConstructor,
+  messageConsumerModule: ModuleConstructor,
   option: KafkaConsumerModuleOption,
-  injectOptionFrom: ServiceIdentifier<unknown> | undefined,
   controllerMetadata: SubscribeControllerMetadata,
   subscribeMetadata: SubscribeTopicMetadata,
   method: Function,
 ) {
-  const ConfigHelper = createConfigHelperFactory(subscribeMetadata.fallbackOption, injectOptionFrom, (a, b) => {
+  const {fallbackOption, injectOptionFrom} = subscribeMetadata;
+  const ConfigHelper = createConfigHelperFactory(fallbackOption, injectOptionFrom, (a, b) => {
     return Object.assign({}, a, b);
   });
   const symbol = Symbol();
 
-  class TopicModule extends Module({requires: [module], factories: [{provide: symbol, factory: ConfigHelper}]}) {
+  class TopicModule extends Module({
+    requires: [messageConsumerModule],
+    factories: [{provide: symbol, factory: ConfigHelper}],
+  }) {
     constructor(
       @inject(symbol) config: KafkaTopicConsumerOption,
       @inject(MessageConsumer) messageConsumer: MessageConsumer,
@@ -95,8 +98,6 @@ function createSubscriberTopicModule(
 }
 
 function scanController(option: KafkaConsumerModuleOption, module: ModuleConstructor) {
-  const map = new Map<string, TopicConsumerOption>();
-  const map2 = new Map<string, ModuleConstructor>();
   const result: ModuleConstructor[] = [];
   for (const component of option.components || []) {
     const controllerMetadata = getSubscribeControllerMetadata(component);
@@ -109,11 +110,9 @@ function scanController(option: KafkaConsumerModuleOption, module: ModuleConstru
       if (!subscribeMetadata) {
         continue;
       }
-      const {fallbackOption, injectOptionFrom} = subscribeMetadata;
       const subscribeTopicModule = createSubscriberTopicModule(
         module,
         option,
-        injectOptionFrom,
         controllerMetadata,
         subscribeMetadata,
         propertyDescriptor.value,
