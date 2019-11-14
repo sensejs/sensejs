@@ -75,8 +75,9 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
         return metadata.onBind(bind, unbind, isBound, rebind);
       }),
     );
+
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, scope, factory} = factoryProvider;
+      const {provide, scope, factory, tag, name} = factoryProvider;
       const binding = bind(factory).toSelf();
       switch (scope) {
         case ComponentScope.REQUEST:
@@ -89,10 +90,19 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
           binding.inTransientScope();
           break;
       }
-      bind(provide).toDynamicValue((context: interfaces.Context) => {
+
+      const dynamicValueBinding = bind(provide).toDynamicValue((context: interfaces.Context) => {
         const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
         return factoryInstance.build(context);
       });
+
+      if (tag) {
+        dynamicValueBinding.whenTargetTagged(tag.key, tag.value);
+      } else if (name) {
+        dynamicValueBinding.whenTargetNamed(name);
+      } else {
+        dynamicValueBinding.whenTargetIsDefault();
+      }
     });
   });
 
