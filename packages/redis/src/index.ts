@@ -1,12 +1,25 @@
 import 'reflect-metadata';
 import Redis from 'ioredis';
 import {inject, named} from 'inversify';
-import {Component, ComponentFactory, ComponentScope, Module, ModuleConstructor} from '@sensejs/core';
+import {
+  Component,
+  ComponentFactory,
+  ComponentScope,
+  Module,
+  ModuleConstructor,
+  ServiceIdentifier,
+  ModuleOption,
+} from '@sensejs/core';
+import {createConfigHelperFactory} from '@sensejs/core';
 
-export interface RedisModuleOptions {
+export interface RedisConnectOption extends Redis.RedisOptions {
   uri?: string;
+}
+
+export interface RedisModuleOptions extends ModuleOption {
   name?: string | symbol;
-  options?: Redis.RedisOptions;
+  options?: RedisConnectOption;
+  injectOptionFrom?: ServiceIdentifier<RedisConnectOption>;
 }
 
 export function InjectRedis(name?: string | symbol) {
@@ -52,9 +65,10 @@ function buildRedisModule(options: RedisModuleOptions): ModuleConstructor {
   class RedisClientFactory extends ComponentFactory<Redis.Redis> {
     private redisClient?: Redis.Redis;
 
-    async connect(options: RedisModuleOptions): Promise<Redis.Redis> {
+    async connect(options: RedisConnectOption): Promise<Redis.Redis> {
       this.redisClient = await new Promise<Redis.Redis>((done, fail) => {
-        const redisClient = options.uri ? new Redis(options.uri) : new Redis(options.options);
+        const {uri, ...rest} = options;
+        const redisClient = typeof uri === 'string' ? new Redis(uri, rest) : new Redis(rest);
         const errorHandlerBeforeConnect = (error: Error) => fail(error);
         redisClient.once('connect', () => {
           redisClient.removeListener('error', errorHandlerBeforeConnect);
@@ -80,17 +94,29 @@ function buildRedisModule(options: RedisModuleOptions): ModuleConstructor {
     }
   }
 
+  const optionSymbol = Symbol();
+  const ConfigFactory = createConfigHelperFactory(options.options, options.injectOptionFrom, (fallback, injected) => {
+    return Object.assign({}, fallback, injected);
+  });
+
   class RedisModule extends Module({
+    requires: [Module(options)],
     components: [],
     // TODO: Factory scope is not correctly defined, set scope to ComponentScope.SINGLETON for work-around
-    factories: [{provide: Redis, name: options.name, scope: ComponentScope.SINGLETON, factory: RedisClientFactory}],
+    factories: [
+      {provide: optionSymbol, scope: ComponentScope.SINGLETON, factory: ConfigFactory},
+      {provide: Redis, name: options.name, scope: ComponentScope.SINGLETON, factory: RedisClientFactory},
+    ],
   }) {
-    constructor(@inject(RedisClientFactory) private redisClientFactory: RedisClientFactory) {
+    constructor(
+      @inject(RedisClientFactory) private redisClientFactory: RedisClientFactory,
+      @inject(optionSymbol) private redisConnectOption: RedisConnectOption,
+    ) {
       super();
     }
 
     async onCreate(): Promise<void> {
-      await this.redisClientFactory.connect(options);
+      await this.redisClientFactory.connect(this.redisConnectOption);
     }
 
     async onDestroy(): Promise<void> {

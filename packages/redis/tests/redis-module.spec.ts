@@ -8,7 +8,7 @@ import {RedisModule, InjectRedis, RedisModuleOptions} from '../src';
 describe('RedisModule', () => {
   test('will throw without `name` field', (done) => {
     try {
-      RedisModule([{uri: '1', name: '1'}, {uri: '2'}]);
+      RedisModule([{options: {uri: '1'}, name: '1'}, {options: {uri: '2'}}]);
 
       done(new Error('error'));
     } catch (error) {
@@ -19,8 +19,8 @@ describe('RedisModule', () => {
   test('will throw with duplicated `name` field', (done) => {
     try {
       RedisModule([
-        {uri: '1', name: '1'},
-        {uri: '2', name: '1'},
+        {options: {uri: '1'}, name: '1'},
+        {options: {uri: '2'}, name: '1'},
       ]);
 
       done(new Error('error'));
@@ -30,14 +30,17 @@ describe('RedisModule', () => {
   });
 
   test('multi redis correct', async () => {
+    const ConfigModule = Module({constants: [{provide: 'config.redis', value: {uri: 'injected'}}]});
     const redisOption1: RedisModuleOptions = {
-      uri: '',
+      options: {uri: ''},
       name: 'redis1',
     };
 
     const redisOption2: RedisModuleOptions = {
-      uri: '',
+      requires: [ConfigModule],
+      options: {uri: ''},
       name: 'redis2',
+      injectOptionFrom: 'config.redis',
     };
 
     @Controller('/example')
@@ -119,7 +122,7 @@ describe('RedisModule', () => {
     }
 
     const redisModule = RedisModule({
-      uri: '',
+      options: {uri: ''},
     });
 
     const spy = jest.fn();
