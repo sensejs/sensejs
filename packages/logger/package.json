@@ -1,8 +1,11 @@
 {
   "name": "@sensejs/logger",
-  "version": "0.0.0",
+  "version": "0.0.4",
   "description": "",
-  "files": ["lib", "README.md"],
+  "files": [
+    "lib",
+    "README.md"
+  ],
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "scripts": {
@@ -15,7 +18,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "colors": "^1.3.3",
+    "colors": "^1.4.0",
     "moment": "^2.24.0"
   },
   "devDependencies": {

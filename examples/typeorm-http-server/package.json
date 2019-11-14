@@ -11,12 +11,12 @@
   "private": true,
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:*",
-    "@sensejs/http": "workspace:*",
-    "@sensejs/typeorm": "workspace:*",
+    "@sensejs/core": "workspace:0.0.4",
+    "@sensejs/http": "workspace:0.0.4",
+    "@sensejs/typeorm": "workspace:0.0.4",
     "reflect-metadata": "^0.1.13",
-    "typeorm": "^0.2.20",
     "sqlite3": "^4.1.0",
-    "tslib": "^1.10.0"
+    "tslib": "^1.10.0",
+    "typeorm": "^0.2.20"
   }
 }

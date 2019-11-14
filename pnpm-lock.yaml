@@ -8,7 +8,7 @@ importers:
       coveralls: 3.0.7
       husky: 3.0.9
       jest: 24.9.0
-      lint-staged: 9.4.2
+      lint-staged: 9.4.3
       prettier: 1.19.1
       reflect-metadata: 0.1.13
       release-it: 12.4.3
@@ -26,7 +26,7 @@ importers:
       coveralls: ^3.0.7
       husky: ^3.0.9
       jest: ^24.9.0
-      lint-staged: ^9.4.2
+      lint-staged: ^9.4.3
       prettier: ^1.19.1
       reflect-metadata: ^0.1.13
       release-it: ^12.4.3
@@ -42,8 +42,8 @@ importers:
       '@sensejs/http': 'link:../../packages/http'
       reflect-metadata: 0.1.13
     specifiers:
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/http': 'workspace:*'
+      '@sensejs/core': 'workspace:0.0.4'
+      '@sensejs/http': 'workspace:0.0.4'
       reflect-metadata: ^0.1.13
   examples/typeorm-http-server:
     dependencies:
@@ -55,9 +55,9 @@ importers:
       tslib: 1.10.0
       typeorm: 0.2.20_sqlite3@4.1.0
     specifiers:
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/http': 'workspace:*'
-      '@sensejs/typeorm': 'workspace:*'
+      '@sensejs/core': 'workspace:0.0.4'
+      '@sensejs/http': 'workspace:0.0.4'
+      '@sensejs/typeorm': 'workspace:0.0.4'
       reflect-metadata: ^0.1.13
       sqlite3: ^4.1.0
       tslib: ^1.10.0
@@ -74,10 +74,10 @@ importers:
       reflect-metadata: 0.1.13
       tslib: 1.10.0
     specifiers:
-      '@sensejs/logger': 'workspace:*'
-      '@types/superagent': ^4.1.3
+      '@sensejs/logger': 'workspace:0.0.4'
+      '@types/superagent': ^4.1.4
       '@types/supertest': ^2.0.8
-      '@types/uuid': ^3.4.5
+      '@types/uuid': ^3.4.6
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
       tslib: ^1.10.0
@@ -98,13 +98,13 @@ importers:
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:*'
+      '@sensejs/core': 'workspace:0.0.4'
       '@types/koa': ^2.0.51
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.0.42
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
-      koa: ^2.8.1
+      koa: ^2.11.0
       koa-bodyparser: ^4.2.1
       koa-router: ^7.4.0
       reflect-metadata: ^0.1.13
@@ -122,7 +122,7 @@ importers:
       '@types/lodash.merge': 4.6.6
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:*'
+      '@sensejs/core': 'workspace:0.0.4'
       '@types/lodash': ^4.14.146
       '@types/lodash.merge': ^4.6.6
       inversify: ^5.0.1
@@ -137,7 +137,7 @@ importers:
     devDependencies:
       tslib: 1.10.0
     specifiers:
-      colors: ^1.3.3
+      colors: ^1.4.0
       moment: ^2.24.0
       tslib: ^1.10.0
   packages/typeorm:
@@ -152,8 +152,8 @@ importers:
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/http': 'workspace:*'
+      '@sensejs/core': 'workspace:0.0.4'
+      '@sensejs/http': 'workspace:0.0.4'
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       sqlite3: ^4.1.0
@@ -2511,7 +2511,7 @@ packages:
     dev: true
     resolution:
       integrity: sha1-8QdIy+dq+WS3yWyTxrzCivEgwIE=
-  /handlebars/4.5.1:
+  /handlebars/4.5.2:
     dependencies:
       neo-async: 2.6.1
       optimist: 0.6.1
@@ -2523,7 +2523,7 @@ packages:
     optionalDependencies:
       uglify-js: 3.6.9
     resolution:
-      integrity: sha512-C29UoFzHe9yM61lOsIlCE5/mQVGrnIOrOq7maQl76L7tYPCgC1og0Ajt6uWnX4ZTxBPnjw+CUvawphwCfJgUnA==
+      integrity: sha512-29Zxv/cynYB7mkT1rVWQnV7mGX6v7H/miQ6dbEpYTKq5eJBN7PsRB+ViYJlcT6JINTSu4dVB9kOqEun78h6Exg==
   /har-schema/2.0.0:
     engines:
       node: '>=4'
@@ -3190,7 +3190,7 @@ packages:
       integrity: sha512-R47KzMtDJH6X4/YW9XTx+jrLnZnscW4VpNN+1PViSYTejLVPWv7oov+Duf8YQSPyVRUvueQqz1TcsC6mooZTXw==
   /istanbul-reports/2.2.6:
     dependencies:
-      handlebars: 4.5.1
+      handlebars: 4.5.2
     dev: true
     engines:
       node: '>=6'
@@ -3840,7 +3840,7 @@ packages:
     dev: true
     resolution:
       integrity: sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
-  /lint-staged/9.4.2:
+  /lint-staged/9.4.3:
     dependencies:
       chalk: 2.4.2
       commander: 2.20.3
@@ -3859,7 +3859,7 @@ packages:
     dev: true
     hasBin: true
     resolution:
-      integrity: sha512-OFyGokJSWTn2M6vngnlLXjaHhi8n83VIZZ5/1Z26SULRUWgR3ITWpAEQC9Pnm3MC/EpCxlwts/mQWDHNji2+zA==
+      integrity: sha512-PejnI+rwOAmKAIO+5UuAZU9gxdej/ovSEOAY34yMfC3OS4Ac82vCBPzAWLReR9zCPOMqeVwQRaZ3bUBpAsaL2Q==
   /listr-silent-renderer/1.1.1:
     dev: true
     engines:
