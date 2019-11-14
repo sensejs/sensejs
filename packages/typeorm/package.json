@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/typeorm",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "files": [
     "lib",
@@ -18,12 +18,12 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.0.4",
+    "@sensejs/core": "workspace:0.0.5",
     "inversify": "^5.0.1",
     "typeorm": "0.2.20"
   },
   "devDependencies": {
-    "@sensejs/http": "workspace:0.0.4",
+    "@sensejs/http": "workspace:0.0.5",
     "@types/supertest": "^2.0.8",
     "sqlite3": "^4.1.0",
     "supertest": "^4.0.2",
