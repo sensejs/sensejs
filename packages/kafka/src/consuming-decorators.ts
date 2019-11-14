@@ -65,10 +65,10 @@ export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
       throw new Error('Request mapping decorator must be applied to a function');
     }
     validateFunctionParamBindingMetadata(targetMethod);
-    const {option: fallbackOption, injectOptionFrom} = option;
+    const {option: fallbackOption, injectOptionFrom, interceptors = []} = option;
     const metadata: SubscribeTopicMetadata = {
       fallbackOption,
-      interceptors: [],
+      interceptors,
       injectOptionFrom,
     };
     setSubscribeTopicMetadata(targetMethod, metadata);

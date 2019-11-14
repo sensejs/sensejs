@@ -13,7 +13,7 @@ import {
 } from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import {Message} from 'kafka-node';
-import {MessageConsumer} from './message-consumer';
+import {ConsumeTopicOption, MessageConsumer} from './message-consumer';
 import {ConsumingContext} from './consuming-context';
 import {
   getSubscribeControllerMetadata,
@@ -24,10 +24,6 @@ import {
 import {ConnectOption, ConsumeOption, FetchOption} from './message-consume-manager';
 
 export interface KafkaConsumerOption extends ConnectOption, FetchOption, ConsumeOption {}
-
-export interface KafkaTopicConsumerOption extends KafkaConsumerOption {
-  topic: string;
-}
 
 export interface KafkaConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Abstract<RequestInterceptor>[];
@@ -68,14 +64,14 @@ function createSubscriberTopicModule(
     factories: [{provide: symbol, factory: ConfigHelper}],
   }) {
     constructor(
-      @inject(symbol) config: KafkaTopicConsumerOption,
+      @inject(symbol) config: ConsumeTopicOption,
       @inject(MessageConsumer) messageConsumer: MessageConsumer,
       @inject(Container) container: Container,
     ) {
       super();
 
       const composedInterceptor = composeRequestInterceptor(container, [
-        ...(option.globalInterceptors || []),
+        ...(option.globalInterceptors ?? []),
         ...controllerMetadata.interceptors,
         ...subscribeMetadata.interceptors,
       ]);

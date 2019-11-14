@@ -24,7 +24,7 @@ export interface ConnectOption {
   heartbeatInterval?: number;
 }
 
-export interface TopicConsumerOption extends ConnectOption, ConsumeOption, FetchOption {
+export interface ConsumeManagerOption extends ConnectOption, ConsumeOption, FetchOption {
   topic: string;
   consumeCallback: ConsumeCallback;
 }
@@ -34,7 +34,7 @@ export class MessageConsumeManager {
   private _runningPromise?: Promise<unknown>;
   private _consumerGroupPipeline: ConsumerGroupPipeline;
 
-  constructor(options: TopicConsumerOption) {
+  constructor(options: ConsumeManagerOption) {
     const {topic, consumeCallback, consumeConcurrency, consumeTimeout, commitInterval, ...rest} = options;
 
     const pipelineOption: ConsumerGroupPipeline.Option = Object.assign(
