@@ -77,7 +77,7 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
     );
 
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, scope, factory, tag, name} = factoryProvider;
+      const {provide, scope, factory, tags, name} = factoryProvider;
       const binding = bind(factory).toSelf();
       switch (scope) {
         case ComponentScope.REQUEST:
@@ -96,8 +96,10 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
         return factoryInstance.build(context);
       });
 
-      if (tag) {
-        dynamicValueBinding.whenTargetTagged(tag.key, tag.value);
+      if (tags) {
+        for (const [tag, value] of Object.entries(tags)) {
+          dynamicValueBinding.whenTargetTagged(tag, value);
+        }
       } else if (name) {
         dynamicValueBinding.whenTargetNamed(name);
       } else {

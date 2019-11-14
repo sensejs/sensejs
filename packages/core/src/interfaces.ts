@@ -30,9 +30,9 @@ export interface FactoryProvider<T> {
   provide: ServiceIdentifier<T>;
   factory: Constructor<ComponentFactory<T>>;
   scope?: ComponentScope;
-  tag?: {
-    key: string;
-    value: string;
+  tags?: {
+    [tagName: string]: any;
+    [tagName: number]: any;
   };
   name?: string | symbol;
 }

@@ -1,4 +1,4 @@
-import {Container, inject} from 'inversify';
+import {Container, inject, tagged} from 'inversify';
 import {Component, ComponentFactory, getModuleMetadata, Module, ModuleClass} from '../src';
 import {ModuleInstance} from '../src/module-instance';
 
@@ -44,6 +44,77 @@ describe('Module', () => {
   });
 
   test('useFactory', async () => {});
+
+  test('test named', async () => {
+    const FactorySymbol = Symbol();
+    const value = 'value';
+    const factoryName = 'testName';
+    class Factory extends ComponentFactory<void> {
+      build() {
+        return value;
+      }
+    }
+
+    const TestModule = Module({
+      factories: [{provide: FactorySymbol, factory: Factory, name: factoryName}],
+    });
+
+    getModuleMetadata(TestModule);
+    const container = new Container();
+    await new ModuleInstance(TestModule, container).onSetup();
+    await new TestModule().onCreate();
+
+    expect(() => container.get(FactorySymbol)).toThrow();
+    expect(() => container.getNamed(FactorySymbol, factoryName)).toBe(value);
+  });
+
+  test.only('test tagged', async () => {
+    const FactorySymbol = Symbol();
+    const value = 'value';
+
+    const factoryTag1 = 'tagName1';
+    const factoryTag2 = 'tagName2';
+    const factoryTagValue1 = 'tagValue1';
+    const factoryTagValue2 = 'tagName2';
+    class Factory extends ComponentFactory<void> {
+      build() {
+        return value;
+      }
+    }
+
+    const TestModule = Module({
+      factories: [
+        {
+          provide: FactorySymbol,
+          factory: Factory,
+          tags: {[factoryTag1]: factoryTagValue1, [factoryTag2]: factoryTagValue2},
+        },
+      ],
+    });
+
+    getModuleMetadata(TestModule);
+    const container = new Container();
+    await new ModuleInstance(TestModule, container).onSetup();
+    await new TestModule().onCreate();
+
+    @Component()
+    class TestComponent {
+      constructor(@inject(FactorySymbol) @tagged(factoryTag1, factoryTagValue1) private test: any) {}
+    }
+    expect(() => container.resolve(TestComponent)).toThrow();
+
+    @Component()
+    class TestComponent1 {
+      constructor(
+        @inject(FactorySymbol)
+        @tagged(factoryTag1, factoryTagValue1)
+        @tagged(factoryTag2, factoryTagValue2)
+        private test: any,
+      ) {}
+    }
+
+    expect(() => container.resolve(TestComponent1)).not.toThrow();
+  });
 
   test('getModuleMetadata', () => {
     class NonModule extends ModuleClass {
