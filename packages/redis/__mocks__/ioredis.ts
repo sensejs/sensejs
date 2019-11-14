@@ -11,11 +11,8 @@ class MockRedis extends EventEmitter {
   }
 
   once(event: string, listener: (...args: any[]) => void) {
-    if (event === 'error') {
-      throw new Error('Redis connect has some error');
-    } else if (event === 'connect' && this.status === 'disconnect') {
-      this.status = 'connect';
-      return this;
+    if (event === 'connect') {
+      setTimeout(listener, 0);
     }
     return this;
   }

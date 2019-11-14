@@ -139,9 +139,11 @@ importers:
       '@sensejs/core': 'link:../core'
       inversify: 5.0.1
       ioredis: 4.14.1
+      reflect-metadata: 0.1.13
     devDependencies:
       '@sensejs/http': 'link:../http'
       '@types/ioredis': 4.0.19
+      '@types/reflect-metadata': 0.1.0
       '@types/supertest': 2.0.8
       supertest: 4.0.2
       tslib: 1.10.0
@@ -149,9 +151,11 @@ importers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/http': 'workspace:*'
       '@types/ioredis': ^4.0.18
+      '@types/reflect-metadata': ^0.1.0
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       ioredis: ^4.14.1
+      reflect-metadata: ^0.1.13
       supertest: ^4.0.2
       tslib: ^1.10.0
   packages/typeorm:
@@ -748,6 +752,13 @@ packages:
   /@types/range-parser/1.2.3:
     resolution:
       integrity: sha512-ewFXqrQHlFsgc09MK5jP5iR7vumV/BYayNC6PgJO2LPe8vrnNFyjQjSppfEngITi0qvfKtzFvgKymGheFM9UOA==
+  /@types/reflect-metadata/0.1.0:
+    dependencies:
+      reflect-metadata: 0.1.13
+    deprecated: 'This is a stub types definition for reflect-metadata (https://github.com/rbuckton/ReflectDecorators). reflect-metadata provides its own type definitions, so you don''t need @types/reflect-metadata installed!'
+    dev: true
+    resolution:
+      integrity: sha512-bXltFLY3qhzCnVYP5iUpeSICagQ8rc9K2liS+8M0lBcz54BHs3O6W5UvqespVSuebo1BXLi+/y9ioELAW9SC2A==
   /@types/serve-static/1.13.3:
     dependencies:
       '@types/express-serve-static-core': 4.16.11
