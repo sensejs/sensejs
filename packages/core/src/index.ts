@@ -6,4 +6,4 @@ export * from './logger-module';
 export * from './param-binding';
 export * from './interceptor';
 export {EntryPoint} from './entry-point';
-export * from './module-helper';
+export * from './module-utility';
