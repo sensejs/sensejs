@@ -1,7 +1,9 @@
 import {
   Abstract,
+  ComponentScope,
   composeRequestInterceptor,
   createConfigHelperFactory,
+  createConnectionFactory,
   invokeMethod,
   Module,
   ModuleConstructor,
@@ -13,53 +15,136 @@ import {Container, inject} from 'inversify';
 import {Message} from 'kafka-node';
 import {MessageConsumer} from './message-consumer';
 import {ConsumingContext} from './consuming-context';
-import {getSubscribeControllerMetadata, getSubscribeTopicMetadata} from './consuming-decorators';
+import {
+  getSubscribeControllerMetadata,
+  getSubscribeTopicMetadata,
+  SubscribeControllerMetadata,
+  SubscribeTopicMetadata,
+} from './consuming-decorators';
 import {ConnectOption, ConsumeOption, FetchOption, TopicConsumerOption} from './message-consume-manager';
-import merge from 'lodash.merge';
 
-export interface KafkaConsumerOption {
-  kafkaConnectOption: ConnectOption;
-  defaultFetchOption?: FetchOption;
-  defaultConsumeOption?: ConsumeOption;
+export interface KafkaConsumerOption extends ConnectOption, FetchOption, ConsumeOption {}
+
+export interface KafkaTopicConsumerOption extends KafkaConsumerOption {
+  topic: string;
 }
 
 export interface KafkaConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Abstract<RequestInterceptor>[];
-  defaultKafkaConsumerOption?: {
-    kafkaConnectOption?: Partial<ConnectOption>;
-    defaultFetchOption?: Partial<FetchOption>;
-    defaultConsumeOption?: Partial<ConsumeOption>;
-  };
+  defaultKafkaConsumerOption?: Partial<KafkaConsumerOption>;
   injectOptionFrom?: ServiceIdentifier<unknown>;
+}
+
+function mergeConnectOption(
+  fallback?: Partial<KafkaConsumerOption>,
+  injected?: Partial<KafkaConsumerOption>,
+): KafkaConsumerOption {
+  const {kafkaHost, groupId, ...rest} = Object.assign({}, fallback, injected);
+  if (typeof kafkaHost === 'undefined') {
+    throw new TypeError('kafkaHost not provided');
+  }
+
+  if (typeof groupId === 'undefined') {
+    throw new TypeError('groupId not provided');
+  }
+  return {kafkaHost, groupId, ...rest};
+}
+
+function createSubscriberTopicModule(
+  module: ModuleConstructor,
+  option: KafkaConsumerModuleOption,
+  injectOptionFrom: ServiceIdentifier<unknown> | undefined,
+  controllerMetadata: SubscribeControllerMetadata,
+  subscribeMetadata: SubscribeTopicMetadata,
+  method: Function,
+) {
+  const ConfigHelper = createConfigHelperFactory(subscribeMetadata.fallbackOption, injectOptionFrom, (a, b) => {
+    return Object.assign({}, a, b);
+  });
+  const symbol = Symbol();
+
+  class TopicModule extends Module({requires: [module], factories: [{provide: symbol, factory: ConfigHelper}]}) {
+    constructor(
+      @inject(symbol) config: KafkaTopicConsumerOption,
+      @inject(MessageConsumer) messageConsumer: MessageConsumer,
+      @inject(Container) container: Container,
+    ) {
+      super();
+
+      const composedInterceptor = composeRequestInterceptor(container, [
+        ...(option.globalInterceptors || []),
+        ...controllerMetadata.interceptors,
+        ...subscribeMetadata.interceptors,
+      ]);
+
+      const consumeCallback = async (message: Message) => {
+        const childContainer = container.createChild();
+        const context = new ConsumingContext(childContainer, message);
+        childContainer.bind(ConsumingContext).toConstantValue(context);
+        const interceptor = childContainer.get(composedInterceptor);
+        await interceptor.intercept(context, async () => {
+          const target = childContainer.get<object>(controllerMetadata.target);
+          await invokeMethod(childContainer, target, method);
+        });
+      };
+      messageConsumer.subscribe(Object.assign({}, config, {consumeCallback}));
+    }
+  }
+
+  return TopicModule;
+}
+
+function scanController(option: KafkaConsumerModuleOption, module: ModuleConstructor) {
+  const map = new Map<string, TopicConsumerOption>();
+  const map2 = new Map<string, ModuleConstructor>();
+  const result: ModuleConstructor[] = [];
+  for (const component of option.components || []) {
+    const controllerMetadata = getSubscribeControllerMetadata(component);
+    if (!controllerMetadata) {
+      continue;
+    }
+    for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(component.prototype))) {
+      const subscribeMetadata = getSubscribeTopicMetadata(propertyDescriptor.value);
+
+      if (!subscribeMetadata) {
+        continue;
+      }
+      const {fallbackOption, injectOptionFrom} = subscribeMetadata;
+      const subscribeTopicModule = createSubscriberTopicModule(
+        module,
+        option,
+        injectOptionFrom,
+        controllerMetadata,
+        subscribeMetadata,
+        propertyDescriptor.value,
+      );
+      result.push(subscribeTopicModule);
+    }
+  }
+  return result;
 }
 
 export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
   const ConfigFactory = createConfigHelperFactory(
     option.defaultKafkaConsumerOption,
     option.injectOptionFrom,
-    (fallback, injected) => {
-      const {kafkaConnectOption, ...rest} = merge({}, fallback, injected);
-      const {kafkaHost, groupId} = kafkaConnectOption ?? {};
-      if (typeof kafkaHost === 'undefined') {
-        throw new TypeError('kafkaHost not provided');
-      }
-
-      if (typeof groupId === 'undefined') {
-        throw new TypeError('groupId not provided');
-      }
-      return {kafkaConnectOption: {kafkaHost, groupId}, ...rest};
-    },
+    mergeConnectOption,
+  );
+  const ConsumerGroupFactory = createConnectionFactory<MessageConsumer, ConnectOption>(
+    async (option) => new MessageConsumer(option),
+    async (messageConsumer) => undefined, // close on KafkaConsumerModule
   );
   const configSymbol = Symbol();
 
-  class KafkaConsumerModule extends Module({
+  class KafkaConsumerGroupModule extends Module({
     requires: [Module(option)],
-    factories: [{provide: configSymbol, factory: ConfigFactory}],
+    factories: [
+      {provide: configSymbol, factory: ConfigFactory, scope: ComponentScope.SINGLETON},
+      {provide: MessageConsumer, factory: ConsumerGroupFactory, scope: ComponentScope.SINGLETON},
+    ],
   }) {
-    private consumerGroup?: MessageConsumer;
-
     constructor(
-      @inject(Container) private container: Container,
+      @inject(ConsumerGroupFactory) private consumerGroupFactory: InstanceType<typeof ConsumerGroupFactory>,
       @inject(configSymbol) private config: KafkaConsumerOption,
     ) {
       super();
@@ -67,74 +152,30 @@ export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleCo
 
     async onCreate(): Promise<void> {
       await super.onCreate();
-      const map = this.scanController();
-
-      if (map.size < 0) {
-        return;
-      }
-
-      this.consumerGroup = new MessageConsumer(this.config.kafkaConnectOption);
-
-      for (const option of map.values()) {
-        this.consumerGroup.subscribe(option.topic, option.consumeCallback, option.consumeOption, option.fetchOption);
-      }
-
-      await this.consumerGroup.open();
+      await this.consumerGroupFactory.connect(this.config);
     }
 
     async onDestroy(): Promise<void> {
-      if (this.consumerGroup) {
-        const consumerGroup = this.consumerGroup;
-        delete this.consumerGroup;
-        await consumerGroup.close();
-      }
+      await this.consumerGroupFactory.disconnect();
       return super.onDestroy();
     }
+  }
 
-    private scanController() {
-      const map = new Map<string, TopicConsumerOption>();
-      for (const component of option.components || []) {
-        const controllerMetadata = getSubscribeControllerMetadata(component);
-        if (!controllerMetadata) {
-          continue;
-        }
-        for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(component.prototype))) {
-          const subscribeMetadata = getSubscribeTopicMetadata(propertyDescriptor.value);
+  const subscribeTopicModules = scanController(option, KafkaConsumerGroupModule);
 
-          if (!subscribeMetadata) {
-            continue;
-          }
-          const topic = subscribeMetadata.topic;
+  class KafkaConsumerModule extends Module({requires: subscribeTopicModules}) {
+    constructor(@inject(MessageConsumer) private messageConsumer: MessageConsumer) {
+      super();
+    }
 
-          if (map.get(topic)) {
-            throw new Error('Duplicated topic subscription');
-          }
+    async onCreate(): Promise<void> {
+      await super.onCreate();
+      await this.messageConsumer.open();
+    }
 
-          const composedInterceptor = composeRequestInterceptor(this.container, [
-            ...(option.globalInterceptors || []),
-            ...controllerMetadata.interceptors,
-            ...subscribeMetadata.interceptors,
-          ]);
-
-          map.set(topic, {
-            connectOption: this.config.kafkaConnectOption,
-            fetchOption: this.config.defaultFetchOption,
-            consumeOption: this.config.defaultConsumeOption,
-            topic,
-            consumeCallback: async (message: Message) => {
-              const container = this.container.createChild();
-              const context = new ConsumingContext(container, message);
-              container.bind(ConsumingContext).toConstantValue(context);
-              const interceptor = container.get(composedInterceptor);
-              await interceptor.intercept(context, async () => {
-                const target = container.get<object>(controllerMetadata.target);
-                await invokeMethod(container, target, propertyDescriptor.value);
-              });
-            },
-          });
-        }
-      }
-      return map;
+    async onDestroy(): Promise<void> {
+      await this.messageConsumer.close();
+      return super.onDestroy();
     }
   }
 

@@ -4,17 +4,17 @@ import {
   Constructor,
   RequestInterceptor,
   validateFunctionParamBindingMetadata,
+  ServiceIdentifier,
 } from '@sensejs/core';
 
 export interface SubscribeTopicMetadata {
-  topic: string;
+  fallbackOption?: SubscribeTopicOption;
   interceptors: Constructor<RequestInterceptor>[];
-  consumeConcurrency?: number;
-  consumeTimeout?: number;
+  injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
 export interface SubscribeTopicOption {
-  interceptors?: Constructor<RequestInterceptor>[];
+  topic?: string;
   consumeConcurrency?: number;
   consumeTimeout?: number;
 }
@@ -53,14 +53,24 @@ export function getSubscribeControllerMetadata(constructor: {}): SubscribeContro
   return Reflect.getMetadata(SUBSCRIBE_CONTROLLER_METADATA_KEY, constructor);
 }
 
-export function SubscribeTopic(topic: string, option: SubscribeTopicOption = {}) {
+interface InjectedSubscribeTopicDecoratorOption {
+  option?: SubscribeTopicOption;
+  injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
+  interceptors?: Constructor<RequestInterceptor>[];
+}
+export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
   return <T extends {}>(prototype: T, method: keyof T & string) => {
     const targetMethod = prototype[method];
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
     validateFunctionParamBindingMetadata(targetMethod);
-    const metadata: SubscribeTopicMetadata = Object.assign({interceptors: []}, option, {topic});
+    const {option: fallbackOption, injectOptionFrom} = option;
+    const metadata: SubscribeTopicMetadata = {
+      fallbackOption,
+      interceptors: [],
+      injectOptionFrom,
+    };
     setSubscribeTopicMetadata(targetMethod, metadata);
   };
 }

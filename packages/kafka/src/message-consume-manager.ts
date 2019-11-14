@@ -24,10 +24,7 @@ export interface ConnectOption {
   heartbeatInterval?: number;
 }
 
-export interface TopicConsumerOption {
-  connectOption: ConnectOption;
-  consumeOption?: ConsumeOption;
-  fetchOption?: FetchOption;
+export interface TopicConsumerOption extends ConnectOption, ConsumeOption, FetchOption {
   topic: string;
   consumeCallback: ConsumeCallback;
 }
@@ -38,37 +35,19 @@ export class MessageConsumeManager {
   private _consumerGroupPipeline: ConsumerGroupPipeline;
 
   constructor(options: TopicConsumerOption) {
-    const {
-      topic,
-      consumeCallback,
-      connectOption: {groupId, kafkaHost, sessionTimeout, heartbeatInterval},
-      consumeOption,
-      fetchOption: {
-        encoding,
-        keyEncoding,
-        fromOffset,
-        outOfRangeOffset,
-        fetchMaxBytes,
-        fetchMinBytes,
-      } = {} as FetchOption,
-    } = options;
+    const {topic, consumeCallback, consumeConcurrency, consumeTimeout, commitInterval, ...rest} = options;
 
-    const pipelineOption: ConsumerGroupPipeline.Option = Object.assign({}, consumeOption, {
-      topic,
-      messageConsumer: consumeCallback,
-      consumerGroupOption: {
-        encoding,
-        keyEncoding,
-        kafkaHost,
-        groupId,
-        fromOffset,
-        outOfRangeOffset,
-        fetchMaxBytes,
-        fetchMinBytes,
-        sessionTimeout,
-        heartbeatInterval,
+    const pipelineOption: ConsumerGroupPipeline.Option = Object.assign(
+      {},
+      {
+        topic,
+        messageConsumer: consumeCallback,
+        consumeConcurrency,
+        consumeTimeout,
+        commitInterval,
+        consumerGroupOption: rest,
       },
-    });
+    );
     this._consumerGroupPipeline = new ConsumerGroupPipeline(pipelineOption);
   }
 

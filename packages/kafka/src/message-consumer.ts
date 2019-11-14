@@ -1,11 +1,4 @@
-import {MessageConsumer as MessageConsumeCallback} from 'kafka-pipeline';
-import {
-  ConnectOption,
-  ConsumeOption,
-  FetchOption,
-  MessageConsumeManager,
-  TopicConsumerOption,
-} from './message-consume-manager';
+import {ConnectOption, MessageConsumeManager, TopicConsumerOption} from './message-consume-manager';
 
 export class MessageConsumer {
   private readonly _options: ConnectOption;
@@ -23,27 +16,12 @@ export class MessageConsumer {
     this._options = options;
   }
 
-  /**
-   *
-   * @param topic
-   * @param consumeOption
-   * @param fetchOption
-   *
-   * @returns this
-   */
-  subscribe(
-    topic: string,
-    messageConsumeCallback: MessageConsumeCallback,
-    consumeOption: ConsumeOption = {},
-    fetchOption: FetchOption = {},
-  ) {
-    this._topicOptions.set(topic, {
-      topic,
-      consumeCallback: messageConsumeCallback,
-      consumeOption,
-      connectOption: this._options,
-      fetchOption,
-    });
+  subscribe(option: TopicConsumerOption) {
+    const {topic} = option;
+    if (this._topicOptions.get(topic)) {
+      throw new Error(`Topic "${topic}" has already been subscribed`);
+    }
+    this._topicOptions.set(topic, Object.assign({}, this._options, option));
     return this;
   }
 

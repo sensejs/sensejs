@@ -101,7 +101,7 @@ function resolveInvoker(container: Container, invokerConstructor: Constructor<In
   }
 }
 
-export function invokeMethod<T>(container: Container, target: T, method: (this: T, ...args: any[]) => unknown) {
+export function invokeMethod<T>(container: Container, target: T, method: Function) {
   const metadata = getFunctionParamBindingMetadata(method);
   if (!metadata) {
     throw new ParamBindingResolvingError();

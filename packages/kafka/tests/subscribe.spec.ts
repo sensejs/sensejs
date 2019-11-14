@@ -44,7 +44,7 @@ describe('Subscribe decorators', () => {
   test('Missing param binding', () => {
     expect(() => {
       class Controller {
-        @SubscribeTopic('foo')
+        @SubscribeTopic({option: {topic: 'foo'}})
         foo(value: any) {}
       }
     }).toThrow();
@@ -53,8 +53,8 @@ describe('Subscribe decorators', () => {
   test('Duplicated @SubscribeTopic', () => {
     expect(() => {
       class Controller {
-        @SubscribeTopic('foo')
-        @SubscribeTopic('bar')
+        @SubscribeTopic({option: {topic: 'foo'}})
+        @SubscribeTopic({option: {topic: 'bar'}})
         foo() {}
       }
     }).toThrow();
@@ -94,7 +94,7 @@ describe('Subscriber', () => {
 
     @SubscribeController({interceptors: [interceptorB]})
     class Controller {
-      @SubscribeTopic('foo', {interceptors: [interceptorC]})
+      @SubscribeTopic({option: {topic: 'foo'}, interceptors: [interceptorC]})
       foo(
         @InjectSubscribeContext() ctx: ConsumingContext,
         @ParamBinding(symbolA) global: any,
@@ -109,7 +109,8 @@ describe('Subscriber', () => {
     const module = KafkaConsumerModule({
       components: [Controller, interceptorA, interceptorB, interceptorC],
       defaultKafkaConsumerOption: {
-        kafkaConnectOption: {kafkaHost: 'any', groupId: ''},
+        kafkaHost: 'any-host',
+        groupId: 'any-group',
       },
       globalInterceptors: [interceptorA],
     });
@@ -123,14 +124,15 @@ describe('Subscriber', () => {
   });
 
   test('injected config', async () => {
-    const kafkaHost = new Date().toISOString(); // for random string
-    const groupId = new Date().toISOString();
+    const kafkaHost = `host_${Date.now()}`; // for random string
+    const groupId = `group_${Date.now()}`;
+    const topic = `topic_${Date.now()}`;
     const stub = jest.fn();
     mockController.once('MockConsumerGroupPipeline:constructor', stub);
 
     @SubscribeController()
     class Controller {
-      @SubscribeTopic('foo')
+      @SubscribeTopic({injectOptionFrom: 'config.consumer.topic'})
       foo() {}
     }
 
@@ -139,9 +141,13 @@ describe('Subscriber', () => {
         {
           provide: 'config.consumer',
           value: {
-            kafkaConnectOption: {
-              kafkaHost,
-            },
+            kafkaHost,
+          },
+        },
+        {
+          provide: 'config.consumer.topic',
+          value: {
+            topic,
           },
         },
       ],
@@ -151,9 +157,7 @@ describe('Subscriber', () => {
       components: [Controller],
       requires: [ConfigModule],
       defaultKafkaConsumerOption: {
-        kafkaConnectOption: {
-          groupId,
-        },
+        groupId,
       },
       injectOptionFrom: 'config.consumer',
     }) {}
@@ -162,6 +166,7 @@ describe('Subscriber', () => {
     await moduleRoot.start().then(() => {
       expect(stub).toHaveBeenCalledWith([
         expect.objectContaining({
+          topic,
           consumerGroupOption: expect.objectContaining({
             kafkaHost,
             groupId,
