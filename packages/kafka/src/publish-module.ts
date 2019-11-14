@@ -14,7 +14,7 @@ import merge from 'lodash.merge';
 
 export interface KafkaPublishModuleOption extends ModuleOption {
   kafkaProducerOption?: Partial<ProducerOption>;
-  injectOptionFrom?: ServiceIdentifier<unknown>;
+  injectOptionFrom?: ServiceIdentifier<Partial<ProducerOption>>;
 }
 
 export function KafkaProducerModule(option: KafkaPublishModuleOption): ModuleConstructor {

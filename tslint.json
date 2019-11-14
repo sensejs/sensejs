@@ -22,7 +22,8 @@
     "quotemark": [true, "single"],
     "max-classes-per-file": false,
     "variable-name": [true, "allow-leading-underscore", "allow-pascal-case"],
-    "no-empty": false
+    "no-empty": false,
+    "no-unnecessary-initializer": false
   },
   "rulesDirectory": []
 }

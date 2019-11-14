@@ -1,5 +1,5 @@
 import {decorate, inject} from 'inversify';
-import {ComponentFactory, Constructor, ComponentScope, ServiceIdentifier} from './interfaces';
+import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
 import {Component} from './component';
 
 export abstract class AbstractConnectionFactory<T, Option> extends ComponentFactory<T> {
