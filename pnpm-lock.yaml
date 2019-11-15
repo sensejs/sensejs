@@ -14,7 +14,7 @@ importers:
       release-it: 12.4.3
       source-map-support: 0.5.16
       ts-jest: 24.1.0_jest@24.9.0
-      ts-node: 8.5.0_typescript@3.7.2
+      ts-node: 8.5.2_typescript@3.7.2
       tslib: 1.10.0
       tslint: 5.20.1_typescript@3.7.2
       typescript: 3.7.2
@@ -62,6 +62,16 @@ importers:
       sqlite3: ^4.1.0
       tslib: ^1.10.0
       typeorm: ^0.2.20
+  packages/config:
+    dependencies:
+      '@sensejs/core': 'link:../core'
+      inversify: 5.0.1
+    devDependencies:
+      tslib: 1.10.0
+    specifiers:
+      '@sensejs/core': ~0.0.0
+      inversify: ^5.0.1
+      tslib: ^1.10.0
   packages/core:
     dependencies:
       '@sensejs/logger': 'link:../logger'
@@ -4969,7 +4979,7 @@ packages:
       '@jest/types': 24.9.0
       ansi-regex: 4.1.0
       ansi-styles: 3.2.1
-      react-is: 16.11.0
+      react-is: 16.12.0
     dev: true
     engines:
       node: '>= 6'
@@ -5042,10 +5052,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==
-  /react-is/16.11.0:
+  /react-is/16.12.0:
     dev: true
     resolution:
-      integrity: sha512-gbBVYR2p8mnriqAwWx9LbuUrShnAuSCNnuPGyc7GJrMVQtPDAh8iLpv7FRuMPFb56KkaVZIYSz1PrjI9q0QPCw==
+      integrity: sha512-rPCkf/mWBtKc97aLL9/txD8DZdemK0vkA3JMLShjlJB3Pj3s+lpf1KaBzMfQrAmhMQB0n1cU/SUGgKKBCe837Q==
   /read-pkg-up/4.0.0:
     dependencies:
       find-up: 3.0.0
@@ -6115,7 +6125,7 @@ packages:
       jest: '>=24 <25'
     resolution:
       integrity: sha512-HEGfrIEAZKfu1pkaxB9au17b1d9b56YZSqz5eCVE8mX68+5reOvlM93xGOzzCREIov9mdH7JBG+s0UyNAqr0tQ==
-  /ts-node/8.5.0_typescript@3.7.2:
+  /ts-node/8.5.2_typescript@3.7.2:
     dependencies:
       arg: 4.1.1
       diff: 4.0.1
@@ -6130,7 +6140,7 @@ packages:
     peerDependencies:
       typescript: '>=2.0'
     resolution:
-      integrity: sha512-fbG32iZEupNV2E2Fd2m2yt1TdAwR3GTCrJQBHDevIiEBNy1A8kqnyl1fv7jmRmmbtcapFab2glZXHJvfD1ed0Q==
+      integrity: sha512-W1DK/a6BGoV/D4x/SXXm6TSQx6q3blECUzd5TN+j56YEMX3yPVMpHsICLedUw3DvGF3aTQ8hfdR9AKMaHjIi+A==
   /tslib/1.10.0:
     resolution:
       integrity: sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==

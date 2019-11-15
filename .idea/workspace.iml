@@ -21,5 +21,7 @@
     <orderEntry type="module" module-name="typeorm" />
     <orderEntry type="module" module-name="typeorm-http-server" />
     <orderEntry type="module" module-name="kafka" />
+    <orderEntry type="module" module-name="core" />
+    <orderEntry type="module" module-name="config" />
   </component>
 </module>
