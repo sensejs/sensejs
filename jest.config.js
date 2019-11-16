@@ -12,4 +12,9 @@ module.exports = {
   },
   setupFiles: ['./jest-setup.js'],
   resetMocks: true,
+  globals: {
+    'ts-jest': {
+      tsConfig: 'tsconfig.test.json',
+    },
+  },
 };
