@@ -7,7 +7,7 @@ export interface ConfigModuleOption {
 }
 
 function escape(x: string) {
-  return x.replace('\\', '\\\\').replace('.', '.');
+  return x.replace('\\', '\\\\').replace('.', '\\.');
 }
 
 function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[] {
