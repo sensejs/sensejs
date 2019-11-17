@@ -40,28 +40,26 @@ importers:
     dependencies:
       '@sensejs/core': 'link:../../packages/core'
       '@sensejs/http': 'link:../../packages/http'
-      reflect-metadata: 0.1.13
-    specifiers:
-      '@sensejs/core': 'workspace:0.0.5'
-      '@sensejs/http': 'workspace:0.0.5'
-      reflect-metadata: ^0.1.13
-  examples/typeorm-http-server:
-    dependencies:
-      '@sensejs/core': 'link:../../packages/core'
-      '@sensejs/http': 'link:../../packages/http'
+      '@sensejs/logger': 'link:../../packages/logger'
       '@sensejs/typeorm': 'link:../../packages/typeorm'
+      inversify: 5.0.1
       reflect-metadata: 0.1.13
       sqlite3: 4.1.0
-      tslib: 1.10.0
       typeorm: 0.2.20_sqlite3@4.1.0
+      uuid: 3.3.3
+    devDependencies:
+      '@types/uuid': 3.4.6
     specifiers:
-      '@sensejs/core': 'workspace:0.0.5'
-      '@sensejs/http': 'workspace:0.0.5'
-      '@sensejs/typeorm': 'workspace:0.0.5'
+      '@sensejs/core': 'workspace:*'
+      '@sensejs/http': 'workspace:*'
+      '@sensejs/logger': 'workspace:*'
+      '@sensejs/typeorm': 'workspace:*'
+      '@types/uuid': ^3.4.6
+      inversify: ^5.0.1
       reflect-metadata: ^0.1.13
       sqlite3: ^4.1.0
-      tslib: ^1.10.0
       typeorm: ^0.2.20
+      uuid: ^3.3.3
   packages/config:
     dependencies:
       '@sensejs/core': 'link:../core'
@@ -811,7 +809,7 @@ packages:
       integrity: sha512-RBz2uRZVCXuMg93WD//aTS5B120QlT4lR/gL+935QtGsKHLS6sCtZBaKfWjIfk7ZXv/r8mtGbwjVIee6/3XTow==
   /@types/uuid/3.4.6:
     dependencies:
-      '@types/node': 12.12.6
+      '@types/node': 12.12.8
     dev: true
     resolution:
       integrity: sha512-cCdlC/1kGEZdEglzOieLDYBxHsvEOIg7kp/2FYyVR9Pxakq+Qf/inL3RKQ+PA8gOlI/NnL+fXmQH12nwcGzsHw==
@@ -897,14 +895,14 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha512-cBhpre4ma+U0T1oM5fXg7Dy1Jw7zzwv7lt/GoCpr+hDQJoYnKVPLL4dCvSEFMmQurOQvSrwT7SL/DAlhBI97RQ==
-  /ansi-escapes/4.2.1:
+  /ansi-escapes/4.3.0:
     dependencies:
-      type-fest: 0.5.2
+      type-fest: 0.8.1
     dev: true
     engines:
       node: '>=8'
     resolution:
-      integrity: sha512-Cg3ymMAdN10wOk/VYfLV7KCQyv7EDirJ64500sU7n9UlmioEtDuU5Gd+hj73hXSU/ex7tHJSssmyftDdkMLO8Q==
+      integrity: sha512-EiYhwo0v255HUL6eDyuLrXEkTi7WwVCLAw+SeOQ7M7qdun1z1pum4DEm/nuqIVbPvi9RPPc9k9LbyBv6H0DwVg==
   /ansi-regex/2.1.1:
     engines:
       node: '>=0.10.0'
@@ -2015,7 +2013,7 @@ packages:
       es-to-primitive: 1.2.1
       function-bind: 1.1.1
       has: 1.0.3
-      has-symbols: 1.0.0
+      has-symbols: 1.0.1
       is-callable: 1.1.4
       is-regex: 1.0.4
       object-inspect: 1.7.0
@@ -2609,11 +2607,11 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
-  /has-symbols/1.0.0:
+  /has-symbols/1.0.1:
     engines:
       node: '>= 0.4'
     resolution:
-      integrity: sha1-uhqPGvKg/DllD1yFA2dwQSIGO0Q=
+      integrity: sha512-PLcsoqu++dmEIZB+6totNFKq/7Do+Z0u4oT0zKOJNl3lYK6vGwwu2hjHs+68OEZbTjiUE9bgOABXbP/GvrS0Kg==
   /has-unicode/2.0.1:
     resolution:
       integrity: sha1-4Ob+aijPUROIVeCG0Wkedx3iqLk=
@@ -2835,7 +2833,7 @@ packages:
       integrity: sha512-RZY5huIKCMRWDUqZlEi72f/lmXKMvuszcMBduliQ3nnWbx9X/ZBQO7DijMEYS9EhHBb2qacRUMtC7svLwe0lcw==
   /inquirer/7.0.0:
     dependencies:
-      ansi-escapes: 4.2.1
+      ansi-escapes: 4.3.0
       chalk: 2.4.2
       cli-cursor: 3.1.0
       cli-width: 2.2.0
@@ -3158,7 +3156,7 @@ packages:
       integrity: sha512-XCoy+WlUr7d1+Z8GgSuXmpuUFC9fOhRXglJMx+dwLKTkL44Cjd4W1Z5P+BQZpr+cR93aGP4S/s7Ftw6Nd/kiEw==
   /is-symbol/1.0.2:
     dependencies:
-      has-symbols: 1.0.0
+      has-symbols: 1.0.1
     engines:
       node: '>= 0.4'
     resolution:
@@ -6221,18 +6219,18 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-cUGJnCdr4STbePCgqNFbpVNCepa+kAVohJs1sLhxzdH+gnEoOd8VhbYa7pD3zZYGiURWM2xzEII3fQcRizDkYQ==
-  /type-fest/0.5.2:
-    dev: true
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-DWkS49EQKVX//Tbupb9TFa19c7+MK1XmzkrZUR8TAktmE/DizXoaoJV6TZ/tSIPXipqNiRI6CyAe7x69Jb6RSw==
   /type-fest/0.6.0:
     dev: true
     engines:
       node: '>=8'
     resolution:
       integrity: sha512-q+MB8nYR1KDLrgr4G5yemftpMC7/QLqVndBmEEdqzmNj5dcFOO4Oo8qlwZE3ULT3+Zim1F8Kq4cBnikNhlCMlg==
+  /type-fest/0.8.1:
+    dev: true
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
   /type-is/1.6.18:
     dependencies:
       media-typer: 0.3.0
