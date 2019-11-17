@@ -51,6 +51,6 @@ const typeOrmModule = TypeOrmModule({
 @EntryPoint()
 class ExampleApp extends HttpModule({
   requires: [typeOrmModule],
-  inspectors: [TypeOrmSupportInterceptor],
+  globalInterceptors: [TypeOrmSupportInterceptor],
   components: [ExampleHttpController],
 }) {}
