@@ -50,12 +50,7 @@ const typeOrmModule = TypeOrmModule({
 
 @EntryPoint()
 class ExampleApp extends HttpModule({
-  type: HttpConfigType.static,
   requires: [typeOrmModule],
-  staticHttpConfig: {
-    listenPort: 3000,
-    listenAddress: '0.0.0.0',
-  },
   inspectors: [TypeOrmSupportInterceptor],
   components: [ExampleHttpController],
 }) {}

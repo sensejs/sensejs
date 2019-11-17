@@ -60,6 +60,7 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
       if (typeof result.type !== 'string') {
         throw new Error('invalid typeorm config, type is missing');
       }
+      // TODO: too complex to check connection type is valid, pass it to TypeORM directory
       return result as ConnectionOptions;
     },
   );
@@ -72,7 +73,6 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
 
   class TypeOrmConnectionModule extends Module({
     components: [TypeOrmSupportInterceptor],
-    // TODO: Factory scope is not correctly defined, set scope to ComponentScope.SINGLETON for work-around
     factories: [factoryProvider, optionProvider],
   }) {
     constructor(
