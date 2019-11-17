@@ -41,12 +41,25 @@ importers:
       '@sensejs/core': 'link:../../packages/core'
       '@sensejs/http': 'link:../../packages/http'
       '@sensejs/logger': 'link:../../packages/logger'
+      '@sensejs/typeorm': 'link:../../packages/typeorm'
+      inversify: 5.0.1
       reflect-metadata: 0.1.13
+      sqlite3: 4.1.0
+      typeorm: 0.2.20_sqlite3@4.1.0
+      uuid: 3.3.3
+    devDependencies:
+      '@types/uuid': 3.4.6
     specifiers:
       '@sensejs/core': 'workspace:0.0.6'
       '@sensejs/http': 'workspace:0.0.6'
       '@sensejs/logger': 'workspace:0.0.6'
+      '@sensejs/typeorm': 'workspace:0.0.6'
+      '@types/uuid': ^3.4.6
+      inversify: ^5.0.1
       reflect-metadata: ^0.1.13
+      sqlite3: ^4.1.0
+      typeorm: ^0.2.20
+      uuid: ^3.3.3
   examples/typeorm-http-server:
     dependencies:
       '@sensejs/core': 'link:../../packages/core'
@@ -777,6 +790,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-E6Zn0rffhgd130zbCbAr/JdXfXkoOUFAKNs/rF8qnafSJ8KYaA/j3oz7dcwal+lYjLA7xvdd5J4wdYpCTlP8+w==
+  /@types/node/12.12.8:
+    dev: true
+    resolution:
+      integrity: sha512-XLla8N+iyfjvsa0KKV+BP/iGSoTmwxsu5Ci5sM33z9TjohF72DEz95iNvD6pPmemvbQgxAv/909G73gUn8QR7w==
   /@types/normalize-package-data/2.4.0:
     dev: true
     resolution:
@@ -813,7 +830,7 @@ packages:
       integrity: sha512-RBz2uRZVCXuMg93WD//aTS5B120QlT4lR/gL+935QtGsKHLS6sCtZBaKfWjIfk7ZXv/r8mtGbwjVIee6/3XTow==
   /@types/uuid/3.4.6:
     dependencies:
-      '@types/node': 12.12.6
+      '@types/node': 12.12.8
     dev: true
     resolution:
       integrity: sha512-cCdlC/1kGEZdEglzOieLDYBxHsvEOIg7kp/2FYyVR9Pxakq+Qf/inL3RKQ+PA8gOlI/NnL+fXmQH12nwcGzsHw==

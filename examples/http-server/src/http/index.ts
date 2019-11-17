@@ -1,0 +1,27 @@
+import {HttpModule} from '@sensejs/http';
+import {ExampleController} from './example.controller';
+import {RequestTimingInterceptor} from './request-timing.interceptor';
+import ExampleModule from '../example';
+import logger from '@sensejs/logger';
+
+export default class $HttpModule extends HttpModule({
+  httpOption: {
+    listenPort: 3000,
+    listenAddress: '0.0.0.0',
+  },
+  requires: [ExampleModule],
+  components: [ExampleController, RequestTimingInterceptor],
+  globalInterceptors: [RequestTimingInterceptor],
+}) {
+  async onCreate() {
+    logger.info('Creating HTTP Module');
+    await super.onCreate();
+    logger.info('Created HTTP Module');
+  }
+
+  async onDestroy() {
+    logger.info('Destroying HTTP Module');
+    await super.onDestroy();
+    logger.info('Destroyed Example Module');
+  }
+}
