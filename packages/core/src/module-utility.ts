@@ -1,6 +1,10 @@
-import {decorate, inject} from 'inversify';
-import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
+import {decorate, inject, interfaces} from 'inversify';
+import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier, FactoryProvider} from './interfaces';
 import {Component} from './component';
+
+export interface ConnectionFactoryProvider<T, Option> extends FactoryProvider<T> {
+  factory: Constructor<AbstractConnectionFactory<T, Option>>;
+}
 
 export abstract class AbstractConnectionFactory<T, Option> extends ComponentFactory<T> {
   abstract connect(option: Option): Promise<T>;
@@ -44,6 +48,18 @@ export function createConnectionFactory<T, Option>(
   return ConnectionFactory;
 }
 
+export function provideConnectionFactory<T, Option>(
+  init: (option: Option) => Promise<T>,
+  destroy: (conn: T) => Promise<void>,
+  exportSymbol: ServiceIdentifier<T> = Symbol(),
+): ConnectionFactoryProvider<T, Option> {
+  return {
+    provide: exportSymbol,
+    factory: createConnectionFactory<T, Option>(init, destroy),
+    scope: ComponentScope.SINGLETON,
+  };
+}
+
 export function createConfigHelperFactory<Result, Fallback = Partial<Result>, Injected = Partial<Result>>(
   fallback: Fallback | undefined,
   injectedSymbol: ServiceIdentifier<unknown> | undefined,
@@ -68,4 +84,17 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
     decorate(decorator, ConfigFactory, 0);
   }
   return ConfigFactory;
+}
+
+export function provideOptionInjector<Result, Fallback = Partial<Result>, Injected = Partial<Result>>(
+  fallback: Fallback | undefined,
+  injectOptionFrom: ServiceIdentifier<unknown> | undefined,
+  configMerger: (fallback?: Fallback, injected?: Injected) => Result,
+  exportSymbol: symbol = Symbol(),
+): FactoryProvider<Result> {
+  return {
+    provide: exportSymbol,
+    factory: createConfigHelperFactory(fallback, injectOptionFrom, configMerger),
+    scope: ComponentScope.SINGLETON,
+  };
 }
