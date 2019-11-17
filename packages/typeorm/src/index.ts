@@ -1,18 +1,20 @@
 import {
   Component,
-  ComponentFactory,
-  ComponentScope,
   Constructor,
   Module,
   ModuleConstructor,
+  provideConnectionFactory,
+  provideOptionInjector,
   RequestContext,
   RequestInterceptor,
+  ServiceIdentifier,
 } from '@sensejs/core';
 import {inject} from 'inversify';
 import {Connection, ConnectionOptions, createConnection} from 'typeorm';
 
 export interface TypeOrmModuleOption {
-  typeOrmOption: ConnectionOptions;
+  typeOrmOption?: ConnectionOptions;
+  injectOptionFrom?: ServiceIdentifier<ConnectionOptions>;
 }
 
 const EntityRepositoryMetadataKey = Symbol();
@@ -50,50 +52,43 @@ export class TypeOrmSupportInterceptor extends RequestInterceptor {
 }
 
 export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
-  @Component({scope: ComponentScope.SINGLETON})
-  class TypeOrmConnectionFactory extends ComponentFactory<Connection> {
-    private typeOrmConnection?: Connection;
-
-    async connect(option: TypeOrmModuleOption): Promise<Connection> {
-      this.typeOrmConnection = await createConnection(option.typeOrmOption);
-      return this.typeOrmConnection;
-    }
-
-    getAllEntityMetadata() {
-      return this.build().entityMetadatas;
-    }
-
-    build(): Connection {
-      if (!this.typeOrmConnection) {
-        throw new Error('TypeORM connection is not yet setup');
+  const optionProvider = provideOptionInjector<ConnectionOptions>(
+    option.typeOrmOption,
+    option.injectOptionFrom,
+    (defaultValue, injectedValue) => {
+      const result = Object.assign({}, defaultValue, injectedValue);
+      if (typeof result.type !== 'string') {
+        throw new Error('invalid typeorm config, type is missing');
       }
-      return this.typeOrmConnection;
-    }
+      return result as ConnectionOptions;
+    },
+  );
 
-    async close() {
-      if (this.typeOrmConnection) {
-        await this.typeOrmConnection.close();
-        delete this.typeOrmConnection;
-      }
-    }
-  }
+  const factoryProvider = provideConnectionFactory(
+    (option: ConnectionOptions) => createConnection(option),
+    (connection: Connection) => connection.close(),
+    Connection,
+  );
 
   class TypeOrmConnectionModule extends Module({
     components: [TypeOrmSupportInterceptor],
     // TODO: Factory scope is not correctly defined, set scope to ComponentScope.SINGLETON for work-around
-    factories: [{provide: Connection, scope: ComponentScope.SINGLETON, factory: TypeOrmConnectionFactory}],
+    factories: [factoryProvider, optionProvider],
   }) {
-    constructor(@inject(TypeOrmConnectionFactory) private typeOrmConnectionFactory: TypeOrmConnectionFactory) {
+    constructor(
+      @inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>,
+      @inject(optionProvider.provide) private config: ConnectionOptions,
+    ) {
       super();
     }
 
     async onCreate(): Promise<void> {
       super.onCreate();
-      await this.typeOrmConnectionFactory.connect(option);
+      await this.factory.connect(this.config);
     }
 
     async onDestroy(): Promise<void> {
-      await this.typeOrmConnectionFactory.close();
+      await this.factory.disconnect();
     }
   }
 
