@@ -1,7 +1,7 @@
 import traverse from 'traverse';
 import {Module, ConstantProvider} from '@sensejs/core';
 
-interface ConfigModuleOption {
+export interface ConfigModuleOption {
   config: object;
   prefix: string;
 }
@@ -11,7 +11,11 @@ function escape(x: string) {
 }
 
 function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[] {
-  return traverse(option.config).reduce(function provideConstant(this: traverse.TraverseContext, acc, value) {
+  return traverse(option.config).reduce(function OptionsReducer(
+    this: traverse.TraverseContext,
+    acc: ConstantProvider<unknown>[],
+    value: unknown,
+  ) {
     if (this.circular) {
       throw new Error('circular detected');
     }
@@ -23,7 +27,8 @@ function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[]
       value,
     });
     return acc;
-  }, []);
+  },
+  []);
 }
 
 export function ConfigModule(option: ConfigModuleOption) {
