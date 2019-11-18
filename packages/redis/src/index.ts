@@ -2,15 +2,13 @@ import 'reflect-metadata';
 import Redis from 'ioredis';
 import {inject, named} from 'inversify';
 import {
-  Component,
-  ComponentFactory,
-  ComponentScope,
   Module,
   ModuleConstructor,
-  ServiceIdentifier,
   ModuleOption,
+  provideConnectionFactory,
+  provideOptionInjector,
+  ServiceIdentifier,
 } from '@sensejs/core';
-import {createConfigHelperFactory} from '@sensejs/core';
 
 export interface RedisConnectOption extends Redis.RedisOptions {
   uri?: string;
@@ -60,57 +58,37 @@ export function RedisModule(options: RedisModuleOptions | RedisModuleOptions[]):
   });
 }
 
+function createRedisConnection(options: RedisConnectOption) {
+  return new Promise<Redis.Redis>((done, fail) => {
+    const {uri, ...rest} = options;
+    const redisClient = typeof uri === 'string' ? new Redis(uri, rest) : new Redis(rest);
+    const errorHandlerBeforeConnect = (error: Error) => fail(error);
+    redisClient.once('connect', () => {
+      redisClient.removeListener('error', errorHandlerBeforeConnect);
+      return done(redisClient);
+    });
+    redisClient.once('error', errorHandlerBeforeConnect);
+  });
+}
+
+function destroyRedisConnection(connection: Redis.Redis) {
+  return Promise.resolve(connection.disconnect());
+}
+
 function buildRedisModule(options: RedisModuleOptions): ModuleConstructor {
-  @Component({scope: ComponentScope.SINGLETON})
-  class RedisClientFactory extends ComponentFactory<Redis.Redis> {
-    private redisClient?: Redis.Redis;
-
-    async connect(options: RedisConnectOption): Promise<Redis.Redis> {
-      this.redisClient = await new Promise<Redis.Redis>((done, fail) => {
-        const {uri, ...rest} = options;
-        const redisClient = typeof uri === 'string' ? new Redis(uri, rest) : new Redis(rest);
-        const errorHandlerBeforeConnect = (error: Error) => fail(error);
-        redisClient.once('connect', () => {
-          redisClient.removeListener('error', errorHandlerBeforeConnect);
-          return done(redisClient);
-        });
-        redisClient.once('error', errorHandlerBeforeConnect);
-      });
-      return this.redisClient;
-    }
-
-    build(): Redis.Redis {
-      if (!this.redisClient) {
-        throw new Error('Redis client is not yet setup');
-      }
-      return this.redisClient;
-    }
-
-    async close() {
-      if (this.redisClient) {
-        await this.redisClient.disconnect();
-        delete this.redisClient;
-      }
-    }
-  }
-
-  const optionSymbol = Symbol();
-  const ConfigFactory = createConfigHelperFactory(options.options, options.injectOptionFrom, (fallback, injected) => {
+  const factoryProvider = provideConnectionFactory(createRedisConnection, destroyRedisConnection, Redis);
+  const optionProvider = provideOptionInjector(options.options, options.injectOptionFrom, (fallback, injected) => {
     return Object.assign({}, fallback, injected);
   });
+  Object.assign(factoryProvider, {name: options.name});
 
   class RedisModule extends Module({
     requires: [Module(options)],
-    components: [],
-    // TODO: Factory scope is not correctly defined, set scope to ComponentScope.SINGLETON for work-around
-    factories: [
-      {provide: optionSymbol, scope: ComponentScope.SINGLETON, factory: ConfigFactory},
-      {provide: Redis, name: options.name, scope: ComponentScope.SINGLETON, factory: RedisClientFactory},
-    ],
+    factories: [factoryProvider, optionProvider],
   }) {
     constructor(
-      @inject(RedisClientFactory) private redisClientFactory: RedisClientFactory,
-      @inject(optionSymbol) private redisConnectOption: RedisConnectOption,
+      @inject(factoryProvider.factory) private redisClientFactory: InstanceType<typeof factoryProvider.factory>,
+      @inject(optionProvider.provide) private redisConnectOption: RedisConnectOption,
     ) {
       super();
     }
@@ -120,7 +98,7 @@ function buildRedisModule(options: RedisModuleOptions): ModuleConstructor {
     }
 
     async onDestroy(): Promise<void> {
-      await this.redisClientFactory.close();
+      await this.redisClientFactory.disconnect();
     }
   }
 
