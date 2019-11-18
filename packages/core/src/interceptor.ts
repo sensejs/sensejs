@@ -1,4 +1,4 @@
-import {Container, decorate, inject, injectable} from 'inversify';
+import {Container, inject, injectable} from 'inversify';
 import {Abstract, ServiceIdentifier} from './interfaces';
 
 export abstract class RequestContext {
@@ -16,11 +16,8 @@ export function composeRequestInterceptor<Context extends RequestContext>(
 ): Abstract<RequestInterceptor<Context>> {
   @injectable()
   class ComposedRequestInterceptor extends RequestInterceptor<Context> {
-    private readonly interceptors: RequestInterceptor<Context>[];
-
-    constructor(...interceptors: RequestInterceptor<Context>[]) {
+    constructor(@inject(Container) private container: Container) {
       super();
-      this.interceptors = interceptors;
     }
 
     async intercept(context: Context, next: () => Promise<undefined>) {
@@ -32,9 +29,12 @@ export function composeRequestInterceptor<Context extends RequestContext>(
         }
         index = i;
         const fn =
-          i === this.interceptors.length
+          i === interceptors.length
             ? next
-            : (fn: () => Promise<void>) => this.interceptors[i].intercept(context, fn);
+            : async (fn: () => Promise<void>) => {
+                const interceptor = this.container.get<RequestInterceptor<Context>>(interceptors[i]);
+                return interceptor.intercept(context, fn);
+              };
 
         await fn(() => dispatch(i + 1));
       };
@@ -43,12 +43,6 @@ export function composeRequestInterceptor<Context extends RequestContext>(
     }
   }
 
-  interceptors.forEach((interceptorConstructor, idx) => {
-    const paramDecorator = inject(interceptorConstructor) as ParameterDecorator;
-    decorate(paramDecorator, ComposedRequestInterceptor, idx);
-  });
-
   container.bind(ComposedRequestInterceptor).toSelf();
-
   return ComposedRequestInterceptor;
 }

@@ -12,8 +12,8 @@ class MockRequestContext extends RequestContext {
 }
 
 describe('Interceptor', () => {
-  const FOO_SYMBOL = Symbol(),
-    BAR_SYMBOL = Symbol();
+  const FOO_SYMBOL = Symbol('FOO_SYMBOL'),
+    BAR_SYMBOL = Symbol('BAR_SYMBOL');
 
   class FooInterceptor extends RequestInterceptor {
     async intercept(context: RequestContext, next: () => Promise<void>) {
@@ -24,7 +24,7 @@ describe('Interceptor', () => {
 
   class BarInterceptor extends RequestInterceptor {
     async intercept(context: RequestContext, next: () => Promise<void>) {
-      context.bindContextValue(FOO_SYMBOL, Math.random());
+      context.bindContextValue(BAR_SYMBOL, Math.random());
       return next();
     }
   }
@@ -80,23 +80,28 @@ describe('Interceptor', () => {
     expect(barSpy).not.toHaveBeenCalled();
   });
 
-  test('Interceptor cannot inject symbol from prior interceptor', async () => {
+  test('Interceptor can inject symbol from prior interceptor', async () => {
+    const spy = jest.fn();
     @injectable()
-    class BuggyInterceptor extends RequestInterceptor {
+    class InjectArgsInterceptor extends RequestInterceptor {
       constructor(@inject(FOO_SYMBOL) value: any) {
         super();
+        spy(value);
       }
 
       async intercept(context: RequestContext, next: () => Promise<void>) {
         return next();
       }
     }
+    container.bind(InjectArgsInterceptor).toSelf();
 
+    const result = composeRequestInterceptor(container, [FooInterceptor, BarInterceptor, InjectArgsInterceptor]);
     const childContainer = container.createChild();
-    const ctx = new MockRequestContext(container);
-    const result = composeRequestInterceptor(container, [FooInterceptor, BarInterceptor, BuggyInterceptor]);
+    childContainer.bind(Container).toConstantValue(childContainer);
+    const ctx = new MockRequestContext(childContainer);
 
-    expect(() => childContainer.get(result).intercept(ctx, () => Promise.resolve())).toThrow();
+    await childContainer.get(result).intercept(ctx, () => Promise.resolve());
+    expect(spy).toHaveBeenCalledWith(expect.any(Number));
   });
 
   test('multiple call to next', async () => {
