@@ -10,7 +10,6 @@ module.exports = {
   moduleNameMapper: {
     '^@sensejs/([a-zA-Z0-9_-]+)$': '<rootDir>/packages/$1/',
   },
-  runInBand: true,
   setupFiles: ['./jest-setup.js'],
   resetMocks: true,
   restoreMocks: true,
