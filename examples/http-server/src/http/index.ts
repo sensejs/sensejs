@@ -4,7 +4,7 @@ import {RequestTimingInterceptor} from './request-timing.interceptor';
 import ExampleModule from '../example';
 import logger from '@sensejs/logger';
 
-export default class $HttpModule extends HttpModule({
+export default class ExampleHttpModule extends HttpModule({
   httpOption: {
     listenPort: 3000,
     listenAddress: '0.0.0.0',
@@ -12,6 +12,7 @@ export default class $HttpModule extends HttpModule({
   requires: [ExampleModule],
   components: [ExampleController, RequestTimingInterceptor],
   globalInterceptors: [RequestTimingInterceptor],
+  injectOptionFrom: 'config.http',
 }) {
   async onCreate() {
     logger.info('Creating HTTP Module');

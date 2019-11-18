@@ -6,7 +6,7 @@ importers:
       '@types/koa-router': 7.0.42
       '@types/node': 12.12.8
       coveralls: 3.0.7
-      husky: 3.0.9
+      husky: 3.1.0
       jest: 24.9.0
       lint-staged: 9.4.3
       prettier: 1.19.1
@@ -38,6 +38,7 @@ importers:
       typescript: ^3.7.2
   examples/http-server:
     dependencies:
+      '@sensejs/config': 'link:../../packages/config'
       '@sensejs/core': 'link:../../packages/core'
       '@sensejs/http': 'link:../../packages/http'
       '@sensejs/logger': 'link:../../packages/logger'
@@ -48,12 +49,15 @@ importers:
       typeorm: 0.2.20_sqlite3@4.1.0
       uuid: 3.3.3
     devDependencies:
+      '@types/config': 0.0.36
       '@types/uuid': 3.4.6
     specifiers:
+      '@sensejs/config': 'workspace:*'
       '@sensejs/core': 'workspace:*'
       '@sensejs/http': 'workspace:*'
       '@sensejs/logger': 'workspace:*'
       '@sensejs/typeorm': 'workspace:*'
+      '@types/config': ^0.0.36
       '@types/uuid': ^3.4.6
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
@@ -626,6 +630,10 @@ packages:
       '@types/node': 12.12.8
     resolution:
       integrity: sha512-RoX2EZjMiFMjZh9lmYrwgoP9RTpAjSHiJxdp4oidAQVO02T7HER3xj9UKue5534ULWeqVEkujhWcyvUce+d68w==
+  /@types/config/0.0.36:
+    dev: true
+    resolution:
+      integrity: sha512-EoAeT1MyFWh2BJvBDEFInY714bQBbHOAucqxqqhprhbBFqr+B7fuN5T9CJqUIGDzvwubnKKRqmSo6yPo0aSpNw==
   /@types/connect/3.4.32:
     dependencies:
       '@types/node': 12.12.8
@@ -2712,7 +2720,7 @@ packages:
       npm: '>=1.3.7'
     resolution:
       integrity: sha1-muzZJRFHcvPZW2WmCruPfBj7rOE=
-  /husky/3.0.9:
+  /husky/3.1.0:
     dependencies:
       chalk: 2.4.2
       ci-info: 2.0.0
@@ -2731,7 +2739,7 @@ packages:
     hasBin: true
     requiresBuild: true
     resolution:
-      integrity: sha512-Yolhupm7le2/MqC1VYLk/cNmYxsSsqKkTyBhzQHhPK1jFnC89mmmNVuGtLNabjDI6Aj8UNIr0KpRNuBkiC4+sg==
+      integrity: sha512-FJkPoHHB+6s4a+jwPqBudBDvYZsoQW5/HBuMSehC8qDiCe50kpcxeqFoDSlow+9I6wg47YxBoT3WxaURlrDIIQ==
   /iconv-lite/0.4.24:
     dependencies:
       safer-buffer: 2.1.2
