@@ -56,18 +56,6 @@ describe('@ParamBinding', () => {
     expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
   });
 
-  test('Missing @ParamBinding', () => {
-    class Foo {
-      bar(param: string) {
-        return param;
-      }
-    }
-
-    const container = new Container();
-    container.bind(String).toConstantValue('deadbeef');
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
-  });
-
   test('Inconsistent param binding', () => {
     class Foo {
       bar(undecorated: string, param: string) {

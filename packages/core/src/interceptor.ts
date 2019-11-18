@@ -20,7 +20,7 @@ export function composeRequestInterceptor<Context extends RequestContext>(
       super();
     }
 
-    async intercept(context: Context, next: () => Promise<undefined>) {
+    async intercept(context: Context, next: () => Promise<void>) {
       let index = -1;
 
       const dispatch = async (i: number) => {
@@ -31,12 +31,12 @@ export function composeRequestInterceptor<Context extends RequestContext>(
         const fn =
           i === interceptors.length
             ? next
-            : async (fn: () => Promise<void>) => {
-                const interceptor = this.container.get<RequestInterceptor<Context>>(interceptors[i]);
-                return interceptor.intercept(context, fn);
+            : async (next: () => Promise<void>) => {
+                const interceptor = this.container.get(interceptors[i]);
+                await interceptor.intercept(context, next);
               };
 
-        await fn(() => dispatch(i + 1));
+        await fn(async () => dispatch(i + 1));
       };
 
       return dispatch(0);

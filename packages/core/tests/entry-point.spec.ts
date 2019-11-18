@@ -1,10 +1,24 @@
-import {EntryPoint, Module} from '../src';
+import {EntryPoint, Module, ModuleConstructor} from '../src';
 import {runModule} from '../src/entry-point';
 
 class AppExit extends Error {
   constructor(public readonly exitCode: number) {
     super();
   }
+}
+
+function runModuleForTest(module: ModuleConstructor) {
+  return runModule(module, {
+    errorExitOption: {
+      exitCode: 101,
+      timeout: 100,
+    },
+    normalExitOption: {
+      exitCode: 0,
+      timeout: 100,
+      exitImmediatelyWhenRepeated: true,
+    },
+  });
 }
 
 describe('Application', () => {
@@ -16,7 +30,7 @@ describe('Application', () => {
   });
   test('no module', async () => {
     const promise = expect(
-      runModule(Module()).catch((appExit: AppExit) => {
+      runModuleForTest(Module()).catch((appExit: AppExit) => {
         expect(appExit.exitCode).toBe(0);
         throw appExit;
       }),
@@ -36,13 +50,8 @@ describe('Application', () => {
     }
 
     const promise = expect(
-      runModule(BadModule, {
-        errorExitOption: {
-          exitCode: 2,
-          timeout: 1000,
-        },
-      }).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(2);
+      runModuleForTest(BadModule).catch((appExit: AppExit) => {
+        expect(appExit.exitCode).toBe(101);
         throw appExit;
       }),
     ).rejects.toThrow(AppExit);
@@ -59,8 +68,8 @@ describe('Application', () => {
     }
 
     const promise = expect(
-      runModule(BadModule).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(1);
+      runModuleForTest(BadModule).catch((appExit: AppExit) => {
+        expect(appExit.exitCode).toBe(101);
         throw appExit;
       }),
     ).rejects.toThrow(AppExit);
@@ -81,8 +90,8 @@ describe('Application', () => {
     }
 
     const promise = expect(
-      runModule(BadModule).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(1);
+      runModuleForTest(BadModule).catch((appExit: AppExit) => {
+        expect(appExit.exitCode).toBe(101);
         throw appExit;
       }),
     ).rejects.toThrow(AppExit);
@@ -98,14 +107,8 @@ describe('Application', () => {
     }
 
     const promise = expect(
-      runModule(BadModule, {
-        normalExitOption: {
-          exitCode: 0,
-          timeout: 100,
-          exitImmediatelyWhenRepeated: false,
-        },
-      }).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(1);
+      runModuleForTest(BadModule).catch((appExit: AppExit) => {
+        expect(appExit.exitCode).toBe(101);
         throw appExit;
       }),
     ).rejects.toThrow(AppExit);
@@ -123,14 +126,8 @@ describe('Application', () => {
     }
 
     const promise = expect(
-      runModule(BadModule, {
-        normalExitOption: {
-          exitCode: 0,
-          timeout: 100,
-          exitImmediatelyWhenRepeated: true,
-        },
-      }).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(1);
+      runModuleForTest(BadModule).catch((appExit: AppExit) => {
+        expect(appExit.exitCode).toBe(101);
         throw appExit;
       }),
     ).rejects.toThrow(AppExit);
