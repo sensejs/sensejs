@@ -30,8 +30,7 @@ class ExampleHttpController {
 
 @EntryPoint()
 class App extends HttpModule({
-  type: HttpConfigType.static,
-  staticHttpConfig: {
+  httpOption: {
     listenPort: 3000,
     listenAddress: '0.0.0.0',
   },

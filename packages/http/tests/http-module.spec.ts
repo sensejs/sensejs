@@ -30,8 +30,7 @@ describe('HttpModule', () => {
 
     const MyHttpModule = HttpModule({
       components: [MyComponent, FooController],
-      type: HttpConfigType.static,
-      staticHttpConfig: {
+      httpOption: {
         listenPort: 3000,
         listenAddress: '0.0.0.0',
       },
@@ -50,8 +49,7 @@ describe('HttpModule', () => {
 
     const MyHttpModule = HttpModule({
       serverIdentifier,
-      type: HttpConfigType.static,
-      staticHttpConfig: {
+      httpOption: {
         listenPort: 3000,
         listenAddress: '0.0.0.0',
       },

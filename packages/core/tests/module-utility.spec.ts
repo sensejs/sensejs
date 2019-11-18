@@ -1,4 +1,4 @@
-import {ComponentScope, createConfigHelperFactory, createConnectionFactory, Module, ModuleRoot} from '../src';
+import {createConnectionFactory, provideConnectionFactory, provideOptionInjector, Module, ModuleRoot} from '../src';
 import {inject} from 'inversify';
 
 test('createConnectionFactory', async () => {
@@ -18,17 +18,18 @@ test('createConnectionFactory', async () => {
 
   jest.spyOn(MockConn.prototype, 'close');
 
-  const Factory = createConnectionFactory<MockConn, Option>(
+  const factoryProvider = provideConnectionFactory<MockConn, Option>(
     async (option) => new MockConn(option),
     async (conn) => conn.close(),
+    MockConn,
   );
 
   const foo = `foo_${Date.now()}`;
 
   class MyFactoryModule extends Module({
-    factories: [{provide: MockConn, factory: Factory, scope: ComponentScope.SINGLETON}],
+    factories: [factoryProvider],
   }) {
-    constructor(@inject(Factory) private factory: InstanceType<typeof Factory>) {
+    constructor(@inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {
       super();
     }
 
@@ -83,15 +84,14 @@ test('createConfigHelperFactory', async () => {
     return {foo: {x, y}, bar};
   };
 
-  const ConfigFactory = createConfigHelperFactory<Foo, typeof defaultValue>(defaultValue, injectSymbol, merger);
-  const configSymbol = Symbol();
-  const factories = [{provide: configSymbol, factory: ConfigFactory, scope: ComponentScope.SINGLETON}];
+  const optionProvider = provideOptionInjector<Foo, typeof defaultValue>(defaultValue, injectSymbol, merger);
+  const factories = [optionProvider];
 
   class CorrectModule extends Module({
     constants: [{provide: injectSymbol, value: {foo: {y: 'x'}, bar: false}}],
     factories,
   }) {
-    constructor(@inject(configSymbol) private factory: Foo) {
+    constructor(@inject(optionProvider.provide) private factory: Foo) {
       super();
     }
   }
@@ -102,7 +102,7 @@ test('createConfigHelperFactory', async () => {
     constants: [{provide: injectSymbol, value: {foo: {x: 'x'}}}],
     factories,
   }) {
-    constructor(@inject(configSymbol) private factory: Foo) {
+    constructor(@inject(optionProvider.provide) private factory: Foo) {
       super();
     }
   }

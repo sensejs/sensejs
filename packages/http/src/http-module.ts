@@ -4,9 +4,16 @@ import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {HttpInterceptor, HttpAdaptor} from './http-abstract';
-import {Constructor, Module, ModuleConstructor, ModuleOption, ServiceIdentifier} from '@sensejs/core';
+import {
+  Constructor,
+  Module,
+  ModuleConstructor,
+  ModuleOption,
+  ServiceIdentifier,
+  provideOptionInjector,
+} from '@sensejs/core';
 
-export interface HttpConfig {
+export interface HttpOption {
   listenAddress: string;
   listenPort: number;
 }
@@ -21,23 +28,13 @@ const defaultHttpConfig = {
   listenPort: 3000,
 };
 
-export interface BaseHttpModuleOption extends ModuleOption {
+export interface HttpModuleOption extends ModuleOption {
   httpAdaptorFactory?: (container: Container) => HttpAdaptor;
-  inspectors?: Constructor<HttpInterceptor>[];
+  globalInterceptors?: Constructor<HttpInterceptor>[];
   serverIdentifier?: ServiceIdentifier<unknown>;
+  httpOption?: Partial<HttpOption>;
+  injectOptionFrom?: ServiceIdentifier<Partial<HttpOption>>;
 }
-
-export interface StaticHttpModuleOption extends BaseHttpModuleOption {
-  type: HttpConfigType.static;
-  staticHttpConfig: HttpConfig;
-}
-
-export interface DynamicHttpModuleOption extends BaseHttpModuleOption {
-  type: HttpConfigType.injected;
-  injectHttpConfig: ServiceIdentifier<unknown>;
-}
-
-export type HttpModuleOption = StaticHttpModuleOption | DynamicHttpModuleOption;
 
 /**
  *
@@ -46,31 +43,39 @@ export type HttpModuleOption = StaticHttpModuleOption | DynamicHttpModuleOption;
  */
 export function HttpModule(
   option: HttpModuleOption = {
-    type: HttpConfigType.static,
-    staticHttpConfig: defaultHttpConfig,
+    httpOption: defaultHttpConfig,
   },
 ): ModuleConstructor {
   const httpAdaptorFactory =
     option.httpAdaptorFactory || ((container: Container) => new KoaHttpApplicationBuilder(container));
   const componentList = option.components || [];
+  const optionProvider = provideOptionInjector<HttpOption>(
+    option.httpOption,
+    option.injectOptionFrom,
+    (defaultValue, injectedValue) => {
+      const {listenAddress, listenPort} = Object.assign({}, defaultValue, injectedValue);
+      if (typeof listenAddress !== 'string' || typeof listenPort !== 'number') {
+        throw new Error('invalid http config');
+      }
+      return {listenAddress, listenPort};
+    },
+  );
 
-  class HttpModule extends Module(option) {
+  class HttpModule extends Module({requires: [Module(option)], factories: [optionProvider]}) {
     private httpServer?: http.Server;
-    private container: Container;
 
-    constructor(@inject(Container) container: Container) {
+    constructor(
+      @inject(Container) private container: Container,
+      @inject(optionProvider.provide) private httpOption: HttpOption,
+    ) {
       super();
-      this.container = container;
     }
 
     async onCreate() {
+      await super.onCreate();
       const httpAdaptor = httpAdaptorFactory(this.container);
-      const httpConfig =
-        option.type === HttpConfigType.static
-          ? option.staticHttpConfig
-          : (this.container.get(option.injectHttpConfig) as HttpConfig);
 
-      for (const inspector of option.inspectors || []) {
+      for (const inspector of option.globalInterceptors || []) {
         httpAdaptor.addGlobalInspector(inspector);
       }
       componentList.forEach((component) => {
@@ -81,7 +86,7 @@ export function HttpModule(
         // TODO: Implement other HTTP stuffs, like middleware and interceptor
       });
 
-      this.httpServer = await this.createHttpServer(httpConfig, httpAdaptor);
+      this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);
 
       if (option.serverIdentifier) {
         this.container.bind(option.serverIdentifier).toConstantValue(this.httpServer);
@@ -89,15 +94,16 @@ export function HttpModule(
     }
 
     async onDestroy() {
-      return promisify((done: (e?: Error) => void) => {
+      await promisify((done: (e?: Error) => void) => {
         if (!this.httpServer) {
           return done();
         }
         return this.httpServer.close(done);
       })();
+      await super.onDestroy();
     }
 
-    private createHttpServer(httpConfig: HttpConfig, httpAdaptor: HttpAdaptor) {
+    private createHttpServer(httpConfig: HttpOption, httpAdaptor: HttpAdaptor) {
       return new Promise<http.Server>((resolve, reject) => {
         const httpServer = http.createServer(httpAdaptor.build());
         httpServer.once('error', reject);
@@ -108,5 +114,6 @@ export function HttpModule(
       });
     }
   }
+
   return HttpModule;
 }
