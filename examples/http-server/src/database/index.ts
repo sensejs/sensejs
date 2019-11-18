@@ -1,13 +1,14 @@
 import {TypeOrmModule} from '@sensejs/typeorm';
 import logger from '@sensejs/logger';
+import ConfigModule from '../config';
 
 export default class DatabaseModule extends TypeOrmModule({
+  requires: [ConfigModule],
   typeOrmOption: {
-    type: 'sqlite',
-    database: 'temp.db',
     synchronize: true,
     entities: [__dirname + '/../**/*.entity.ts'],
   },
+  injectOptionFrom: 'config.database',
 }) {
   async onCreate(): Promise<void> {
     logger.info('Creating TypeORM Module');

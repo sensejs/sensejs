@@ -11,17 +11,20 @@
   "private": true,
   "license": "ISC",
   "dependencies": {
+    "@sensejs/config": "workspace:0.0.6",
     "@sensejs/core": "workspace:0.0.6",
     "@sensejs/http": "workspace:0.0.6",
     "@sensejs/logger": "workspace:0.0.6",
     "@sensejs/typeorm": "workspace:0.0.6",
     "reflect-metadata": "^0.1.13",
     "inversify": "^5.0.1",
+    "reflect-metadata": "^0.1.13",
     "sqlite3": "^4.1.0",
     "typeorm": "^0.2.20",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
+    "@types/config": "^0.0.36",
     "@types/uuid": "^3.4.6"
   }
 }

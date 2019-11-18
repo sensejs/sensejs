@@ -38,6 +38,7 @@ importers:
       typescript: ^3.7.2
   examples/http-server:
     dependencies:
+      '@sensejs/config': 'link:../../packages/config'
       '@sensejs/core': 'link:../../packages/core'
       '@sensejs/http': 'link:../../packages/http'
       '@sensejs/logger': 'link:../../packages/logger'
@@ -48,12 +49,15 @@ importers:
       typeorm: 0.2.20_sqlite3@4.1.0
       uuid: 3.3.3
     devDependencies:
+      '@types/config': 0.0.36
       '@types/uuid': 3.4.6
     specifiers:
+      '@sensejs/config': 'workspace:0.0.6'
       '@sensejs/core': 'workspace:0.0.6'
       '@sensejs/http': 'workspace:0.0.6'
       '@sensejs/logger': 'workspace:0.0.6'
       '@sensejs/typeorm': 'workspace:0.0.6'
+      '@types/config': ^0.0.36
       '@types/uuid': ^3.4.6
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
@@ -643,6 +647,10 @@ packages:
       '@types/node': 12.12.11
     resolution:
       integrity: sha512-RoX2EZjMiFMjZh9lmYrwgoP9RTpAjSHiJxdp4oidAQVO02T7HER3xj9UKue5534ULWeqVEkujhWcyvUce+d68w==
+  /@types/config/0.0.36:
+    dev: true
+    resolution:
+      integrity: sha512-EoAeT1MyFWh2BJvBDEFInY714bQBbHOAucqxqqhprhbBFqr+B7fuN5T9CJqUIGDzvwubnKKRqmSo6yPo0aSpNw==
   /@types/connect/3.4.32:
     dependencies:
       '@types/node': 12.12.11

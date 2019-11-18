@@ -1,0 +1,11 @@
+{
+  "database": {
+    "type": "sqlite",
+    "db": "temp.db"
+  },
+  "http": {
+    "listenPort": 3000,
+    "listenAddress": "0.0.0.0"
+  }
+
+}
