@@ -5,7 +5,7 @@ import {Repository} from 'typeorm';
 import {Component} from '@sensejs/core';
 
 @Component()
-export class WritingFacade {
+export class PublishingFacade {
   constructor(
     @InjectRepository(BookEntity) private bookRepository: Repository<BookEntity>,
     @InjectRepository(AuthorEntity) private authorRepository: Repository<AuthorEntity>,
