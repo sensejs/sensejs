@@ -13,8 +13,8 @@ import {inject} from 'inversify';
 import {Connection, ConnectionOptions, createConnection} from 'typeorm';
 
 export interface TypeOrmModuleOption {
-  typeOrmOption?: ConnectionOptions;
-  injectOptionFrom?: ServiceIdentifier<ConnectionOptions>;
+  typeOrmOption?: Partial<ConnectionOptions>;
+  injectOptionFrom?: ServiceIdentifier<Partial<ConnectionOptions>>;
 }
 
 const EntityRepositoryMetadataKey = Symbol();
