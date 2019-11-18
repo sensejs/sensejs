@@ -41,6 +41,7 @@ importers:
       '@sensejs/config': 'link:../../packages/config'
       '@sensejs/core': 'link:../../packages/core'
       '@sensejs/http': 'link:../../packages/http'
+      '@sensejs/kafka': 'link:../../packages/kafka'
       '@sensejs/logger': 'link:../../packages/logger'
       '@sensejs/typeorm': 'link:../../packages/typeorm'
       inversify: 5.0.1
@@ -55,6 +56,7 @@ importers:
       '@sensejs/config': 'workspace:*'
       '@sensejs/core': 'workspace:*'
       '@sensejs/http': 'workspace:*'
+      '@sensejs/kafka': 'workspace:*'
       '@sensejs/logger': 'workspace:*'
       '@sensejs/typeorm': 'workspace:*'
       '@types/config': ^0.0.36

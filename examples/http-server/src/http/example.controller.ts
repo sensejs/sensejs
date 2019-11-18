@@ -1,10 +1,10 @@
 import {Controller, GET, Query, POST, Body, Path} from '@sensejs/http';
-import {WritingFacade} from '../example/writing-facade';
+import {PublishingFacade} from '../publishing/publishing-facade.component';
 import {inject} from 'inversify';
 
 @Controller('/example')
 export class ExampleController {
-  constructor(@inject(WritingFacade) private writingFacade: WritingFacade) {}
+  constructor(@inject(PublishingFacade) private writingFacade: PublishingFacade) {}
 
   @GET('/')
   handleGetRequest(@Query() query: object) {

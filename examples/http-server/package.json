@@ -15,6 +15,7 @@
     "@sensejs/core": "workspace:*",
     "@sensejs/http": "workspace:*",
     "@sensejs/logger": "workspace:*",
+    "@sensejs/kafka": "workspace:*",
     "@sensejs/typeorm": "workspace:*",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13",

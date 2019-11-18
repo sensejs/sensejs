@@ -1,7 +1,7 @@
 import {HttpModule} from '@sensejs/http';
 import {ExampleController} from './example.controller';
 import {RequestTimingInterceptor} from './request-timing.interceptor';
-import ExampleModule from '../example';
+import PublishingModule from '../publishing';
 import logger from '@sensejs/logger';
 
 export default class ExampleHttpModule extends HttpModule({
@@ -9,7 +9,7 @@ export default class ExampleHttpModule extends HttpModule({
     listenPort: 3000,
     listenAddress: '0.0.0.0',
   },
-  requires: [ExampleModule],
+  requires: [PublishingModule],
   components: [ExampleController, RequestTimingInterceptor],
   globalInterceptors: [RequestTimingInterceptor],
   injectOptionFrom: 'config.http',

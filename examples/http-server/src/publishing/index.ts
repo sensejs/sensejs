@@ -1,9 +1,9 @@
-import {WritingFacade} from './writing-facade';
+import {PublishingFacade} from './publishing-facade.component';
 import {Module} from '@sensejs/core';
 import DatabaseModule from '../database';
 import logger from '@sensejs/logger';
 
-export default class ExampleModule extends Module({components: [WritingFacade], requires: [DatabaseModule]}) {
+export default class PublishingModule extends Module({components: [PublishingFacade], requires: [DatabaseModule]}) {
   async onCreate() {
     logger.info('Creating Example Module');
     await super.onCreate();
