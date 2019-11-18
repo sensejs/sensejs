@@ -3,6 +3,7 @@ import {
   Constructor,
   Module,
   ModuleConstructor,
+  ModuleOption,
   provideConnectionFactory,
   provideOptionInjector,
   RequestContext,
@@ -12,7 +13,7 @@ import {
 import {inject} from 'inversify';
 import {Connection, ConnectionOptions, createConnection} from 'typeorm';
 
-export interface TypeOrmModuleOption {
+export interface TypeOrmModuleOption extends ModuleOption {
   typeOrmOption?: Partial<ConnectionOptions>;
   injectOptionFrom?: ServiceIdentifier<Partial<ConnectionOptions>>;
 }
@@ -72,6 +73,7 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
   );
 
   class TypeOrmConnectionModule extends Module({
+    requires: [Module(option)],
     components: [TypeOrmSupportInterceptor],
     factories: [factoryProvider, optionProvider],
   }) {
