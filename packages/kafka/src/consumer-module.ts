@@ -1,13 +1,12 @@
 import {
   Abstract,
-  ComponentScope,
   composeRequestInterceptor,
-  createConfigHelperFactory,
-  createConnectionFactory,
   invokeMethod,
   Module,
   ModuleConstructor,
   ModuleOption,
+  provideConnectionFactory,
+  provideOptionInjector,
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
@@ -54,17 +53,16 @@ function createSubscriberTopicModule(
   method: Function,
 ) {
   const {fallbackOption, injectOptionFrom} = subscribeMetadata;
-  const ConfigHelper = createConfigHelperFactory(fallbackOption, injectOptionFrom, (a, b) => {
-    return Object.assign({}, a, b);
+  const optionProvider = provideOptionInjector(fallbackOption, injectOptionFrom, (defaultValue, injectedValue) => {
+    return Object.assign({}, defaultValue, injectedValue);
   });
-  const symbol = Symbol();
 
   class TopicModule extends Module({
     requires: [messageConsumerModule],
-    factories: [{provide: symbol, factory: ConfigHelper}],
+    factories: [optionProvider],
   }) {
     constructor(
-      @inject(symbol) config: ConsumeTopicOption,
+      @inject(optionProvider.provide) config: ConsumeTopicOption,
       @inject(MessageConsumer) messageConsumer: MessageConsumer,
       @inject(Container) container: Container,
     ) {
@@ -119,28 +117,26 @@ function scanController(option: KafkaConsumerModuleOption, module: ModuleConstru
   return result;
 }
 
-export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
-  const ConfigFactory = createConfigHelperFactory(
+function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption): ModuleConstructor {
+  const optionProvider = provideOptionInjector(
     option.defaultKafkaConsumerOption,
     option.injectOptionFrom,
     mergeConnectOption,
   );
-  const ConsumerGroupFactory = createConnectionFactory<MessageConsumer, ConnectOption>(
-    async (option) => new MessageConsumer(option),
-    async (messageConsumer) => undefined, // close on KafkaConsumerModule
+
+  const factoryProvider = provideConnectionFactory<MessageConsumer, ConnectOption>(
+    async (option) => new MessageConsumer(option), // connect on kafkaConsumerModule
+    async () => undefined, // close on KafkaConsumerModule
+    MessageConsumer,
   );
-  const configSymbol = Symbol();
 
   class KafkaConsumerGroupModule extends Module({
     requires: [Module(option)],
-    factories: [
-      {provide: configSymbol, factory: ConfigFactory, scope: ComponentScope.SINGLETON},
-      {provide: MessageConsumer, factory: ConsumerGroupFactory, scope: ComponentScope.SINGLETON},
-    ],
+    factories: [optionProvider, factoryProvider],
   }) {
     constructor(
-      @inject(ConsumerGroupFactory) private consumerGroupFactory: InstanceType<typeof ConsumerGroupFactory>,
-      @inject(configSymbol) private config: KafkaConsumerOption,
+      @inject(factoryProvider.factory) private consumerGroupFactory: InstanceType<typeof factoryProvider.factory>,
+      @inject(optionProvider.provide) private config: KafkaConsumerOption,
     ) {
       super();
     }
@@ -155,8 +151,11 @@ export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleCo
       return super.onDestroy();
     }
   }
+  return KafkaConsumerGroupModule;
+}
 
-  const subscribeTopicModules = scanController(option, KafkaConsumerGroupModule);
+export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
+  const subscribeTopicModules = scanController(option, KafkaConsumerHelperModule(option));
 
   class KafkaConsumerModule extends Module({requires: subscribeTopicModules}) {
     constructor(@inject(MessageConsumer) private messageConsumer: MessageConsumer) {
