@@ -70,6 +70,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     koa.use(koaBodyParser());
     koa.use(async (ctx, next) => {
       const childContainer = this.container.createChild();
+      childContainer.bind(Container).toConstantValue(childContainer);
       ctx.container = childContainer;
       const context = new KoaHttpContext(childContainer);
       childContainer.bind(HttpContext).toConstantValue(context);
