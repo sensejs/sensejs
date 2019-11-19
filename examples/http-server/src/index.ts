@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import {Component, EntryPoint, ParamBinding} from '@sensejs/core';
 import {Controller, GET, HttpConfigType, HttpContext, HttpInterceptor, HttpModule, Query} from '@sensejs/http';
+import {defaultLoggerBuilder} from '@sensejs/logger';
 
 @Component()
 class Interceptor extends HttpInterceptor {
@@ -28,7 +29,7 @@ class ExampleHttpController {
   }
 }
 
-@EntryPoint()
+@EntryPoint({logger: defaultLoggerBuilder.build()})
 class App extends HttpModule({
   httpOption: {
     listenPort: 3000,

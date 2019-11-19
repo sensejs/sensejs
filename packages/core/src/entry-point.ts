@@ -1,5 +1,6 @@
 import {ModuleRoot} from './module-root';
 import {ModuleConstructor} from './module';
+import {consoleLogger, Logger} from './logger-module';
 
 interface ExitOption {
   exitCode: number;
@@ -18,6 +19,7 @@ interface RunOption {
   normalExitOption: RepeatableExitOption;
   errorExitOption: ExitOption;
   exitSignals: ExitSignalOption;
+  logger: Logger;
 }
 
 export const defaultExitOption: ExitOption = {
@@ -46,19 +48,24 @@ export const defaultRunOption: RunOption = {
     },
     SIGTERM: {},
   },
+  logger: consoleLogger,
 };
 
 function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOption) => void) {
   const onWarning = () => {};
-  const onError = () => {
+  const onError = (e: any) => {
+    actualRunOption.logger.info('Uncaught exception: ', e);
+    actualRunOption.logger.info('Going to quit');
     stopApp(actualRunOption.errorExitOption);
   };
   const registerExitSignal = (signal: NodeJS.Signals) => {
     const exitOption = Object.assign({}, actualRunOption.normalExitOption, actualRunOption.exitSignals[signal]);
+    actualRunOption.logger.info('Receive signal %s, going to quit', signal);
     process.once(signal, () => {
       stopApp(exitOption);
       if (exitOption.exitImmediatelyWhenRepeated) {
         process.once(signal, () => {
+          actualRunOption.logger.info('Receive signal %s again, force quit immediately', signal);
           stopApp(actualRunOption.errorExitOption);
         });
       }
@@ -98,7 +105,9 @@ export async function runModule(entryModule: ModuleConstructor, runOption: Parti
     };
     setupEventEmitter(actualRunOption, stopApp);
 
-    moduleRoot.start().catch(() => {
+    moduleRoot.start().catch((e) => {
+      actualRunOption.logger.fatal('Uncaught exception: ', e);
+      actualRunOption.logger.fatal('Going to quit');
       stopApp(actualRunOption.errorExitOption);
     });
   });

@@ -93,7 +93,7 @@ export interface LoggerBuilder {
   build(loggerLabel: string): Logger;
 }
 
-const consoleLogger = new ConsoleLogger();
+export const consoleLogger = new ConsoleLogger();
 
 @Component()
 export class ConsoleLoggerBuilder implements LoggerBuilder {
