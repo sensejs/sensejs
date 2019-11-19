@@ -36,8 +36,8 @@ function timestampColoredBySeverity(metadata: RawLogData) {
   return colorTextView(logLevelColorMap(metadata.level), moment(metadata.timestamp).format(moment.HTML5_FMT.TIME_MS));
 }
 
-function boldModuleName(metadata: RawLogData) {
-  return metadata.module ? colorTextView(colors.bold, metadata.module) : colorTextView(colors.grey, '-');
+function boldLogLabel(metadata: RawLogData) {
+  return metadata.label ? colorTextView(colors.bold, metadata.label) : colorTextView(colors.grey, '-');
 }
 
 function underlinedTraceId(metadata: RawLogData) {
@@ -46,7 +46,7 @@ function underlinedTraceId(metadata: RawLogData) {
 
 export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
   getMetadataView() {
-    return [timestampColoredBySeverity, boldModuleName, underlinedTraceId];
+    return [timestampColoredBySeverity, boldLogLabel, underlinedTraceId];
   }
 
   getEventMark(rawData: RawLogData): string {

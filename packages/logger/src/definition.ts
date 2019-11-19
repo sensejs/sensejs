@@ -10,7 +10,7 @@ export enum LogLevel {
 export interface RawLogData {
   timestamp: number;
   level: LogLevel;
-  module: string;
+  label: string;
   traceId?: string;
   messages: [unknown, ...unknown[]];
 }

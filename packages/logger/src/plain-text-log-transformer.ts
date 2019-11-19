@@ -20,8 +20,8 @@ function plainIsoTimestamp(metadata: RawLogData) {
   return plainTextView(new Date(metadata.timestamp).toISOString());
 }
 
-function plainModuleName(metadata: RawLogData) {
-  return plainTextView(metadata.module ? `<${metadata.module}>` : '-');
+function plainLogLabel(metadata: RawLogData) {
+  return plainTextView(metadata.label ? `<${metadata.label}>` : '-');
 }
 
 function plainTraceId(metadata: RawLogData) {
@@ -30,7 +30,7 @@ function plainTraceId(metadata: RawLogData) {
 
 export class PlainTextLogTransformer extends BasicTextLogTransformer {
   getMetadataView() {
-    return [plainIsoTimestamp, plainLevel, plainModuleName, plainTraceId];
+    return [plainIsoTimestamp, plainLevel, plainLogLabel, plainTraceId];
   }
 
   contentFormatter(...messages: [unknown, ...unknown[]]) {
