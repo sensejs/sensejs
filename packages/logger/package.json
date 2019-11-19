@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/logger",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "",
   "files": [
     "lib",
@@ -18,7 +18,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:*",
+    "@sensejs/core": "workspace:0.0.6",
     "colors": "^1.4.0",
     "moment": "^2.24.0"
   },

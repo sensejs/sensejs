@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/config",
-  "version": "0.0.0",
+  "version": "0.0.6",
   "description": "",
   "files": [
     "lib",
@@ -18,7 +18,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:~0.0.5",
+    "@sensejs/core": "workspace:0.0.6",
     "inversify": "^5.0.1",
     "traverse": "^0.6.6"
   },
