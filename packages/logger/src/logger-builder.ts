@@ -1,5 +1,6 @@
-import {Logger, LogLevel, LogTransport} from './definition';
+import {LogLevel, LogTransport} from './definition';
 import {StreamLogTransport} from './stream-log-transport';
+import {Logger} from '@sensejs/core';
 
 const MODULE_NAME_RULE = /^[_a-zA-Z][-.=_0-9a-zA-Z]{0,31}$/;
 const TRACE_ID_RULE = /^[-.+/=_a-zA-Z0-9]{0,36}$/;
@@ -45,11 +46,11 @@ function createLogger(logTransports: LogTransport[], initModuleName: string, ini
 /**
  * Simple Log Factory
  */
-export class LoggerFactory {
+export class SenseLoggerBuilder {
   constructor(private _module: string, private _logTransports: LogTransport[] = []) {}
 
   setModuleName(label: string) {
-    return new LoggerFactory(label, this._logTransports);
+    return new SenseLoggerBuilder(label, this._logTransports);
   }
 
   build(initTraceId?: string): Logger {
@@ -61,7 +62,7 @@ export class LoggerFactory {
   }
 }
 
-export const defaultLoggerFactory = new LoggerFactory('', [
+export const defaultLoggerBuilder = new SenseLoggerBuilder('', [
   new StreamLogTransport(process.stdout, [LogLevel.TRACE, LogLevel.DEBUG, LogLevel.INFO]),
   new StreamLogTransport(process.stderr, [LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL]),
 ]);

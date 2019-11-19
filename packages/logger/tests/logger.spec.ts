@@ -1,7 +1,7 @@
 import {
   BasicTextLogTransformer,
   ColorTtyTextLogTransformer,
-  LoggerFactory,
+  LoggerBuilder,
   LogLevel,
   LogTransformer,
   PlainTextLogTransformer,
@@ -28,7 +28,7 @@ describe('Logger', () => {
     const mockLogTransport = new MockLogTransport();
     const writeSpy = jest.spyOn(mockLogTransport, 'write');
 
-    const loggerFactory = new LoggerFactory('', [mockLogTransport]).setModuleName('foo');
+    const loggerFactory = new LoggerBuilder('', [mockLogTransport]).setModuleName('foo');
     let logger = loggerFactory.build();
 
     const assertTransportLogLevelParams = (level: LogLevel) => {

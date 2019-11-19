@@ -18,6 +18,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
+    "@sensejs/core": "workspace:*",
     "colors": "^1.4.0",
     "moment": "^2.24.0"
   },
