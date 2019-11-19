@@ -17,6 +17,7 @@
     "@sensejs/logger": "workspace:0.0.6",
     "@sensejs/kafka": "workspace:0.0.6",
     "@sensejs/typeorm": "workspace:0.0.6",
+    "config": "^3.2.4",
     "reflect-metadata": "^0.1.13",
     "inversify": "^5.0.1",
     "sqlite3": "^4.1.0",
