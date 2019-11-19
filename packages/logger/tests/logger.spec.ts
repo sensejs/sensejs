@@ -1,11 +1,8 @@
 import {
-  BasicTextLogTransformer,
   ColorTtyTextLogTransformer,
-  LoggerFactory,
   LogLevel,
-  LogTransformer,
   PlainTextLogTransformer,
-  RawLogData,
+  SenseLoggerBuilder,
   StreamLogTransport,
 } from '../src';
 import {Writable} from 'stream';
@@ -28,7 +25,7 @@ describe('Logger', () => {
     const mockLogTransport = new MockLogTransport();
     const writeSpy = jest.spyOn(mockLogTransport, 'write');
 
-    const loggerFactory = new LoggerFactory('', [mockLogTransport]).setModuleName('foo');
+    const loggerFactory = new SenseLoggerBuilder('', '', [mockLogTransport]);
     let logger = loggerFactory.build();
 
     const assertTransportLogLevelParams = (level: LogLevel) => {
@@ -37,7 +34,7 @@ describe('Logger', () => {
           Object.assign(
             {
               timestamp: expect.any(Number),
-              module: 'foo',
+              label: '',
               traceId: '',
             },
             {level},
@@ -59,43 +56,42 @@ describe('Logger', () => {
     logger.fatal('...');
     assertTransportLogLevelParams(LogLevel.FATAL);
 
-    const assertTransportModuleAndTranceID = (module: string, traceId: string) => {
+    const assertTransportModuleAndTranceID = (label: string, traceId: string) => {
       expect(writeSpy).lastCalledWith(
         expect.objectContaining({
           timestamp: expect.any(Number),
-          module,
+          label,
           traceId,
         }),
       );
     };
     // Change module name
     let newModuleName = `module_${Date.now()}`;
-    logger = logger(newModuleName);
+    logger = loggerFactory.setLabel(newModuleName).build();
     logger.log('...');
     assertTransportModuleAndTranceID(newModuleName, '');
+
     // Change trace id
-    let newTraceId = `trace_${Date.now()}`;
-    logger = logger(null, newTraceId);
+    const newTraceId = `trace_${Date.now()}`;
+    logger = loggerFactory.setTraceId(newTraceId).build();
     logger.log('...');
     // Change module name with trace id preserved
-    assertTransportModuleAndTranceID(newModuleName, newTraceId);
-    newModuleName = `module_${Date.now()}`;
-    logger = logger(newModuleName);
-    logger.log('...');
-    assertTransportModuleAndTranceID(newModuleName, newTraceId);
+    assertTransportModuleAndTranceID('', newTraceId);
 
     // Change both module name and trace id
-    newTraceId = `trace_${Date.now()}`;
     newModuleName = `module_${Date.now()}`;
-    logger = logger(newModuleName, newTraceId);
+    logger = loggerFactory
+      .setTraceId(newTraceId)
+      .setLabel(newModuleName)
+      .build();
     logger.log('...');
     assertTransportModuleAndTranceID(newModuleName, newTraceId);
 
     // Invalid module name
-    expect(() => logger('*')).toThrow();
+    expect(() => loggerFactory.setLabel('*').build()).toThrow();
 
     // Invalid trace id
-    expect(() => logger(null, '*')).toThrow();
+    expect(() => loggerFactory.setTraceId('*').build()).toThrow();
   });
 
   test('Plain text transformer', () => {
@@ -112,7 +108,7 @@ describe('Logger', () => {
               .format({
                 timestamp: Date.now(),
                 level,
-                module,
+                label: module,
                 traceId,
                 messages: ['message'],
               })
@@ -136,7 +132,7 @@ describe('Logger', () => {
             .format({
               timestamp: Date.now(),
               level,
-              module,
+              label: module,
               traceId,
               messages: ['message'],
             })
@@ -160,7 +156,7 @@ describe('Logger', () => {
       await transport.write({
         timestamp: Date.now(),
         level: LogLevel.DEBUG,
-        module: '',
+        label: '',
         traceId: '',
         messages: ['message'],
       });
@@ -168,7 +164,7 @@ describe('Logger', () => {
       await transport.write({
         timestamp: Date.now(),
         level: LogLevel.ERROR,
-        module: '',
+        label: '',
         traceId: '',
         messages: ['message'],
       });
@@ -189,7 +185,7 @@ describe('Logger', () => {
       const p1 = transport.write({
         timestamp: Date.now(),
         level: LogLevel.ERROR,
-        module: '',
+        label: '',
         traceId: '',
         messages: ['1'],
       });
@@ -198,7 +194,7 @@ describe('Logger', () => {
       const p2 = transport.write({
         timestamp: Date.now(),
         level: LogLevel.ERROR,
-        module: '',
+        label: '',
         traceId: '',
         messages: ['message'],
       });

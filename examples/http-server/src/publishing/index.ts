@@ -1,18 +1,25 @@
 import {PublishingFacade} from './publishing-facade.component';
-import {Module} from '@sensejs/core';
+import {InjectLogger, Logger, Module} from '@sensejs/core';
 import DatabaseModule from '../database';
-import logger from '@sensejs/logger';
+import {SenseLogModule} from '@sensejs/logger';
 
-export default class PublishingModule extends Module({components: [PublishingFacade], requires: [DatabaseModule]}) {
+export default class PublishingModule extends Module({
+  requires: [SenseLogModule, DatabaseModule],
+  components: [PublishingFacade],
+}) {
+  constructor(@InjectLogger(DatabaseModule) private logger: Logger) {
+    super();
+  }
+
   async onCreate() {
-    logger.info('Creating Example Module');
+    this.logger.info('Creating Example Module');
     await super.onCreate();
-    logger.info('Created Example Module');
+    this.logger.info('Created Example Module');
   }
 
   async onDestroy() {
-    logger.info('Destroying Example Module');
+    this.logger.info('Destroying Example Module');
     await super.onDestroy();
-    logger.info('Destroyed Example Module');
+    this.logger.info('Destroyed Example Module');
   }
 }

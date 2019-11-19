@@ -2,7 +2,7 @@ import {HttpModule} from '@sensejs/http';
 import {ExampleController} from './example.controller';
 import {RequestTimingInterceptor} from './request-timing.interceptor';
 import PublishingModule from '../publishing';
-import logger from '@sensejs/logger';
+import {InjectLogger, Logger} from '@sensejs/core';
 
 export default class ExampleHttpModule extends HttpModule({
   httpOption: {
@@ -14,15 +14,19 @@ export default class ExampleHttpModule extends HttpModule({
   globalInterceptors: [RequestTimingInterceptor],
   injectOptionFrom: 'config.http',
 }) {
+  constructor(@InjectLogger(RequestTimingInterceptor) private logger: Logger) {
+    super();
+  }
+
   async onCreate() {
-    logger.info('Creating HTTP Module');
+    this.logger.info('Creating HTTP Module');
     await super.onCreate();
-    logger.info('Created HTTP Module');
+    this.logger.info('Created HTTP Module');
   }
 
   async onDestroy() {
-    logger.info('Destroying HTTP Module');
+    this.logger.info('Destroying HTTP Module');
     await super.onDestroy();
-    logger.info('Destroyed Example Module');
+    this.logger.info('Destroyed Example Module');
   }
 }
