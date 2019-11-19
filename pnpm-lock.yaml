@@ -44,6 +44,7 @@ importers:
       '@sensejs/kafka': 'link:../../packages/kafka'
       '@sensejs/logger': 'link:../../packages/logger'
       '@sensejs/typeorm': 'link:../../packages/typeorm'
+      config: 3.2.4
       inversify: 5.0.1
       reflect-metadata: 0.1.13
       sqlite3: 4.1.0
@@ -61,6 +62,7 @@ importers:
       '@sensejs/typeorm': 'workspace:*'
       '@types/config': ^0.0.36
       '@types/uuid': ^3.4.6
+      config: ^3.2.4
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
       sqlite3: ^4.1.0
@@ -1591,6 +1593,14 @@ packages:
   /concat-map/0.0.1:
     resolution:
       integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=
+  /config/3.2.4:
+    dependencies:
+      json5: 1.0.1
+    dev: false
+    engines:
+      node: '>= 6.0.0'
+    resolution:
+      integrity: sha512-H1XIGfnU1EAkfjSLn9ZvYDRx9lOezDViuzLDgiJ/lMeqjYe3q6iQfpcLt2NInckJgpAeekbNhQkmnnbdEDs9rw==
   /configstore/4.0.0:
     dependencies:
       dot-prop: 4.2.0
@@ -3734,6 +3744,13 @@ packages:
   /json-stringify-safe/5.0.1:
     resolution:
       integrity: sha1-Epai1Y/UXxmg9s4B1lcB4sc1tus=
+  /json5/1.0.1:
+    dependencies:
+      minimist: 1.2.0
+    dev: false
+    hasBin: true
+    resolution:
+      integrity: sha512-aKS4WQjPenRxiQsC93MNfjx+nbF4PAdYzmd/1JIj8HYzqfbu86beTuNgXDzPknWk0n0uARlyewZo4s++ES36Ow==
   /json5/2.1.1:
     dependencies:
       minimist: 1.2.0
