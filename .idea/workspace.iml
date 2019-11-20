@@ -3,12 +3,6 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/account-module/coverage" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/account-module/lib" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/example/lib" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/infrastructure/lib" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/logger/lib" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/redis/lib" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
     </content>
@@ -25,8 +19,7 @@
     <orderEntry type="module" module-name="config" />
     <orderEntry type="module" module-name="redis" />
     <orderEntry type="module" module-name="mikro-orm" />
-    <orderEntry type="module" module-name="mikro-orm" />
-    <orderEntry type="module" module-name="mikro-orm" />
-    <orderEntry type="module" module-name="mikro-orm" />
+    <orderEntry type="module" module-name="mikro-orm-example" />
+    <orderEntry type="module" module-name="redis" />
   </component>
 </module>

@@ -4,14 +4,18 @@ import {
   Module,
   ModuleConstructor,
   ModuleOption,
+  provideConnectionFactory,
+  provideOptionInjector,
   RequestContext,
   RequestInterceptor,
+  ServiceIdentifier,
 } from '@sensejs/core';
-import {Configuration, EntityManager, MikroORM, Options} from 'mikro-orm';
-import {AsyncContainerModule, Container, inject} from 'inversify';
+import {EntityManager, MikroORM, Options} from 'mikro-orm';
+import {Container, inject} from 'inversify';
 
 interface MikroOrmModuleOption extends ModuleOption {
-  mikroOrmOption: Options | Configuration;
+  mikroOrmOption?: Partial<Options>;
+  injectOptionFrom?: ServiceIdentifier<Options>;
 }
 
 const EntityRepositoryMetadataKey = Symbol();
@@ -36,16 +40,14 @@ export function InjectRepository(entityConstructor: Constructor<unknown>) {
 }
 
 export class RepositoryRegister {
-
-  constructor(private entityManager: EntityManager) {
-
-  }
+  constructor(private entityManager: EntityManager) {}
 
   registerOnContainer(container: Container) {
     const forkedEntityManager = this.entityManager.fork();
     container.bind(EntityManager).toConstantValue(forkedEntityManager);
     for (const entityMetadata of Object.values(forkedEntityManager.getMetadata().getAll())) {
-      container.bind<unknown>(ensureInjectRepositoryToken(entityMetadata.prototype))
+      container
+        .bind<unknown>(ensureInjectRepositoryToken(entityMetadata.prototype))
         .toConstantValue(forkedEntityManager.getRepository(entityMetadata.className));
     }
   }
@@ -61,8 +63,7 @@ export class RepositoryRegister {
 }
 
 @Component()
-export class SenseHttpInterceptor extends RequestInterceptor {
-
+export class MikroOrmInterceptor extends RequestInterceptor {
   constructor(
     @inject(EntityManager) private entityManager: EntityManager,
     @inject(RepositoryRegister) private repositoryRegister: RepositoryRegister,
@@ -75,43 +76,38 @@ export class SenseHttpInterceptor extends RequestInterceptor {
     await next();
     await this.entityManager.flush();
   }
-
 }
 
 export function MikroOrmModule(option: MikroOrmModuleOption): ModuleConstructor {
+  const optionProvider = provideOptionInjector<Options>(option.mikroOrmOption, option.injectOptionFrom, (a, b) => {
+    return Object.assign({}, a, b) as Options;
+  });
+  const factoryProvider = provideConnectionFactory(
+    (option: Options) => MikroORM.init(option),
+    (connection) => connection.close(),
+  );
 
-  class MikroOrmModule extends Module(option) {
-
-    ormInstance?: MikroORM;
-    ormModule?: AsyncContainerModule;
-
-    constructor(@inject(Container) private container: Container) {
+  class MikroOrmModule extends Module({
+    requires: [Module(option)],
+    factories: [factoryProvider, optionProvider],
+  }) {
+    constructor(
+      @inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>,
+      @inject(optionProvider.provide) private mikroOrmOption: Options,
+    ) {
       super();
     }
 
     async onCreate(): Promise<void> {
-      // super.onCreate(container);
-      this.ormModule = new AsyncContainerModule(async (bind) => {
-        const ormInstance = await MikroORM.init(option.mikroOrmOption);
-        this.ormInstance = ormInstance;
-        bind(RepositoryRegister).toConstantValue(new RepositoryRegister(ormInstance.em));
-      });
-      return this.container.loadAsync(this.ormModule);
+      await super.onCreate();
+      await this.factory.connect(this.mikroOrmOption);
     }
 
     async onDestroy(): Promise<void> {
-      if (this.ormModule) {
-        this.container.unload(this.ormModule);
-        this.ormModule = undefined;
-      }
-      if (this.ormInstance) {
-        await this.ormInstance.close();
-        this.ormInstance = undefined;
-      }
+      await this.factory.disconnect();
       return super.onDestroy();
     }
   }
 
   return MikroOrmModule;
-
 }
