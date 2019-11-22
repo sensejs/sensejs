@@ -62,6 +62,7 @@ function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOpt
     const exitOption = Object.assign({}, actualRunOption.normalExitOption, actualRunOption.exitSignals[signal]);
     actualRunOption.logger.info('Receive signal %s, going to quit', signal);
     process.once(signal, () => {
+      actualRunOption.logger.info('Receive signal %s, going to quit', signal);
       stopApp(exitOption);
       if (exitOption.exitImmediatelyWhenRepeated) {
         process.once(signal, () => {
