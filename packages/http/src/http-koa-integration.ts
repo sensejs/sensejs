@@ -5,16 +5,8 @@ import Koa from 'koa';
 import koaBodyParser from 'koa-bodyparser';
 import KoaRouter from 'koa-router';
 import {Readable} from 'stream';
-import {HttpAdaptor, HttpContext, HttpInterceptor} from './http-abstract';
-import {
-  BindingSymbolForBody,
-  BindingSymbolForHeader,
-  BindingSymbolForPath,
-  BindingSymbolForQuery,
-  ControllerMetadata,
-  getHttpControllerMetadata,
-  getRequestMappingMetadata,
-} from './http-decorators';
+import {HttpAdaptor, HttpContext, HttpInterceptor, HttpRequest, HttpResponse} from './http-abstract';
+import {ControllerMetadata, getHttpControllerMetadata, getRequestMappingMetadata} from './http-decorators';
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
   private globalRouter = new KoaRouter();
@@ -34,25 +26,22 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       if (!requestMappingMetadata) {
         continue;
       }
-      const interceptors = [
+      const {httpMethod, path, interceptors} = requestMappingMetadata;
+      const composedInterceptor = this.createComposedInterceptor([
         ...this.globalInterceptors,
         ...controllerMetadata.interceptors,
-        ...requestMappingMetadata.interceptors,
-      ];
-      const composedInterceptor = this.createComposedInterceptor(interceptors);
+        ...interceptors,
+      ]);
 
-      localRouter[requestMappingMetadata.httpMethod](requestMappingMetadata.path, async (ctx: any) => {
-        const container = ctx.container;
-        if (!(container instanceof Container)) {
-          throw new Error('ctx.container is not an instance of Container');
-        }
-        container.bind(BindingSymbolForBody).toConstantValue(ctx.request.body);
-        container.bind(BindingSymbolForPath).toConstantValue(ctx.params);
-        const httpContext = container.get<HttpContext>(HttpContext);
-        const interceptor = container.get(composedInterceptor);
-        await interceptor.intercept(httpContext, async () => {
-          const target = container.get<object>(controllerMetadata.target);
-          httpContext.responseValue = await invokeMethod(container, target, propertyDescriptor.value);
+      localRouter[httpMethod](path, async (ctx: KoaRouter.RouterContext) => {
+        const childContainer = this.container.createChild();
+        childContainer.bind(Container).toConstantValue(childContainer);
+        const context = new KoaHttpContext(childContainer, ctx);
+        childContainer.bind(HttpContext).toConstantValue(context);
+        const interceptor = childContainer.get(composedInterceptor);
+        await interceptor.intercept(context, async () => {
+          const target = childContainer.get<object>(controllerMetadata.target);
+          context.response.data = await invokeMethod(childContainer, target, propertyDescriptor.value);
         });
       });
     }
@@ -68,22 +57,6 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
   build(): RequestListener {
     const koa = new Koa();
     koa.use(koaBodyParser());
-    koa.use(async (ctx, next) => {
-      const childContainer = this.container.createChild();
-      childContainer.bind(Container).toConstantValue(childContainer);
-      ctx.container = childContainer;
-      const context = new KoaHttpContext(childContainer);
-      childContainer.bind(HttpContext).toConstantValue(context);
-      childContainer.bind(BindingSymbolForHeader).toConstantValue(ctx.headers);
-      childContainer.bind(BindingSymbolForQuery).toConstantValue(ctx.query);
-      await next();
-      if (typeof ctx.response.body !== 'undefined') {
-        ctx.response.body = context.responseValue;
-      }
-      if (typeof context.responseStatusCode !== 'undefined') {
-        ctx.response.status = context.responseStatusCode;
-      }
-    });
     koa.use(this.globalRouter.routes());
     return koa.callback();
   }
@@ -94,10 +67,42 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 }
 
 export class KoaHttpContext extends HttpContext {
-  responseValue?: object | Buffer | Readable;
-  responseStatusCode: number = 404;
+  get request(): HttpRequest {
+    const context = this.koaContext;
+    const request = context.request as any;
+    return {
+      query: context.request.query,
+      body: request.body,
+      protocol: context.protocol,
+      url: context.originalUrl,
+      method: context.method,
+      params: context.params,
+      headers: context.headers,
+    };
+  }
 
-  constructor(private readonly container: Container) {
+  get response(): HttpResponse {
+    const context = this.koaContext;
+    return {
+      set statusCode(statusCode) {
+        context.response.status = statusCode;
+      },
+
+      get statusCode() {
+        return context.response.status;
+      },
+
+      set data(data) {
+        context.body = data;
+      },
+
+      get data() {
+        return context.body;
+      },
+    };
+  }
+
+  constructor(private readonly container: Container, private readonly koaContext: KoaRouter.RouterContext) {
     super();
   }
 

@@ -4,10 +4,35 @@ import {Container} from 'inversify';
 import {Readable} from 'stream';
 import {ControllerMetadata} from './http-decorators';
 
-export abstract class HttpContext extends RequestContext {
-  abstract responseStatusCode: number;
+export interface HttpRequest {
+  readonly url: string;
 
-  abstract responseValue?: object | Buffer | Readable;
+  readonly method: string;
+
+  readonly protocol: string; // TODO: HTTP2?
+
+  readonly body?: unknown;
+
+  readonly query?: unknown;
+
+  readonly params: {
+    [name: string]: string | undefined;
+  };
+  readonly headers: {
+    [name: string]: string | undefined;
+  };
+}
+
+export interface HttpResponse {
+  statusCode?: number;
+
+  data?: object | Buffer | Readable;
+}
+
+export abstract class HttpContext extends RequestContext {
+  abstract request: HttpRequest;
+
+  abstract response: HttpResponse;
 }
 
 export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {

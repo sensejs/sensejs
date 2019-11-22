@@ -7,7 +7,7 @@ import {
   Transformer,
   validateFunctionParamBindingMetadata,
 } from '@sensejs/core';
-import {HttpInterceptor} from './http-abstract';
+import {HttpContext, HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
   GET = 'get',
@@ -41,27 +41,27 @@ export interface ControllerOption {
 const noop: Transformer = (x) => x;
 
 export function Path(name: string, transform: Transformer = noop) {
-  return ParamBinding(BindingSymbolForPath, {
-    transform: (pathParam: {[name: string]: string}) => transform(pathParam[name]),
+  return ParamBinding(HttpContext, {
+    transform: (ctx: HttpContext) => transform(ctx.request.params[name]),
   });
 }
 
 export function Body(transform: Transformer = noop) {
-  return ParamBinding(BindingSymbolForBody, {
-    transform,
+  return ParamBinding(HttpContext, {
+    transform: (ctx: HttpContext) => transform(ctx.request.body),
   });
 }
 
 export function Query(transform: Transformer = noop) {
-  return ParamBinding(BindingSymbolForQuery, {
-    transform,
+  return ParamBinding(HttpContext, {
+    transform: (ctx: HttpContext) => transform(ctx.request.query),
   });
 }
 
 export function Header(name: string, transform: Transformer = noop) {
   name = name.toLowerCase();
-  return ParamBinding(BindingSymbolForHeader, {
-    transform: (headerSet) => headerSet[name],
+  return ParamBinding(HttpContext, {
+    transform: (ctx: HttpContext) => transform(ctx.request.headers[name]),
   });
 }
 
@@ -75,11 +75,11 @@ export interface HttpRequestBuiltinParam {
     [key: string]: string;
   };
 }
-
-export const BindingSymbolForHeader = Symbol('HttpParamBindingSymbolForHeader');
-export const BindingSymbolForQuery = Symbol('HttpParamBindingSymbolForQuery');
-export const BindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
-export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
+//
+// export const BindingSymbolForHeader = Symbol('HttpParamBindingSymbolForHeader');
+// export const BindingSymbolForQuery = Symbol('HttpParamBindingSymbolForQuery');
+// export const BindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
+// export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
 

@@ -12,7 +12,7 @@ class Interceptor extends HttpInterceptor {
     context.bindContextValue(Date, date);
     this.timestamp = date.getTime();
     await next();
-    (context.responseValue as any).duration = Date.now() - this.timestamp!;
+    (context.response.data as any).duration = Date.now() - this.timestamp!;
   }
 }
 
