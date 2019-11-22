@@ -4,8 +4,15 @@ import {Container} from 'inversify';
 import Koa from 'koa';
 import koaBodyParser from 'koa-bodyparser';
 import KoaRouter from 'koa-router';
-import {Readable} from 'stream';
-import {HttpAdaptor, HttpContext, HttpInterceptor, HttpRequest, HttpResponse} from './http-abstract';
+import KoaCors from '@koa/cors';
+import {
+  HttpAdaptor,
+  HttpApplicationOption,
+  HttpContext,
+  HttpInterceptor,
+  HttpRequest,
+  HttpResponse,
+} from './http-abstract';
 import {ControllerMetadata, getHttpControllerMetadata, getRequestMappingMetadata} from './http-decorators';
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
@@ -54,9 +61,14 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return this;
   }
 
-  build(): RequestListener {
+  build(httpAppOption: HttpApplicationOption): RequestListener {
     const koa = new Koa();
+    const {corsOption, trustProxy = false} = httpAppOption;
+    koa.proxy = trustProxy;
     koa.use(koaBodyParser());
+    if (corsOption) {
+      koa.use(KoaCors(corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
+    }
     koa.use(this.globalRouter.routes());
     return koa.callback();
   }

@@ -89,7 +89,7 @@ describe('KoaHttpApplicationBuilder', () => {
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder(container);
     koaHttpApplicationBuilder.addGlobalInspector(InterceptorA);
     koaHttpApplicationBuilder.addController(FooController);
-    const koaHttpApplication = koaHttpApplicationBuilder.build();
+    const koaHttpApplication = koaHttpApplicationBuilder.build({});
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
     await testClient.get('/');
     await testClient.post('/');
@@ -136,7 +136,7 @@ describe('KoaHttpApplicationBuilder', () => {
     container.bind(FooController).toSelf();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder(container);
     koaHttpApplicationBuilder.addController(FooController);
-    const koaHttpApplication = koaHttpApplicationBuilder.build();
+    const koaHttpApplication = koaHttpApplicationBuilder.build({});
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
 
     await testClient

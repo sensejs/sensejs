@@ -16,6 +16,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@koa/cors": "^3.0.0",
     "@sensejs/core": "workspace:0.0.6",
     "@types/koa": "^2.0.51",
     "@types/koa-bodyparser": "^4.3.0",
@@ -26,6 +27,7 @@
     "koa-router": "^7.4.0"
   },
   "devDependencies": {
+    "@types/koa__cors": "^2.2.3",
     "@types/node": "^12.12.11",
     "@types/supertest": "^2.0.8",
     "reflect-metadata": "^0.1.13",

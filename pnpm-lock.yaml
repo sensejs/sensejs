@@ -98,6 +98,7 @@ importers:
       uuid: ^3.3.3
   packages/http:
     dependencies:
+      '@koa/cors': 3.0.0
       '@sensejs/core': 'link:../core'
       '@types/koa': 2.0.51
       '@types/koa-bodyparser': 4.3.0
@@ -107,16 +108,19 @@ importers:
       koa-bodyparser: 4.2.1
       koa-router: 7.4.0
     devDependencies:
+      '@types/koa__cors': 2.2.3
       '@types/node': 12.12.11
       '@types/supertest': 2.0.8
       reflect-metadata: 0.1.13
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
+      '@koa/cors': ^3.0.0
       '@sensejs/core': 'workspace:0.0.6'
       '@types/koa': ^2.0.51
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.0.42
+      '@types/koa__cors': ^2.2.3
       '@types/node': ^12.12.11
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
@@ -494,6 +498,14 @@ packages:
       node: '>= 6'
     resolution:
       integrity: sha512-XKK7ze1apu5JWQ5eZjHITP66AX+QsLlbaJRBGYr8pNzwcAE2JVkwnf0yqjHTsDRcjR0mujy/NmZMXw5kl+kGBw==
+  /@koa/cors/3.0.0:
+    dependencies:
+      vary: 1.1.2
+    dev: false
+    engines:
+      node: '>= 8.0.0'
+    resolution:
+      integrity: sha512-hDp+cXj6vTYSwHRJfiSpnf5dTMv3FmqNKh1or9BPJk4SHOviHnK9GoL9dT0ypt/E+hlkRkZ9edHylcosW3Ghrw==
   /@nodelib/fs.scandir/2.1.3:
     dependencies:
       '@nodelib/fs.stat': 2.0.3
@@ -752,6 +764,12 @@ packages:
       '@types/node': 12.12.11
     resolution:
       integrity: sha512-cp/GTOhOYwomlSKqEoG0kaVEVJEzP4ojYmfa7EKaGkmkkRwJ4B/1VBLbQZ49Z+WJNvzXejQB/9GIKqMo9XLgFQ==
+  /@types/koa__cors/2.2.3:
+    dependencies:
+      '@types/koa': 2.0.52
+    dev: true
+    resolution:
+      integrity: sha512-RfG2EuSc+nv/E+xbDSLW8KCoeri/3AkqwVPuENfF/DctllRoXhooboO//Sw7yFtkLvj7nG7O1H3JcZmoTQz8nQ==
   /@types/lodash.merge/4.6.6:
     dependencies:
       '@types/lodash': 4.14.146

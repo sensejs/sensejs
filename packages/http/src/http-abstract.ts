@@ -4,6 +4,21 @@ import {Container} from 'inversify';
 import {Readable} from 'stream';
 import {ControllerMetadata} from './http-decorators';
 
+interface CrossOriginResourceShareOption {
+  origin?: string | ((origin: string) => boolean);
+  allowedMethods?: string | string[];
+  exposeHeaders?: string | string[];
+  allowedHeaders?: string | string[];
+  maxAge?: number;
+  credentials?: boolean;
+  keepHeadersOnError?: boolean;
+}
+
+export interface HttpApplicationOption {
+  trustProxy?: boolean;
+  corsOption?: CrossOriginResourceShareOption;
+}
+
 export interface HttpRequest {
   readonly url: string;
 
@@ -48,5 +63,5 @@ export abstract class HttpAdaptor {
 
   abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
 
-  abstract build(): RequestListener;
+  abstract build(appOption: HttpApplicationOption): RequestListener;
 }
