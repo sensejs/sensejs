@@ -28,7 +28,8 @@
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged && pnpm recursive run prepare",
-      "pre-push": "pnpm t"
+      "pre-push": "pnpm t",
+      "post-checkout": "pnpm m i"
     }
   },
   "lint-staged": {
