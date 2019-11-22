@@ -151,7 +151,7 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption): ModuleCon
       return super.onDestroy();
     }
   }
-  return KafkaConsumerGroupModule;
+  return Module({requires: [KafkaConsumerGroupModule]});
 }
 
 export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
@@ -173,5 +173,5 @@ export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleCo
     }
   }
 
-  return KafkaConsumerModule;
+  return Module({requires: [KafkaConsumerModule]});
 }

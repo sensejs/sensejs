@@ -85,14 +85,15 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     }
 
     async onCreate(): Promise<void> {
-      super.onCreate();
+      await super.onCreate();
       await this.factory.connect(this.config);
     }
 
     async onDestroy(): Promise<void> {
       await this.factory.disconnect();
+      await super.onDestroy();
     }
   }
 
-  return TypeOrmConnectionModule;
+  return Module({requires: [TypeOrmConnectionModule]});
 }

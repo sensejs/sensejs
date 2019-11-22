@@ -68,5 +68,5 @@ export function KafkaProducerModule(option: KafkaPublishModuleOption): ModuleCon
     }
   }
 
-  return KafkaPublishModule;
+  return Module({requires: [KafkaPublishModule]});
 }

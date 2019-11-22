@@ -115,5 +115,5 @@ export function HttpModule(
     }
   }
 
-  return HttpModule;
+  return Module({requires: [HttpModule]});
 }

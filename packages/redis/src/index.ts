@@ -102,5 +102,5 @@ function buildRedisModule(options: RedisModuleOptions): ModuleConstructor {
     }
   }
 
-  return RedisModule;
+  return Module({requires: [RedisModule]});
 }
