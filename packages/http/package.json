@@ -26,6 +26,7 @@
     "koa-router": "^7.4.0"
   },
   "devDependencies": {
+    "@types/node": "^12.12.11",
     "@types/supertest": "^2.0.8",
     "reflect-metadata": "^0.1.13",
     "supertest": "^4.0.2",
