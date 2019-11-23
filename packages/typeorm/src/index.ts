@@ -20,17 +20,18 @@ export interface TypeOrmModuleOption extends ModuleOption {
 
 const EntityRepositoryMetadataKey = Symbol();
 
-function ensureInjectRepositoryToken<T extends {}>(entityConstructor: T): symbol {
+function ensureInjectRepositoryToken(entityConstructor: string | Function): symbol {
   let symbol = Reflect.getMetadata(EntityRepositoryMetadataKey, entityConstructor);
   if (symbol) {
     return symbol;
   }
-  symbol = Symbol();
+  const entityName = typeof entityConstructor === 'string' ? entityConstructor : entityConstructor.name;
+  symbol = Symbol(`Repository<${entityName}>`);
   Reflect.defineMetadata(EntityRepositoryMetadataKey, symbol, entityConstructor);
   return symbol;
 }
 
-export function InjectRepository(entityConstructor: Constructor<unknown>) {
+export function InjectRepository(entityConstructor: string | Function) {
   const symbol = ensureInjectRepositoryToken(entityConstructor);
   return inject(symbol);
 }

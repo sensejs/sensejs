@@ -1,10 +1,10 @@
 import {Entity, PrimaryGeneratedColumn, Column} from 'typeorm';
-import {Book} from './book';
+import {BookEntity} from './book.entity';
 
 @Entity()
-export class Author {
+export class AuthorEntity {
   static create(name: string) {
-    const author = new Author();
+    const author = new AuthorEntity();
     author.name = name;
     return author;
   }
@@ -18,8 +18,8 @@ export class Author {
   @Column()
   bookCount: number = 0;
 
-  writeBook(bookName: string): Book {
+  writeBook(bookName: string): BookEntity {
     this.bookCount++;
-    return Book.create(bookName, this);
+    return BookEntity.create(bookName, this);
   }
 }

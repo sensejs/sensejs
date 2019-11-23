@@ -1,10 +1,10 @@
 import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
-import {Author} from './author';
+import {AuthorEntity} from './author.entity';
 
 @Entity()
-export class Book {
-  static create(name: string, author: Author): Book {
-    const result = new Book();
+export class BookEntity {
+  static create(name: string, author: AuthorEntity): BookEntity {
+    const result = new BookEntity();
     result.name = name;
     result.author = author;
     return result;
@@ -16,6 +16,6 @@ export class Book {
   @Column()
   name?: string;
 
-  @ManyToOne(() => Author)
-  author?: Author;
+  @ManyToOne(() => AuthorEntity)
+  author?: AuthorEntity;
 }
