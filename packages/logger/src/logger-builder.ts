@@ -62,8 +62,8 @@ export class SenseLoggerBuilder {
     return new SenseLoggerBuilder(this.label, this.traceId, this.logTransports.concat([transport]));
   }
 
-  build(): Logger {
-    return createLogger(this.logTransports, this.label, this.traceId);
+  build(label?: string): Logger {
+    return createLogger(this.logTransports, label ?? this.label, this.traceId);
   }
 }
 
