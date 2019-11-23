@@ -1,9 +1,10 @@
 {
   "name": "@sensejs/typeorm",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "files": [
-    "lib",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
     "README.md"
   ],
   "types": "lib/index.d.ts",
@@ -18,12 +19,12 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.0.6",
+    "@sensejs/core": "workspace:0.0.7",
     "inversify": "^5.0.1",
     "typeorm": "0.2.20"
   },
   "devDependencies": {
-    "@sensejs/http": "workspace:0.0.6",
+    "@sensejs/http": "workspace:0.0.7",
     "@types/supertest": "^2.0.8",
     "sqlite3": "^4.1.0",
     "supertest": "^4.0.2",

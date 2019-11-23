@@ -1,9 +1,10 @@
 {
   "name": "@sensejs/core",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "files": [
-    "lib",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
     "README.md"
   ],
   "types": "lib/index.d.ts",

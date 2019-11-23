@@ -1,7 +1,10 @@
 {
   "name": "@sensejs/create-app",
-  "version": "1.0.0",
+  "version": "0.0.7",
   "description": "SENSE.js application boilerplate",
+  "files": [
+    "src"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "jest",
@@ -9,16 +12,17 @@
   },
   "author": "Xingcan LAN <thynson@live.com>",
   "license": "ISC",
+  "private": true,
   "dependencies": {
-    "@sensejs/config": "workspace:^0.0.6",
-    "@sensejs/core": "workspace:^0.0.6",
-    "@sensejs/http": "workspace:^0.0.6",
-    "@sensejs/logger": "workspace:^0.0.6",
-    "@sensejs/kafka": "workspace:^0.0.6",
-    "@sensejs/typeorm": "workspace:^0.0.6",
+    "@sensejs/config": "workspace:0.0.7",
+    "@sensejs/core": "workspace:0.0.7",
+    "@sensejs/http": "workspace:0.0.7",
+    "@sensejs/kafka": "workspace:0.0.7",
+    "@sensejs/logger": "workspace:0.0.7",
+    "@sensejs/typeorm": "workspace:0.0.7",
     "config": "^3.2.4",
-    "reflect-metadata": "^0.1.13",
     "inversify": "^5.0.1",
+    "reflect-metadata": "^0.1.13",
     "sqlite3": "^4.1.0",
     "typeorm": "^0.2.20",
     "uuid": "^3.3.3"

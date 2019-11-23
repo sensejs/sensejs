@@ -1,9 +1,10 @@
 {
   "name": "@sensejs/redis",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "files": [
-    "lib",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
     "README.md"
   ],
   "types": "lib/index.d.ts",
@@ -18,8 +19,8 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.0.6",
-    "@sensejs/http": "workspace:0.0.6",
+    "@sensejs/core": "workspace:0.0.7",
+    "@sensejs/http": "workspace:0.0.7",
     "@types/ioredis": "^4.0.19",
     "inversify": "^5.0.1",
     "ioredis": "^4.14.1"
