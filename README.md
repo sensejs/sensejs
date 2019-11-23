@@ -17,7 +17,8 @@ Hello world
 -------
 
 ```typescript
-import {Application, HttpModule, Controller} from '@sensejs/framework'
+import {EntryPoint} from '@sensejs/core'
+import {HttpModule, Controller, GET} from '@sensejs/http';
 
 @Controller()
 class WebController
@@ -28,28 +29,60 @@ class WebController
   }
 }
 
-@HttpModule({components: [WebController]})
-class Web { }
+@EntryPoint()
+class App extends HttpModule({
+  controllers: [WebController],
+  httpOption: {
+    listenPort: 3000
+  }
+}) {
 
-new Application(Web).start();
+}
+
 ```
 
-TODO:
+Concept
 -------
 
-- Complete HTTP Module
-    - Routing
-    - Request mapping
-    - Content type
-    - Error handling
-    - Cookie and header
-    - Websocket
-- Kafka Module
-    - Consumer
-    - Producer
-- Integrate TypeORM 
-- Redis
+1. `Component`
 
+    Components are anything that registered into a container, either by type, factory or constant value. By listing them
+    into a module, components can be registered when application is started.
+  
+    ```typescript
+    import {Component, ComponentFactory, Module} from '@sensejs/core';
+    
+    @Component()
+    class ClassComponent {}
+    
+    class Factory extends ComponentFactory<string> {
+      async build() {
+        return 'anything';
+      }
+    } 
+    
+    const factoryComponent = { provide: Symbol('anything'), factory: Factory};
+    
+    const constantComponent = {provide: 'config', value: 'value'};
+    
+    const myModule = Module({ components: [ClassComponent], factories: [factoryComponent], constants: [constantComponent]});
+    ```
 
+2. `Module`
 
-[inversify-js]: http://inversify.io
+    Unlink Nest.js, Module in this framework is not only a set of components, but also an I/O lifecycle manager. Application
+    can combines many modules to support multiple service entry point, for example:
+      
+    ```typescript
+    import {HttpModule, Controller, GET} from '@sensejs/http';
+    import {KafkaConsumerModule} from '@sensejs/kafka';
+    import {EntryPoint, Module} from '@sensejs/core';
+   
+    const publicHttpModule = HttpModule({httpOption: {listenPort: 3000}, /*...*/});
+    const internalHttpModule = HttpModule({httpOption: {listenPort: 3001}, /*...*/});
+    const kafkaConsumerModule = KafkaConsumerModule({/*...*/});
+    
+    @EntryPoint()
+    class App extends Module({ requires: [publicHttpModule, internalHttpModule, kafkaConsumerModule]}){}
+    ```
+  
