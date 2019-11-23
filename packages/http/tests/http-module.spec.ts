@@ -2,6 +2,7 @@ import {ModuleRoot, Component, Module} from '@sensejs/core';
 import {inject, Container} from 'inversify';
 import supertest from 'supertest';
 import {Controller, GET, HttpModule, HttpConfigType} from '../src';
+import {Server} from 'http';
 
 describe('HttpModule', () => {
   afterEach(() => {
@@ -50,19 +51,19 @@ describe('HttpModule', () => {
     const MyHttpModule = HttpModule({
       serverIdentifier,
       httpOption: {
-        listenPort: 3000,
+        listenPort: 0,
         listenAddress: '0.0.0.0',
       },
     });
+    //
+    // const server = {
+    //   close: jest.fn().mockImplementation((done) => done()),
+    // };
 
-    const server = {
-      close: jest.fn().mockImplementation((done) => done()),
-    };
-
-    jest.spyOn(MyHttpModule.prototype, 'createHttpServer').mockImplementation(() => {
-      stub();
-      return server;
-    });
+    // jest.spyOn(MyHttpModule.prototype, 'createHttpServer').mockImplementation(() => {
+    //   stub();
+    //   return server;
+    // });
 
     class TestModule extends Module({requires: [MyHttpModule]}) {
       constructor(@inject(Container) private container: Container) {
@@ -70,7 +71,8 @@ describe('HttpModule', () => {
       }
       async onCreate() {
         const containerServer = this.container.get(serverIdentifier);
-        expect(containerServer).toBe(server);
+        stub(containerServer);
+        expect(containerServer).toBeInstanceOf(Server);
       }
     }
 
@@ -78,7 +80,6 @@ describe('HttpModule', () => {
     await app.start();
     await app.stop();
 
-    expect(stub).toBeCalled();
-    expect(server.close).toBeCalled();
+    expect(stub).toBeCalledWith(expect.any(Server));
   });
 });

@@ -1,4 +1,4 @@
-import {Container, inject, tagged} from 'inversify';
+import {Container, inject, tagged, named} from 'inversify';
 import {Component, ComponentFactory, getModuleMetadata, Module, ModuleClass} from '../src';
 import {ModuleInstance} from '../src/module-instance';
 
@@ -43,8 +43,6 @@ describe('Module', () => {
     expect(componentSpy).toHaveBeenCalledWith(constant, -constant);
   });
 
-  test('useFactory', async () => {});
-
   test('test named', async () => {
     const FactorySymbol = Symbol();
     const value = 'value';
@@ -64,11 +62,19 @@ describe('Module', () => {
     await new ModuleInstance(TestModule, container).onSetup();
     await new TestModule().onCreate();
 
-    expect(() => container.get(FactorySymbol)).toThrow();
-    expect(() => container.getNamed(FactorySymbol, factoryName)).toBe(value);
+    @Component()
+    class TestComponent1 {
+      constructor(
+        @inject(FactorySymbol)
+        @named(factoryName)
+        private test: any,
+      ) {}
+    }
+
+    expect(() => container.resolve(TestComponent1)).not.toThrow();
   });
 
-  test.only('test tagged', async () => {
+  test('test tagged', async () => {
     const FactorySymbol = Symbol();
     const value = 'value';
 

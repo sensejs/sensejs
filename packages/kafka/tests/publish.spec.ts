@@ -6,8 +6,8 @@ jest.mock('kafka-node', () => {
 
     constructor(...args: any) {
       super();
-      mockController.emit('MockKafkaClient:constructor', args);
       mockController.once('KafkaClient:ready', () => this.emit('ready'));
+      mockController.emit('MockKafkaClient:constructor', args);
     }
 
     refreshMetadata(topics: string[], callback: Function) {
@@ -70,19 +70,9 @@ describe('MessageProducerModule', () => {
   test('Module', async () => {
     const spy = jest.spyOn(HighLevelProducer.prototype, 'send');
 
-    class WrappedKafkaModule extends KafkaProducerModule({
-      kafkaProducerOption: {kafkaHost: ''},
+    class Foo extends Module({
+      requires: [KafkaProducerModule({kafkaProducerOption: {kafkaHost: ''}})],
     }) {
-      onCreate() {
-        const promise = super.onCreate();
-        mockController.once('Producer:constructor', () => {
-          mockController.emit('Producer:ready');
-        });
-        return promise;
-      }
-    }
-
-    class Foo extends Module({requires: [WrappedKafkaModule]}) {
       constructor(@inject(MessageProducer) messageProducer: MessageProducer) {
         super();
         messageProducer.produceMessage('topic', '1', 'key');
@@ -101,6 +91,9 @@ describe('MessageProducerModule', () => {
           expect.any(Function),
         );
         done();
+      });
+      mockController.once('Producer:constructor', () => {
+        mockController.emit('Producer:ready');
       });
       moduleRoot.start();
     });
@@ -135,21 +128,15 @@ describe('MessageProducerModule', () => {
       constants: [{provide: 'config.kafkaProducer', value: {kafkaHost}}],
     });
 
-    class MyKafkaModule extends KafkaProducerModule({
+    const producerModule = KafkaProducerModule({
       requires: [ConfigModule],
       injectOptionFrom: 'config.kafkaProducer',
-    }) {
-      onCreate() {
-        const promise = super.onCreate();
-        // let producer emit ready only after the constructor had been called
-        mockController.once('Producer:constructor', () => {
-          mockController.emit('Producer:ready');
-        });
-        return promise;
-      }
-    }
+    });
 
-    const moduleRoot = new ModuleRoot(MyKafkaModule);
+    const moduleRoot = new ModuleRoot(producerModule);
+    mockController.once('Producer:constructor', () => {
+      mockController.emit('Producer:ready');
+    });
     const promise = moduleRoot.start().then(() => {
       expect(stub).toHaveBeenCalledWith([
         expect.objectContaining({

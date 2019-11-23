@@ -3,7 +3,7 @@ import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
-import {HttpInterceptor, HttpAdaptor} from './http-abstract';
+import {HttpInterceptor, HttpAdaptor, HttpApplicationOption} from './http-abstract';
 import {
   Constructor,
   Module,
@@ -13,9 +13,10 @@ import {
   provideOptionInjector,
 } from '@sensejs/core';
 
-export interface HttpOption {
+export interface HttpOption extends HttpApplicationOption {
   listenAddress: string;
   listenPort: number;
+  trustProxy?: boolean;
 }
 
 export enum HttpConfigType {
@@ -53,11 +54,11 @@ export function HttpModule(
     option.httpOption,
     option.injectOptionFrom,
     (defaultValue, injectedValue) => {
-      const {listenAddress, listenPort} = Object.assign({}, defaultValue, injectedValue);
+      const {listenAddress, listenPort, ...rest} = Object.assign({}, defaultValue, injectedValue);
       if (typeof listenAddress !== 'string' || typeof listenPort !== 'number') {
         throw new Error('invalid http config');
       }
-      return {listenAddress, listenPort};
+      return {listenAddress, listenPort, ...rest};
     },
   );
 
@@ -103,11 +104,11 @@ export function HttpModule(
       await super.onDestroy();
     }
 
-    private createHttpServer(httpConfig: HttpOption, httpAdaptor: HttpAdaptor) {
+    private createHttpServer(httpOption: HttpOption, httpAdaptor: HttpAdaptor) {
       return new Promise<http.Server>((resolve, reject) => {
-        const httpServer = http.createServer(httpAdaptor.build());
+        const httpServer = http.createServer(httpAdaptor.build(httpOption));
         httpServer.once('error', reject);
-        httpServer.listen(httpConfig.listenPort, httpConfig.listenAddress, () => {
+        httpServer.listen(httpOption.listenPort, httpOption.listenAddress, () => {
           httpServer.removeListener('error', reject);
           resolve(httpServer);
         });

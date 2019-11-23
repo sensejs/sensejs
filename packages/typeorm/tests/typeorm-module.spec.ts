@@ -1,8 +1,17 @@
-import {ModuleRoot, Module} from '@sensejs/core';
+import {ModuleRoot, Module, RequestInterceptor, RequestContext, ServiceIdentifier} from '@sensejs/core';
 import {Controller, GET, HttpInterceptor, KoaHttpContext} from '@sensejs/http';
 import {Container, inject} from 'inversify';
 import {Column, Entity, PrimaryGeneratedColumn, Repository} from 'typeorm';
 import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '../src';
+
+class MockRequestContext extends RequestContext {
+  constructor(private container: Container) {
+    super();
+  }
+  bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
+    this.container.bind(key).toConstantValue(value);
+  }
+}
 
 describe('TypeOrmModule', () => {
   test('common case', async () => {
@@ -45,14 +54,14 @@ describe('TypeOrmModule', () => {
 
     class FooModule extends Module({components: [ExampleHttpController], requires: [typeOrmModule]}) {
       constructor(
-        @inject(TypeOrmSupportInterceptor) private interceptor: HttpInterceptor,
+        @inject(TypeOrmSupportInterceptor) private interceptor: RequestInterceptor,
         @inject(Container) private container: Container,
       ) {
         super();
       }
 
       async onCreate() {
-        const context = new KoaHttpContext(this.container);
+        const context = new MockRequestContext(this.container);
         await this.interceptor.intercept(context, () => Promise.resolve());
         const controller = this.container.get(ExampleHttpController);
         const name = `test_${Date.now()}`;
