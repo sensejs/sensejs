@@ -1,10 +1,16 @@
 import {Controller, GET, Query, POST, Body, Path} from '@sensejs/http';
 import {PublishingFacade} from '../example/publishing-facade.component';
 import {inject} from 'inversify';
+import {InjectLogger, Logger} from '@sensejs/core';
 
 @Controller('/example')
 export class ExampleController {
-  constructor(@inject(PublishingFacade) private writingFacade: PublishingFacade) {}
+  constructor(
+    @inject(PublishingFacade) private writingFacade: PublishingFacade,
+    @InjectLogger(ExampleController) private logger: Logger,
+  ) {
+    this.logger.info('Exmaple created');
+  }
 
   @GET('/')
   handleGetRequest(@Query() query: object) {

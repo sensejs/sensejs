@@ -1,7 +1,7 @@
 {
   "database": {
     "type": "sqlite",
-    "db": "temp.db"
+    "database": "temp.db"
   },
   "http": {
     "listenPort": 3000,
