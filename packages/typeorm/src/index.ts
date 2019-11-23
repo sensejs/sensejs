@@ -9,9 +9,11 @@ import {
   RequestContext,
   RequestInterceptor,
   ServiceIdentifier,
+  Logger,
+  InjectLogger,
 } from '@sensejs/core';
 import {inject} from 'inversify';
-import {Connection, ConnectionOptions, createConnection} from 'typeorm';
+import {Connection, ConnectionOptions, createConnection, Logger as TypeOrmLogger, QueryRunner} from 'typeorm';
 
 export interface TypeOrmModuleOption extends ModuleOption {
   typeOrmOption?: Partial<ConnectionOptions>;
@@ -20,7 +22,35 @@ export interface TypeOrmModuleOption extends ModuleOption {
 
 const EntityRepositoryMetadataKey = Symbol();
 
-function ensureInjectRepositoryToken<T extends {}>(entityConstructor: T): symbol {
+function createTypeOrmLogger(logger: Logger, migrationLogger: Logger, queryLogger: Logger): TypeOrmLogger {
+  return {
+    log(level: 'log' | 'info' | 'warn', message: any) {
+      logger[level](message);
+    },
+    logMigration(message: string): any {
+      logger.info(message);
+    },
+    logQuery(query: string, parameters: any[] = []) {
+      queryLogger.debug('Query: ' + query + '\nParameters: ', parameters);
+    },
+    logQueryError(error: string, query: string, parameters: any[] = []) {
+      logger.error(
+        'Error occurred when running query: \n' + query + '\nParameter: ' + parameters + '\nError detail: ' + error,
+      );
+    },
+    logQuerySlow(time: number, query: string, parameters?: any[]) {
+      logger.warn(
+        'The following query is too slow: \n' + query + '\nParameter: ' + parameters + 'Finished within %d ms',
+        time,
+      );
+    },
+    logSchemaBuild(message: string): any {
+      logger.info(message);
+    },
+  };
+}
+
+function ensureInjectRepositoryToken(entityConstructor: string | Function): symbol {
   let symbol = Reflect.getMetadata(EntityRepositoryMetadataKey, entityConstructor);
   if (symbol) {
     return symbol;
@@ -59,9 +89,9 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     (defaultValue, injectedValue) => {
       const result = Object.assign({}, defaultValue, injectedValue);
       if (typeof result.type !== 'string') {
-        throw new Error('invalid typeorm config, type is missing');
+        throw new Error('invalid TypeORM config, type is missing');
       }
-      // TODO: too complex to check connection type is valid, pass it to TypeORM directory
+      // TODO: too complex to check connection type is valid, pass it to TypeORM directly
       return result as ConnectionOptions;
     },
   );
@@ -80,13 +110,22 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     constructor(
       @inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>,
       @inject(optionProvider.provide) private config: ConnectionOptions,
+      @InjectLogger('TypeOrm') private logger: Logger,
+      @InjectLogger('TypeOrmMigration') private migrationLogger: Logger,
+      @InjectLogger('TypeOrmQuery') private queryLogger: Logger,
     ) {
       super();
     }
 
     async onCreate(): Promise<void> {
       await super.onCreate();
-      await this.factory.connect(this.config);
+      let config = this.config;
+      if (this.config.logging === true && !this.config.logger) {
+        config = Object.assign({}, this.config, {
+          logger: createTypeOrmLogger(this.logger, this.migrationLogger, this.queryLogger),
+        });
+      }
+      await this.factory.connect(config);
     }
 
     async onDestroy(): Promise<void> {
