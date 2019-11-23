@@ -4,6 +4,7 @@ import {ExampleController} from './example.controller';
 import {RequestTimingInterceptor} from './request-timing.interceptor';
 import PublishingModule from '../example';
 import logger from '@sensejs/logger';
+import {TracingInterceptor} from './tracing-interceptor';
 
 export default class ExampleHttpModule extends HttpModule({
   httpOption: {
@@ -12,7 +13,7 @@ export default class ExampleHttpModule extends HttpModule({
   },
   requires: [PublishingModule],
   components: [ExampleController, RequestTimingInterceptor],
-  globalInterceptors: [RequestTimingInterceptor],
+  globalInterceptors: [TracingInterceptor, RequestTimingInterceptor],
   injectOptionFrom: 'config.http',
 }) {
   constructor(@InjectLogger(ExampleHttpModule) private logger: Logger) {
