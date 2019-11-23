@@ -1,5 +1,5 @@
 import {Controller, GET, Query, POST, Body, Path} from '@sensejs/http';
-import {PublishingFacade} from '../publishing/publishing-facade.component';
+import {PublishingFacade} from '../example/publishing-facade.component';
 import {inject} from 'inversify';
 
 @Controller('/example')

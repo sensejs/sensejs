@@ -2,7 +2,7 @@ import {Logger, InjectLogger} from '@sensejs/core';
 import {HttpModule} from '@sensejs/http';
 import {ExampleController} from './example.controller';
 import {RequestTimingInterceptor} from './request-timing.interceptor';
-import PublishingModule from '../publishing';
+import PublishingModule from '../example';
 import logger from '@sensejs/logger';
 
 export default class ExampleHttpModule extends HttpModule({
