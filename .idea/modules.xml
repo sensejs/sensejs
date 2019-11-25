@@ -4,7 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/packages/config/.idea/config.iml" filepath="$PROJECT_DIR$/packages/config/.idea/config.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/core/.idea/core.iml" filepath="$PROJECT_DIR$/packages/core/.idea/core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/examples/create-app/.idea/create-app.iml" filepath="$PROJECT_DIR$/examples/create-app/.idea/create-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tools/create-app/.idea/create-app.iml" filepath="$PROJECT_DIR$/tools/create-app/.idea/create-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/http/.idea/http.iml" filepath="$PROJECT_DIR$/packages/http/.idea/http.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/kafka/.idea/kafka.iml" filepath="$PROJECT_DIR$/packages/kafka/.idea/kafka.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/logger/.idea/logger.iml" filepath="$PROJECT_DIR$/packages/logger/.idea/logger.iml" />

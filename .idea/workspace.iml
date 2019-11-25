@@ -11,6 +11,7 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/redis/lib" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/create-app/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -23,5 +24,7 @@
     <orderEntry type="module" module-name="core" />
     <orderEntry type="module" module-name="config" />
     <orderEntry type="module" module-name="redis" />
+    <orderEntry type="module" module-name="create-app" />
+    <orderEntry type="module" module-name="create-app" />
   </component>
 </module>
