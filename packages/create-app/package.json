@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/create-app",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "SENSE.js application boilerplate",
   "files": [
     "src"
@@ -14,12 +14,12 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@sensejs/config": "workspace:0.0.7",
-    "@sensejs/core": "workspace:0.0.7",
-    "@sensejs/http": "workspace:0.0.7",
-    "@sensejs/kafka": "workspace:0.0.7",
-    "@sensejs/logger": "workspace:0.0.7",
-    "@sensejs/typeorm": "workspace:0.0.7",
+    "@sensejs/config": "workspace:0.0.8",
+    "@sensejs/core": "workspace:0.0.8",
+    "@sensejs/http": "workspace:0.0.8",
+    "@sensejs/kafka": "workspace:0.0.8",
+    "@sensejs/logger": "workspace:0.0.8",
+    "@sensejs/typeorm": "workspace:0.0.8",
     "config": "^3.2.4",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13",

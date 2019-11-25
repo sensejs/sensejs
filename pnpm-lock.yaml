@@ -45,7 +45,7 @@ importers:
       '@types/traverse': 0.6.32
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:0.0.7'
+      '@sensejs/core': 'workspace:0.0.8'
       '@types/traverse': ^0.6.32
       inversify: ^5.0.1
       traverse: ^0.6.6
@@ -86,12 +86,12 @@ importers:
       '@types/config': 0.0.36
       '@types/uuid': 3.4.6
     specifiers:
-      '@sensejs/config': 'workspace:0.0.7'
-      '@sensejs/core': 'workspace:0.0.7'
-      '@sensejs/http': 'workspace:0.0.7'
-      '@sensejs/kafka': 'workspace:0.0.7'
-      '@sensejs/logger': 'workspace:0.0.7'
-      '@sensejs/typeorm': 'workspace:0.0.7'
+      '@sensejs/config': 'workspace:0.0.8'
+      '@sensejs/core': 'workspace:0.0.8'
+      '@sensejs/http': 'workspace:0.0.8'
+      '@sensejs/kafka': 'workspace:0.0.8'
+      '@sensejs/logger': 'workspace:0.0.8'
+      '@sensejs/typeorm': 'workspace:0.0.8'
       '@types/config': ^0.0.36
       '@types/uuid': ^3.4.6
       config: ^3.2.4
@@ -120,7 +120,7 @@ importers:
       tslib: 1.10.0
     specifiers:
       '@koa/cors': ^3.0.0
-      '@sensejs/core': 'workspace:0.0.7'
+      '@sensejs/core': 'workspace:0.0.8'
       '@types/koa': ^2.0.51
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.0.42
@@ -146,7 +146,7 @@ importers:
       '@types/lodash.merge': 4.6.6
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:0.0.7'
+      '@sensejs/core': 'workspace:0.0.8'
       '@types/lodash': ^4.14.146
       '@types/lodash.merge': ^4.6.6
       inversify: ^5.0.1
@@ -162,7 +162,7 @@ importers:
     devDependencies:
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:0.0.7'
+      '@sensejs/core': 'workspace:0.0.8'
       colors: ^1.4.0
       moment: ^2.24.0
       tslib: ^1.10.0
@@ -178,8 +178,8 @@ importers:
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:0.0.7'
-      '@sensejs/http': 'workspace:0.0.7'
+      '@sensejs/core': 'workspace:0.0.8'
+      '@sensejs/http': 'workspace:0.0.8'
       '@types/ioredis': ^4.0.19
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
@@ -198,8 +198,8 @@ importers:
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:0.0.7'
-      '@sensejs/http': 'workspace:0.0.7'
+      '@sensejs/core': 'workspace:0.0.8'
+      '@sensejs/http': 'workspace:0.0.8'
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       sqlite3: ^4.1.0
@@ -2072,7 +2072,7 @@ packages:
     dev: false
     resolution:
       integrity: sha1-4rPZG1Su1nLzCdlQ0VSFD6EdTzc=
-  /es-abstract/1.16.0:
+  /es-abstract/1.16.1:
     dependencies:
       es-to-primitive: 1.2.1
       function-bind: 1.1.1
@@ -2087,7 +2087,7 @@ packages:
     engines:
       node: '>= 0.4'
     resolution:
-      integrity: sha512-xdQnfykZ9JMEiasTAJZJdMWCQ1Vm00NBw79/AWi7ELfZuuPCSOMDZbT9mkOfSctVtfhb+sAAzrm+j//GjjLHLg==
+      integrity: sha512-38Pa/Asg/9i3Gkgj1oAK0WfWDv03ngRV39qgHdMSJZ23AAAWRKFJuwT5QPtCDg7paIWG1OEpt4QnzDFVXfJIAQ==
   /es-to-primitive/1.2.1:
     dependencies:
       is-callable: 1.1.4
@@ -4671,7 +4671,7 @@ packages:
   /object.getownpropertydescriptors/2.0.3:
     dependencies:
       define-properties: 1.1.3
-      es-abstract: 1.16.0
+      es-abstract: 1.16.1
     engines:
       node: '>= 0.8'
     resolution:
