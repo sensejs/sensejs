@@ -3,7 +3,6 @@ import {SenseLogModule} from '@sensejs/logger';
 import ConfigModule from '../config';
 import {InjectLogger, Logger} from '@sensejs/core';
 
-console.log(__dirname + '/../**/*.entity.js');
 export default class DatabaseModule extends TypeOrmModule({
   requires: [SenseLogModule, ConfigModule],
   typeOrmOption: {
