@@ -27,7 +27,7 @@ test('ConsoleLogger', () => {
   logger.debug('debug');
   logger.trace('debug');
 });
-describe('LoggerModule', () => {
+describe('Logger', () => {
   test('Logger', async () => {
     class MockLoggerBuilder extends ConsoleLoggerBuilder {
       build(): Logger {
@@ -71,12 +71,6 @@ describe('LoggerModule', () => {
         }),
       ],
       components: [FooComponent, BarComponent],
-      factories: [
-        {
-          provide: LOGGER_BUILDER_SYMBOL,
-          factory: MockLoggerBuilder,
-        },
-      ],
     }) {
       constructor(@inject(FooComponent) fooComponent: FooComponent, @inject(BarComponent) barComponent: BarComponent) {
         super();

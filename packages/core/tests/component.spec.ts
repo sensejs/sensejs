@@ -1,24 +1,22 @@
-import {Component, ComponentMetadata, getComponentMetadata} from '../src';
+import {Component, ComponentMetadata, getComponentMetadata, Named, Tagged} from '../src';
 import {AsyncContainerModule, Container} from 'inversify';
-
-async function mockBind<T>(metadata: ComponentMetadata<T>) {
-  const container: Container = new Container({skipBaseClassChecks: true});
-  container.load(
-    new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
-      await metadata.onBind(bind, unbind, isBound, rebind);
-    }),
-  );
-  return container;
-}
+//
+// async function mockBind<T>(metadata: ComponentMetadata<T>) {
+//   const container: Container = new Container({skipBaseClassChecks: true});
+//   container.load(
+//     new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
+//       await metadata.onBind(bind, unbind, isBound, rebind);
+//     }),
+//   );
+//   return container;
+// }
 
 describe('Component', () => {
   test('getComponent', async () => {
     @Component()
     class MyComponent {}
 
-    const metadata = getComponentMetadata(MyComponent);
-    const container = await mockBind(metadata);
-    expect(container.get(MyComponent)).toBeInstanceOf(MyComponent);
+    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id: MyComponent}));
 
     class NonComponent {}
 
@@ -32,8 +30,9 @@ describe('Component', () => {
     class MyComponent {}
 
     const metadata = getComponentMetadata(MyComponent);
-    const container = await mockBind(metadata);
-    expect(container.get(id)).toBeInstanceOf(MyComponent);
+    // const container = await mockBind(metadata);
+    // expect(container.get(id)).toBeInstanceOf(MyComponent);
+    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id}));
   });
 
   test('Component using symbol as id', async () => {
@@ -42,36 +41,57 @@ describe('Component', () => {
     @Component({id})
     class MyComponent {}
 
-    const metadata = getComponentMetadata(MyComponent);
-    const container = await mockBind(metadata);
-    expect(container.get(id)).toBeInstanceOf(MyComponent);
+    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id}));
   });
 
-  test('Component using symbol as id', async () => {
+  test('Component using abstract as id', async () => {
     abstract class BaseClass {}
 
     @Component({id: BaseClass})
     class MyComponent extends BaseClass {}
 
     const metadata = getComponentMetadata(MyComponent);
-    const container = await mockBind(metadata);
-    expect(container.get(BaseClass)).toBeInstanceOf(MyComponent);
+    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id: BaseClass}));
   });
   test('Component explicit using self as component id', async () => {
     @Component({id: MyComponent})
     class MyComponent {}
 
-    const metadata = getComponentMetadata(MyComponent);
-    const container = await mockBind(metadata);
-    expect(container.get(MyComponent)).toBeInstanceOf(MyComponent);
+    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id: MyComponent}));
   });
 
-  test('Component cannot using non-base class as component id', () => {
-    expect(() => {
-      abstract class BaseClass {}
+  test('Named component', () => {
+    const name = `name-${Date.now()}`;
 
-      @Component({id: BaseClass})
-      class MyComponent {}
-    }).toThrow();
+    @Component()
+    @Named(name)
+    class MyComponent {}
+
+    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({name}));
+  });
+
+  test('Tagged component', () => {
+    const numberTagKey = 0;
+    const numberTagValue = Date.now();
+    const stringTagKey = `tag_${Date.now()}`;
+    const stringTagValue = `value_${Date.now()}`;
+    const symbolTagKey = Symbol(`symbol_${Date.now()}`);
+    const symbolTagValue = `value_${Date.now()}`;
+
+    @Component()
+    @Tagged(numberTagKey, numberTagValue)
+    @Tagged(stringTagKey, stringTagValue)
+    @Tagged(symbolTagKey, symbolTagValue)
+    class MyComponent {}
+
+    expect(getComponentMetadata(MyComponent)).toEqual(
+      expect.objectContaining({
+        tags: expect.arrayContaining([
+          {key: numberTagKey, value: numberTagValue},
+          {key: stringTagKey, value: stringTagValue},
+          {key: symbolTagKey, value: symbolTagValue},
+        ]),
+      }),
+    );
   });
 });

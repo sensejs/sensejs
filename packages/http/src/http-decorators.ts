@@ -36,6 +36,10 @@ export interface ControllerMetadata {
 
 export interface ControllerOption {
   interceptors?: Constructor<HttpInterceptor>[];
+  tags?: {
+    [tag: string]: unknown;
+    [tag: number]: unknown;
+  };
 }
 
 const noop: Transformer = (x) => x;
@@ -179,6 +183,8 @@ function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetad
 export function getHttpControllerMetadata(target: object): ControllerMetadata | undefined {
   return Reflect.getMetadata(ControllerMetadataKey, target);
 }
+
+const HttpControllerSymbol = Symbol();
 
 /**
  * Controller decorator, indicates http adaptor to scan its method for routing request

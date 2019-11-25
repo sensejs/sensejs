@@ -84,7 +84,6 @@ export function HttpModule(
         if (httpControllerMetadata) {
           httpAdaptor.addControllerMapping(httpControllerMetadata);
         }
-        // TODO: Implement other HTTP stuffs, like middleware and interceptor
       });
 
       this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);

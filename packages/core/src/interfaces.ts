@@ -23,18 +23,21 @@ export interface Abstract<T> extends Function {
   prototype: T;
 }
 
+export interface BindingSpec {
+  scope?: ComponentScope;
+  name?: string | symbol;
+  tags?: {
+    key: symbol | string | number;
+    value: unknown;
+  }[];
+}
+
 /**
  *
  */
-export interface FactoryProvider<T> {
+export interface FactoryProvider<T> extends BindingSpec {
   provide: ServiceIdentifier<T>;
   factory: Constructor<ComponentFactory<T>>;
-  scope?: ComponentScope;
-  tags?: {
-    [tagName: string]: any;
-    [tagName: number]: any;
-  };
-  name?: string | symbol;
 }
 
 /**
@@ -50,11 +53,7 @@ export interface ConstantProvider<T> {
  *
  * Specify how to register an component into IoC Container, as well as its scope
  */
-export interface ComponentMetadata<T> {
-  onBind(
-    bind: interfaces.Bind,
-    unbind: interfaces.Unbind,
-    isBound: interfaces.IsBound,
-    rebind: interfaces.Rebind,
-  ): Promise<void>;
+export interface ComponentMetadata<T> extends BindingSpec {
+  target: Constructor<unknown>;
+  id?: ServiceIdentifier<T>;
 }

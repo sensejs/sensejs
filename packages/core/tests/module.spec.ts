@@ -47,6 +47,7 @@ describe('Module', () => {
     const FactorySymbol = Symbol();
     const value = 'value';
     const factoryName = 'testName';
+
     class Factory extends ComponentFactory<void> {
       build() {
         return value;
@@ -82,6 +83,7 @@ describe('Module', () => {
     const factoryTag2 = 'tagName2';
     const factoryTagValue1 = 'tagValue1';
     const factoryTagValue2 = 'tagName2';
+
     class Factory extends ComponentFactory<void> {
       build() {
         return value;
@@ -93,7 +95,10 @@ describe('Module', () => {
         {
           provide: FactorySymbol,
           factory: Factory,
-          tags: {[factoryTag1]: factoryTagValue1, [factoryTag2]: factoryTagValue2},
+          tags: [
+            {key: factoryTag1, value: factoryTagValue1},
+            {key: factoryTag2, value: factoryTagValue2},
+          ],
         },
       ],
     });
@@ -107,6 +112,7 @@ describe('Module', () => {
     class TestComponent {
       constructor(@inject(FactorySymbol) @tagged(factoryTag1, factoryTagValue1) private test: any) {}
     }
+
     expect(() => container.resolve(TestComponent)).toThrow();
 
     @Component()

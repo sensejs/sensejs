@@ -1,6 +1,6 @@
 import {ModuleRoot} from './module-root';
 import {ModuleConstructor} from './module';
-import {consoleLogger, Logger} from './logger-module';
+import {consoleLogger, Logger} from './logger';
 
 interface ExitOption {
   exitCode: number;

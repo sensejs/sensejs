@@ -1,5 +1,6 @@
 import {
   Abstract,
+  BindingSpec,
   ComponentFactory,
   ComponentMetadata,
   ComponentScope,
@@ -61,8 +62,34 @@ export function setModuleMetadata(module: ModuleConstructor, metadata: ModuleMet
   Reflect.defineMetadata(MODULE_REFLECT_SYMBOL, metadata, module);
 }
 
+function scopedBindingHelper<T>(
+  binding: interfaces.BindingInSyntax<T>,
+  scope: ComponentScope = ComponentScope.TRANSIENT,
+): interfaces.BindingWhenOnSyntax<T> {
+  switch (scope) {
+    case ComponentScope.SINGLETON:
+      return binding.inSingletonScope();
+    case ComponentScope.REQUEST:
+      return binding.inRequestScope();
+    default:
+      return binding.inTransientScope();
+  }
+}
+
+function bindingHelper<T>(spec: BindingSpec, from: () => interfaces.BindingInSyntax<T>) {
+  const result = scopedBindingHelper(from(), spec.scope);
+  if (spec.name) {
+    result.whenTargetNamed(spec.name);
+  }
+  if (spec.tags) {
+    for (const {key, value} of spec.tags) {
+      result.whenTargetTagged(key, value);
+    }
+  }
+}
+
 export function Module(spec: ModuleOption = {}): ModuleConstructor {
-  const componentList = spec.components || [];
+  const components = spec.components || [];
   const factories = spec.factories || [];
   const constants = spec.constants || [];
 
@@ -70,41 +97,23 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
     constants.forEach((constantProvider) => {
       bind(constantProvider.provide).toConstantValue(constantProvider.value);
     });
-    await Promise.all(
-      componentList.map(getComponentMetadata).map(async (metadata: ComponentMetadata<unknown>) => {
-        return metadata.onBind(bind, unbind, isBound, rebind);
-      }),
-    );
+
+    components.map(getComponentMetadata).map(async (metadata: ComponentMetadata<unknown>) => {
+      const {target, id = target} = metadata;
+      bindingHelper(metadata, () => bind(id).to(metadata.target));
+    });
 
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, scope, factory, tags, name} = factoryProvider;
-      const binding = bind(factory).toSelf();
-      switch (scope) {
-        case ComponentScope.REQUEST:
-          binding.inRequestScope();
-          break;
-        case ComponentScope.SINGLETON:
-          binding.inSingletonScope();
-          break;
-        default:
-          binding.inTransientScope();
-          break;
+      const {provide, factory, scope, ...rest} = factoryProvider;
+      if (!isBound(factory)) {
+        bindingHelper({scope}, () => bind(factory).toSelf());
       }
-
-      const dynamicValueBinding = bind(provide).toDynamicValue((context: interfaces.Context) => {
-        const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
-        return factoryInstance.build(context);
-      });
-
-      if (tags) {
-        for (const [tag, value] of Object.entries(tags)) {
-          dynamicValueBinding.whenTargetTagged(tag, value);
-        }
-      } else if (name) {
-        dynamicValueBinding.whenTargetNamed(name);
-      } else {
-        dynamicValueBinding.whenTargetIsDefault();
-      }
+      bindingHelper(rest, () =>
+        bind(provide).toDynamicValue((context: interfaces.Context) => {
+          const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
+          return factoryInstance.build(context);
+        }),
+      );
     });
   });
 
