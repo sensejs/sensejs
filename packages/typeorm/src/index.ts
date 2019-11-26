@@ -12,7 +12,7 @@ import {
   InjectLogger,
 } from '@sensejs/core';
 import {inject} from 'inversify';
-import {Connection, ConnectionOptions, createConnection, Logger as TypeOrmLogger} from 'typeorm';
+import {Connection, EntityManager, ConnectionOptions, createConnection, Logger as TypeOrmLogger} from 'typeorm';
 
 export interface TypeOrmModuleOption extends ModuleOption {
   typeOrmOption?: Partial<ConnectionOptions>;
@@ -72,13 +72,15 @@ export class TypeOrmSupportInterceptor extends RequestInterceptor {
   }
 
   async intercept(context: RequestContext, next: () => Promise<void>) {
+    const entityManager = this.connection.createEntityManager();
+    context.bindContextValue(EntityManager, entityManager);
     for (const entityMetadata of this.connection.entityMetadatas) {
       context.bindContextValue(
         ensureInjectRepositoryToken(entityMetadata.target),
-        this.connection.getRepository(entityMetadata.target),
+        entityManager.getRepository(entityMetadata.target),
       );
     }
-    return next();
+    return await next();
   }
 }
 
