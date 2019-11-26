@@ -68,7 +68,7 @@ export function InjectRepository(entityConstructor: string | Function) {
 
 @Component()
 export class TypeOrmSupportInterceptor extends RequestInterceptor {
-  constructor(@inject(Connection) private connection: Connection, @InjectLogger() private logger: Logger) {
+  constructor(@inject(Connection) private connection: Connection) {
     super();
   }
 
@@ -77,10 +77,8 @@ export class TypeOrmSupportInterceptor extends RequestInterceptor {
     context.bindContextValue(EntityManager, entityManager);
     for (const entityMetadata of this.connection.entityMetadatas) {
       const inheritanceTree = entityMetadata.inheritanceTree;
-      // this.logger.debug('InheritanceTree: ', inheritanceTree);
       const target = inheritanceTree[0];
       const symbol = ensureInjectRepositoryToken(target);
-      // this.logger.debug('Registering: ', entityMetadata.name, target, symbol);
       context.bindContextValue(symbol, entityManager.getRepository(target));
     }
     return await next();
