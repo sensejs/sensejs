@@ -10,6 +10,7 @@ import {
   ServiceIdentifier,
   Logger,
   InjectLogger,
+  LoggerModule,
 } from '@sensejs/core';
 import {inject} from 'inversify';
 import {Connection, EntityManager, ConnectionOptions, createConnection, Logger as TypeOrmLogger} from 'typeorm';
@@ -50,7 +51,7 @@ function createTypeOrmLogger(logger: Logger, migrationLogger: Logger, queryLogge
 }
 
 function ensureInjectRepositoryToken(entityConstructor: string | Function): symbol {
-  let symbol = Reflect.getMetadata(EntityRepositoryMetadataKey, entityConstructor);
+  let symbol = Reflect.getOwnMetadata(EntityRepositoryMetadataKey, entityConstructor);
   if (symbol) {
     return symbol;
   }
@@ -67,7 +68,7 @@ export function InjectRepository(entityConstructor: string | Function) {
 
 @Component()
 export class TypeOrmSupportInterceptor extends RequestInterceptor {
-  constructor(@inject(Connection) private connection: Connection) {
+  constructor(@inject(Connection) private connection: Connection, @InjectLogger() private logger: Logger) {
     super();
   }
 
@@ -75,10 +76,12 @@ export class TypeOrmSupportInterceptor extends RequestInterceptor {
     const entityManager = this.connection.createEntityManager();
     context.bindContextValue(EntityManager, entityManager);
     for (const entityMetadata of this.connection.entityMetadatas) {
-      context.bindContextValue(
-        ensureInjectRepositoryToken(entityMetadata.target),
-        entityManager.getRepository(entityMetadata.target),
-      );
+      const inheritanceTree = entityMetadata.inheritanceTree;
+      // this.logger.debug('InheritanceTree: ', inheritanceTree);
+      const target = inheritanceTree[0];
+      const symbol = ensureInjectRepositoryToken(target);
+      // this.logger.debug('Registering: ', entityMetadata.name, target, symbol);
+      context.bindContextValue(symbol, entityManager.getRepository(target));
     }
     return await next();
   }
@@ -105,7 +108,7 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
   );
 
   class TypeOrmConnectionModule extends Module({
-    requires: [Module(option)],
+    requires: [LoggerModule, Module(option)],
     components: [TypeOrmSupportInterceptor],
     factories: [factoryProvider, optionProvider],
   }) {
