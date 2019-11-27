@@ -5,8 +5,8 @@ export interface Transformer<Input = any, Output = Input> {
   (input: Input): Output;
 }
 
-export interface ParamBindingOption {
-  transform?: Transformer;
+export interface ParamBindingOption<T, R> {
+  transform?: Transformer<T, R>;
 }
 
 interface ParamBindingMetadata {
@@ -61,7 +61,7 @@ export function ensureParamBindingMetadata(target: any): FunctionParamBindingMet
   return result;
 }
 
-export function ParamBinding(target: ServiceIdentifier<unknown>, option: ParamBindingOption = {}) {
+export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: ParamBindingOption<T, R> = {}) {
   return <T, M extends keyof T>(prototype: T, methodName: M, paramIndex: number) => {
     const metadata = ensureParamBindingMetadata(prototype[methodName]);
     if (metadata.paramsMetadata[paramIndex]) {
