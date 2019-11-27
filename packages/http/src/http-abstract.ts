@@ -24,7 +24,9 @@ export interface HttpRequest {
 
   readonly method: string;
 
-  readonly protocol: string; // TODO: HTTP2?
+  readonly protocol: string;
+
+  readonly hostname: string;
 
   readonly body?: unknown;
 

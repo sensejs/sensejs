@@ -90,6 +90,7 @@ export class KoaHttpContext extends HttpContext {
       method: context.method,
       params: context.params,
       headers: context.headers,
+      hostname: context.request.hostname,
     };
   }
 
