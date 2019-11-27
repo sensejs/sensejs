@@ -47,6 +47,10 @@ export interface HttpResponse {
 }
 
 export abstract class HttpContext extends RequestContext {
+  abstract nativeRequest: unknown;
+
+  abstract nativeResponse: unknown;
+
   abstract request: HttpRequest;
 
   abstract response: HttpResponse;

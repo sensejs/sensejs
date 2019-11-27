@@ -115,6 +115,14 @@ export class KoaHttpContext extends HttpContext {
     };
   }
 
+  get nativeRequest(): unknown {
+    return this.koaContext.request;
+  }
+
+  get nativeResponse(): unknown {
+    return this.koaContext.response;
+  }
+
   constructor(private readonly container: Container, private readonly koaContext: KoaRouter.RouterContext) {
     super();
   }
