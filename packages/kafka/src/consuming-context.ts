@@ -16,6 +16,8 @@ export function InjectSubscribeContext(transform: Transformer = (x) => x) {
   return ParamBinding(ConsumingContext, {transform});
 }
 
-export function Message() {
+function Message() {
   return InjectSubscribeContext((x: ConsumingContext) => x.message);
 }
+
+export {Message};
