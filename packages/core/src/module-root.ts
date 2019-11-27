@@ -59,7 +59,10 @@ export class ModuleRoot {
       this.moduleInstanceMap.set(module, moduleInstance);
       const dependencies = this.moduleDependencyMap.get(module);
       if (dependencies) {
-        await Promise.all(dependencies.map((dep) => this.startModule(dep)));
+        for (const dependency of dependencies) {
+          await this.startModule(dependency);
+        }
+        // await Promise.all(dependencies.map((dep) => this.startModule(dep)));
       }
     }
     await moduleInstance.onSetup();
