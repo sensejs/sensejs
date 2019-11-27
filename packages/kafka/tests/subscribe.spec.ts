@@ -34,9 +34,14 @@ jest.mock('kafka-pipeline', (): unknown => {
 import {Component, Module, ModuleRoot, ParamBinding, RequestInterceptor} from '@sensejs/core';
 import {EventEmitter} from 'events';
 import {ConsumerGroupPipeline} from 'kafka-pipeline';
-import {KafkaConsumerModule} from '../src';
-import {ConsumingContext, InjectSubscribeContext, Message} from '../src/consuming-context';
-import {SubscribeController, SubscribeTopic} from '../src/consuming-decorators';
+import {
+  ConsumingContext,
+  InjectSubscribeContext,
+  KafkaConsumerModule,
+  Message,
+  SubscribeController,
+  SubscribeTopic,
+} from '../src';
 
 const mockController = new EventEmitter();
 
