@@ -36,18 +36,24 @@ export class MessageConsumeManager {
 
   constructor(options: ConsumeManagerOption) {
     const {topic, consumeCallback, consumeConcurrency, consumeTimeout, commitInterval, ...rest} = options;
+    const pipelineOption: ConsumerGroupPipeline.Option = {
+      topic,
+      messageConsumer: consumeCallback,
+      consumerGroupOption: rest,
+    };
 
-    const pipelineOption: ConsumerGroupPipeline.Option = Object.assign(
-      {},
-      {
-        topic,
-        messageConsumer: consumeCallback,
-        consumeConcurrency,
-        consumeTimeout,
-        commitInterval,
-        consumerGroupOption: rest,
-      },
-    );
+    if (consumeConcurrency) {
+      pipelineOption.consumeConcurrency = consumeConcurrency;
+    }
+
+    if (consumeTimeout) {
+      pipelineOption.consumeTimeout = consumeTimeout;
+    }
+
+    if (commitInterval) {
+      pipelineOption.commitInterval = commitInterval;
+    }
+
     this._consumerGroupPipeline = new ConsumerGroupPipeline(pipelineOption);
   }
 
