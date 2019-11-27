@@ -46,11 +46,12 @@ function mergeConnectOption(
 }
 
 function createSubscriberTopicModule(
-  messageConsumerModule: ModuleConstructor,
+  consumerGroupModule: ModuleConstructor,
   option: KafkaConsumerModuleOption,
   controllerMetadata: SubscribeControllerMetadata,
   subscribeMetadata: SubscribeTopicMetadata,
   method: Function,
+  injectSymbol: symbol,
 ) {
   const {fallbackOption, injectOptionFrom} = subscribeMetadata;
   const optionProvider = provideOptionInjector(fallbackOption, injectOptionFrom, (defaultValue, injectedValue) => {
@@ -58,12 +59,12 @@ function createSubscriberTopicModule(
   });
 
   class TopicModule extends Module({
-    requires: [messageConsumerModule],
+    requires: [consumerGroupModule],
     factories: [optionProvider],
   }) {
     constructor(
       @inject(optionProvider.provide) config: ConsumeTopicOption,
-      @inject(MessageConsumer) messageConsumer: MessageConsumer,
+      @inject(injectSymbol) messageConsumer: MessageConsumer,
       @inject(Container) container: Container,
     ) {
       super();
@@ -91,7 +92,7 @@ function createSubscriberTopicModule(
   return TopicModule;
 }
 
-function scanController(option: KafkaConsumerModuleOption, module: ModuleConstructor) {
+function scanController(option: KafkaConsumerModuleOption, module: ModuleConstructor, injectSymbol: symbol) {
   const result: ModuleConstructor[] = [];
   for (const component of option.components || []) {
     const controllerMetadata = getSubscribeControllerMetadata(component);
@@ -110,6 +111,7 @@ function scanController(option: KafkaConsumerModuleOption, module: ModuleConstru
         controllerMetadata,
         subscribeMetadata,
         propertyDescriptor.value,
+        injectSymbol,
       );
       result.push(subscribeTopicModule);
     }
@@ -117,7 +119,7 @@ function scanController(option: KafkaConsumerModuleOption, module: ModuleConstru
   return result;
 }
 
-function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption): ModuleConstructor {
+function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymbol: symbol): ModuleConstructor {
   const optionProvider = provideOptionInjector(
     option.defaultKafkaConsumerOption,
     option.injectOptionFrom,
@@ -125,9 +127,11 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption): ModuleCon
   );
 
   const factoryProvider = provideConnectionFactory<MessageConsumer, ConnectOption>(
-    async (option) => new MessageConsumer(option), // connect on kafkaConsumerModule
+    async (option) => {
+      return new MessageConsumer(option);
+    }, // connect on kafkaConsumerModule
     async () => undefined, // close on KafkaConsumerModule
-    MessageConsumer,
+    exportSymbol,
   );
 
   class KafkaConsumerGroupModule extends Module({
@@ -155,10 +159,12 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption): ModuleCon
 }
 
 export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
-  const subscribeTopicModules = scanController(option, KafkaConsumerHelperModule(option));
+  const injectMessageConsumerSymbol = Symbol('MessageConsumer');
+  const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
+  const subscribeTopicModules = scanController(option, kafkaConnectionModule, injectMessageConsumerSymbol);
 
   class KafkaConsumerModule extends Module({requires: subscribeTopicModules}) {
-    constructor(@inject(MessageConsumer) private messageConsumer: MessageConsumer) {
+    constructor(@inject(injectMessageConsumerSymbol) private messageConsumer: MessageConsumer) {
       super();
     }
 
