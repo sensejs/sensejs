@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/redis",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -20,8 +20,8 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.0.10",
-    "@sensejs/http": "workspace:0.0.10",
+    "@sensejs/core": "workspace:0.0.11",
+    "@sensejs/http": "workspace:0.0.11",
     "@types/ioredis": "^4.0.19",
     "inversify": "^5.0.1",
     "ioredis": "^4.14.1"
