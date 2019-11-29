@@ -10,22 +10,25 @@ import {
 
 describe('@ParamBinding', () => {
   test('param binding', () => {
+    const x = Symbol(),
+      y = Symbol();
     class Foo {
-      bar(@ParamBinding(String) param: string, @ParamBinding(Number, {transform: (x) => x + 1}) number: number) {
+      bar(@ParamBinding(x) param: string, @ParamBinding(y, {transform: (x: number) => x + 1}) number: number) {
         return param.repeat(number);
       }
     }
 
     const container = new Container();
     const constValue = 'deadbeef';
-    container.bind(String).toConstantValue(constValue);
-    container.bind(Number).toConstantValue(2);
+    container.bind(x).toConstantValue(constValue);
+    container.bind(y).toConstantValue(2);
     expect(invokeMethod(container, new Foo(), Foo.prototype.bar)).toBe(constValue.repeat(3));
   });
 
   test('Validate param binding', () => {
+    const x = Symbol();
     class Foo {
-      shouldOkay(@ParamBinding(String) foo: any) {}
+      shouldOkay(@ParamBinding(x) foo: any) {}
 
       shouldFail(foo: any) {}
 
@@ -37,9 +40,11 @@ describe('@ParamBinding', () => {
   });
 
   test('Duplicated param binding', () => {
+    const x = Symbol(),
+      y = Symbol();
     expect(() => {
       class Foo {
-        bar(@ParamBinding(String) @ParamBinding(Number) foo: any) {}
+        bar(@ParamBinding(x) @ParamBinding(y) foo: any) {}
       }
     }).toThrow(ParamBindingError);
   });
@@ -76,12 +81,15 @@ describe('@ParamBinding', () => {
   });
 
   test('Performance test', () => {
+    const x = Symbol(),
+      y = Symbol();
+
     @Component()
     class Test {}
 
     const container = new Container();
-    container.bind(String).toConstantValue('deadbeef');
-    container.bind(Number).toConstantValue(2);
+    container.bind(x).toConstantValue('deadbeef');
+    container.bind(y).toConstantValue(2);
     let constructor: any;
     for (let i = 0; i < 10000; i++) {
       if (i % 100) {
@@ -110,8 +118,8 @@ describe('@ParamBinding', () => {
     @Component()
     class Foo {
       bar(
-        @ParamBinding(String, {transform: (x: string) => x.repeat(2)}) param: string,
-        @ParamBinding(Number, {transform: (x: number) => x * x}) number: number,
+        @ParamBinding(x, {transform: (x: string) => x.repeat(2)}) param: string,
+        @ParamBinding(y, {transform: (x: number) => x * x}) number: number,
         @ParamBinding(Test) test: Test,
         @ParamBinding(constructor) x: any,
       ) {
