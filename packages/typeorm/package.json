@@ -22,18 +22,19 @@
   "dependencies": {
     "@sensejs/core": "workspace:0.0.11",
     "inversify": "^5.0.1",
-    "typeorm": "0.2.20"
+    "tslib": "^1.10.0"
   },
   "devDependencies": {
     "@sensejs/http": "workspace:0.0.11",
     "@types/supertest": "^2.0.8",
     "sqlite3": "^4.1.0",
     "supertest": "^4.0.2",
-    "tslib": "^1.10.0"
+    "typeorm": "0.2.20",
+    "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
     "sqlite3": "^4.1.0",
-    "tslib": "^1.10.0",
-    "typeorm": "0.2.20"
+    "typeorm": "0.2.20",
+    "reflect-metadata": "^0.1.13"
   }
 }
