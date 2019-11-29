@@ -1,0 +1,6 @@
+database:
+  type: sqlite
+  database: ":memory:"
+http:
+  listenPort: 3000
+  listenAddress: "0.0.0.0"

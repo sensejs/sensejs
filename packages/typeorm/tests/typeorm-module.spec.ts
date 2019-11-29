@@ -78,7 +78,7 @@ describe('TypeOrmModule', () => {
     const typeOrmModule = TypeOrmModule({
       typeOrmOption: {
         type: 'sqlite',
-        database: 'temp.db',
+        database: ':memory:',
         synchronize: true,
         entities: [Photo, Video, Content],
       },
