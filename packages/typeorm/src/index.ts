@@ -9,10 +9,10 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
   Logger,
-  InjectLogger,
   LoggerModule,
+  InjectLogger,
 } from '@sensejs/core';
-import {inject} from 'inversify';
+import {inject, Container, AsyncContainerModule} from 'inversify';
 import {Connection, EntityManager, ConnectionOptions, createConnection, Logger as TypeOrmLogger} from 'typeorm';
 
 export interface TypeOrmModuleOption extends ModuleOption {
@@ -68,20 +68,38 @@ export function InjectRepository(entityConstructor: string | Function) {
 
 @Component()
 export class TypeOrmSupportInterceptor extends RequestInterceptor {
-  constructor(@inject(Connection) private connection: Connection) {
+  constructor(
+    @inject(Connection) private connection: Connection,
+    @inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
+  ) {
     super();
   }
 
   async intercept(context: RequestContext, next: () => Promise<void>) {
+    this.entityMetadataHelper.bindEntityManagerAndRepository((symbol, target) => {
+      context.bindContextValue(symbol, target);
+    });
+    return next();
+  }
+}
+
+@Component()
+class EntityMetadataHelper {
+  constructor(@inject(Connection) private connection: Connection) {}
+
+  bindEntityManagerAndRepository(binder: <T>(symbol: ServiceIdentifier<T>, target: T) => void) {
     const entityManager = this.connection.createEntityManager();
-    context.bindContextValue(EntityManager, entityManager);
+    binder(EntityManager, entityManager);
     for (const entityMetadata of this.connection.entityMetadatas) {
       const inheritanceTree = entityMetadata.inheritanceTree;
-      const target = inheritanceTree[0];
-      const symbol = ensureInjectRepositoryToken(target);
-      context.bindContextValue(symbol, entityManager.getRepository(target));
+      const constructor = inheritanceTree[0];
+      const entityInjectToken = ensureInjectRepositoryToken(constructor);
+      if (entityMetadata.treeType) {
+        binder(entityInjectToken, entityManager.getTreeRepository(constructor));
+      } else {
+        binder(entityInjectToken, entityManager.getRepository(constructor));
+      }
     }
-    return await next();
   }
 }
 
@@ -137,5 +155,33 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     }
   }
 
-  return Module({requires: [TypeOrmConnectionModule]});
+  class EntityManagerModule extends Module({
+    requires: [TypeOrmConnectionModule],
+  }) {
+    private module: AsyncContainerModule;
+
+    constructor(
+      @inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
+      @inject(Container) private container: Container,
+    ) {
+      super();
+      this.module = new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
+        this.entityMetadataHelper.bindEntityManagerAndRepository((symbol, target) => {
+          bind(symbol).toConstantValue(target);
+        });
+      });
+    }
+
+    async onCreate() {
+      await super.onCreate();
+      await this.container.loadAsync(this.module);
+    }
+
+    async onDestroy() {
+      await this.container.unload(this.module);
+      return super.onDestroy();
+    }
+  }
+
+  return EntityManagerModule;
 }
