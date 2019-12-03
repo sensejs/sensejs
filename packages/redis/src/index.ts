@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import Redis from 'ioredis';
 import {inject, named} from 'inversify';
 import {
