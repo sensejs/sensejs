@@ -1,12 +1,4 @@
-import {
-  Component,
-  Constructor,
-  ensureParamBindingMetadata,
-  getFunctionParamBindingMetadata,
-  ParamBinding,
-  Transformer,
-  validateFunctionParamBindingMetadata,
-} from '@sensejs/core';
+import {Component, Constructor, ParamBinding, Transformer, validateFunctionParamBindingMetadata} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
@@ -79,11 +71,6 @@ export interface HttpRequestBuiltinParam {
     [key: string]: string;
   };
 }
-//
-// export const BindingSymbolForHeader = Symbol('HttpParamBindingSymbolForHeader');
-// export const BindingSymbolForQuery = Symbol('HttpParamBindingSymbolForQuery');
-// export const BindingSymbolForBody = Symbol('HttpParamBindingSymbolForQuery');
-// export const BindingSymbolForPath = Symbol('HttpParamBindingSymbolForQuery');
 
 const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
 
@@ -183,8 +170,6 @@ function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetad
 export function getHttpControllerMetadata(target: object): ControllerMetadata | undefined {
   return Reflect.getMetadata(ControllerMetadataKey, target);
 }
-
-const HttpControllerSymbol = Symbol();
 
 /**
  * Controller decorator, indicates http adaptor to scan its method for routing request
