@@ -1,7 +1,7 @@
 import {ModuleRoot, Component, Module} from '@sensejs/core';
 import {inject, Container} from 'inversify';
 import supertest from 'supertest';
-import {Controller, GET, HttpModule, HttpConfigType} from '../src';
+import {Controller, GET, HttpModule, HttpConfigType, HttpInterceptor, HttpContext} from '../src';
 import {Server} from 'http';
 
 describe('HttpModule', () => {
@@ -11,6 +11,12 @@ describe('HttpModule', () => {
   test('basic usage', async () => {
     const stub = jest.fn();
 
+    class MockInterceptor extends HttpInterceptor {
+      intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
+        return next();
+      }
+    }
+
     @Component()
     class MyComponent {
       foo() {
@@ -19,7 +25,7 @@ describe('HttpModule', () => {
       }
     }
 
-    @Controller('/foo')
+    @Controller('/foo', {interceptors: [MockInterceptor]})
     class FooController {
       constructor(@inject(MyComponent) private myComponent: MyComponent) {}
 
@@ -55,15 +61,6 @@ describe('HttpModule', () => {
         listenAddress: '0.0.0.0',
       },
     });
-    //
-    // const server = {
-    //   close: jest.fn().mockImplementation((done) => done()),
-    // };
-
-    // jest.spyOn(MyHttpModule.prototype, 'createHttpServer').mockImplementation(() => {
-    //   stub();
-    //   return server;
-    // });
 
     class TestModule extends Module({requires: [MyHttpModule]}) {
       constructor(@inject(Container) private container: Container) {

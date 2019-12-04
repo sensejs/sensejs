@@ -79,9 +79,11 @@ importers:
       koa: 2.11.0
       koa-bodyparser: 4.2.1
       koa-router: 7.4.0
+      lodash.uniq: 4.5.0
       tslib: 1.10.0
     devDependencies:
       '@types/koa__cors': 2.2.3
+      '@types/lodash.uniq': 4.5.6
       '@types/node': 12.12.12
       '@types/supertest': 2.0.8
       reflect-metadata: 0.1.13
@@ -93,12 +95,14 @@ importers:
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.0.42
       '@types/koa__cors': ^2.2.3
+      '@types/lodash.uniq': ^4.5.6
       '@types/node': ^12.12.12
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       koa: ^2.11.0
       koa-bodyparser: ^4.2.1
       koa-router: ^7.4.0
+      lodash.uniq: ^4.5.0
       reflect-metadata: ^0.1.13
       supertest: ^4.0.2
       tslib: ^1.10.0
@@ -797,6 +801,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-IB90krzMf7YpfgP3u/EvZEdXVvm4e3gJbUvh5ieuI+o+XqiNEt6fCzqNRaiLlPVScLI59RxIGZMQ3+Ko/DJ8vQ==
+  /@types/lodash.uniq/4.5.6:
+    dependencies:
+      '@types/lodash': 4.14.149
+    dev: true
+    resolution:
+      integrity: sha512-XHNMXBtiwsWZstZMyxOYjr0e8YYWv0RgPlzIHblTuwBBiWo2MzWVaTBihtBpslb5BglgAWIeBv69qt1+RTRW1A==
   /@types/lodash/4.14.149:
     dev: true
     resolution:
@@ -4094,7 +4104,6 @@ packages:
     resolution:
       integrity: sha1-7dFMgk4sycHgsKG0K7UhBRakJDg=
   /lodash.uniq/4.5.0:
-    dev: true
     resolution:
       integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
   /lodash/4.17.15:

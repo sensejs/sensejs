@@ -1,4 +1,4 @@
-import {Container, inject} from 'inversify';
+import {Container, inject, ContainerModule} from 'inversify';
 import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
@@ -30,12 +30,14 @@ const defaultHttpConfig = {
 };
 
 export interface HttpModuleOption extends ModuleOption {
-  httpAdaptorFactory?: (container: Container) => HttpAdaptor;
+  httpAdaptorFactory?: () => HttpAdaptor;
   globalInterceptors?: Constructor<HttpInterceptor>[];
   serverIdentifier?: ServiceIdentifier<unknown>;
   httpOption?: Partial<HttpOption>;
   injectOptionFrom?: ServiceIdentifier<Partial<HttpOption>>;
 }
+
+function getHttpAdaptor() {}
 
 /**
  *
@@ -47,8 +49,7 @@ export function HttpModule(
     httpOption: defaultHttpConfig,
   },
 ): ModuleConstructor {
-  const httpAdaptorFactory =
-    option.httpAdaptorFactory || ((container: Container) => new KoaHttpApplicationBuilder(container));
+  const httpAdaptorFactory = option.httpAdaptorFactory || (() => new KoaHttpApplicationBuilder());
   const componentList = option.components || [];
   const optionProvider = provideOptionInjector<HttpOption>(
     option.httpOption,
@@ -64,6 +65,7 @@ export function HttpModule(
 
   class HttpModule extends Module({requires: [Module(option)], factories: [optionProvider]}) {
     private httpServer?: http.Server;
+    private interceptorModule?: ContainerModule;
 
     constructor(
       @inject(Container) private container: Container,
@@ -74,7 +76,7 @@ export function HttpModule(
 
     async onCreate() {
       await super.onCreate();
-      const httpAdaptor = httpAdaptorFactory(this.container);
+      const httpAdaptor = httpAdaptorFactory();
 
       for (const inspector of option.globalInterceptors || []) {
         httpAdaptor.addGlobalInspector(inspector);
@@ -82,9 +84,16 @@ export function HttpModule(
       componentList.forEach((component) => {
         const httpControllerMetadata = getHttpControllerMetadata(component);
         if (httpControllerMetadata) {
-          httpAdaptor.addControllerMapping(httpControllerMetadata);
+          httpAdaptor.addControllerWithMetadata(httpControllerMetadata);
         }
       });
+      const allInterceptors = httpAdaptor.getAllInterceptors();
+      this.interceptorModule = new ContainerModule((bind) => {
+        allInterceptors.forEach((interceptor) => {
+          bind(interceptor).toSelf();
+        });
+      });
+      this.container.load(this.interceptorModule);
 
       this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);
 
@@ -100,12 +109,15 @@ export function HttpModule(
         }
         return this.httpServer.close(done);
       })();
+      if (this.interceptorModule) {
+        this.container.unload(this.interceptorModule);
+      }
       await super.onDestroy();
     }
 
     private createHttpServer(httpOption: HttpOption, httpAdaptor: HttpAdaptor) {
       return new Promise<http.Server>((resolve, reject) => {
-        const httpServer = http.createServer(httpAdaptor.build(httpOption));
+        const httpServer = http.createServer(httpAdaptor.build(httpOption, this.container));
         httpServer.once('error', reject);
         httpServer.listen(httpOption.listenPort, httpOption.listenAddress, () => {
           httpServer.removeListener('error', reject);

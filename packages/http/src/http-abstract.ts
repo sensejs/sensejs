@@ -1,4 +1,4 @@
-import {Constructor, RequestInterceptor, RequestContext} from '@sensejs/core';
+import {Constructor, RequestInterceptor, RequestContext, ServiceIdentifier} from '@sensejs/core';
 import {RequestListener} from 'http';
 import {Container} from 'inversify';
 import {Readable} from 'stream';
@@ -63,11 +63,11 @@ export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {
 }
 
 export abstract class HttpAdaptor {
-  constructor(protected readonly container: Container) {}
-
-  abstract addControllerMapping(controllerMapping: ControllerMetadata): this;
+  abstract addControllerWithMetadata(controllerMapping: ControllerMetadata): this;
 
   abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
 
-  abstract build(appOption: HttpApplicationOption): RequestListener;
+  abstract build(appOption: HttpApplicationOption, container: Container): RequestListener;
+
+  abstract getAllInterceptors(): Constructor<HttpInterceptor>[];
 }

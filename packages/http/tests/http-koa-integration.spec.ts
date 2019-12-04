@@ -6,6 +6,7 @@ import {
   Controller,
   DELETE,
   GET,
+  getHttpControllerMetadata,
   Header,
   HttpContext,
   HttpInterceptor,
@@ -86,10 +87,10 @@ describe('KoaHttpApplicationBuilder', () => {
     container.bind(InterceptorA).toSelf();
     container.bind(InterceptorB).toSelf();
     container.bind(InterceptorC).toSelf();
-    const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder(container);
+    const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addGlobalInspector(InterceptorA);
-    koaHttpApplicationBuilder.addController(FooController);
-    const koaHttpApplication = koaHttpApplicationBuilder.build({});
+    koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
+    const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
     await testClient.get('/');
     await testClient.post('/');
@@ -134,9 +135,9 @@ describe('KoaHttpApplicationBuilder', () => {
 
     const container = new Container();
     container.bind(FooController).toSelf();
-    const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder(container);
-    koaHttpApplicationBuilder.addController(FooController);
-    const koaHttpApplication = koaHttpApplicationBuilder.build({});
+    const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
+    koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
+    const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
 
     await testClient

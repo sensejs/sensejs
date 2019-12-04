@@ -13,47 +13,44 @@ import {
   HttpRequest,
   HttpResponse,
 } from './http-abstract';
-import {ControllerMetadata, getHttpControllerMetadata, getRequestMappingMetadata} from './http-decorators';
+import uniq from 'lodash.uniq';
+import {ControllerMetadata, getRequestMappingMetadata, HttpMethod} from './http-decorators';
+
+interface MethodRouteSpec {
+  path: string;
+  httpMethod: HttpMethod;
+  interceptors: Constructor<HttpInterceptor>[];
+  targetConstructor: Constructor<unknown>;
+  targetMethod: Function;
+}
+
+interface ControllerRouteSpec {
+  path: string;
+  methodRouteSpecs: MethodRouteSpec[];
+}
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
-  private globalRouter = new KoaRouter();
   private globalInterceptors: Constructor<HttpInterceptor>[] = [];
+  private interceptors: Constructor<HttpInterceptor>[] = [];
+  private controllerRouteSpecs: ControllerRouteSpec[] = [];
 
-  addController(controller: Constructor<unknown>) {
-    const controllerMapping = getHttpControllerMetadata(controller);
-    if (controllerMapping) {
-      this.addControllerMapping(controllerMapping);
+  addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
+    this.interceptors = this.interceptors.concat(controllerMetadata.interceptors);
+    const controllerRouteSpec: ControllerRouteSpec = {
+      path: controllerMetadata.path,
+      methodRouteSpecs: [],
+    };
+    this.controllerRouteSpecs.push(controllerRouteSpec);
+
+    for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMetadata.prototype))) {
+      this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, propertyDescriptor.value);
     }
+    return this;
   }
 
-  addControllerMapping(controllerMetadata: ControllerMetadata): this {
-    const localRouter = new KoaRouter();
-    for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMetadata.prototype))) {
-      const requestMappingMetadata = getRequestMappingMetadata(propertyDescriptor.value);
-      if (!requestMappingMetadata) {
-        continue;
-      }
-      const {httpMethod, path, interceptors} = requestMappingMetadata;
-      const composedInterceptor = this.createComposedInterceptor([
-        ...this.globalInterceptors,
-        ...controllerMetadata.interceptors,
-        ...interceptors,
-      ]);
-
-      localRouter[httpMethod](path, async (ctx: KoaRouter.RouterContext) => {
-        const childContainer = this.container.createChild();
-        childContainer.bind(Container).toConstantValue(childContainer);
-        const context = new KoaHttpContext(childContainer, ctx);
-        childContainer.bind(HttpContext).toConstantValue(context);
-        const interceptor = childContainer.get(composedInterceptor);
-        await interceptor.intercept(context, async () => {
-          const target = childContainer.get<object>(controllerMetadata.target);
-          context.response.data = await invokeMethod(childContainer, target, propertyDescriptor.value);
-        });
-      });
-    }
-    this.globalRouter.use(controllerMetadata.path!, localRouter.routes(), localRouter.allowedMethods());
-    return this;
+  getAllInterceptors(): Constructor<HttpInterceptor>[] {
+    const allInterceptors = this.globalInterceptors.concat(this.interceptors);
+    return uniq(allInterceptors);
   }
 
   addGlobalInspector(inspector: Constructor<HttpInterceptor>): this {
@@ -61,7 +58,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return this;
   }
 
-  build(httpAppOption: HttpApplicationOption): RequestListener {
+  build(httpAppOption: HttpApplicationOption, container: Container): RequestListener {
     const koa = new Koa();
     const {corsOption, trustProxy = false} = httpAppOption;
     koa.proxy = trustProxy;
@@ -69,12 +66,54 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     if (corsOption) {
       koa.use(KoaCors(corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
     }
-    koa.use(this.globalRouter.routes());
+    koa.use(this.createGlobalRouter(container));
     return koa.callback();
   }
 
-  private createComposedInterceptor(interceptorConstructors: Constructor<HttpInterceptor>[]) {
-    return composeRequestInterceptor(this.container, interceptorConstructors);
+  private addRouterSpec(methodRoutSpecs: MethodRouteSpec[], controllerMetadata: ControllerMetadata, property: unknown) {
+    if (typeof property !== 'function') {
+      return;
+    }
+    const requestMappingMetadata = getRequestMappingMetadata(property);
+    if (!requestMappingMetadata) {
+      return;
+    }
+
+    const {httpMethod, path, interceptors} = requestMappingMetadata;
+    this.interceptors = this.interceptors.concat(interceptors);
+
+    methodRoutSpecs.push({
+      path,
+      httpMethod,
+      interceptors: [...this.globalInterceptors, ...controllerMetadata.interceptors, ...interceptors],
+      targetConstructor: controllerMetadata.target,
+      targetMethod: property,
+    });
+  }
+
+  private createGlobalRouter(container: Container) {
+    const globalRouter = new KoaRouter();
+    for (const controllerRouteSpec of this.controllerRouteSpecs) {
+      const controllerRouter = new KoaRouter();
+      for (const methodRouteSpec of controllerRouteSpec.methodRouteSpecs) {
+        const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
+        const composedInterceptor = composeRequestInterceptor(container, interceptors);
+
+        controllerRouter[httpMethod](path, async (ctx) => {
+          const childContainer = container.createChild();
+          childContainer.bind(Container).toConstantValue(childContainer);
+          const context = new KoaHttpContext(childContainer, ctx);
+          childContainer.bind(HttpContext).toConstantValue(context);
+          const interceptor = childContainer.get(composedInterceptor);
+          await interceptor.intercept(context, async () => {
+            const target = childContainer.get<object>(targetConstructor);
+            context.response.data = await invokeMethod(childContainer, target, targetMethod);
+          });
+        });
+      }
+      globalRouter.use(controllerRouteSpec.path, controllerRouter.routes(), controllerRouter.allowedMethods());
+    }
+    return globalRouter.routes();
   }
 }
 

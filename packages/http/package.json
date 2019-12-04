@@ -27,10 +27,12 @@
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.2.1",
     "koa-router": "^7.4.0",
+    "lodash.uniq": "^4.5.0",
     "tslib": "^1.10.0"
   },
   "devDependencies": {
     "@types/koa__cors": "^2.2.3",
+    "@types/lodash.uniq": "^4.5.6",
     "@types/node": "^12.12.12",
     "@types/supertest": "^2.0.8",
     "reflect-metadata": "^0.1.13",
