@@ -1,5 +1,4 @@
-import {ModuleRoot, Module, RequestInterceptor, RequestContext, ServiceIdentifier} from '@sensejs/core';
-import {Controller, GET, HttpInterceptor, KoaHttpContext} from '@sensejs/http';
+import {ModuleRoot, Module, RequestInterceptor, RequestContext, ServiceIdentifier, Component} from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import {Column, Entity, PrimaryColumn, Repository, TableInheritance, ChildEntity} from 'typeorm';
 import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '../src';
@@ -15,7 +14,7 @@ class MockRequestContext extends RequestContext {
 }
 
 describe('TypeOrmModule', () => {
-  test('common case', async () => {
+  test('entity metadata and repositories shall be injectable on both global and child container', async () => {
     @Entity()
     @TableInheritance({column: {name: 'type', type: 'varchar'}})
     class Content {
@@ -53,7 +52,7 @@ describe('TypeOrmModule', () => {
       }
     }
 
-    @Controller('/example')
+    @Component()
     class ExampleHttpController {
       constructor(
         @InjectRepository(Content) private contentRepository: Repository<Content>,
@@ -69,7 +68,6 @@ describe('TypeOrmModule', () => {
         return this.photoRepository.insert(new Photo(id, description, url));
       }
 
-      @GET('/book')
       async findBook() {
         return this.contentRepository.find();
       }
@@ -81,6 +79,7 @@ describe('TypeOrmModule', () => {
         database: ':memory:',
         synchronize: true,
         entities: [Photo, Video, Content],
+        logging: true,
       },
     });
 
@@ -95,8 +94,8 @@ describe('TypeOrmModule', () => {
       }
 
       async onCreate() {
-        const context = new MockRequestContext(this.container);
-        await this.interceptor.intercept(context, () => Promise.resolve());
+        const childContainer = this.container.createChild();
+        const context = new MockRequestContext(childContainer);
         const controller = this.container.get(ExampleHttpController);
         const now = Date.now();
         const vid = `v${now}`;
@@ -114,6 +113,8 @@ describe('TypeOrmModule', () => {
             expect.objectContaining({id: pid, description: photoName, imageUrl: url}),
           ]),
         );
+        await this.interceptor.intercept(context, () => Promise.resolve());
+        childContainer.get<ExampleHttpController>(ExampleHttpController);
         spy();
       }
 

@@ -67,23 +67,6 @@ export function InjectRepository(entityConstructor: string | Function) {
 }
 
 @Component()
-export class TypeOrmSupportInterceptor extends RequestInterceptor {
-  constructor(
-    @inject(Connection) private connection: Connection,
-    @inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
-  ) {
-    super();
-  }
-
-  async intercept(context: RequestContext, next: () => Promise<void>) {
-    this.entityMetadataHelper.bindEntityManagerAndRepository((symbol, target) => {
-      context.bindContextValue(symbol, target);
-    });
-    return next();
-  }
-}
-
-@Component()
 class EntityMetadataHelper {
   constructor(@inject(Connection) private connection: Connection) {}
 
@@ -100,6 +83,25 @@ class EntityMetadataHelper {
         binder(entityInjectToken, entityManager.getRepository(constructor));
       }
     }
+  }
+}
+
+const helperModule = Module({components: [EntityMetadataHelper]});
+
+@Component()
+export class TypeOrmSupportInterceptor extends RequestInterceptor {
+  constructor(
+    @inject(Connection) private connection: Connection,
+    @inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
+  ) {
+    super();
+  }
+
+  async intercept(context: RequestContext, next: () => Promise<void>) {
+    this.entityMetadataHelper.bindEntityManagerAndRepository((symbol, target) => {
+      context.bindContextValue(symbol, target);
+    });
+    return next();
   }
 }
 
@@ -124,7 +126,7 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
   );
 
   class TypeOrmConnectionModule extends Module({
-    requires: [LoggerModule, Module(option)],
+    requires: [LoggerModule, Module(option), helperModule],
     components: [TypeOrmSupportInterceptor],
     factories: [factoryProvider, optionProvider],
   }) {
