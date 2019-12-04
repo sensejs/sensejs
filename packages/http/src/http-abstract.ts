@@ -56,11 +56,7 @@ export abstract class HttpContext extends RequestContext {
   abstract response: HttpResponse;
 }
 
-export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {
-  intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
-    return next();
-  }
-}
+export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {}
 
 export abstract class HttpAdaptor {
   abstract addControllerWithMetadata(controllerMapping: ControllerMetadata): this;
