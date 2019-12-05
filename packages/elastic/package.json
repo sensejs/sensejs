@@ -1,0 +1,39 @@
+{
+  "name": "@sensejs/elastic",
+  "version": "0.0.11",
+  "description": "",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "prepare": "tsc",
+    "cleanup": "rm -rf ./lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Chalin Shi",
+  "license": "ISC",
+  "dependencies": {
+    "@sensejs/core": "workspace:0.0.11",
+    "inversify": "^5.0.1",
+    "tslib": "^1.10.0"
+  },
+  "devDependencies": {
+    "@sensejs/http": "workspace:0.0.11",
+    "@types/elasticsearch": "^5.0.36",
+    "@types/supertest": "^2.0.8",
+    "elasticsearch": "^16.5.0",
+    "reflect-metadata": "^0.1.13",
+    "supertest": "^4.0.2"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.1.13"
+  }
+}
