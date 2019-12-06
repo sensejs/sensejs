@@ -20,7 +20,6 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.0.11",
     "inversify": "^5.0.1",
     "kafka-node": "git+https://github.com/thynson/kafka-node.git#7fd49714142c37af33d1d9c392f09eec5cfc97e5",
     "kafka-pipeline": "^3.0.2",
@@ -30,9 +29,11 @@
   "devDependencies": {
     "@types/lodash": "^4.14.149",
     "@types/lodash.merge": "^4.6.6",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "@sensejs/core": "workspace:0.0.11"
   },
   "peerDependencies": {
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "@sensejs/core": "workspace:0.0.11"
   }
 }

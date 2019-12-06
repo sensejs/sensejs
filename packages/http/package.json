@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@koa/cors": "^3.0.0",
-    "@sensejs/core": "workspace:0.0.11",
     "@types/koa": "^2.0.51",
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa-router": "^7.0.42",
@@ -36,10 +35,12 @@
     "@types/node": "^12.12.12",
     "@types/supertest": "^2.0.8",
     "reflect-metadata": "^0.1.13",
-    "supertest": "^4.0.2"
+    "supertest": "^4.0.2",
+    "@sensejs/core": "workspace:0.0.11"
   },
   "peerDependencies": {
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "@sensejs/core": "workspace:0.0.11"
   },
   "author": "LAN Xingcan",
   "license": "ISC"
