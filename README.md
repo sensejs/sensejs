@@ -86,3 +86,4 @@ Concept
     class App extends Module({ requires: [publicHttpModule, internalHttpModule, kafkaConsumerModule]}){}
     ```
   
+[inversify-js]: http://inversify.io
