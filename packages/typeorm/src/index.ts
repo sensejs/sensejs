@@ -90,10 +90,7 @@ const helperModule = Module({components: [EntityMetadataHelper]});
 
 @Component()
 export class TypeOrmSupportInterceptor extends RequestInterceptor {
-  constructor(
-    @inject(Connection) private connection: Connection,
-    @inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
-  ) {
+  constructor(@inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper) {
     super();
   }
 
@@ -127,7 +124,6 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
 
   class TypeOrmConnectionModule extends Module({
     requires: [LoggerModule, Module(option), helperModule],
-    components: [TypeOrmSupportInterceptor],
     factories: [factoryProvider, optionProvider],
   }) {
     constructor(
@@ -160,7 +156,7 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
   class EntityManagerModule extends Module({
     requires: [TypeOrmConnectionModule],
   }) {
-    private module: AsyncContainerModule;
+    private readonly module: AsyncContainerModule;
 
     constructor(
       @inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
@@ -185,5 +181,5 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     }
   }
 
-  return EntityManagerModule;
+  return Module({requires: [EntityManagerModule]});
 }
