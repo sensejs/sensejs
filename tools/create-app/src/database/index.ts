@@ -4,7 +4,6 @@ import ConfigModule from '../config';
 import {InjectLogger, Logger} from '@sensejs/core';
 
 export default class DatabaseModule extends TypeOrmModule({
-  requires: [SenseLogModule, ConfigModule],
   typeOrmOption: {
     synchronize: true,
     entities: [__dirname + '/../**/*.entity.*'],

@@ -2,6 +2,12 @@ import {Controller, GET, Query, POST, Body, Path} from '@sensejs/http';
 import {PublishingFacade} from '../example/publishing-facade.component';
 import {inject} from 'inversify';
 import {InjectLogger, Logger} from '@sensejs/core';
+import {
+  CreateAuthorFormTransformer,
+  CreateAuthorFormType,
+  CreateBookFormTransformer,
+  CreateBookFormType,
+} from './http-validation';
 
 @Controller('/example')
 export class ExampleController {
@@ -21,12 +27,12 @@ export class ExampleController {
   }
 
   @POST('/author')
-  async createAuthor(@Body() body: {name: string}) {
+  async createAuthor(@Body(CreateAuthorFormTransformer) body: CreateAuthorFormType) {
     return this.writingFacade.createAuthor(body.name);
   }
 
   @POST('/author/:id/book')
-  async createBook(@Body() body: {name: string}, @Path('id') id: string) {
+  async createBook(@Body(CreateBookFormTransformer) body: CreateBookFormType, @Path('id') id: string) {
     return this.writingFacade.createBook(id, body.name);
   }
 }

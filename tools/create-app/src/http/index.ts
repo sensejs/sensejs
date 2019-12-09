@@ -5,6 +5,7 @@ import {RequestTimingInterceptor} from './request-timing.interceptor';
 import PublishingModule from '../example';
 import {TracingInterceptor} from './tracing-interceptor';
 import {TypeOrmSupportInterceptor} from '@sensejs/typeorm';
+import {ErrorHandlerInterceptor} from './error-handler.interceptor';
 
 export default class ExampleHttpModule extends HttpModule({
   httpOption: {
@@ -12,8 +13,13 @@ export default class ExampleHttpModule extends HttpModule({
     listenAddress: '0.0.0.0',
   },
   requires: [PublishingModule],
-  components: [ExampleController, TracingInterceptor, RequestTimingInterceptor],
-  globalInterceptors: [TypeOrmSupportInterceptor, TracingInterceptor, RequestTimingInterceptor],
+  components: [ExampleController],
+  globalInterceptors: [
+    ErrorHandlerInterceptor,
+    TracingInterceptor,
+    RequestTimingInterceptor,
+    TypeOrmSupportInterceptor,
+  ],
   injectOptionFrom: 'config.http',
 }) {
   constructor(@InjectLogger(ExampleHttpModule) private logger: Logger) {

@@ -1,11 +1,10 @@
 import {PublishingFacade} from './publishing-facade.component';
 import {Module, InjectLogger, Logger} from '@sensejs/core';
-import DatabaseModule from '../database';
 import {SenseLogModule} from '@sensejs/logger';
 
 export default class PublishingModule extends Module({
   components: [PublishingFacade],
-  requires: [SenseLogModule, DatabaseModule],
+  requires: [SenseLogModule],
 }) {
   constructor(@InjectLogger(PublishingModule) private logger: Logger) {
     super();
