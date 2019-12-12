@@ -85,7 +85,10 @@ describe('TypeOrmModule', () => {
 
     const spy = jest.fn();
 
-    class FooModule extends Module({components: [ExampleHttpController], requires: [typeOrmModule]}) {
+    class FooModule extends Module({
+      components: [ExampleHttpController, TypeOrmSupportInterceptor],
+      requires: [typeOrmModule],
+    }) {
       constructor(
         @inject(TypeOrmSupportInterceptor) private interceptor: RequestInterceptor,
         @inject(Container) private container: Container,
@@ -117,8 +120,6 @@ describe('TypeOrmModule', () => {
         childContainer.get<ExampleHttpController>(ExampleHttpController);
         spy();
       }
-
-      async onDestroy() {}
     }
 
     const moduleRoot = new ModuleRoot(FooModule);
