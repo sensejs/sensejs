@@ -84,6 +84,9 @@ describe('Component', () => {
     @Tagged(symbolTagKey, symbolTagValue)
     class MyComponent {}
 
+    const x = Tagged('key', 'value');
+    x(MyComponent);
+
     expect(getComponentMetadata(MyComponent)).toEqual(
       expect.objectContaining({
         tags: expect.arrayContaining([

@@ -16,7 +16,7 @@ export function getComponentMetadata(target: Constructor<unknown> | Abstract<unk
   return result;
 }
 
-function ensureComponentMetadata(target: Constructor<unknown>) {
+export function ensureComponentMetadata(target: Constructor<unknown>) {
   let result: ComponentMetadata<unknown> = Reflect.getMetadata(COMPONENT_METADATA_KEY, target);
   if (!result) {
     result = {
@@ -26,21 +26,6 @@ function ensureComponentMetadata(target: Constructor<unknown>) {
     Reflect.defineMetadata(COMPONENT_METADATA_KEY, result, target);
   }
   return result;
-}
-
-export function Tagged(key: string | number | symbol, value: unknown) {
-  return (target: Constructor<unknown>) => {
-    const metadata = ensureComponentMetadata(target);
-    metadata.tags = metadata.tags ?? [];
-    metadata.tags.push({key, value});
-  };
-}
-
-export function Named(name: string) {
-  return (target: Constructor<unknown>) => {
-    const metadata = ensureComponentMetadata(target);
-    metadata.name = name;
-  };
 }
 
 /**

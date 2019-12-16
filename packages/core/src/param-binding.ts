@@ -1,50 +1,60 @@
 import {Constructor, ServiceIdentifier} from './interfaces';
-import {Container, decorate, inject, injectable} from 'inversify';
+import {Container, decorate, inject, injectable, named, tagged, optional} from 'inversify';
+import {
+  ConstructorDecorator,
+  ConstructorParamDecorator,
+  DecoratorDiscriminator,
+  MethodParamDecorator,
+} from './utils/decorator-discriminator';
+import {ensureComponentMetadata} from './component';
 
 export interface Transformer<Input = any, Output = Input> {
   (input: Input): Output;
 }
 
-export interface ParamBindingOption<T, R> {
+export interface MethodParameterInjectOption<T, R> {
+  /**
+   * Transform the injected target
+   */
   transform?: Transformer<T, R>;
 }
 
-interface ParamBindingMetadata {
+interface MethodParameterInjectMetadata {
   target: ServiceIdentifier<unknown>;
   transform: Transformer;
 }
 
-interface FunctionParamBindingMetadata {
-  paramsMetadata: ParamBindingMetadata[];
-  invoker: Constructor<Invokable>;
+interface MethodInjectMetadata {
+  paramsMetadata: MethodParameterInjectMetadata[];
+  proxy: Constructor<Invokable>;
 }
 
 export class ParamBindingError extends Error {}
 
 interface Invokable {
-  call(paramsBindingMetadata: ParamBindingMetadata[], self: any): any;
+  call(paramsBindingMetadata: MethodParameterInjectMetadata[], self: any): any;
 }
 
-const PARAM_BINDING_KEY = Symbol('PARAM_BINDING_KEY');
+const METHOD_INJECT_KEY = Symbol('METHOD_INJECT_KEY');
 
-export function ensureParamBindingMetadata(target: any): FunctionParamBindingMetadata {
+function ensureMethodInjectMetadata(target: any): MethodInjectMetadata {
   if (typeof target !== 'function') {
     throw new TypeError('Decorated target for @ParamBinding is not a function');
   }
-  let result = Reflect.getMetadata(PARAM_BINDING_KEY, target);
+  let result = Reflect.getMetadata(METHOD_INJECT_KEY, target);
   if (typeof result !== 'undefined') {
     return result;
   }
 
   @injectable()
-  class Invoker implements Invokable {
+  class Proxy implements Invokable {
     private readonly args: unknown[];
 
     constructor(...args: unknown[]) {
       this.args = args;
     }
 
-    call(paramsBindingMetadata: ParamBindingMetadata[], self: any) {
+    call(paramsBindingMetadata: MethodParameterInjectMetadata[], self: any) {
       return target.apply(
         self,
         this.args.map((elem, idx) => paramsBindingMetadata[idx].transform(elem)),
@@ -54,21 +64,21 @@ export function ensureParamBindingMetadata(target: any): FunctionParamBindingMet
 
   result = {
     paramsMetadata: [],
-    invoker: Invoker,
-  };
+    proxy: Proxy,
+  } as MethodInjectMetadata;
 
-  Reflect.defineMetadata(PARAM_BINDING_KEY, result, target);
+  Reflect.defineMetadata(METHOD_INJECT_KEY, result, target);
   return result;
 }
 
-export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: ParamBindingOption<T, R> = {}) {
-  return <T, M extends keyof T>(prototype: T, methodName: M, paramIndex: number) => {
-    const metadata = ensureParamBindingMetadata(prototype[methodName]);
+function MethodInject<T, R = T>(target: ServiceIdentifier<T>, option: MethodParameterInjectOption<T, R> = {}) {
+  return (prototype: {}, methodName: string | symbol, paramIndex: number) => {
+    const metadata = ensureMethodInjectMetadata(Reflect.get(prototype, methodName));
     if (metadata.paramsMetadata[paramIndex]) {
       throw new ParamBindingError();
     }
     const parameterDecorator = inject(target) as ParameterDecorator;
-    decorate(parameterDecorator, metadata.invoker as Constructor<unknown>, paramIndex);
+    decorate(parameterDecorator, metadata.proxy as Constructor<unknown>, paramIndex);
 
     metadata.paramsMetadata[paramIndex] = Object.assign(
       {target},
@@ -77,18 +87,40 @@ export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: Par
   };
 }
 
-export function getFunctionParamBindingMetadata(method: Function): FunctionParamBindingMetadata {
-  return Reflect.getMetadata(PARAM_BINDING_KEY, method);
+/**
+ * @param target Identifier of target wanted to be injected
+ * @param option
+ * @decorator
+ * @deprecated
+ * @see Inject
+ */
+export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: MethodParameterInjectOption<T, R> = {}) {
+  // Defer warning to next tick to make it possible to be caught by handler set up later in this tick
+  // during application start up
+  process.nextTick(() => process.emitWarning('@ParamBinding() is deprecated, use @Inject() instead'));
+
+  return MethodInject(target, option);
 }
 
-export function validateFunctionParamBindingMetadata(method: Function): FunctionParamBindingMetadata {
-  const paramBindingMapping = ensureParamBindingMetadata(method);
+export function getFunctionParamBindingMetadata(method: Function): MethodInjectMetadata {
+  process.nextTick(() => {
+    process.emitWarning('getFunctionParamBindingMetadata is deprecated, use getMethodInjectMetadata instead');
+  });
+  return getMethodInjectMetadata(method);
+}
+
+export function getMethodInjectMetadata(method: Function): MethodInjectMetadata {
+  return Reflect.getMetadata(METHOD_INJECT_KEY, method);
+}
+
+export function validateFunctionParamBindingMetadata(method: Function): MethodInjectMetadata {
+  const methodInjectMetadata = ensureMethodInjectMetadata(method);
   for (let i = 0; i < method.length; i++) {
-    if (!paramBindingMapping.paramsMetadata[i]) {
+    if (!methodInjectMetadata.paramsMetadata[i]) {
       throw new Error(`Parameter at position ${i} is not decorated`);
     }
   }
-  return paramBindingMapping;
+  return methodInjectMetadata;
 }
 
 export class ParamBindingResolvingError extends Error {}
@@ -110,7 +142,86 @@ export function invokeMethod<T>(container: Container, target: T, method: Functio
   if (metadata.paramsMetadata.length !== method.length) {
     throw new ParamBindingResolvingError();
   }
-  const invoker = resolveInvoker(container, metadata.invoker);
+  const invoker = resolveInvoker(container, metadata.proxy);
 
   return invoker.call(metadata.paramsMetadata, target);
+}
+
+function applyToParamBindingInvoker<Parameter>(
+  decorator: ParameterDecorator,
+  prototype: {},
+  name: string | symbol,
+  index: number,
+) {
+  const targetMethod = Reflect.get(prototype, name);
+  if (typeof targetMethod !== 'function') {
+    throw new TypeError('@Optional decorator can only decorate parameter of constructor or class method');
+  }
+  const metadata = getFunctionParamBindingMetadata(targetMethod);
+  decorate(decorator, metadata.proxy, index);
+}
+
+export function Inject<T, R = T>(target: ServiceIdentifier<T>, option?: MethodParameterInjectOption<T, R>) {
+  const name = typeof target === 'function' ? target.name : target.toString();
+  const discriminator = new DecoratorDiscriminator(`Inject(${name})`).whenApplyToInstanceMethodParam(
+    (prototype, name, index) => {
+      MethodInject(target, option)(prototype, name, index);
+    },
+  );
+  if (typeof option === 'undefined') {
+    discriminator.whenApplyToConstructorParam((constructor, index) => {
+      decorate(inject(target) as ParameterDecorator, constructor, index);
+    });
+  }
+  return discriminator.as<ParameterDecorator>();
+}
+
+export function Optional() {
+  return new DecoratorDiscriminator('Optional')
+    .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
+      applyToParamBindingInvoker(optional, prototype, name, index);
+    })
+    .whenApplyToConstructorParam((constructor, index) => {
+      decorate(optional, constructor, index);
+    })
+    .as<ParameterDecorator>();
+}
+
+export interface InjectionConstraintDecorator
+  extends ConstructorParamDecorator,
+    MethodParamDecorator,
+    ConstructorDecorator {}
+
+export function Tagged(key: string | number | symbol, value: any) {
+  const decorator = tagged(key, value) as ParameterDecorator;
+  return new DecoratorDiscriminator(`Tagged(key=${String(key)}, value=${String(value)})`)
+    .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
+      applyToParamBindingInvoker(decorator, prototype, name, index);
+    })
+    .whenApplyToConstructorParam((constructor, index) => {
+      decorate(decorator, constructor, index);
+    })
+    .whenApplyToConstructor((constructor) => {
+      const metadata = ensureComponentMetadata(constructor);
+      metadata.tags = metadata.tags ?? [];
+      metadata.tags.push({key, value});
+    })
+    .as<InjectionConstraintDecorator>();
+}
+
+export function Named(name: string) {
+  const decorator = named(name) as ParameterDecorator;
+  return new DecoratorDiscriminator(`Named(name="${name}")`)
+    .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
+      applyToParamBindingInvoker(decorator, prototype, name, index);
+    })
+    .whenApplyToConstructorParam((constructor, index) => {
+      decorate(decorator, constructor, index);
+    })
+    .whenApplyToConstructor((constructor) => {
+      const metadata = ensureComponentMetadata(constructor);
+      metadata.tags = metadata.tags ?? [];
+      metadata.name = name;
+    })
+    .as<InjectionConstraintDecorator>();
 }
