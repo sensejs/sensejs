@@ -1,8 +1,8 @@
-import {DecoratorDiscriminator, Decorator} from '../src/utils/decorator-discriminator';
+import {DecoratorBuilder, Decorator} from '../src';
 
 function noop() {}
 
-function defineCase(test: (d: Decorator) => void, factory: (d: DecoratorDiscriminator) => DecoratorDiscriminator) {
+function defineCase(test: (d: Decorator) => void, factory: (d: DecoratorBuilder) => DecoratorBuilder) {
   return {
     test,
     factory,
@@ -12,7 +12,7 @@ function defineCase(test: (d: Decorator) => void, factory: (d: DecoratorDiscrimi
 const allCases: {
   [name: string]: {
     test: (d: Decorator) => void;
-    factory(d: DecoratorDiscriminator): DecoratorDiscriminator;
+    factory(d: DecoratorBuilder): DecoratorBuilder;
   };
 } = {
   constructor: defineCase(
@@ -163,11 +163,11 @@ const allCases: {
 describe('ParameterDecoratorDiscriminator', () => {
   Object.entries(allCases).forEach(([caseName, spec]) => {
     test(`only apply to ${caseName}`, () => {
-      spec.test(new DecoratorDiscriminator('foo', false).as());
+      spec.test(new DecoratorBuilder('foo', false).build());
       Object.entries(allCases).forEach(([failedCaseName, failedCaseSpec]) => {
         if (failedCaseName !== caseName) {
           expect(() => {
-            failedCaseSpec.test(spec.factory(new DecoratorDiscriminator('foo')).as());
+            failedCaseSpec.test(spec.factory(new DecoratorBuilder('foo')).build());
           }).toThrow();
         }
       });

@@ -1,2 +1,2 @@
-export * from './decorator-discriminator';
+export * from './decorator-builder';
 export * from './deprecate';

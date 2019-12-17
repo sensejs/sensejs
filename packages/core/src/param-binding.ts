@@ -3,9 +3,9 @@ import {Container, decorate, inject, injectable, named, tagged, optional} from '
 import {
   ConstructorDecorator,
   ConstructorParamDecorator,
-  DecoratorDiscriminator,
+  DecoratorBuilder,
   MethodParamDecorator, ParamDecorator,
-} from './utils/decorator-discriminator';
+} from './utils';
 import {ensureComponentMetadata} from './component';
 
 export interface Transformer<Input = any, Output = Input> {
@@ -163,7 +163,7 @@ function applyToParamBindingInvoker<Parameter>(
 
 export function Inject<T, R = T>(target: ServiceIdentifier<T>, option?: MethodParameterInjectOption<T, R>) {
   const name = typeof target === 'function' ? target.name : target.toString();
-  const discriminator = new DecoratorDiscriminator(`Inject(${name})`).whenApplyToInstanceMethodParam(
+  const discriminator = new DecoratorBuilder(`Inject(${name})`).whenApplyToInstanceMethodParam(
     (prototype, name, index) => {
       return MethodInject(target, option)(prototype, name, index);
     },
@@ -173,21 +173,21 @@ export function Inject<T, R = T>(target: ServiceIdentifier<T>, option?: MethodPa
       return decorate(inject(target) as ParameterDecorator, constructor, index);
     });
   }
-  return discriminator.as<ParamDecorator>();
+  return discriminator.build<ParamDecorator>();
 }
 
 export function Optional() {
   // XXX: Inversify Typing Error?
   // Need to use @optional() instead of @optional
   const decorator = optional() as ParameterDecorator;
-  return new DecoratorDiscriminator('Optional')
+  return new DecoratorBuilder('Optional')
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
       return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
       return decorate(decorator, constructor, index);
     })
-    .as<ParamDecorator>();
+    .build<ParamDecorator>();
 }
 
 export interface InjectionConstraintDecorator
@@ -197,7 +197,7 @@ export interface InjectionConstraintDecorator
 
 export function Tagged(key: string | number | symbol, value: any) {
   const decorator = tagged(key, value) as ParameterDecorator;
-  return new DecoratorDiscriminator(`Tagged(key=${String(key)}, value=${String(value)})`)
+  return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
       return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
@@ -209,12 +209,12 @@ export function Tagged(key: string | number | symbol, value: any) {
       metadata.tags = metadata.tags ?? [];
       metadata.tags.push({key, value});
     })
-    .as<InjectionConstraintDecorator>();
+    .build<InjectionConstraintDecorator>();
 }
 
 export function Named(name: string | symbol) {
   const decorator = named(name) as ParameterDecorator;
-  return new DecoratorDiscriminator(`Named(name="${name.toString()}")`)
+  return new DecoratorBuilder(`Named(name="${name.toString()}")`)
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
       return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
@@ -226,5 +226,5 @@ export function Named(name: string | symbol) {
       metadata.tags = metadata.tags ?? [];
       metadata.name = name;
     })
-    .as<InjectionConstraintDecorator>();
+    .build<InjectionConstraintDecorator>();
 }
