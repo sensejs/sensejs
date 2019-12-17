@@ -26,5 +26,6 @@
     <orderEntry type="module" module-name="redis" />
     <orderEntry type="module" module-name="create-app" />
     <orderEntry type="module" module-name="create-app" />
+    <orderEntry type="module" module-name="testing-utility" />
   </component>
 </module>
