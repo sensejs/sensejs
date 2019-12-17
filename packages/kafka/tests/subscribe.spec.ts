@@ -31,7 +31,7 @@ jest.mock('kafka-pipeline', (): unknown => {
 
   return {ConsumerGroupPipeline: MockConsumerGroupPipeline};
 });
-import {Component, Module, ModuleRoot, ParamBinding, RequestInterceptor} from '@sensejs/core';
+import {Component, Module, ModuleRoot, RequestInterceptor, Inject} from '@sensejs/core';
 import {EventEmitter} from 'events';
 import {ConsumerGroupPipeline} from 'kafka-pipeline';
 import {
@@ -102,9 +102,9 @@ describe('Subscriber', () => {
       @SubscribeTopic({option: {topic: 'foo'}, interceptors: [interceptorC]})
       foo(
         @InjectSubscribeContext() ctx: ConsumingContext,
-        @ParamBinding(symbolA) global: any,
-        @ParamBinding(symbolB) controller: any,
-        @ParamBinding(symbolC) fromTopic: any,
+        @Inject(symbolA) global: any,
+        @Inject(symbolB) controller: any,
+        @Inject(symbolC) fromTopic: any,
         @Message() message: string | Buffer,
       ) {
         fooSpy();

@@ -1,4 +1,4 @@
-import {Constructor, ParamBinding} from '@sensejs/core';
+import {Constructor, ParamBinding, Inject} from '@sensejs/core';
 import {Container} from 'inversify';
 import supertest from 'supertest';
 import {
@@ -53,10 +53,10 @@ describe('KoaHttpApplicationBuilder', () => {
     class FooController {
       @GET('/', {interceptors: [InterceptorC]})
       get(
-        @ParamBinding(HttpContext) ctx: HttpContext,
-        @ParamBinding(symbolA) numberA: number,
-        @ParamBinding(symbolB) numberB: number,
-        @ParamBinding(symbolC) numberC: number,
+        @Inject(HttpContext) ctx: HttpContext,
+        @Inject(symbolA) numberA: number,
+        @Inject(symbolB) numberB: number,
+        @Inject(symbolC) numberC: number,
       ) {
         stubForGet(ctx);
       }

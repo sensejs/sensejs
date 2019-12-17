@@ -2,18 +2,18 @@ import {Container, inject, injectable} from 'inversify';
 import {
   Component,
   invokeMethod,
-  ParamBinding,
+  Inject,
   ParamBindingError,
   ParamBindingResolvingError,
   validateFunctionParamBindingMetadata,
 } from '../src';
 
-describe('@ParamBinding', () => {
+describe('@Inject', () => {
   test('param binding', () => {
     const x = Symbol(),
       y = Symbol();
     class Foo {
-      bar(@ParamBinding(x) param: string, @ParamBinding(y, {transform: (x: number) => x + 1}) number: number) {
+      bar(@Inject(x) param: string, @Inject(y, {transform: (x: number) => x + 1}) number: number) {
         return param.repeat(number);
       }
     }
@@ -28,7 +28,7 @@ describe('@ParamBinding', () => {
   test('Validate param binding', () => {
     const x = Symbol();
     class Foo {
-      shouldOkay(@ParamBinding(x) foo: any) {}
+      shouldOkay(@Inject(x) foo: any) {}
 
       shouldFail(foo: any) {}
 
@@ -44,12 +44,12 @@ describe('@ParamBinding', () => {
       y = Symbol();
     expect(() => {
       class Foo {
-        bar(@ParamBinding(x) @ParamBinding(y) foo: any) {}
+        bar(@Inject(x) @Inject(y) foo: any) {}
       }
     }).toThrow(ParamBindingError);
   });
 
-  test('Missing @ParamBinding', () => {
+  test('Missing @Inject', () => {
     class Foo {
       bar(param: string) {
         return param;
@@ -73,10 +73,10 @@ describe('@ParamBinding', () => {
     container.bind(String).toConstantValue('deadbeef');
     expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
 
-    ParamBinding(String)(Foo.prototype, 'bar', 1);
+    Inject(String)(Foo.prototype, 'bar', 1);
     expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
 
-    ParamBinding(String)(Foo.prototype, 'bar', 2);
+    Inject(String)(Foo.prototype, 'bar', 2);
     expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
   });
 
@@ -118,10 +118,10 @@ describe('@ParamBinding', () => {
     @Component()
     class Foo {
       bar(
-        @ParamBinding(x, {transform: (x: string) => x.repeat(2)}) param: string,
-        @ParamBinding(y, {transform: (x: number) => x * x}) number: number,
-        @ParamBinding(Test) test: Test,
-        @ParamBinding(constructor) x: any,
+        @Inject(x, {transform: (x: string) => x.repeat(2)}) param: string,
+        @Inject(y, {transform: (x: number) => x * x}) number: number,
+        @Inject(Test) test: Test,
+        @Inject(constructor) x: any,
       ) {
         return param.repeat(number);
       }
