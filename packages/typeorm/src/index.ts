@@ -11,6 +11,8 @@ import {
   Logger,
   LoggerModule,
   InjectLogger,
+  deprecate,
+  Deprecated
 } from '@sensejs/core';
 import {inject, Container, AsyncContainerModule} from 'inversify';
 import {Connection, EntityManager, ConnectionOptions, createConnection, Logger as TypeOrmLogger} from 'typeorm';
@@ -68,7 +70,8 @@ export function InjectRepository(entityConstructor: string | Function) {
 
 @Component()
 class EntityMetadataHelper {
-  constructor(@inject(Connection) private connection: Connection) {}
+  constructor(@inject(Connection) private connection: Connection) {
+  }
 
   bindEntityManagerAndRepository(binder: <T>(symbol: ServiceIdentifier<T>, target: T) => void) {
     const entityManager = this.connection.createEntityManager();
@@ -89,15 +92,13 @@ class EntityMetadataHelper {
 const helperModule = Module({components: [EntityMetadataHelper]});
 
 @Component()
+@Deprecated()
 export class TypeOrmSupportInterceptor extends RequestInterceptor {
   constructor(@inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper) {
     super();
   }
 
   async intercept(context: RequestContext, next: () => Promise<void>) {
-    this.entityMetadataHelper.bindEntityManagerAndRepository((symbol, target) => {
-      context.bindContextValue(symbol, target);
-    });
     return next();
   }
 }
