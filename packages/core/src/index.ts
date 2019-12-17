@@ -7,3 +7,4 @@ export * from './param-binding';
 export * from './interceptor';
 export {EntryPoint} from './entry-point';
 export * from './module-utility';
+export * from './utils';

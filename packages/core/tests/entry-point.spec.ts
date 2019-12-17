@@ -8,7 +8,7 @@ class AppExit extends Error {
 }
 
 function runModuleForTest(module: ModuleConstructor) {
-  return runModule(module, {
+  return new Promise((resolve, reject) => runModule(module, {
     errorExitOption: {
       exitCode: 101,
       timeout: 100,
@@ -18,7 +18,11 @@ function runModuleForTest(module: ModuleConstructor) {
       timeout: 100,
       exitImmediatelyWhenRepeated: true,
     },
-  });
+    onExit: (exitCode): never => {
+      reject(new AppExit(exitCode));
+      return undefined as never;
+    },
+  }));
 }
 
 describe('Application', () => {
@@ -143,11 +147,13 @@ describe('Application', () => {
 
   test('warn when multiple entrypoint', () => {
     @EntryPoint()
-    class A extends Module() {}
+    class A extends Module() {
+    }
 
     expect(() => {
       @EntryPoint()
-      class B extends Module() {}
+      class B extends Module() {
+      }
     }).toThrow();
   });
 });

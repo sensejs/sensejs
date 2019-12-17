@@ -20,6 +20,7 @@ interface RunOption {
   errorExitOption: ExitOption;
   exitSignals: ExitSignalOption;
   logger: Logger;
+  onExit: (exitCode: number) => never;
 }
 
 export const defaultExitOption: ExitOption = {
@@ -49,10 +50,12 @@ export const defaultRunOption: RunOption = {
     SIGTERM: {},
   },
   logger: consoleLogger,
+  onExit: (exitCode) => process.exit(exitCode)
 };
 
 function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOption) => void) {
-  const onWarning = () => {};
+  const onWarning = () => {
+  };
   const onError = (e: any) => {
     actualRunOption.logger.info('Uncaught exception: ', e);
     actualRunOption.logger.info('Going to quit');
@@ -77,7 +80,7 @@ function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOpt
   (Object.keys(actualRunOption.exitSignals) as NodeJS.Signals[]).forEach(registerExitSignal);
 }
 
-export async function runModule(entryModule: ModuleConstructor, runOption: Partial<RunOption> = {}): Promise<never> {
+export async function runModule(entryModule: ModuleConstructor, runOption: Partial<RunOption> = {}) {
   const actualRunOption = Object.assign({}, defaultRunOption, runOption);
   const moduleRoot = new ModuleRoot(entryModule);
   let stopPromise: Promise<void>;
@@ -110,9 +113,7 @@ export async function runModule(entryModule: ModuleConstructor, runOption: Parti
       actualRunOption.logger.fatal('Going to quit');
       stopApp(actualRunOption.errorExitOption);
     });
-  });
-
-  return process.exit(await runUntilExit);
+  }).then((exitCode) => actualRunOption.onExit(exitCode));
 }
 
 let entryPointCalled = false;
