@@ -51,7 +51,10 @@ export interface Decorator extends ConstructorDecorator, MethodDecorator, Proper
 type WhenApplyToConstructorParam = <T extends Function>(target: T, index: number) => void;
 type WhenApplyToStaticMethodParam = <T extends Function>(target: T, name: string | symbol, index: number) => void;
 type WhenApplyToInstanceMethodParam = (target: object, name: string | symbol, index: number) => void;
-type WhenApplyToStaticMethod = <T>(target: Function, name: string | symbol, pd: TypedPropertyDescriptor<T>) => void;
+type WhenApplyToStaticMethod =
+  <T extends Function>(target: Function, name: string | symbol, pd: TypedPropertyDescriptor<T>) => void;
+type WhenApplyToInstanceMethod =
+  <T extends Function>(target: {}, name: string | symbol, pd: TypedPropertyDescriptor<T>) => void;
 type WhenApplyToStaticProperty = (target: Function, name: string | symbol) => void;
 type WhenApplyToInstanceProperty = (target: object, name: string | symbol) => void;
 
@@ -126,7 +129,7 @@ export class DecoratorDiscriminator {
       applyToWrongPlace,
     } = this;
 
-    const result = <T, R>(
+    const result = <T extends Function, R>(
       target: object | Constructor<R>,
       method?: undefined | symbol | string,
       descriptor?: number | TypedPropertyDescriptor<T>,
