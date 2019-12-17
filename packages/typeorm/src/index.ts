@@ -1,5 +1,6 @@
 import {
   Component,
+  Constructor,
   createLegacyModule,
   createModule,
   Deprecated,
@@ -77,6 +78,33 @@ export class TypeOrmSupportInterceptor extends RequestInterceptor {
   async intercept(context: RequestContext, next: () => Promise<void>) {
     return next();
   }
+}
+
+export enum TransactionLevel {
+  READ_UNCOMMITTED = 'READ UNCOMMITTED',
+  READ_COMMITTED = 'READ COMMITTED',
+  REPEATABLE_READ = 'REPEATABLE READ',
+  SERIALIZABLE = 'SERIALIZABLE'
+}
+
+export function Transactional(level?: TransactionLevel): Constructor<RequestInterceptor> {
+
+  @Component()
+  class TransactionInterceptor extends RequestInterceptor {
+
+    constructor(@Inject(EntityManager) private entityManager: EntityManager) {
+      super();
+    }
+
+    async intercept(context: RequestContext, next: () => Promise<void>) {
+      if (level) {
+        return this.entityManager.transaction(level, next);
+      }
+      return this.entityManager.transaction(next);
+    }
+  }
+
+  return TransactionInterceptor;
 }
 
 export function TypeOrmModuleClass(option: TypeOrmModuleOption) {

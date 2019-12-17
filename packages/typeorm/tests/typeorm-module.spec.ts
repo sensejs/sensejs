@@ -11,7 +11,7 @@ import {
 } from '@sensejs/core';
 import {Container} from 'inversify';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
-import {InjectRepository, TypeOrmModule, TypeOrmModuleClass, TypeOrmSupportInterceptor} from '../src';
+import {InjectRepository, Transactional, TypeOrmModule, TypeOrmModuleClass, TypeOrmSupportInterceptor} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
@@ -98,7 +98,7 @@ describe('TypeOrmModule', () => {
     const spy = jest.fn();
 
     @ModuleClass({
-      components: [ExampleHttpController, TypeOrmSupportInterceptor],
+      components: [ExampleHttpController, TypeOrmSupportInterceptor, Transactional()],
       requires: [LoggerModule, TypeOrmModule],
     })
     class FooModule {
