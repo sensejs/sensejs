@@ -30,7 +30,7 @@
     "hooks": {
       "pre-commit": "pnpm recursive run prepare && lint-staged",
       "pre-push": "pnpm t",
-      "post-checkout": "[[ $3 == 1 ]] && pnpm m i",
+      "post-checkout": "sh scripts/post-checkout.sh",
       "post-merge": "pnpm m i"
     }
   },
