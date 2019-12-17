@@ -10,7 +10,7 @@
     "@types/jest": "^24.0.23",
     "@types/koa": "^2.11.0",
     "@types/koa-router": "^7.0.42",
-    "@types/node": "^12.12.14",
+    "@types/node": "^12.12.18",
     "coveralls": "^3.0.9",
     "husky": "^3.1.0",
     "jest": "^24.9.0",
@@ -20,25 +20,23 @@
     "release-it": "^12.4.3",
     "source-map-support": "^0.5.16",
     "ts-jest": "^24.2.0",
-    "ts-node": "^8.5.2",
+    "ts-node": "^8.5.4",
     "tslib": "^1.10.0",
     "tslint": "^5.20.1",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.3",
+    "typescript-formatter": "^7.2.2"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged && pnpm recursive run prepare",
+      "pre-commit": "pnpm recursive run prepare && lint-staged",
       "pre-push": "pnpm t",
       "post-checkout": "pnpm m i"
     }
   },
   "lint-staged": {
-    "*.js": [
-      "prettier --write",
-      "git add"
-    ],
     "*.ts?(x)": [
-      "pnpm run prettier",
+      "pnpm run format",
+      "pnpm run lint",
       "git add"
     ]
   },
@@ -49,6 +47,7 @@
     "pretest": "pnpm recursive run prepare",
     "coveralls": "cat coverage/lcov.info | coveralls",
     "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx release-it -c `pwd`/.release-it.yaml --non-interactive",
-    "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\""
+    "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\"",
+    "format": "tsfmt -r"
   }
 }

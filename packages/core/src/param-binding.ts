@@ -189,8 +189,8 @@ export function Optional() {
 
 export interface InjectionConstraintDecorator
   extends ConstructorParamDecorator,
-    MethodParamDecorator,
-    ConstructorDecorator {}
+  MethodParamDecorator,
+  ConstructorDecorator {}
 
 export function Tagged(key: string | number | symbol, value: any) {
   const decorator = tagged(key, value) as ParameterDecorator;

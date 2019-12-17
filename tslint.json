@@ -23,7 +23,8 @@
     "max-classes-per-file": false,
     "variable-name": [true, "allow-leading-underscore", "allow-pascal-case"],
     "no-empty": false,
-    "no-unnecessary-initializer": false
+    "no-unnecessary-initializer": false,
+    "semicolon": [true, "always", "strict-bound-class-methods"]
   },
   "rulesDirectory": []
 }

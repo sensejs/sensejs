@@ -27,8 +27,7 @@ function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[]
       value,
     });
     return acc;
-  },
-  []);
+  }, []);
 }
 
 export function ConfigModule(option: ConfigModuleOption) {

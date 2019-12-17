@@ -32,9 +32,9 @@ export function composeRequestInterceptor<Context extends RequestContext>(
           i === interceptors.length
             ? next
             : async (next: () => Promise<void>) => {
-                const interceptor = this.container.get(interceptors[i]);
-                await interceptor.intercept(context, next);
-              };
+              const interceptor = this.container.get(interceptors[i]);
+              await interceptor.intercept(context, next);
+            };
 
         await fn(async () => dispatch(i + 1));
       };

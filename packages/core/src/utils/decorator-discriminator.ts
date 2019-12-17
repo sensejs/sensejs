@@ -1,9 +1,3 @@
-// type Decorator = <T>(
-//   target: object,
-//   name?: string | symbol,
-//   descriptor?: number | TypedPropertyDescriptor<T>,
-// ) => unknown;
-//
 import {Constructor} from '../interfaces';
 
 export interface ConstructorDecorator {
@@ -21,9 +15,11 @@ export interface StaticPropertyDecorator {
 }
 
 export interface StaticMethodDecorator {
-  <T extends Function, R>(target: T, name: PropertyName, pd: TypedPropertyDescriptor<R>): TypedPropertyDescriptor<
-    R
-  > | void;
+  <T extends Function, R>(
+    target: T,
+    name: PropertyName,
+    pd: TypedPropertyDescriptor<R>,
+  ): TypedPropertyDescriptor<R> | void;
 }
 
 export interface InstanceMethodDecorator {
@@ -64,42 +60,6 @@ function noop() {}
 type NarrowTo<T> = Decorator extends T ? T : unknown;
 
 export class DecoratorDiscriminator {
-  private applyToConstructor: ConstructorDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to class`);
-  };
-
-  private applyToInstanceProperty: WhenApplyToInstanceProperty = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to property`);
-  };
-
-  private applyToStaticProperty: WhenApplyToStaticProperty = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to static property`);
-  };
-
-  private applyToInstanceMethod: MethodDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to method`);
-  };
-
-  private applyToStaticMethod: WhenApplyToStaticMethod = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to static method`);
-  };
-
-  private applyToConstructorParam: WhenApplyToConstructorParam = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
-  };
-
-  private applyToStaticMethodParam: WhenApplyToStaticMethodParam = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class static method`);
-  };
-
-  private applyToInstanceMethodParam: WhenApplyToInstanceMethodParam = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class instance method`);
-  };
-
-  private applyToWrongPlace: () => void = () => {
-    throw new Error(`@${this.decoratorName} cannot be applied here`);
-  };
-
   constructor(private decoratorName: string, strictChecking = true) {
     if (!strictChecking) {
       this.applyToConstructorParam = noop;
@@ -165,6 +125,7 @@ export class DecoratorDiscriminator {
       applyToConstructor,
       applyToWrongPlace,
     } = this;
+
     const result = <T, R>(
       target: object | Constructor<R>,
       method?: undefined | symbol | string,
@@ -203,4 +164,40 @@ export class DecoratorDiscriminator {
     };
     return result as NarrowTo<T>;
   }
+
+  private applyToConstructor: ConstructorDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to class`);
+  };
+
+  private applyToInstanceProperty: WhenApplyToInstanceProperty = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to property`);
+  };
+
+  private applyToStaticProperty: WhenApplyToStaticProperty = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to static property`);
+  };
+
+  private applyToInstanceMethod: MethodDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to method`);
+  };
+
+  private applyToStaticMethod: WhenApplyToStaticMethod = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to static method`);
+  };
+
+  private applyToConstructorParam: WhenApplyToConstructorParam = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
+  };
+
+  private applyToStaticMethodParam: WhenApplyToStaticMethodParam = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class static method`);
+  };
+
+  private applyToInstanceMethodParam: WhenApplyToInstanceMethodParam = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class instance method`);
+  };
+
+  private applyToWrongPlace: () => void = () => {
+    throw new Error(`@${this.decoratorName} cannot be applied here`);
+  };
 }

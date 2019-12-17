@@ -13,7 +13,7 @@ export class ModuleRoot {
 
     const moduleClasses = [entryModule];
 
-    for (;;) {
+    for (; ;) {
       const moduleClass = moduleClasses.shift();
       if (!moduleClass) {
         return;

@@ -1,5 +1,5 @@
 /* tslint:disable no-console */
-import {Module, ModuleConstructor} from './module';
+import {Module} from './module';
 import {ComponentFactory, ComponentFactoryContext, ComponentScope} from './interfaces';
 import {inject, optional, targetName} from 'inversify';
 import {Component} from './component';
@@ -121,12 +121,12 @@ export class LoggerFactory extends ComponentFactory<Logger> {
         parent === null
           ? ''
           : typeof parent === 'symbol'
-          ? parent.toString()
-          : typeof parent === 'string'
-          ? parent
-          : typeof parent === 'function'
-          ? parent.name
-          : '';
+            ? parent.toString()
+            : typeof parent === 'string'
+              ? parent
+              : typeof parent === 'function'
+                ? parent.name
+                : '';
     }
 
     return this.loggerBuilder.build(moduleName);

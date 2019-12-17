@@ -16,7 +16,7 @@ export abstract class ComponentFactory<T> {
 export type ServiceIdentifier<T> = interfaces.ServiceIdentifier<T>;
 
 export interface Constructor<T> extends Function {
-  new (...args: any[]): T;
+  new(...args: any[]): T;
 }
 
 export interface Abstract<T> extends Function {
