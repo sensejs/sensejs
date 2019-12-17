@@ -1,0 +1,21 @@
+{
+  "name": "@sensejs/testing-utility",
+  "version": "0.0.8",
+  "description": "Utility for testing, such as common mocks",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "README.md"
+  ],
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "tsc"
+  },
+  "author": "Xingcan LAN <thynson@live.com>",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "jest": "^24.9.0"
+  }
+}

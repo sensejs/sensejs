@@ -25,6 +25,7 @@
     "tslib": "^1.10.0"
   },
   "devDependencies": {
+    "@sensejs/testing-utility": "workspace:*",
     "@types/superagent": "^4.1.4",
     "@types/supertest": "^2.0.8",
     "@types/uuid": "^3.4.6",

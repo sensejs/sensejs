@@ -2,6 +2,7 @@ import {ModuleRoot, Module, RequestInterceptor, RequestContext, ServiceIdentifie
 import {Container, inject} from 'inversify';
 import {Column, Entity, PrimaryColumn, Repository, TableInheritance, ChildEntity} from 'typeorm';
 import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '../src';
+import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
   constructor(private container: Container) {

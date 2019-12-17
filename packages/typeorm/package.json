@@ -25,6 +25,7 @@
     "tslib": "^1.10.0"
   },
   "devDependencies": {
+    "@sensejs/testing-utility": "workspace:*",
     "@types/supertest": "^2.0.8",
     "sqlite3": "^4.1.0",
     "supertest": "^4.0.2",

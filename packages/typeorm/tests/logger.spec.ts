@@ -1,5 +1,6 @@
 import {createTypeOrmLogger} from '../src/logger';
 import {Logger} from '@sensejs/core';
+import '@sensejs/testing-utility/lib/mock-console';
 
 function mockLogger(): Logger {
   return {
