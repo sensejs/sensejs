@@ -1,5 +1,10 @@
 import {
   Component,
+  Deprecated,
+  Inject,
+  InjectLogger,
+  Logger,
+  LoggerModule,
   Module,
   ModuleConstructor,
   ModuleOption,
@@ -8,14 +13,10 @@ import {
   RequestContext,
   RequestInterceptor,
   ServiceIdentifier,
-  Logger,
-  LoggerModule,
-  InjectLogger,
-  Deprecated,
-  Inject
 } from '@sensejs/core';
-import {Container, AsyncContainerModule} from 'inversify';
-import {Connection, EntityManager, ConnectionOptions, createConnection, Logger as TypeOrmLogger} from 'typeorm';
+import {AsyncContainerModule, Container} from 'inversify';
+import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
+import {createTypeOrmLogger} from './logger';
 
 export interface TypeOrmModuleOption extends ModuleOption {
   typeOrmOption?: Partial<ConnectionOptions>;
@@ -23,34 +24,6 @@ export interface TypeOrmModuleOption extends ModuleOption {
 }
 
 const EntityRepositoryMetadataKey = Symbol();
-
-function createTypeOrmLogger(logger: Logger, migrationLogger: Logger, queryLogger: Logger): TypeOrmLogger {
-  return {
-    log(level: 'log' | 'info' | 'warn', message: any) {
-      logger[level](message);
-    },
-    logMigration(message: string): any {
-      logger.info(message);
-    },
-    logQuery(query: string, parameters: any[] = []) {
-      queryLogger.debug('Query: ' + query + '\nParameters: ', parameters);
-    },
-    logQueryError(error: string, query: string, parameters: any[] = []) {
-      logger.error(
-        'Error occurred when running query: \n' + query + '\nParameter: ' + parameters + '\nError detail: ' + error,
-      );
-    },
-    logQuerySlow(time: number, query: string, parameters?: any[]) {
-      logger.warn(
-        'The following query is too slow: \n' + query + '\nParameter: ' + parameters + 'Finished within %d ms',
-        time,
-      );
-    },
-    logSchemaBuild(message: string): any {
-      logger.info(message);
-    },
-  };
-}
 
 function ensureInjectRepositoryToken(entityConstructor: string | Function): symbol {
   let symbol = Reflect.getOwnMetadata(EntityRepositoryMetadataKey, entityConstructor);
