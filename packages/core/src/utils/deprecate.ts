@@ -48,15 +48,11 @@ interface DeprecatedDecorator extends ConstructorDecorator, MethodDecorator {
 
 function makeDeprecateConstructorProxy(replacedBy?: Function | string | symbol) {
   return <T extends {}>(target: Constructor<T>) => {
-    const constructorDescriptor = Object.getOwnPropertyDescriptor(target.prototype, 'constructor');
-    if (!constructorDescriptor) {
-      return;
-    }
     const deprecateMessageEmitter = makeDeprecateMessageEmitter(target, replacedBy);
-    return new Proxy(target, {
-      construct: (constructor: Constructor<T>, args: unknown[]): T => {
+    target.prototype.constructor = new Proxy(target.prototype.constructor, {
+      apply: (target: Function, self: T, args: unknown[]) => {
         deprecateMessageEmitter();
-        return Reflect.construct(constructor, args);
+        return target.apply(self, args);
       }
     });
   };

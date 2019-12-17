@@ -91,7 +91,7 @@ export class DecoratorDiscriminator {
     return this;
   }
 
-  whenApplyToInstanceMethod(fn: MethodDecorator) {
+  whenApplyToInstanceMethod(fn: WhenApplyToInstanceMethod) {
     this.applyToInstanceMethod = fn;
     return this;
   }
@@ -180,7 +180,7 @@ export class DecoratorDiscriminator {
     throw new Error(`@${this.decoratorName} cannot apply to static property`);
   };
 
-  private applyToInstanceMethod: MethodDecorator = () => {
+  private applyToInstanceMethod: WhenApplyToInstanceMethod = () => {
     throw new Error(`@${this.decoratorName} cannot apply to method`);
   };
 
