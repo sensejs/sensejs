@@ -4,7 +4,7 @@ import {
   ConstructorDecorator,
   ConstructorParamDecorator,
   DecoratorDiscriminator,
-  MethodParamDecorator,
+  MethodParamDecorator, ParamDecorator,
 } from './utils/decorator-discriminator';
 import {ensureComponentMetadata} from './component';
 
@@ -134,7 +134,7 @@ function resolveInvoker(container: Container, invokerConstructor: Constructor<In
 }
 
 export function invokeMethod<T>(container: Container, target: T, method: Function) {
-  const metadata = getFunctionParamBindingMetadata(method);
+  const metadata = getMethodInjectMetadata(method);
   if (!metadata) {
     throw new ParamBindingResolvingError();
   }
@@ -157,7 +157,7 @@ function applyToParamBindingInvoker<Parameter>(
   if (typeof targetMethod !== 'function') {
     throw new TypeError('@Optional decorator can only decorate parameter of constructor or class method');
   }
-  const metadata = getFunctionParamBindingMetadata(targetMethod);
+  const metadata = getMethodInjectMetadata(targetMethod);
   decorate(decorator, metadata.proxy, index);
 }
 
@@ -165,26 +165,29 @@ export function Inject<T, R = T>(target: ServiceIdentifier<T>, option?: MethodPa
   const name = typeof target === 'function' ? target.name : target.toString();
   const discriminator = new DecoratorDiscriminator(`Inject(${name})`).whenApplyToInstanceMethodParam(
     (prototype, name, index) => {
-      MethodInject(target, option)(prototype, name, index);
+      return MethodInject(target, option)(prototype, name, index);
     },
   );
   if (typeof option === 'undefined') {
     discriminator.whenApplyToConstructorParam((constructor, index) => {
-      decorate(inject(target) as ParameterDecorator, constructor, index);
+      return decorate(inject(target) as ParameterDecorator, constructor, index);
     });
   }
-  return discriminator.as<ParameterDecorator>();
+  return discriminator.as<ParamDecorator>();
 }
 
 export function Optional() {
+  // XXX: Inversify Typing Error?
+  // Need to use @optional() instead of @optional
+  const decorator = optional() as ParameterDecorator;
   return new DecoratorDiscriminator('Optional')
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
-      applyToParamBindingInvoker(optional, prototype, name, index);
+      return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      decorate(optional, constructor, index);
+      return decorate(decorator, constructor, index);
     })
-    .as<ParameterDecorator>();
+    .as<ParamDecorator>();
 }
 
 export interface InjectionConstraintDecorator
@@ -196,10 +199,10 @@ export function Tagged(key: string | number | symbol, value: any) {
   const decorator = tagged(key, value) as ParameterDecorator;
   return new DecoratorDiscriminator(`Tagged(key=${String(key)}, value=${String(value)})`)
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
-      applyToParamBindingInvoker(decorator, prototype, name, index);
+      return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      decorate(decorator, constructor, index);
+      return decorate(decorator, constructor, index);
     })
     .whenApplyToConstructor((constructor) => {
       const metadata = ensureComponentMetadata(constructor);
@@ -209,14 +212,14 @@ export function Tagged(key: string | number | symbol, value: any) {
     .as<InjectionConstraintDecorator>();
 }
 
-export function Named(name: string) {
+export function Named(name: string | symbol) {
   const decorator = named(name) as ParameterDecorator;
-  return new DecoratorDiscriminator(`Named(name="${name}")`)
+  return new DecoratorDiscriminator(`Named(name="${name.toString()}")`)
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
-      applyToParamBindingInvoker(decorator, prototype, name, index);
+      return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      decorate(decorator, constructor, index);
+      return decorate(decorator, constructor, index);
     })
     .whenApplyToConstructor((constructor) => {
       const metadata = ensureComponentMetadata(constructor);

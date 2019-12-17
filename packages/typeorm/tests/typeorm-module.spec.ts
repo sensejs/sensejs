@@ -1,4 +1,4 @@
-import {ModuleRoot, Module, RequestInterceptor, RequestContext, ServiceIdentifier, Component} from '@sensejs/core';
+import {ModuleRoot, Module, RequestInterceptor, RequestContext, ServiceIdentifier, Component, LoggerModule} from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import {Column, Entity, PrimaryColumn, Repository, TableInheritance, ChildEntity} from 'typeorm';
 import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '../src';

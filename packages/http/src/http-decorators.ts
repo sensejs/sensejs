@@ -1,4 +1,4 @@
-import {Component, Constructor, ParamBinding, Transformer, validateFunctionParamBindingMetadata} from '@sensejs/core';
+import {Component, Constructor, Transformer, validateFunctionParamBindingMetadata, Inject} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
@@ -37,26 +37,26 @@ export interface ControllerOption {
 const noop: Transformer = (x) => x;
 
 export function Path(name: string, transform: Transformer = noop) {
-  return ParamBinding(HttpContext, {
+  return Inject(HttpContext, {
     transform: (ctx: HttpContext) => transform(ctx.request.params[name]),
   });
 }
 
 export function Body(transform: Transformer = noop) {
-  return ParamBinding(HttpContext, {
+  return Inject(HttpContext, {
     transform: (ctx: HttpContext) => transform(ctx.request.body),
   });
 }
 
 export function Query(transform: Transformer = noop) {
-  return ParamBinding(HttpContext, {
+  return Inject(HttpContext, {
     transform: (ctx: HttpContext) => transform(ctx.request.query),
   });
 }
 
 export function Header(name: string, transform: Transformer = noop) {
   name = name.toLowerCase();
-  return ParamBinding(HttpContext, {
+  return Inject(HttpContext, {
     transform: (ctx: HttpContext) => transform(ctx.request.headers[name]),
   });
 }

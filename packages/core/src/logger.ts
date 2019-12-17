@@ -1,8 +1,9 @@
 /* tslint:disable no-console */
 import {Module} from './module';
 import {ComponentFactory, ComponentFactoryContext, ComponentScope} from './interfaces';
-import {inject, optional, targetName} from 'inversify';
+import {targetName} from 'inversify';
 import {Component} from './component';
+import {Inject, Optional} from './param-binding';
 
 const LOGGER_SYMBOL = Symbol('LOGGER_SYMBOL');
 export const LOGGER_BUILDER_SYMBOL = Symbol('LOGGER_BUILDER_SYMBOL');
@@ -10,7 +11,7 @@ export const LOGGER_BUILDER_SYMBOL = Symbol('LOGGER_BUILDER_SYMBOL');
 export function InjectLogger(name?: string | Function) {
   const labelName = typeof name === 'function' ? name.name : typeof name === 'string' ? name : '';
   return (target: object, property: string, index: number) => {
-    inject(LOGGER_SYMBOL)(target, property, index);
+    Inject(LOGGER_SYMBOL)(target, property, index);
     targetName(labelName)(target, property, index);
   };
 }
@@ -104,8 +105,8 @@ export class ConsoleLoggerBuilder implements LoggerBuilder {
 
 export class LoggerFactory extends ComponentFactory<Logger> {
   constructor(
-    @inject(LOGGER_BUILDER_SYMBOL)
-    @optional()
+    @Inject(LOGGER_BUILDER_SYMBOL)
+    @Optional()
     private loggerBuilder: LoggerBuilder = new ConsoleLoggerBuilder(),
   ) {
     super();

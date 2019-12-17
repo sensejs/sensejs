@@ -1,6 +1,6 @@
-import {decorate, inject, interfaces} from 'inversify';
 import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier, FactoryProvider} from './interfaces';
 import {Component} from './component';
+import {Inject} from './param-binding';
 
 export interface ConnectionFactoryProvider<T, Option> extends FactoryProvider<T> {
   factory: Constructor<AbstractConnectionFactory<T, Option>>;
@@ -80,8 +80,8 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
   }
 
   if (injectedSymbol) {
-    const decorator = inject(injectedSymbol) as ParameterDecorator;
-    decorate(decorator, ConfigFactory, 0);
+    const decorator = Inject(injectedSymbol);
+    Inject(injectedSymbol)(ConfigFactory, undefined, 0);
   }
   return ConfigFactory;
 }

@@ -1,4 +1,4 @@
-import {ParamBinding, RequestContext, ServiceIdentifier, Transformer} from '@sensejs/core';
+import {RequestContext, ServiceIdentifier, Transformer, Inject} from '@sensejs/core';
 import {Container} from 'inversify';
 import * as kafkaNode from 'kafka-node';
 
@@ -15,7 +15,7 @@ export class ConsumingContext extends RequestContext {
 }
 
 export function InjectSubscribeContext(transform: Transformer = (x) => x) {
-  return ParamBinding(ConsumingContext, {transform});
+  return Inject(ConsumingContext, {transform});
 }
 
 export function Message() {

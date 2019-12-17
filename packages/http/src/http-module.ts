@@ -1,4 +1,4 @@
-import {Container, inject, ContainerModule} from 'inversify';
+import {Container, ContainerModule} from 'inversify';
 import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
@@ -11,6 +11,7 @@ import {
   ModuleOption,
   ServiceIdentifier,
   provideOptionInjector,
+  Inject,
 } from '@sensejs/core';
 
 export interface HttpOption extends HttpApplicationOption {
@@ -68,8 +69,8 @@ export function HttpModule(
     private interceptorModule?: ContainerModule;
 
     constructor(
-      @inject(Container) private container: Container,
-      @inject(optionProvider.provide) private httpOption: HttpOption,
+      @Inject(Container) private container: Container,
+      @Inject(optionProvider.provide) private httpOption: HttpOption,
     ) {
       super();
     }

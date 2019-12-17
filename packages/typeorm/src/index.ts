@@ -11,10 +11,10 @@ import {
   Logger,
   LoggerModule,
   InjectLogger,
-  deprecate,
-  Deprecated
+  Deprecated,
+  Inject
 } from '@sensejs/core';
-import {inject, Container, AsyncContainerModule} from 'inversify';
+import {Container, AsyncContainerModule} from 'inversify';
 import {Connection, EntityManager, ConnectionOptions, createConnection, Logger as TypeOrmLogger} from 'typeorm';
 
 export interface TypeOrmModuleOption extends ModuleOption {
@@ -65,12 +65,12 @@ function ensureInjectRepositoryToken(entityConstructor: string | Function): symb
 
 export function InjectRepository(entityConstructor: string | Function) {
   const symbol = ensureInjectRepositoryToken(entityConstructor);
-  return inject(symbol);
+  return Inject(symbol);
 }
 
 @Component()
 class EntityMetadataHelper {
-  constructor(@inject(Connection) private connection: Connection) {
+  constructor(@Inject(Connection) private connection: Connection) {
   }
 
   bindEntityManagerAndRepository(binder: <T>(symbol: ServiceIdentifier<T>, target: T) => void) {
@@ -94,7 +94,7 @@ const helperModule = Module({components: [EntityMetadataHelper]});
 @Component()
 @Deprecated()
 export class TypeOrmSupportInterceptor extends RequestInterceptor {
-  constructor(@inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper) {
+  constructor(@Inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper) {
     super();
   }
 
@@ -107,8 +107,8 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
   const optionProvider = provideOptionInjector<ConnectionOptions>(
     option.typeOrmOption,
     option.injectOptionFrom,
-    (defaultValue, injectedValue) => {
-      const result = Object.assign({}, defaultValue, injectedValue);
+    (defaultValue, InjectedValue) => {
+      const result = Object.assign({}, defaultValue, InjectedValue);
       if (typeof result.type !== 'string') {
         throw new Error('invalid TypeORM config, type is missing');
       }
@@ -128,8 +128,8 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     factories: [factoryProvider, optionProvider],
   }) {
     constructor(
-      @inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>,
-      @inject(optionProvider.provide) private config: ConnectionOptions,
+      @Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>,
+      @Inject(optionProvider.provide) private config: ConnectionOptions,
       @InjectLogger('TypeOrm') private logger: Logger,
       @InjectLogger('TypeOrmMigration') private migrationLogger: Logger,
       @InjectLogger('TypeOrmQuery') private queryLogger: Logger,
@@ -160,8 +160,8 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     private readonly module: AsyncContainerModule;
 
     constructor(
-      @inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
-      @inject(Container) private container: Container,
+      @Inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
+      @Inject(Container) private container: Container,
     ) {
       super();
       this.module = new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {

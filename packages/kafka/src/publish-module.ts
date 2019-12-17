@@ -7,9 +7,9 @@ import {
   ModuleConstructor,
   ModuleOption,
   ServiceIdentifier,
+  Inject,
 } from '@sensejs/core';
 import {MessageProducer, ProducerOption} from './message-producer';
-import {inject} from 'inversify';
 import merge from 'lodash.merge';
 
 export interface KafkaPublishModuleOption extends ModuleOption {
@@ -51,8 +51,8 @@ export function KafkaProducerModule(option: KafkaPublishModuleOption): ModuleCon
     ],
   }) {
     constructor(
-      @inject(ConnectionFactory) private factory: AbstractConnectionFactory<MessageProducer, ProducerOption>,
-      @inject(configSymbol) private config: ProducerOption,
+      @Inject(ConnectionFactory) private factory: AbstractConnectionFactory<MessageProducer, ProducerOption>,
+      @Inject(configSymbol) private config: ProducerOption,
     ) {
       super();
     }

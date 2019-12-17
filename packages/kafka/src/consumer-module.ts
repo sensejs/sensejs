@@ -9,8 +9,9 @@ import {
   provideOptionInjector,
   RequestInterceptor,
   ServiceIdentifier,
+  Inject,
 } from '@sensejs/core';
-import {Container, inject} from 'inversify';
+import {Container} from 'inversify';
 import {Message} from 'kafka-node';
 import {ConsumeTopicOption, MessageConsumer} from './message-consumer';
 import {ConsumingContext} from './consuming-context';
@@ -63,9 +64,9 @@ function createSubscriberTopicModule(
     factories: [optionProvider],
   }) {
     constructor(
-      @inject(optionProvider.provide) config: ConsumeTopicOption,
-      @inject(injectSymbol) messageConsumer: MessageConsumer,
-      @inject(Container) container: Container,
+      @Inject(optionProvider.provide) config: ConsumeTopicOption,
+      @Inject(injectSymbol) messageConsumer: MessageConsumer,
+      @Inject(Container) container: Container,
     ) {
       super();
 
@@ -139,8 +140,8 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymb
     factories: [optionProvider, factoryProvider],
   }) {
     constructor(
-      @inject(factoryProvider.factory) private consumerGroupFactory: InstanceType<typeof factoryProvider.factory>,
-      @inject(optionProvider.provide) private config: KafkaConsumerOption,
+      @Inject(factoryProvider.factory) private consumerGroupFactory: InstanceType<typeof factoryProvider.factory>,
+      @Inject(optionProvider.provide) private config: KafkaConsumerOption,
     ) {
       super();
     }
@@ -164,7 +165,7 @@ export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleCo
   const subscribeTopicModules = scanController(option, kafkaConnectionModule, injectMessageConsumerSymbol);
 
   class KafkaConsumerModule extends Module({requires: subscribeTopicModules}) {
-    constructor(@inject(injectMessageConsumerSymbol) private messageConsumer: MessageConsumer) {
+    constructor(@Inject(injectMessageConsumerSymbol) private messageConsumer: MessageConsumer) {
       super();
     }
 

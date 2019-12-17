@@ -1,5 +1,4 @@
 import Redis from 'ioredis';
-import {inject, named} from 'inversify';
 import {
   Module,
   ModuleConstructor,
@@ -7,6 +6,8 @@ import {
   provideConnectionFactory,
   provideOptionInjector,
   ServiceIdentifier,
+  Inject,
+  Named,
 } from '@sensejs/core';
 
 export interface RedisConnectOption extends Redis.RedisOptions {
@@ -20,10 +21,10 @@ export interface RedisModuleOptions extends ModuleOption {
 }
 
 export function InjectRedis(name?: string | symbol) {
-  return (target: any, key: string, index?: number) => {
-    inject(Redis)(target, key, index);
+  return (target: any, key: string, index: number) => {
+    Inject(Redis)(target, key, index);
     if (name) {
-      named(name)(target, key, index);
+      Named(name)(target, key, index);
     }
   };
 }
@@ -86,8 +87,8 @@ function buildRedisModule(options: RedisModuleOptions): ModuleConstructor {
     factories: [factoryProvider, optionProvider],
   }) {
     constructor(
-      @inject(factoryProvider.factory) private redisClientFactory: InstanceType<typeof factoryProvider.factory>,
-      @inject(optionProvider.provide) private redisConnectOption: RedisConnectOption,
+      @Inject(factoryProvider.factory) private redisClientFactory: InstanceType<typeof factoryProvider.factory>,
+      @Inject(optionProvider.provide) private redisConnectOption: RedisConnectOption,
     ) {
       super();
     }
