@@ -43,11 +43,11 @@ export function Component(spec: ComponentOption = {}) {
     }
     const id: ServiceIdentifier<unknown> = spec.id || target;
     const metadata = ensureComponentMetadata(target);
-    if (spec.id) {
+    if (typeof spec.id !== 'undefined') {
       metadata.id = spec.id;
     }
     metadata.id = id;
-    if (spec.scope) {
+    if (typeof spec.scope !== 'undefined') {
       metadata.scope = spec.scope;
     }
   };

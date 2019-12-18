@@ -1,15 +1,4 @@
-import {Component, ComponentMetadata, getComponentMetadata, Named, Tagged} from '../src';
-import {AsyncContainerModule, Container} from 'inversify';
-//
-// async function mockBind<T>(metadata: ComponentMetadata<T>) {
-//   const container: Container = new Container({skipBaseClassChecks: true});
-//   container.load(
-//     new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
-//       await metadata.onBind(bind, unbind, isBound, rebind);
-//     }),
-//   );
-//   return container;
-// }
+import {Component, ComponentScope, getComponentMetadata} from '../src';
 
 describe('Component', () => {
   test('getComponent', async () => {
@@ -28,10 +17,6 @@ describe('Component', () => {
 
     @Component({id})
     class MyComponent {}
-
-    const metadata = getComponentMetadata(MyComponent);
-    // const container = await mockBind(metadata);
-    // expect(container.get(id)).toBeInstanceOf(MyComponent);
     expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id}));
   });
 
@@ -53,6 +38,20 @@ describe('Component', () => {
     const metadata = getComponentMetadata(MyComponent);
     expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id: BaseClass}));
   });
+
+  xtest('Failed to use unrelated function as component id', async () => {
+    class AnyOtherClass {}
+    @Component({id: AnyOtherClass})
+    class MyComponent extends AnyOtherClass {}
+  });
+
+  test('Component scope', () => {
+    @Component({scope: ComponentScope.SINGLETON})
+    class MyComponent {}
+
+    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({scope: ComponentScope.SINGLETON}));
+  });
+
   test('Component explicit using self as component id', async () => {
     @Component({id: MyComponent})
     class MyComponent {}
@@ -60,41 +59,4 @@ describe('Component', () => {
     expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id: MyComponent}));
   });
 
-  test('Named component', () => {
-    const name = `name-${Date.now()}`;
-
-    @Component()
-    @Named(name)
-    class MyComponent {}
-
-    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({name}));
-  });
-
-  test('Tagged component', () => {
-    const numberTagKey = 0;
-    const numberTagValue = Date.now();
-    const stringTagKey = `tag_${Date.now()}`;
-    const stringTagValue = `value_${Date.now()}`;
-    const symbolTagKey = Symbol(`symbol_${Date.now()}`);
-    const symbolTagValue = `value_${Date.now()}`;
-
-    @Component()
-    @Tagged(numberTagKey, numberTagValue)
-    @Tagged(stringTagKey, stringTagValue)
-    @Tagged(symbolTagKey, symbolTagValue)
-    class MyComponent {}
-
-    const x = Tagged('key', 'value');
-    x(MyComponent);
-
-    expect(getComponentMetadata(MyComponent)).toEqual(
-      expect.objectContaining({
-        tags: expect.arrayContaining([
-          {key: numberTagKey, value: numberTagValue},
-          {key: stringTagKey, value: stringTagValue},
-          {key: symbolTagKey, value: symbolTagValue},
-        ]),
-      }),
-    );
-  });
 });
