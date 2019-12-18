@@ -10,6 +10,7 @@ import {
 } from './utils';
 import {ensureComponentMetadata} from './component';
 import {
+  ensureMethodInjectMetadata,
   getMethodInjectMetadata, MethodInject,
   MethodParameterInjectOption,
 } from './method-inject';
@@ -21,11 +22,10 @@ function applyToParamBindingInvoker<Parameter>(
   index: number,
 ) {
   const targetMethod = Reflect.get(prototype, name);
-  if (typeof targetMethod !== 'function') {
-    throw new TypeError('@Optional decorator can only decorate parameter of constructor or class method');
+  if (typeof targetMethod === 'function') {
+    const metadata = ensureMethodInjectMetadata(targetMethod);
+    decorate(decorator, metadata.proxy, index);
   }
-  const metadata = getMethodInjectMetadata(targetMethod);
-  decorate(decorator, metadata.proxy, index);
 }
 
 export function Inject<T, R = T>(target: ServiceIdentifier<T>, option?: MethodParameterInjectOption<T, R>) {
