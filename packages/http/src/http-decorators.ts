@@ -1,4 +1,4 @@
-import {Component, Constructor, Transformer, validateFunctionParamBindingMetadata, Inject} from '@sensejs/core';
+import {Component, Constructor, Transformer, validateMethodInjectMetadata, Inject} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
@@ -99,7 +99,7 @@ export function RequestMapping(httpMethod: HttpMethod, path: string, option: Req
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    validateFunctionParamBindingMetadata(targetMethod);
+    validateMethodInjectMetadata(targetMethod);
     setRequestMappingMetadata(targetMethod, {
       httpMethod,
       path,

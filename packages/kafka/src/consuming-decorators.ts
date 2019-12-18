@@ -3,7 +3,7 @@ import {
   Component,
   Constructor,
   RequestInterceptor,
-  validateFunctionParamBindingMetadata,
+  validateMethodInjectMetadata,
   ServiceIdentifier,
 } from '@sensejs/core';
 
@@ -64,7 +64,7 @@ export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    validateFunctionParamBindingMetadata(targetMethod);
+    validateMethodInjectMetadata(targetMethod);
     const {option: fallbackOption, injectOptionFrom, interceptors = []} = option;
     const metadata: SubscribeTopicMetadata = {
       fallbackOption,

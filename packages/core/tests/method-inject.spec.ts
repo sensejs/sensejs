@@ -2,9 +2,9 @@ import {Container, inject, injectable} from 'inversify';
 import {
   Component,
   invokeMethod,
-  ParamBindingError,
-  ParamBindingResolvingError,
-  validateFunctionParamBindingMetadata, MethodInject,
+  MethodParamDecorateError,
+  MethodParamInjectError,
+  validateMethodInjectMetadata, MethodInject,
 } from '../src';
 
 describe('@Inject', () => {
@@ -33,9 +33,9 @@ describe('@Inject', () => {
 
       noParam() {}
     }
-    expect(() => validateFunctionParamBindingMetadata(Foo.prototype.shouldOkay)).not.toThrow();
-    expect(() => validateFunctionParamBindingMetadata(Foo.prototype.shouldFail)).toThrow();
-    expect(() => validateFunctionParamBindingMetadata(Foo.prototype.noParam)).not.toThrow();
+    expect(() => validateMethodInjectMetadata(Foo.prototype.shouldOkay)).not.toThrow();
+    expect(() => validateMethodInjectMetadata(Foo.prototype.shouldFail)).toThrow();
+    expect(() => validateMethodInjectMetadata(Foo.prototype.noParam)).not.toThrow();
   });
 
   test('Duplicated param binding', () => {
@@ -45,7 +45,7 @@ describe('@Inject', () => {
       class Foo {
         bar(@MethodInject(x) @MethodInject(y) foo: any) {}
       }
-    }).toThrow(ParamBindingError);
+    }).toThrow(MethodParamDecorateError);
   });
 
   test('Missing @Inject', () => {
@@ -57,7 +57,7 @@ describe('@Inject', () => {
 
     const container = new Container();
     container.bind(String).toConstantValue('deadbeef');
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
+    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
   });
 
   test('Inconsistent param binding', () => {
@@ -70,13 +70,13 @@ describe('@Inject', () => {
     const container = new Container();
 
     container.bind(String).toConstantValue('deadbeef');
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
+    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
 
     MethodInject(String)(Foo.prototype, 'bar', 1);
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
+    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
 
     MethodInject(String)(Foo.prototype, 'bar', 2);
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
+    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
   });
 
   test('Performance test', () => {

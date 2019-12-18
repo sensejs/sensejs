@@ -4,10 +4,9 @@ import {Constructor, ServiceIdentifier} from './interfaces';
 export interface Transformer<Input = any, Output = Input> {
   (input: Input): Output;
 }
-export class ParamBindingError extends Error {}
+export class MethodParamDecorateError extends Error {}
 
-export class ParamBindingResolvingError extends Error {
-}
+export class MethodParamInjectError extends Error {}
 
 export interface MethodParameterInjectOption<T, R> {
   /**
@@ -23,10 +22,10 @@ interface MethodParameterInjectMetadata {
 
 interface MethodInjectMetadata {
   paramsMetadata: MethodParameterInjectMetadata[];
-  proxy: Constructor<Invokable>;
+  proxy: Constructor<MethodInjectProxy>;
 }
 
-interface Invokable {
+interface MethodInjectProxy {
   call(paramsBindingMetadata: MethodParameterInjectMetadata[], self: any): any;
 }
 
@@ -34,7 +33,7 @@ const METHOD_INJECT_KEY = Symbol('METHOD_INJECT_KEY');
 
 export function ensureMethodInjectMetadata(target: any): MethodInjectMetadata {
   if (typeof target !== 'function') {
-    throw new TypeError('Decorated target for @ParamBinding is not a function');
+    throw new TypeError('Decorated target for @MethodInject is not a function');
   }
   let result = Reflect.getMetadata(METHOD_INJECT_KEY, target);
   if (typeof result !== 'undefined') {
@@ -42,7 +41,7 @@ export function ensureMethodInjectMetadata(target: any): MethodInjectMetadata {
   }
 
   @injectable()
-  class Proxy implements Invokable {
+  class Proxy implements MethodInjectProxy {
     private readonly args: unknown[];
 
     constructor(...args: unknown[]) {
@@ -77,7 +76,7 @@ export function getMethodInjectMetadata(method: Function): MethodInjectMetadata 
   return Reflect.getMetadata(METHOD_INJECT_KEY, method);
 }
 
-export function validateFunctionParamBindingMetadata(method: Function): MethodInjectMetadata {
+export function validateMethodInjectMetadata(method: Function): MethodInjectMetadata {
   const methodInjectMetadata = ensureMethodInjectMetadata(method);
   for (let i = 0; i < method.length; i++) {
     if (!methodInjectMetadata.paramsMetadata[i]) {
@@ -87,24 +86,24 @@ export function validateFunctionParamBindingMetadata(method: Function): MethodIn
   return methodInjectMetadata;
 }
 
-export function resolveInvoker(container: Container, invokerConstructor: Constructor<Invokable>) {
+export function resolveMethodInjectProxy(container: Container, invokerConstructor: Constructor<MethodInjectProxy>) {
   try {
-    return container.resolve<Invokable>(invokerConstructor);
+    return container.resolve<MethodInjectProxy>(invokerConstructor);
   } catch (e) {
-    throw new ParamBindingResolvingError();
+    throw new MethodParamInjectError();
   }
 }
 
 export function invokeMethod<T>(container: Container, target: T, method: Function) {
   const metadata = getMethodInjectMetadata(method);
   if (!metadata) {
-    throw new ParamBindingResolvingError();
+    throw new MethodParamInjectError();
   }
 
   if (metadata.paramsMetadata.length !== method.length) {
-    throw new ParamBindingResolvingError();
+    throw new MethodParamInjectError();
   }
-  const invoker = resolveInvoker(container, metadata.proxy);
+  const invoker = resolveMethodInjectProxy(container, metadata.proxy);
 
   return invoker.call(metadata.paramsMetadata, target);
 }
@@ -113,7 +112,7 @@ export function MethodInject<T, R = T>(target: ServiceIdentifier<T>, option: Met
   return (prototype: {}, methodName: string | symbol, paramIndex: number) => {
     const metadata = ensureMethodInjectMetadata(Reflect.get(prototype, methodName));
     if (metadata.paramsMetadata[paramIndex]) {
-      throw new ParamBindingError();
+      throw new MethodParamDecorateError();
     }
     const parameterDecorator = inject(target) as ParameterDecorator;
     decorate(parameterDecorator, metadata.proxy as Constructor<unknown>, paramIndex);
