@@ -43,6 +43,9 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     this.controllerRouteSpecs.push(controllerRouteSpec);
 
     for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMetadata.prototype))) {
+      if (typeof propertyDescriptor.value !== 'function') {
+        continue;
+      }
       this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, propertyDescriptor.value);
     }
     return this;
@@ -70,11 +73,8 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return koa.callback();
   }
 
-  private addRouterSpec(methodRoutSpecs: MethodRouteSpec[], controllerMetadata: ControllerMetadata, property: unknown) {
-    if (typeof property !== 'function') {
-      return;
-    }
-    const requestMappingMetadata = getRequestMappingMetadata(property);
+  private addRouterSpec(methodRoutSpecs: MethodRouteSpec[], controllerMetadata: ControllerMetadata, method: Function) {
+    const requestMappingMetadata = getRequestMappingMetadata(method);
     if (!requestMappingMetadata) {
       return;
     }
@@ -87,7 +87,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       httpMethod,
       interceptors: [...this.globalInterceptors, ...controllerMetadata.interceptors, ...interceptors],
       targetConstructor: controllerMetadata.target,
-      targetMethod: property,
+      targetMethod: method,
     });
   }
 

@@ -38,8 +38,6 @@ export interface HttpModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<Partial<HttpOption>>;
 }
 
-function getHttpAdaptor() {}
-
 /**
  *
  * @param option

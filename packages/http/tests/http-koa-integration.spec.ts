@@ -51,6 +51,8 @@ describe('KoaHttpApplicationBuilder', () => {
       interceptors: [InterceptorB],
     })
     class FooController {
+      unusedMethod() {}
+
       @GET('/', {interceptors: [InterceptorC]})
       get(
         @Inject(HttpContext) ctx: HttpContext,
