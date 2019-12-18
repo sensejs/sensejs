@@ -40,19 +40,10 @@ export class MessageConsumeManager {
       topic,
       messageConsumer: consumeCallback,
       consumerGroupOption: rest,
+      consumeConcurrency,
+      consumeTimeout,
+      commitInterval
     };
-
-    if (consumeConcurrency) {
-      pipelineOption.consumeConcurrency = consumeConcurrency;
-    }
-
-    if (consumeTimeout) {
-      pipelineOption.consumeTimeout = consumeTimeout;
-    }
-
-    if (commitInterval) {
-      pipelineOption.commitInterval = commitInterval;
-    }
 
     this._consumerGroupPipeline = new ConsumerGroupPipeline(pipelineOption);
   }
