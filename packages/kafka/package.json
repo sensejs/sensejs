@@ -21,8 +21,8 @@
   "license": "ISC",
   "dependencies": {
     "inversify": "^5.0.1",
-    "kafka-node": "git+https://github.com/thynson/kafka-node.git#7fd49714142c37af33d1d9c392f09eec5cfc97e5",
-    "kafka-pipeline": "^3.0.2",
+    "kafka-node": "git+https://github.com/thynson/kafka-node.git#49800b96b7d27a4f6226b138253a6fd8c1f842c7",
+    "kafka-pipeline": "^3.2.0",
     "lodash.merge": "^4.6.2",
     "tslib": "^1.10.0"
   },
