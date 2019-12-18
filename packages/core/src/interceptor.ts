@@ -1,6 +1,7 @@
 import {Container, injectable} from 'inversify';
 import {Abstract, ServiceIdentifier, Constructor} from './interfaces';
-import {Inject} from './param-binding';
+import {Inject} from './decorators';
+import {Component} from './component';
 
 export abstract class RequestContext {
   abstract bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void;
@@ -15,7 +16,7 @@ export function composeRequestInterceptor<Context extends RequestContext>(
   container: Container,
   interceptors: Abstract<RequestInterceptor<Context>>[],
 ): Constructor<RequestInterceptor<Context>> {
-  @injectable()
+  @Component()
   class ComposedRequestInterceptor extends RequestInterceptor<Context> {
     constructor(@Inject(Container) private container: Container) {
       super();

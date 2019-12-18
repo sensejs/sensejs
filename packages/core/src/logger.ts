@@ -3,7 +3,7 @@ import {Module} from './module';
 import {ComponentFactory, ComponentFactoryContext, ComponentScope} from './interfaces';
 import {targetName} from 'inversify';
 import {Component} from './component';
-import {Inject, Optional} from './param-binding';
+import {Inject, Optional} from './decorators';
 
 const LOGGER_SYMBOL = Symbol('LOGGER_SYMBOL');
 export const LOGGER_BUILDER_SYMBOL = Symbol('LOGGER_BUILDER_SYMBOL');

@@ -1,6 +1,6 @@
 import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier, FactoryProvider} from './interfaces';
 import {Component} from './component';
-import {Inject} from './param-binding';
+import {Inject} from './decorators';
 
 export interface ConnectionFactoryProvider<T, Option> extends FactoryProvider<T> {
   factory: Constructor<AbstractConnectionFactory<T, Option>>;
