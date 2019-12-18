@@ -1,4 +1,4 @@
-import {Constructor, ParamBinding, Inject} from '@sensejs/core';
+import {Constructor, Inject} from '@sensejs/core';
 import {Container} from 'inversify';
 import supertest from 'supertest';
 import {

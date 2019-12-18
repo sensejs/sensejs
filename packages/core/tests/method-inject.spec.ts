@@ -2,10 +2,9 @@ import {Container, inject, injectable} from 'inversify';
 import {
   Component,
   invokeMethod,
-  Inject,
   ParamBindingError,
   ParamBindingResolvingError,
-  validateFunctionParamBindingMetadata,
+  validateFunctionParamBindingMetadata, MethodInject,
 } from '../src';
 
 describe('@Inject', () => {
@@ -13,7 +12,7 @@ describe('@Inject', () => {
     const x = Symbol(),
       y = Symbol();
     class Foo {
-      bar(@Inject(x) param: string, @Inject(y, {transform: (x: number) => x + 1}) number: number) {
+      bar(@MethodInject(x) param: string, @MethodInject(y, {transform: (x: number) => x + 1}) number: number) {
         return param.repeat(number);
       }
     }
@@ -28,7 +27,7 @@ describe('@Inject', () => {
   test('Validate param binding', () => {
     const x = Symbol();
     class Foo {
-      shouldOkay(@Inject(x) foo: any) {}
+      shouldOkay(@MethodInject(x) foo: any) {}
 
       shouldFail(foo: any) {}
 
@@ -44,7 +43,7 @@ describe('@Inject', () => {
       y = Symbol();
     expect(() => {
       class Foo {
-        bar(@Inject(x) @Inject(y) foo: any) {}
+        bar(@MethodInject(x) @MethodInject(y) foo: any) {}
       }
     }).toThrow(ParamBindingError);
   });
@@ -73,10 +72,10 @@ describe('@Inject', () => {
     container.bind(String).toConstantValue('deadbeef');
     expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
 
-    Inject(String)(Foo.prototype, 'bar', 1);
+    MethodInject(String)(Foo.prototype, 'bar', 1);
     expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
 
-    Inject(String)(Foo.prototype, 'bar', 2);
+    MethodInject(String)(Foo.prototype, 'bar', 2);
     expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(ParamBindingResolvingError);
   });
 
@@ -118,10 +117,10 @@ describe('@Inject', () => {
     @Component()
     class Foo {
       bar(
-        @Inject(x, {transform: (x: string) => x.repeat(2)}) param: string,
-        @Inject(y, {transform: (x: number) => x * x}) number: number,
-        @Inject(Test) test: Test,
-        @Inject(constructor) x: any,
+        @MethodInject(x, {transform: (x: string) => x.repeat(2)}) param: string,
+        @MethodInject(y, {transform: (x: number) => x * x}) number: number,
+        @MethodInject(Test) test: Test,
+        @MethodInject(constructor) x: any,
       ) {
         return param.repeat(number);
       }

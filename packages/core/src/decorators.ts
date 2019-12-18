@@ -102,7 +102,7 @@ export function Named(name: string | symbol) {
  * @deprecated
  * @see Inject
  */
-function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: MethodParameterInjectOption<T, R> = {}) {
+export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: MethodParameterInjectOption<T, R> = {}) {
   deprecatedMessageEmitter();
   return MethodInject(target, option);
 }
