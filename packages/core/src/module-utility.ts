@@ -80,7 +80,6 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
   }
 
   if (injectedSymbol) {
-    const decorator = Inject(injectedSymbol);
     Inject(injectedSymbol)(ConfigFactory, undefined, 0);
   }
   return ConfigFactory;

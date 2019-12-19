@@ -1,14 +1,12 @@
 import {ServiceIdentifier} from './interfaces';
 import {decorate, inject, named, optional, tagged} from 'inversify';
 import {
-  ClassDecorator,
   ConstructorParamDecorator,
   DecoratorBuilder,
   MethodParamDecorator,
   ParamDecorator,
   makeDeprecateMessageEmitter,
 } from './utils';
-import {getComponentMetadata} from './component';
 import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
 
 function applyToParamBindingInvoker<Parameter>(
@@ -54,7 +52,7 @@ export function Optional() {
 }
 
 export interface InjectionConstraintDecorator
-  extends ConstructorParamDecorator, MethodParamDecorator, ClassDecorator {
+  extends ConstructorParamDecorator, MethodParamDecorator {
 }
 
 export function Tagged(key: string | number | symbol, value: any) {
@@ -65,15 +63,6 @@ export function Tagged(key: string | number | symbol, value: any) {
     })
     .whenApplyToConstructorParam((constructor, index) => {
       return decorate(decorator, constructor, index);
-    })
-    .whenApplyToConstructor((constructor) => {
-      try {
-        const metadata = getComponentMetadata(constructor);
-        metadata.tags = metadata.tags ?? [];
-        metadata.tags.push({key, value});
-      } catch (e) {
-        throw new Error('@Tagged applied to a class not yet decorated by @Component, you may need to change the order');
-      }
     })
     .build<InjectionConstraintDecorator>();
 }
@@ -86,15 +75,6 @@ export function Named(name: string | symbol) {
     })
     .whenApplyToConstructorParam((constructor, index) => {
       return decorate(decorator, constructor, index);
-    })
-    .whenApplyToConstructor((constructor) => {
-      try {
-        const metadata = getComponentMetadata(constructor);
-        metadata.tags = metadata.tags ?? [];
-        metadata.name = name;
-      } catch (e) {
-        throw new Error('@Named applied to a class not yet decorated by @Component, you may need to change the order');
-      }
     })
     .build<InjectionConstraintDecorator>();
 }

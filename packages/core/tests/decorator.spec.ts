@@ -62,20 +62,13 @@ describe('Named', () => {
   const name2 = `name2-${Date.now()}`;
   const id = Symbol();
 
-  @Named(name1)
-  @Component({id})
+  @Component({id, name: name1})
   class MyComponent1 {
   }
 
-  @Named(name2)
-  @Component({id})
+  @Component({id, name: name2})
   class MyComponent2 {
   }
-
-  test('Named component', () => {
-    expect(getComponentMetadata(MyComponent1)).toEqual(expect.objectContaining({name: name1}));
-    expect(getComponentMetadata(MyComponent2)).toEqual(expect.objectContaining({name: name2}));
-  });
 
   test('Method inject', () => {
     const result = Math.random();
@@ -138,42 +131,14 @@ describe('Named', () => {
 
 describe('Decorators', () => {
 
-  test('Tagged component', () => {
-    const numberTagKey = 0;
-    const numberTagValue = Date.now();
-    const stringTagKey = `tag_${Date.now()}`;
-    const stringTagValue = `value_${Date.now()}`;
-    const symbolTagKey = Symbol(`symbol_${Date.now()}`);
-    const symbolTagValue = `value_${Date.now()}`;
-
-    @Tagged(numberTagKey, numberTagValue)
-    @Tagged(stringTagKey, stringTagValue)
-    @Tagged(symbolTagKey, symbolTagValue)
-    @Component()
-    class MyComponent {
-    }
-
-    const x = Tagged('key', 'value');
-    x(MyComponent);
-
-    expect(getComponentMetadata(MyComponent)).toEqual(
-      expect.objectContaining({
-        tags: expect.arrayContaining([
-          {key: numberTagKey, value: numberTagValue},
-          {key: stringTagKey, value: stringTagValue},
-          {key: symbolTagKey, value: symbolTagValue},
-        ]),
-      }),
-    );
-  });
-
   test('Method inject', async () => {
     const result = Math.random();
     const key = Symbol();
     const value = Symbol();
 
-    @Tagged(key, value)
-    @Component()
+    @Component({
+      tags: [{key, value}]
+    })
     class Y {
     }
 
@@ -206,15 +171,11 @@ describe('Decorators', () => {
     const name2 = `name2-${Date.now()}`;
     const id = Symbol();
 
-    @Tagged(key1, name1)
-    @Component({id})
-    // @Tagged(key2, name1)
+    @Component({id, tags: [{key: key1, value: name1}]})
     class MyComponent1 {
     }
 
-    @Tagged(key1, name2)
-    @Component({id})
-    // @Tagged(key2, name2)
+    @Component({id, tags: [{key: key1, value: name2}]})
     class MyComponent2 {
     }
 
