@@ -21,7 +21,7 @@ export interface RequestMappingOption {
 
 export interface ControllerMetadata {
   path: string;
-  target: Constructor<unknown>;
+  target: Constructor;
   prototype: object;
   interceptors: Constructor<HttpInterceptor>[];
 }
@@ -160,7 +160,7 @@ export function PUT(path: string, option?: RequestMappingOption) {
 
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
 
-function setHttpControllerMetadata(target: Constructor<unknown>, controllerMetadata: ControllerMetadata) {
+function setHttpControllerMetadata(target: Constructor, controllerMetadata: ControllerMetadata) {
   if (Reflect.getMetadata(ControllerMetadataKey, target)) {
     throw new Error('Target constructor is already has controller metadata');
   }
@@ -176,7 +176,7 @@ export function getHttpControllerMetadata(target: object): ControllerMetadata | 
  * @decorator
  */
 export function Controller(path: string, controllerOption: ControllerOption = {}) {
-  return <T>(target: Constructor<T>) => {
+  return (target: Constructor) => {
     // Decorate target as a component
     Component()(target);
     setHttpControllerMetadata(target, {

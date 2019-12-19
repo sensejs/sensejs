@@ -1,5 +1,5 @@
 import {
-  Abstract,
+  Class,
   Component,
   Constructor,
   RequestInterceptor,
@@ -21,7 +21,7 @@ export interface SubscribeTopicOption {
 
 export interface SubscribeControllerMetadata {
   interceptors: Constructor<RequestInterceptor>[];
-  target: Constructor<{}> | Abstract<{}>;
+  target: Class<{}>;
 }
 
 export interface SubscribeControllerOption {

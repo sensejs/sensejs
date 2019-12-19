@@ -1,5 +1,5 @@
 import {
-  Abstract,
+  Class,
   BindingSpec,
   ComponentFactory,
   ComponentMetadata,
@@ -29,7 +29,7 @@ export interface ModuleOption {
   /**
    * Components provided by this module
    */
-  components?: (Constructor<unknown> | Abstract<unknown>)[];
+  components?: (Constructor | Class)[];
 
   factories?: FactoryProvider<unknown>[];
 

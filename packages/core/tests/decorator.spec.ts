@@ -62,13 +62,13 @@ describe('Named', () => {
   const name2 = `name2-${Date.now()}`;
   const id = Symbol();
 
-  @Component({id})
   @Named(name1)
+  @Component({id})
   class MyComponent1 {
   }
 
-  @Component({id})
   @Named(name2)
+  @Component({id})
   class MyComponent2 {
   }
 
@@ -146,10 +146,10 @@ describe('Decorators', () => {
     const symbolTagKey = Symbol(`symbol_${Date.now()}`);
     const symbolTagValue = `value_${Date.now()}`;
 
-    @Component()
     @Tagged(numberTagKey, numberTagValue)
     @Tagged(stringTagKey, stringTagValue)
     @Tagged(symbolTagKey, symbolTagValue)
+    @Component()
     class MyComponent {
     }
 
@@ -206,14 +206,14 @@ describe('Decorators', () => {
     const name2 = `name2-${Date.now()}`;
     const id = Symbol();
 
-    @Component({id})
     @Tagged(key1, name1)
+    @Component({id})
     // @Tagged(key2, name1)
     class MyComponent1 {
     }
 
-    @Component({id})
     @Tagged(key1, name2)
+    @Component({id})
     // @Tagged(key2, name2)
     class MyComponent2 {
     }
@@ -257,12 +257,6 @@ describe('Decorators', () => {
         expect(resolvable1).toBeInstanceOf(Resolvable1);
         expect(resolvable1.foo1).toBeInstanceOf(MyComponent1);
         expect(resolvable1.foo2).toBeInstanceOf(MyComponent2);
-
-        // const resolvable2 = container.get(Resolvable2);
-        // expect(resolvable2).toBeInstanceOf(Resolvable2);
-        // expect(resolvable2.foo1).toBeInstanceOf(MyComponent1);
-        // expect(resolvable2.foo2).toBeInstanceOf(MyComponent2);
-        // console.log('resolvable2');
 
         expect(() => container.get(NonResolvable1)).toThrow();
         expect(() => container.get(NonResolvable2)).toThrow();

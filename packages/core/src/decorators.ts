@@ -1,19 +1,15 @@
 import {ServiceIdentifier} from './interfaces';
 import {decorate, inject, named, optional, tagged} from 'inversify';
 import {
-  ConstructorDecorator,
+  ClassDecorator,
   ConstructorParamDecorator,
   DecoratorBuilder,
   MethodParamDecorator,
   ParamDecorator,
   makeDeprecateMessageEmitter,
 } from './utils';
-import {ensureComponentMetadata} from './component';
-import {
-  ensureMethodInjectMetadata,
-  getMethodInjectMetadata, MethodInject,
-  MethodParameterInjectOption,
-} from './method-inject';
+import {getComponentMetadata} from './component';
+import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
 
 function applyToParamBindingInvoker<Parameter>(
   decorator: ParameterDecorator,
@@ -58,7 +54,7 @@ export function Optional() {
 }
 
 export interface InjectionConstraintDecorator
-  extends ConstructorParamDecorator, MethodParamDecorator, ConstructorDecorator {
+  extends ConstructorParamDecorator, MethodParamDecorator, ClassDecorator {
 }
 
 export function Tagged(key: string | number | symbol, value: any) {
@@ -71,9 +67,13 @@ export function Tagged(key: string | number | symbol, value: any) {
       return decorate(decorator, constructor, index);
     })
     .whenApplyToConstructor((constructor) => {
-      const metadata = ensureComponentMetadata(constructor);
-      metadata.tags = metadata.tags ?? [];
-      metadata.tags.push({key, value});
+      try {
+        const metadata = getComponentMetadata(constructor);
+        metadata.tags = metadata.tags ?? [];
+        metadata.tags.push({key, value});
+      } catch (e) {
+        throw new Error('@Tagged applied to a class not yet decorated by @Component, you may need to change the order');
+      }
     })
     .build<InjectionConstraintDecorator>();
 }
@@ -88,9 +88,13 @@ export function Named(name: string | symbol) {
       return decorate(decorator, constructor, index);
     })
     .whenApplyToConstructor((constructor) => {
-      const metadata = ensureComponentMetadata(constructor);
-      metadata.tags = metadata.tags ?? [];
-      metadata.name = name;
+      try {
+        const metadata = getComponentMetadata(constructor);
+        metadata.tags = metadata.tags ?? [];
+        metadata.name = name;
+      } catch (e) {
+        throw new Error('@Named applied to a class not yet decorated by @Component, you may need to change the order');
+      }
     })
     .build<InjectionConstraintDecorator>();
 }
@@ -106,4 +110,5 @@ export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: Met
   deprecatedMessageEmitter();
   return MethodInject(target, option);
 }
+
 const deprecatedMessageEmitter = makeDeprecateMessageEmitter(ParamBinding, Inject);

@@ -20,7 +20,7 @@ interface MethodRouteSpec {
   path: string;
   httpMethod: HttpMethod;
   interceptors: Constructor<HttpInterceptor>[];
-  targetConstructor: Constructor<unknown>;
+  targetConstructor: Constructor;
   targetMethod: Function;
 }
 

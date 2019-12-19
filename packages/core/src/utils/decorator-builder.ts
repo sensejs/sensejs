@@ -1,7 +1,7 @@
-import {Constructor} from '../interfaces';
+import {Class} from '../interfaces';
 
-export interface ConstructorDecorator {
-  <T>(target: Constructor<T>): Constructor<T> | void;
+export interface ClassDecorator {
+  <T extends Class>(target: T): T | void;
 }
 
 type PropertyName = string | symbol;
@@ -11,12 +11,12 @@ export interface InstancePropertyDecorator {
 }
 
 export interface StaticPropertyDecorator {
-  (target: Function, name: PropertyName): void;
+  <T extends Class>(target: T, name: PropertyName): void;
 }
 
 export interface StaticMethodDecorator {
-  <T extends Function, R>(
-    target: Constructor<R>,
+  <T extends Function, R extends Class>(
+    target: R,
     name: PropertyName,
     pd: TypedPropertyDescriptor<T>,
   ): TypedPropertyDescriptor<T> | void;
@@ -54,7 +54,7 @@ export interface MethodParamDecorator extends InstanceMethodParamDecorator, Stat
 export interface ParamDecorator extends MethodParamDecorator, ConstructorParamDecorator {
 }
 
-export interface Decorator extends ConstructorDecorator, MethodDecorator, PropertyDecorator, ParamDecorator {
+export interface Decorator extends ClassDecorator, MethodDecorator, PropertyDecorator, ParamDecorator {
 }
 
 function noop() {
@@ -72,12 +72,12 @@ export class DecoratorBuilder {
       this.applyToStaticProperty = noop;
       this.applyToInstanceMethod = noop;
       this.applyToStaticMethod = noop;
-      this.applyToConstructor = noop;
+      this.applyToClass = noop;
     }
   }
 
-  whenApplyToConstructor(fn: ConstructorDecorator) {
-    this.applyToConstructor = fn;
+  whenApplyToConstructor(fn: ClassDecorator) {
+    this.applyToClass = fn;
     return this;
   }
 
@@ -101,8 +101,8 @@ export class DecoratorBuilder {
     return this;
   }
 
-  whenApplyToConstructorParam(fn: <T>(constructor: Constructor<T>, index: number) => Constructor<T> | void) {
-    this.applyToConstructorParam = <T>(constructor: Constructor<T>, name: any, index: number) => fn(constructor, index);
+  whenApplyToConstructorParam(fn: <T extends Class>(ctr: T, index: number) => T | void) {
+    this.applyToConstructorParam = <T extends Class>(ctr: T, name: any, index: number) => fn(ctr, index);
     return this;
   }
 
@@ -125,20 +125,20 @@ export class DecoratorBuilder {
       applyToStaticMethod,
       applyToInstanceProperty,
       applyToStaticProperty,
-      applyToConstructor,
+      applyToClass,
       applyToWrongPlace,
     } = this;
 
     const result = <T extends Function, R>(
-      target: object | Constructor<R>,
+      target: object | Class<R>,
       method?: undefined | symbol | string,
       descriptor?: number | TypedPropertyDescriptor<T>,
-    ): void | TypedPropertyDescriptor<T> | Constructor<R> => {
+    ): void | TypedPropertyDescriptor<T> | Class<R> => {
       if (typeof descriptor === 'number') {
         // parameter decoration
         if (typeof target === 'function') {
           if (typeof method === 'undefined') {
-            return applyToConstructorParam(target as Constructor<R>, method, descriptor);
+            return applyToConstructorParam(target as Class<R>, method, descriptor);
           } else {
             return applyToStaticMethodParam(target, method, descriptor);
           }
@@ -158,7 +158,7 @@ export class DecoratorBuilder {
       if (typeof descriptor === 'undefined') {
         if (typeof target === 'function') {
           if (typeof method === 'undefined') {
-            return applyToConstructor(target as Constructor<R>);
+            return applyToClass(target as Class<R>);
           } else {
             return applyToStaticProperty(target, method);
           }
@@ -171,7 +171,7 @@ export class DecoratorBuilder {
     return result as NarrowTo<T>;
   }
 
-  private applyToConstructor: ConstructorDecorator = () => {
+  private applyToClass: ClassDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to class`);
   };
 
@@ -191,7 +191,7 @@ export class DecoratorBuilder {
     throw new Error(`@${this.decoratorName} cannot apply to static method`);
   };
 
-  private applyToConstructorParam: <T>(ctr: Constructor<T>, name: any, index: number) => void | Constructor<T> = () => {
+  private applyToConstructorParam: <T>(ctr: Class<T>, name: any, index: number) => void | Class<T> = () => {
     throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
   };
 

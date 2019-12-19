@@ -1,14 +1,14 @@
 import {decorate, injectable} from 'inversify';
-import {Abstract, ComponentMetadata, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
+import {Class, ComponentMetadata, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
 
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
 
 export interface ComponentOption {
   scope?: ComponentScope;
-  id?: string | symbol | Abstract<any>;
+  id?: string | symbol | Class<any>;
 }
 
-export function getComponentMetadata(target: Constructor<unknown> | Abstract<unknown>): ComponentMetadata<unknown> {
+export function getComponentMetadata(target: Class): ComponentMetadata<unknown> {
   const result: ComponentMetadata<unknown> = Reflect.getMetadata(COMPONENT_METADATA_KEY, target);
   if (!result) {
     throw new Error('Target is not an component');
@@ -16,7 +16,7 @@ export function getComponentMetadata(target: Constructor<unknown> | Abstract<unk
   return result;
 }
 
-export function ensureComponentMetadata(target: Constructor<unknown>) {
+export function ensureComponentMetadata(target: Constructor) {
   let result: ComponentMetadata<unknown> = Reflect.getMetadata(COMPONENT_METADATA_KEY, target);
   if (!result) {
     result = {
@@ -34,7 +34,7 @@ export function ensureComponentMetadata(target: Constructor<unknown>) {
  * @decorator
  */
 export function Component(spec: ComponentOption = {}) {
-  return (target: Constructor<unknown>) => {
+  return (target: Constructor) => {
     decorate(injectable(), target);
     if (typeof spec.id === 'function') {
       if (!(target.prototype instanceof spec.id) && spec.id !== target) {

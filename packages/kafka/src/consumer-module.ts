@@ -1,5 +1,5 @@
 import {
-  Abstract,
+  Class,
   composeRequestInterceptor,
   invokeMethod,
   Module,
@@ -26,7 +26,7 @@ import {ConnectOption, ConsumeOption, FetchOption} from './message-consume-manag
 export interface KafkaConsumerOption extends ConnectOption, FetchOption, ConsumeOption {}
 
 export interface KafkaConsumerModuleOption extends ModuleOption {
-  globalInterceptors?: Abstract<RequestInterceptor>[];
+  globalInterceptors?: Class<RequestInterceptor>[];
   defaultKafkaConsumerOption?: Partial<KafkaConsumerOption>;
   injectOptionFrom?: ServiceIdentifier<unknown>;
 }

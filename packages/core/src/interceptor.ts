@@ -1,5 +1,5 @@
 import {Container, injectable} from 'inversify';
-import {Abstract, ServiceIdentifier, Constructor} from './interfaces';
+import {Class, ServiceIdentifier, Constructor} from './interfaces';
 import {Inject} from './decorators';
 import {Component} from './component';
 
@@ -14,7 +14,7 @@ export abstract class RequestInterceptor<Context extends RequestContext = Reques
 
 export function composeRequestInterceptor<Context extends RequestContext>(
   container: Container,
-  interceptors: Abstract<RequestInterceptor<Context>>[],
+  interceptors: Class<RequestInterceptor<Context>>[],
 ): Constructor<RequestInterceptor<Context>> {
   @Component()
   class ComposedRequestInterceptor extends RequestInterceptor<Context> {

@@ -115,7 +115,7 @@ export function MethodInject<T, R = T>(target: ServiceIdentifier<T>, option: Met
       throw new MethodParamDecorateError();
     }
     const parameterDecorator = inject(target) as ParameterDecorator;
-    decorate(parameterDecorator, metadata.proxy as Constructor<unknown>, paramIndex);
+    decorate(parameterDecorator, metadata.proxy as Constructor, paramIndex);
 
     metadata.paramsMetadata[paramIndex] = Object.assign(
       {target},

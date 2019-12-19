@@ -15,12 +15,12 @@ export abstract class ComponentFactory<T> {
 
 export type ServiceIdentifier<T> = interfaces.ServiceIdentifier<T>;
 
-export interface Constructor<T> extends Function {
-  new(...args: any[]): T;
+export interface Class<T extends {} = {}> extends Function {
+  prototype: T;
 }
 
-export interface Abstract<T> extends Function {
-  prototype: T;
+export interface Constructor<T extends {} = {}> extends Class<T> {
+  new(...args: any[]): T;
 }
 
 export interface BindingSpec {
@@ -37,7 +37,7 @@ export interface BindingSpec {
  */
 export interface FactoryProvider<T> extends BindingSpec {
   provide: ServiceIdentifier<T>;
-  factory: Constructor<ComponentFactory<T>>;
+  factory: Class<ComponentFactory<T>>;
 }
 
 /**
@@ -54,6 +54,6 @@ export interface ConstantProvider<T> {
  * Specify how to register an component into IoC Container, as well as its scope
  */
 export interface ComponentMetadata<T> extends BindingSpec {
-  target: Constructor<unknown>;
+  target: Constructor<T>;
   id?: ServiceIdentifier<T>;
 }

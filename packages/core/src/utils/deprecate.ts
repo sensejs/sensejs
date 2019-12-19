@@ -1,5 +1,5 @@
-import {ConstructorDecorator, Decorator, DecoratorBuilder} from './decorator-builder';
-import {Constructor} from '../interfaces';
+import {ClassDecorator, Decorator, DecoratorBuilder} from './decorator-builder';
+import {Class} from '../interfaces';
 
 function getName(func: Function | string | symbol) {
   return typeof func === 'function' ? func.name : typeof func === 'symbol' ? func.toString() : func;
@@ -51,18 +51,18 @@ export function deprecate<T extends Function>(target: T, replacedBy?: Function |
   return result;
 }
 
-export interface DeprecatedDecorator extends ConstructorDecorator, MethodDecorator {
+export interface DeprecatedDecorator extends ClassDecorator, MethodDecorator {
 }
 
 function makeDeprecateConstructorProxy(replacedBy?: Function | string | symbol) {
-  return <T extends {}>(target: Constructor<T>): Constructor<T> => {
+  return <T extends Class>(target: T): T => {
     const emitter = makeDeprecateMessageEmitter(target, replacedBy);
-    const result = new Proxy(target, {
+    const result = new Proxy<T>(target, {
       construct: (target: Function, argArray: unknown[], newTarget: T) => {
         emitter();
         return Reflect.construct(target, argArray, newTarget);
       },
-    }) as Constructor<T>;
+    });
     copyMetadata(result, target);
     return result;
   };
