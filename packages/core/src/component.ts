@@ -3,9 +3,9 @@ import {Class, ComponentMetadata, ComponentScope, Constructor, ServiceIdentifier
 
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
 
-export interface ComponentOption {
+export interface ComponentOption<T extends {} = {}> {
   scope?: ComponentScope;
-  id?: string | symbol | Class;
+  id?: string | symbol | Class<T>;
   name?: string | symbol;
   tags?: {
     key: string | number | symbol, value: unknown
@@ -20,7 +20,7 @@ export function getComponentMetadata<T extends {}>(target: Class<T>): ComponentM
   return result;
 }
 
-export function setComponentMetadata(target: Constructor, option: ComponentOption) {
+export function setComponentMetadata<T extends {}>(target: Constructor<T>, option: ComponentOption<T>) {
   if (Reflect.hasOwnMetadata(COMPONENT_METADATA_KEY, target)) {
     throw new Error('Component metadata already defined for target');
   }
@@ -30,14 +30,15 @@ export function setComponentMetadata(target: Constructor, option: ComponentOptio
     id = target,
     scope = ComponentScope.TRANSIENT
   } = option;
-
-  Reflect.defineMetadata(COMPONENT_METADATA_KEY, {
+  const metadata: ComponentMetadata<T> = {
     target,
     id,
     scope,
     name,
     tags
-  }, target);
+  };
+
+  Reflect.defineMetadata(COMPONENT_METADATA_KEY, metadata, target);
 }
 
 /**

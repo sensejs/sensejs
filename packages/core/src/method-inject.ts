@@ -16,7 +16,7 @@ export interface MethodParameterInjectOption<T, R> {
 }
 
 interface MethodParameterInjectMetadata {
-  target: ServiceIdentifier<unknown>;
+  target: ServiceIdentifier;
   transform: Transformer;
 }
 

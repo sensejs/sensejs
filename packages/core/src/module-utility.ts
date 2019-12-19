@@ -62,7 +62,7 @@ export function provideConnectionFactory<T, Option>(
 
 export function createConfigHelperFactory<Result, Fallback = Partial<Result>, Injected = Partial<Result>>(
   fallback: Fallback | undefined,
-  injectedSymbol: ServiceIdentifier<unknown> | undefined,
+  injectedSymbol: ServiceIdentifier | undefined,
   configMerger: (fallback?: Fallback, injected?: Injected) => Result,
 ): Constructor<ComponentFactory<Result>> {
   @Component({scope: ComponentScope.SINGLETON})
@@ -87,7 +87,7 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
 
 export function provideOptionInjector<Result, Fallback = Partial<Result>, Injected = Partial<Result>>(
   fallback: Fallback | undefined,
-  injectOptionFrom: ServiceIdentifier<unknown> | undefined,
+  injectOptionFrom: ServiceIdentifier | undefined,
   configMerger: (fallback?: Fallback, injected?: Injected) => Result,
   exportSymbol: symbol = Symbol(),
 ): FactoryProvider<Result> {

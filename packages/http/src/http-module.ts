@@ -33,7 +33,7 @@ const defaultHttpConfig = {
 export interface HttpModuleOption extends ModuleOption {
   httpAdaptorFactory?: () => HttpAdaptor;
   globalInterceptors?: Constructor<HttpInterceptor>[];
-  serverIdentifier?: ServiceIdentifier<unknown>;
+  serverIdentifier?: ServiceIdentifier;
   httpOption?: Partial<HttpOption>;
   injectOptionFrom?: ServiceIdentifier<Partial<HttpOption>>;
 }

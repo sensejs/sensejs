@@ -13,7 +13,7 @@ export abstract class ComponentFactory<T> {
   abstract build(context: ComponentFactoryContext): T;
 }
 
-export type ServiceIdentifier<T> = interfaces.ServiceIdentifier<T>;
+export type ServiceIdentifier<T extends {} = {}> = string | symbol | Class<T>;
 
 export interface Class<T extends {} = {}> extends Function {
   prototype: T;

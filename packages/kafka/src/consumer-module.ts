@@ -28,7 +28,7 @@ export interface KafkaConsumerOption extends ConnectOption, FetchOption, Consume
 export interface KafkaConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Class<RequestInterceptor>[];
   defaultKafkaConsumerOption?: Partial<KafkaConsumerOption>;
-  injectOptionFrom?: ServiceIdentifier<unknown>;
+  injectOptionFrom?: ServiceIdentifier;
 }
 
 function mergeConnectOption(
