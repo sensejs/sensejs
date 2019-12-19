@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/core",
-  "version": "0.0.11",
+  "version": "0.1.0-0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -21,11 +21,11 @@
   "license": "ISC",
   "dependencies": {
     "inversify": "^5.0.1",
-    "uuid": "^3.3.3",
-    "tslib": "^1.10.0"
+    "tslib": "^1.10.0",
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:*",
+    "@sensejs/testing-utility": "workspace:0.0.8",
     "@types/superagent": "^4.1.4",
     "@types/supertest": "^2.0.8",
     "@types/uuid": "^3.4.6",

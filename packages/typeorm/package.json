@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/typeorm",
-  "version": "0.0.11",
+  "version": "0.1.0-0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -20,20 +20,20 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.0.11",
+    "@sensejs/core": "workspace:0.1.0-0",
     "inversify": "^5.0.1",
     "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:*",
+    "@sensejs/testing-utility": "workspace:0.0.8",
     "@types/supertest": "^2.0.8",
+    "reflect-metadata": "^0.1.13",
     "sqlite3": "^4.1.0",
     "supertest": "^4.0.2",
-    "typeorm": "0.2.20",
-    "reflect-metadata": "^0.1.13"
+    "typeorm": "0.2.20"
   },
   "peerDependencies": {
-    "typeorm": "0.2.20",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "0.2.20"
   }
 }

@@ -180,7 +180,7 @@ export function OnModuleDestroy() {
   };
 }
 
-@Deprecated({message: 'Module() is deprecated. Use @ModuleDecorator or createModule to define module instead.'})
+@Deprecated({message: 'Module() is deprecated. Use @ModuleDecorator to define module instead.'})
 @injectable()
 export class ModuleClass {
   async onCreate(): Promise<void> {}
