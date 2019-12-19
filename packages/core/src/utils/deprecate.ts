@@ -18,17 +18,8 @@ function copyMetadata(result: object, target: object) {
   }
 }
 
-export function makeDeprecateMessageEmitter(
-  func: Function | string | symbol,
-  replacedWith?: Function | string | symbol,
-) {
-
+export function makeOneTimeWarningEmitter(message: string) {
   let emitted = false;
-  let message = `"${getName(func)}" is deprecated.`;
-  if (replacedWith) {
-    message += `${message} Use "${getName(replacedWith)}" instead.`;
-  }
-
   return () => {
     if (!emitted) {
       emitted = true;
@@ -39,8 +30,27 @@ export function makeDeprecateMessageEmitter(
   };
 }
 
-export function deprecate<T extends Function>(target: T, replacedBy?: Function | string | symbol): T {
-  const emitter = makeDeprecateMessageEmitter(target, replacedBy);
+export function makeDeprecateMessageEmitter(
+  func: Function | string | symbol,
+  replacedWith?: Function | string | symbol,
+) {
+
+  let message = `"${getName(func)}" is deprecated.`;
+  if (replacedWith) {
+    message += `${message} Use "${getName(replacedWith)}" instead.`;
+  }
+
+  return makeOneTimeWarningEmitter(message);
+}
+
+export function deprecate<T extends Function>(
+  target: T,
+  option: DeprecateOption | DeprecateSymbolMethodOption = {},
+): T {
+  const emitter = typeof option.message === 'string'
+    ? makeOneTimeWarningEmitter(option.message)
+    : makeDeprecateMessageEmitter(target, option.replacedBy);
+
   const result = new Proxy(target, {
     apply: (func, that, args) => {
       emitter();
@@ -51,12 +61,12 @@ export function deprecate<T extends Function>(target: T, replacedBy?: Function |
   return result;
 }
 
-export interface DeprecatedDecorator extends ClassDecorator, MethodDecorator {
-}
-
-function makeDeprecateConstructorProxy(replacedBy?: Function | string | symbol) {
+function makeDeprecateConstructorProxy(option: DeprecateOption) {
   return <T extends Class>(target: T): T => {
-    const emitter = makeDeprecateMessageEmitter(target, replacedBy);
+    const emitter = typeof option.message === 'string'
+      ? makeOneTimeWarningEmitter(option.message)
+      : makeDeprecateMessageEmitter(target, option.replacedBy);
+
     const result = new Proxy<T>(target, {
       construct: (target: Function, argArray: unknown[], newTarget: T) => {
         emitter();
@@ -68,26 +78,40 @@ function makeDeprecateConstructorProxy(replacedBy?: Function | string | symbol) 
   };
 }
 
-function makeDeprecatedMethodProxy(replacedBy?: Function | string | symbol) {
+function makeDeprecatedMethodProxy(option: DeprecateOption | DeprecateSymbolMethodOption) {
   return <T extends Function>(target: {} | Function, name: string | symbol, pd: TypedPropertyDescriptor<T>) => {
     const origin = pd.value;
     if (!origin) {
       throw new Error('Deprecated target is not a function');
     }
-    pd.value = deprecate<T>(origin, replacedBy);
+    pd.value = deprecate<T>(origin, option);
     return pd;
   };
 }
 
-export function Deprecated(option: {replacedBy: symbol}): MethodDecorator;
-export function Deprecated(option?: {replacedBy?: Function | string}): DeprecatedDecorator;
+interface DeprecateOption {
+  replacedBy?: Function | string;
+  message?: string;
+}
 
-export function Deprecated(option: {replacedBy?: Function | string | symbol} = {}): Decorator {
+interface DeprecateSymbolMethodOption {
+  replacedBy: symbol;
+  message?: string;
+}
+
+export interface DeprecatedDecorator extends ClassDecorator, MethodDecorator {
+}
+
+export function Deprecated(option: DeprecateSymbolMethodOption): MethodDecorator;
+export function Deprecated(option?: DeprecateOption): DeprecatedDecorator;
+
+export function Deprecated(option: DeprecateOption | DeprecateSymbolMethodOption = {}): Decorator {
   const dd = new DecoratorBuilder('Deprecated', false);
-  dd.whenApplyToInstanceMethod(makeDeprecatedMethodProxy(option.replacedBy))
-    .whenApplyToStaticMethod(makeDeprecatedMethodProxy(option.replacedBy));
+  const methodProxy = makeDeprecatedMethodProxy(option);
+  dd.whenApplyToInstanceMethod(methodProxy)
+    .whenApplyToStaticMethod(methodProxy);
   if (typeof option.replacedBy === 'symbol') {
     return dd.build();
   }
-  return dd.whenApplyToConstructor(makeDeprecateConstructorProxy(option.replacedBy)).build();
+  return dd.whenApplyToConstructor(makeDeprecateConstructorProxy(option as DeprecateOption)).build();
 }
