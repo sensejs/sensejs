@@ -1,5 +1,5 @@
 import {decorate, injectable} from 'inversify';
-import {Class, ComponentMetadata, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
+import {Class, ComponentMetadata, ComponentScope, Constructor} from './interfaces';
 
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
 
