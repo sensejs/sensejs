@@ -11,7 +11,7 @@ import {
 import {ModuleInstance} from '../src/module-instance';
 
 describe('Module', () => {
-  test('@Module', async () => {
+  test('@ModuleDecorator', async () => {
     const ConstantSymbol = Symbol();
 
     const constant = Math.random();
@@ -36,12 +36,6 @@ describe('Module', () => {
         componentSpy(constantValue, factoryValue);
       }
     }
-
-    // const TestModule = Module({
-    //   components: [TestComponent],
-    //   constants: [{provide: ConstantSymbol, value: constant}],
-    //   factories: [{provide: FactorySymbol, factory: Factory}],
-    // });
 
     @ModuleDecorator({
       components: [TestComponent],

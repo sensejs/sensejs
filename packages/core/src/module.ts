@@ -11,15 +11,7 @@ import {
 import {AsyncContainerModule, ContainerModule, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 import {ensureMethodInjectMetadata} from './method-inject';
-
-@injectable()
-export class ModuleClass {
-  async onCreate(): Promise<void> {}
-
-  async onDestroy(): Promise<void> {}
-}
-
-export type ModuleConstructor = Constructor<ModuleClass>;
+import {Deprecated} from './utils/deprecate';
 
 export interface ModuleOption {
   /**
@@ -188,6 +180,16 @@ export function OnModuleDestroy() {
   };
 }
 
+@Deprecated({message: 'Module() is deprecated. Use @ModuleDecorator or createModule to define module instead.'})
+@injectable()
+export class ModuleClass {
+  async onCreate(): Promise<void> {}
+
+  async onDestroy(): Promise<void> {}
+}
+
+export type ModuleConstructor = Constructor<ModuleClass>;
+
 export function Module(spec: ModuleOption = {}): ModuleConstructor {
   const components = spec.components || [];
   const factories = spec.factories || [];
@@ -217,7 +219,7 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
     });
   });
 
-  const moduleConstructor: ModuleConstructor = class extends ModuleClass {};
+  class Module extends ModuleClass {}
 
   function onModuleCreate(this: ModuleClass) {
     return this.onCreate();
@@ -229,11 +231,11 @@ export function Module(spec: ModuleOption = {}): ModuleConstructor {
 
   ensureMethodInjectMetadata(onModuleCreate);
   ensureMethodInjectMetadata(onModuleDestroy);
-  setModuleMetadata(moduleConstructor, {
+  setModuleMetadata(Module, {
     requires: spec.requires || [],
     containerModule,
     onModuleCreate,
     onModuleDestroy,
   });
-  return moduleConstructor;
+  return Module as ModuleConstructor;
 }
