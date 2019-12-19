@@ -7,64 +7,58 @@ export interface ConstructorDecorator {
 type PropertyName = string | symbol;
 
 export interface InstancePropertyDecorator {
-  (target: Function, name: PropertyName): void;
+  (target: object, name: PropertyName): void;
 }
 
 export interface StaticPropertyDecorator {
-  (target: object, name: PropertyName): void;
+  (target: Function, name: PropertyName): void;
 }
 
 export interface StaticMethodDecorator {
   <T extends Function, R>(
-    target: T,
+    target: Constructor<R>,
     name: PropertyName,
-    pd: TypedPropertyDescriptor<R>,
-  ): TypedPropertyDescriptor<R> | void;
+    pd: TypedPropertyDescriptor<T>,
+  ): TypedPropertyDescriptor<T> | void;
 }
 
 export interface InstanceMethodDecorator {
-  <T>(target: object, name: PropertyName, pd: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<T> | void;
+  <T extends Function>(
+    target: object,
+    name: PropertyName,
+    pd: TypedPropertyDescriptor<T>
+  ): TypedPropertyDescriptor<T> | void;
 }
 
 export interface InstanceMethodParamDecorator {
-  (target: Function, name: PropertyName, pd: number): void;
+  (target: object, name: PropertyName, pd: number): void;
 }
 
 export interface StaticMethodParamDecorator {
-  (target: object, name: PropertyName, pd: number): void;
+  (target: Function, name: PropertyName, pd: number): void;
 }
 
 export interface ConstructorParamDecorator {
   (target: Function, name: any, pd: number): void;
 }
 
-export interface PropertyDecorator extends StaticPropertyDecorator, InstancePropertyDecorator {}
+export interface PropertyDecorator extends StaticPropertyDecorator, InstancePropertyDecorator {
+}
 
-export interface MethodDecorator extends StaticMethodDecorator, InstanceMethodDecorator {}
+export interface MethodDecorator extends StaticMethodDecorator, InstanceMethodDecorator {
+}
 
-export interface MethodParamDecorator extends InstanceMethodParamDecorator, StaticMethodParamDecorator {}
+export interface MethodParamDecorator extends InstanceMethodParamDecorator, StaticMethodParamDecorator {
+}
 
-export interface ParamDecorator extends MethodParamDecorator, ConstructorParamDecorator {}
+export interface ParamDecorator extends MethodParamDecorator, ConstructorParamDecorator {
+}
 
-export interface Decorator extends ConstructorDecorator, MethodDecorator, PropertyDecorator, ParamDecorator {}
+export interface Decorator extends ConstructorDecorator, MethodDecorator, PropertyDecorator, ParamDecorator {
+}
 
-type WhenApplyToConstructorParam = <T extends Function>(target: T, index: number) => void;
-type WhenApplyToStaticMethodParam = <T extends Function>(target: T, name: string | symbol, index: number) => void;
-type WhenApplyToInstanceMethodParam = (target: object, name: string | symbol, index: number) => void;
-type WhenApplyToStaticMethod = <T extends Function>(
-  target: Function,
-  name: string | symbol,
-  pd: TypedPropertyDescriptor<T>
-) => TypedPropertyDescriptor<T> | void;
-type WhenApplyToInstanceMethod = <T extends Function>(
-  target: {},
-  name: string | symbol,
-  pd: TypedPropertyDescriptor<T>
-) => TypedPropertyDescriptor<T> | void;
-type WhenApplyToStaticProperty = (target: Function, name: string | symbol) => void;
-type WhenApplyToInstanceProperty = (target: object, name: string | symbol) => void;
-
-function noop() {}
+function noop() {
+}
 
 type NarrowTo<T> = Decorator extends T ? T : unknown;
 
@@ -87,37 +81,37 @@ export class DecoratorBuilder {
     return this;
   }
 
-  whenApplyToInstanceProperty(fn: WhenApplyToInstanceProperty) {
+  whenApplyToInstanceProperty(fn: InstancePropertyDecorator) {
     this.applyToInstanceProperty = fn;
     return this;
   }
 
-  whenApplyToStaticProperty(fn: WhenApplyToStaticProperty) {
+  whenApplyToStaticProperty(fn: StaticPropertyDecorator) {
     this.applyToStaticProperty = fn;
     return this;
   }
 
-  whenApplyToInstanceMethod(fn: WhenApplyToInstanceMethod) {
+  whenApplyToInstanceMethod(fn: InstanceMethodDecorator) {
     this.applyToInstanceMethod = fn;
     return this;
   }
 
-  whenApplyToStaticMethod(fn: WhenApplyToStaticMethod) {
+  whenApplyToStaticMethod(fn: StaticMethodDecorator) {
     this.applyToStaticMethod = fn;
     return this;
   }
 
-  whenApplyToConstructorParam(fn: WhenApplyToConstructorParam) {
-    this.applyToConstructorParam = fn;
+  whenApplyToConstructorParam(fn: <T>(constructor: Constructor<T>, index: number) => Constructor<T> | void) {
+    this.applyToConstructorParam = <T>(constructor: Constructor<T>, name: any, index: number) => fn(constructor, index);
     return this;
   }
 
-  whenApplyToStaticMethodParam(fn: WhenApplyToStaticMethodParam) {
+  whenApplyToStaticMethodParam(fn: StaticMethodParamDecorator) {
     this.applyToStaticMethodParam = fn;
     return this;
   }
 
-  whenApplyToInstanceMethodParam(fn: WhenApplyToInstanceMethodParam) {
+  whenApplyToInstanceMethodParam(fn: InstanceMethodParamDecorator) {
     this.applyToInstanceMethodParam = fn;
     return this;
   }
@@ -144,21 +138,24 @@ export class DecoratorBuilder {
         // parameter decoration
         if (typeof target === 'function') {
           if (typeof method === 'undefined') {
-            return applyToConstructorParam(target, descriptor);
+            return applyToConstructorParam(target as Constructor<R>, method, descriptor);
           } else {
             return applyToStaticMethodParam(target, method, descriptor);
           }
-        } else if (typeof target === 'object' && typeof method !== 'undefined') {
+        }
+        if (typeof target === 'object' && typeof method !== 'undefined') {
           return applyToInstanceMethodParam(target, method, descriptor);
         }
-      } else if (typeof descriptor === 'object' && typeof method !== 'undefined') {
+      }
+      if (typeof descriptor === 'object' && typeof method !== 'undefined') {
         // method decoration
-        if (typeof target === 'function') {
-          return applyToStaticMethod(target, method, descriptor);
-        } else {
+        if (typeof target === 'object') {
           return applyToInstanceMethod(target, method, descriptor);
+        } else {
+          return applyToStaticMethod(target, method, descriptor);
         }
-      } else if (typeof descriptor === 'undefined') {
+      }
+      if (typeof descriptor === 'undefined') {
         if (typeof target === 'function') {
           if (typeof method === 'undefined') {
             return applyToConstructor(target as Constructor<R>);
@@ -178,31 +175,31 @@ export class DecoratorBuilder {
     throw new Error(`@${this.decoratorName} cannot apply to class`);
   };
 
-  private applyToInstanceProperty: WhenApplyToInstanceProperty = () => {
+  private applyToInstanceProperty: InstancePropertyDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to property`);
   };
 
-  private applyToStaticProperty: WhenApplyToStaticProperty = () => {
+  private applyToStaticProperty: StaticPropertyDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to static property`);
   };
 
-  private applyToInstanceMethod: WhenApplyToInstanceMethod = () => {
+  private applyToInstanceMethod: InstanceMethodDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to method`);
   };
 
-  private applyToStaticMethod: WhenApplyToStaticMethod = () => {
+  private applyToStaticMethod: StaticMethodDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to static method`);
   };
 
-  private applyToConstructorParam: WhenApplyToConstructorParam = () => {
+  private applyToConstructorParam: <T>(ctr: Constructor<T>, name: any, index: number) => void | Constructor<T> = () => {
     throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
   };
 
-  private applyToStaticMethodParam: WhenApplyToStaticMethodParam = () => {
+  private applyToStaticMethodParam: StaticMethodParamDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to param of class static method`);
   };
 
-  private applyToInstanceMethodParam: WhenApplyToInstanceMethodParam = () => {
+  private applyToInstanceMethodParam: InstanceMethodParamDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to param of class instance method`);
   };
 
