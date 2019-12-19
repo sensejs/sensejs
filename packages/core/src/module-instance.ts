@@ -1,5 +1,7 @@
 import {Container} from 'inversify';
-import {getModuleMetadata, ModuleClass, ModuleConstructor, ModuleMetadata} from './module';
+import {getModuleMetadata, ModuleClass, ModuleMetadata} from './module';
+import {invokeMethod} from './method-inject';
+import {Constructor} from './interfaces';
 
 /**
  * @private
@@ -7,10 +9,10 @@ import {getModuleMetadata, ModuleClass, ModuleConstructor, ModuleMetadata} from 
 export class ModuleInstance {
   private setupPromise?: Promise<void>;
   private destroyPromise?: Promise<void>;
-  private moduleLifecycle?: ModuleClass;
+  private moduleInstance?: object;
   private moduleMetadata: ModuleMetadata = getModuleMetadata(this.moduleClass);
 
-  constructor(readonly moduleClass: ModuleConstructor, private readonly container: Container) {}
+  constructor(readonly moduleClass: Constructor, private readonly container: Container) {}
 
   async onSetup() {
     if (this.setupPromise) {
@@ -33,14 +35,16 @@ export class ModuleInstance {
       .bind(this.moduleClass)
       .toSelf()
       .inSingletonScope();
-    await this.container.loadAsync(this.moduleMetadata.containerModule);
-    this.moduleLifecycle = this.container.get(this.moduleClass);
-    await this.moduleLifecycle!.onCreate();
+    this.container.load(this.moduleMetadata.containerModule);
+    this.moduleInstance = this.container.get(this.moduleClass);
+    if (this.moduleMetadata.onModuleCreate) {
+      await Promise.resolve(invokeMethod(this.container, this.moduleInstance, this.moduleMetadata.onModuleCreate));
+    }
   }
 
   private async performDestroy() {
-    if (this.moduleLifecycle) {
-      await this.moduleLifecycle.onDestroy();
+    if (this.moduleInstance && this.moduleMetadata.onModuleDestroy) {
+      await Promise.resolve(invokeMethod(this.container, this.moduleInstance, this.moduleMetadata.onModuleDestroy));
     }
     this.container.unload(this.moduleMetadata.containerModule);
   }

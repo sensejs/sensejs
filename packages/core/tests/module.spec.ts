@@ -1,5 +1,13 @@
 import {Container, inject, named, tagged} from 'inversify';
-import {Component, ComponentFactory, getModuleMetadata, Module, ModuleClass} from '../src';
+import {
+  Component,
+  ComponentFactory,
+  getModuleMetadata,
+  Module,
+  ModuleClass,
+  ModuleDecorator,
+  OnModuleCreate, OnModuleDestroy,
+} from '../src';
 import {ModuleInstance} from '../src/module-instance';
 
 describe('Module', () => {
@@ -29,16 +37,31 @@ describe('Module', () => {
       }
     }
 
-    const TestModule = Module({
+    // const TestModule = Module({
+    //   components: [TestComponent],
+    //   constants: [{provide: ConstantSymbol, value: constant}],
+    //   factories: [{provide: FactorySymbol, factory: Factory}],
+    // });
+
+    @ModuleDecorator({
       components: [TestComponent],
       constants: [{provide: ConstantSymbol, value: constant}],
       factories: [{provide: FactorySymbol, factory: Factory}],
-    });
+    })
+    class TestModule {
+
+      @OnModuleCreate()
+      onModuleCreate() {}
+
+      @OnModuleDestroy()
+      onModuleDestroy() {}
+
+    }
 
     getModuleMetadata(TestModule);
     const container = new Container();
     await new ModuleInstance(TestModule, container).onSetup();
-    await new TestModule().onCreate();
+    // await new TestModule().onCreate();
     expect(container.get(TestComponent)).toBeInstanceOf(TestComponent);
     expect(componentSpy).toHaveBeenCalledWith(constant, -constant);
   });

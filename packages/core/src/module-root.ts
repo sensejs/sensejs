@@ -1,12 +1,13 @@
 import {Container} from 'inversify';
 import {getModuleMetadata, ModuleConstructor} from './module';
 import {ModuleInstance} from './module-instance';
+import {Constructor} from './interfaces';
 
 export class ModuleRoot {
   private readonly container: Container = new Container({skipBaseClassChecks: true});
-  private readonly moduleInstanceMap: Map<ModuleConstructor, ModuleInstance> = new Map();
-  private readonly moduleDependencyMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
-  private readonly moduleReferencedMap: Map<ModuleConstructor, ModuleConstructor[]> = new Map();
+  private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
+  private readonly moduleDependencyMap: Map<Constructor, Constructor[]> = new Map();
+  private readonly moduleReferencedMap: Map<Constructor, Constructor[]> = new Map();
 
   public constructor(private entryModule: ModuleConstructor) {
     this.container.bind(Container).toConstantValue(this.container);
@@ -52,7 +53,7 @@ export class ModuleRoot {
     await Promise.all(Array.from(this.moduleInstanceMap.values()).map((module) => this.stopModule(module)));
   }
 
-  private async startModule(module: ModuleConstructor) {
+  private async startModule(module: Constructor) {
     let moduleInstance = this.moduleInstanceMap.get(module);
     if (!moduleInstance) {
       moduleInstance = new ModuleInstance(module, this.container);
