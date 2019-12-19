@@ -1,14 +1,4 @@
-import {
-  Component,
-  getComponentMetadata,
-  Inject,
-  Named,
-  Tagged,
-  Module,
-  ModuleRoot,
-  invokeMethod,
-  Optional,
-} from '../src';
+import {Component, Inject, invokeMethod, Module, ModuleRoot, Named, Optional, Tagged} from '../src';
 import {Container} from 'inversify';
 
 describe('Optional', () => {
@@ -16,6 +6,7 @@ describe('Optional', () => {
   test('Decorate constructor param', async () => {
 
     const stub = jest.fn();
+
     @Component()
     class X {
       constructor(@Inject(injectToken) @Optional() param: any) {
@@ -35,10 +26,12 @@ describe('Optional', () => {
 
   test('Optional method inject', async () => {
     const stub = jest.fn();
+
     @Component()
     class X {
       constructor(@Inject(injectToken) @Optional() param: any) {
       }
+
       method(@Inject(injectToken) @Optional() param: any) {
         stub(param);
       }
@@ -137,7 +130,7 @@ describe('Decorators', () => {
     const value = Symbol();
 
     @Component({
-      tags: [{key, value}]
+      tags: [{key, value}],
     })
     class Y {
     }

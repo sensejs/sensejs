@@ -3,8 +3,8 @@ import {
   Component,
   Constructor,
   RequestInterceptor,
-  validateMethodInjectMetadata,
   ServiceIdentifier,
+  validateMethodInjectMetadata,
 } from '@sensejs/core';
 
 export interface SubscribeTopicMetadata {
@@ -58,6 +58,7 @@ interface InjectedSubscribeTopicDecoratorOption {
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
   interceptors?: Constructor<RequestInterceptor>[];
 }
+
 export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
   return <T extends {}>(prototype: T, method: keyof T & string) => {
     const targetMethod = prototype[method];

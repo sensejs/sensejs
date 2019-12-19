@@ -1,4 +1,4 @@
-import {Container, inject, tagged, named} from 'inversify';
+import {Container, inject, named, tagged} from 'inversify';
 import {Component, ComponentFactory, getModuleMetadata, Module, ModuleClass} from '../src';
 import {ModuleInstance} from '../src/module-instance';
 

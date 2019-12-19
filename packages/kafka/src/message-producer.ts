@@ -68,7 +68,9 @@ export class MessageProducer {
         const highLevelProducer = this._highLevelProducer;
         delete this._highLevelProducer;
         if (highLevelProducer) {
-          return new Promise((resolve, reject) => highLevelProducer.close((e?) => (e ? reject(e) : resolve())));
+          return new Promise((resolve, reject) => highLevelProducer.close((e?) => (
+            e ? reject(e) : resolve()
+          )));
         }
       });
   }
@@ -82,40 +84,42 @@ export class MessageProducer {
     if (this._initialized) {
       return this._initialized;
     }
-    return (this._initialized = new Promise<HighLevelProducer>((done, fail) => {
-      const client = new KafkaClient({kafkaHost: this._option.kafkaHost});
+    return (
+      this._initialized = new Promise<HighLevelProducer>((done, fail) => {
+        const client = new KafkaClient({kafkaHost: this._option.kafkaHost});
 
-      const producer = new HighLevelProducer(
-        client,
-        Object.assign({requireAcks: 1, ackTimeoutMs: 1000}, this._option.producerOptions),
-        this._option.customPartition,
-      );
+        const producer = new HighLevelProducer(
+          client,
+          Object.assign({requireAcks: 1, ackTimeoutMs: 1000}, this._option.producerOptions),
+          this._option.customPartition,
+        );
 
-      const errorBeforeReady = (error: Error) => {
-        return client.close(() => fail(error));
-      };
+        const errorBeforeReady = (error: Error) => {
+          return client.close(() => fail(error));
+        };
 
-      producer.once('error', errorBeforeReady);
-      producer.once('ready', () => {
-        producer.removeListener('error', errorBeforeReady);
-        done(producer);
-      });
-    }).then((highLevelProducer: HighLevelProducer) => {
-      this._highLevelProducer = highLevelProducer;
-      return new Writable({
-        objectMode: true,
-        decodeStrings: false,
-        highWaterMark: 16,
-        write: (chunk: ProduceRequest, encoding, callback) => {
-          highLevelProducer.send([chunk], callback);
-        },
-        writev: (chunks: {chunk: ProduceRequest}[], callback) => {
-          highLevelProducer.send(
-            chunks.map((x) => x.chunk),
-            callback,
-          );
-        },
-      });
-    }));
+        producer.once('error', errorBeforeReady);
+        producer.once('ready', () => {
+          producer.removeListener('error', errorBeforeReady);
+          done(producer);
+        });
+      }).then((highLevelProducer: HighLevelProducer) => {
+        this._highLevelProducer = highLevelProducer;
+        return new Writable({
+          objectMode: true,
+          decodeStrings: false,
+          highWaterMark: 16,
+          write: (chunk: ProduceRequest, encoding, callback) => {
+            highLevelProducer.send([chunk], callback);
+          },
+          writev: (chunks: {chunk: ProduceRequest}[], callback) => {
+            highLevelProducer.send(
+              chunks.map((x) => x.chunk),
+              callback,
+            );
+          },
+        });
+      })
+    );
   }
 }

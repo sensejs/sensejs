@@ -1,9 +1,10 @@
-import {Container, injectable, inject, decorate} from 'inversify';
+import {Container, decorate, inject, injectable} from 'inversify';
 import {Constructor, ServiceIdentifier} from './interfaces';
 
 export interface Transformer<Input = any, Output = Input> {
   (input: Input): Output;
 }
+
 export class MethodParamDecorateError extends Error {}
 
 export class MethodParamInjectError extends Error {}

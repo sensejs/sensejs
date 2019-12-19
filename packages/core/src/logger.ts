@@ -118,16 +118,15 @@ export class LoggerFactory extends ComponentFactory<Logger> {
 
     const parent = parentRequest ? parentRequest.serviceIdentifier : null;
     if (!moduleName) {
-      moduleName =
-        parent === null
-          ? ''
-          : typeof parent === 'symbol'
-            ? parent.toString()
-            : typeof parent === 'string'
-              ? parent
-              : typeof parent === 'function'
-                ? parent.name
-                : '';
+      moduleName = parent === null
+        ? ''
+        : typeof parent === 'symbol'
+          ? parent.toString()
+          : typeof parent === 'string'
+            ? parent
+            : typeof parent === 'function'
+              ? parent.name
+              : '';
     }
 
     return this.loggerBuilder.build(moduleName);

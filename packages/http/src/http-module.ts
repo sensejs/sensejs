@@ -3,15 +3,15 @@ import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
-import {HttpInterceptor, HttpAdaptor, HttpApplicationOption} from './http-abstract';
+import {HttpAdaptor, HttpApplicationOption, HttpInterceptor} from './http-abstract';
 import {
   Constructor,
+  Inject,
   Module,
   ModuleConstructor,
   ModuleOption,
-  ServiceIdentifier,
   provideOptionInjector,
-  Inject,
+  ServiceIdentifier,
 } from '@sensejs/core';
 
 export interface HttpOption extends HttpApplicationOption {
@@ -48,7 +48,9 @@ export function HttpModule(
     httpOption: defaultHttpConfig,
   },
 ): ModuleConstructor {
-  const httpAdaptorFactory = option.httpAdaptorFactory || (() => new KoaHttpApplicationBuilder());
+  const httpAdaptorFactory = option.httpAdaptorFactory || (
+    () => new KoaHttpApplicationBuilder()
+  );
   const componentList = option.components || [];
   const optionProvider = provideOptionInjector<HttpOption>(
     option.httpOption,

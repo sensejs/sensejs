@@ -1,7 +1,7 @@
-import {ModuleRoot, Component, Module} from '@sensejs/core';
-import {inject, Container} from 'inversify';
+import {Component, Module, ModuleRoot} from '@sensejs/core';
+import {Container, inject} from 'inversify';
 import supertest from 'supertest';
-import {Controller, GET, HttpModule, HttpInterceptor, HttpContext} from '../src';
+import {Controller, GET, HttpContext, HttpInterceptor, HttpModule} from '../src';
 import {Server} from 'http';
 
 describe('HttpModule', () => {
@@ -66,6 +66,7 @@ describe('HttpModule', () => {
       constructor(@inject(Container) private container: Container) {
         super();
       }
+
       async onCreate() {
         const containerServer = this.container.get(serverIdentifier);
         stub(containerServer);

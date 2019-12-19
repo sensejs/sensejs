@@ -1,4 +1,4 @@
-import {Entity, TableInheritance, ChildEntity, Column, Unique, PrimaryGeneratedColumn} from 'typeorm';
+import {ChildEntity, Column, Entity, PrimaryGeneratedColumn, TableInheritance, Unique} from 'typeorm';
 
 enum DeviceDomain {
   SMOKE,

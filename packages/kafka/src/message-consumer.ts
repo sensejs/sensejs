@@ -1,9 +1,9 @@
 import {
   ConnectOption,
+  ConsumeManagerOption,
   ConsumeOption,
   FetchOption,
   MessageConsumeManager,
-  ConsumeManagerOption,
 } from './message-consume-manager';
 import {MessageConsumer as ConsumeCallback} from 'kafka-pipeline';
 

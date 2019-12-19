@@ -1,5 +1,5 @@
 import {Container, injectable} from 'inversify';
-import {Class, ServiceIdentifier, Constructor} from './interfaces';
+import {Class, Constructor, ServiceIdentifier} from './interfaces';
 import {Inject} from './decorators';
 import {Component} from './component';
 

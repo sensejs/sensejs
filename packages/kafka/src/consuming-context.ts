@@ -1,7 +1,6 @@
-import {RequestContext, ServiceIdentifier, Transformer, Inject} from '@sensejs/core';
+import {Inject, RequestContext, ServiceIdentifier, Transformer} from '@sensejs/core';
 import {Container} from 'inversify';
 import * as kafkaNode from 'kafka-node';
-
 export import KafkaMessage = kafkaNode.Message;
 
 export class ConsumingContext extends RequestContext {

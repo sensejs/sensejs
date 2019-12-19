@@ -17,6 +17,7 @@ describe('Component', () => {
 
     @Component({id})
     class MyComponent {}
+
     expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id}));
   });
 
@@ -41,6 +42,7 @@ describe('Component', () => {
 
   xtest('Failed to use unrelated function as component id', async () => {
     class AnyOtherClass {}
+
     @Component({id: AnyOtherClass})
     class MyComponent extends AnyOtherClass {}
   });

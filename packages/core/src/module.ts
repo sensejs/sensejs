@@ -1,6 +1,6 @@
 import {
-  Class,
   BindingSpec,
+  Class,
   ComponentFactory,
   ComponentMetadata,
   ComponentScope,

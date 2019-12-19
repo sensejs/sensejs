@@ -1,4 +1,4 @@
-import {createConnectionFactory, provideConnectionFactory, provideOptionInjector, Module, ModuleRoot} from '../src';
+import {createConnectionFactory, Module, ModuleRoot, provideConnectionFactory, provideOptionInjector} from '../src';
 import {inject} from 'inversify';
 
 test('createConnectionFactory', async () => {

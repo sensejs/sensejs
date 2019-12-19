@@ -1,4 +1,4 @@
-import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier, FactoryProvider} from './interfaces';
+import {ComponentFactory, ComponentScope, Constructor, FactoryProvider, ServiceIdentifier} from './interfaces';
 import {Component} from './component';
 import {Inject} from './decorators';
 

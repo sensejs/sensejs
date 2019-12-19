@@ -1,5 +1,5 @@
 import {EventEmitter} from 'events';
-import {ModuleRoot, Component, Module} from '../src';
+import {Component, Module, ModuleRoot} from '../src';
 import {inject} from 'inversify';
 
 describe('ModuleRoot', () => {

@@ -1,4 +1,4 @@
-import {Constructor, RequestInterceptor, RequestContext} from '@sensejs/core';
+import {Constructor, RequestContext, RequestInterceptor} from '@sensejs/core';
 import {RequestListener} from 'http';
 import {Container} from 'inversify';
 import {Readable} from 'stream';

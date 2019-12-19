@@ -50,7 +50,7 @@ export const defaultRunOption: RunOption = {
     SIGTERM: {},
   },
   logger: consoleLogger,
-  onExit: (exitCode) => process.exit(exitCode)
+  onExit: (exitCode) => process.exit(exitCode),
 };
 
 function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOption) => void) {

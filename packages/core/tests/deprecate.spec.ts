@@ -1,5 +1,5 @@
 import {Deprecated} from '../src/utils';
-import {injectable, inject, Container} from 'inversify';
+import {Container, inject, injectable} from 'inversify';
 import {Inject, invokeMethod} from '../src';
 
 const awaitWarningCalled = (stub: jest.SpyInstance) => new Promise((done) => {

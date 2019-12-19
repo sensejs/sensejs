@@ -3,11 +3,11 @@ import {
   ComponentScope,
   createConfigHelperFactory,
   createConnectionFactory,
+  Inject,
   Module,
   ModuleConstructor,
   ModuleOption,
   ServiceIdentifier,
-  Inject,
 } from '@sensejs/core';
 import {MessageProducer, ProducerOption} from './message-producer';
 import merge from 'lodash.merge';

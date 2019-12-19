@@ -2,8 +2,8 @@ import 'reflect-metadata';
 import Redis from 'ioredis';
 import {Container, inject} from 'inversify';
 import {Controller} from '@sensejs/http';
-import {ModuleRoot, Module} from '@sensejs/core';
-import {RedisModule, InjectRedis, RedisModuleOptions} from '../src';
+import {Module, ModuleRoot} from '@sensejs/core';
+import {InjectRedis, RedisModule, RedisModuleOptions} from '../src';
 
 describe('RedisModule', () => {
   test('will throw without `name` field', (done) => {

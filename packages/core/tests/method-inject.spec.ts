@@ -2,15 +2,17 @@ import {Container, inject, injectable} from 'inversify';
 import {
   Component,
   invokeMethod,
+  MethodInject,
   MethodParamDecorateError,
   MethodParamInjectError,
-  validateMethodInjectMetadata, MethodInject,
+  validateMethodInjectMetadata,
 } from '../src';
 
 describe('@Inject', () => {
   test('param binding', () => {
     const x = Symbol(),
       y = Symbol();
+
     class Foo {
       bar(@MethodInject(x) param: string, @MethodInject(y, {transform: (x: number) => x + 1}) number: number) {
         return param.repeat(number);
@@ -26,6 +28,7 @@ describe('@Inject', () => {
 
   test('Validate param binding', () => {
     const x = Symbol();
+
     class Foo {
       shouldOkay(@MethodInject(x) foo: any) {}
 
@@ -33,6 +36,7 @@ describe('@Inject', () => {
 
       noParam() {}
     }
+
     expect(() => validateMethodInjectMetadata(Foo.prototype.shouldOkay)).not.toThrow();
     expect(() => validateMethodInjectMetadata(Foo.prototype.shouldFail)).toThrow();
     expect(() => validateMethodInjectMetadata(Foo.prototype.noParam)).not.toThrow();

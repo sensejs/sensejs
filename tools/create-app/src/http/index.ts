@@ -1,4 +1,4 @@
-import {Logger, InjectLogger} from '@sensejs/core';
+import {InjectLogger, Logger} from '@sensejs/core';
 import {HttpModule} from '@sensejs/http';
 import {ExampleController} from './example.controller';
 import {RequestTimingInterceptor} from './request-timing.interceptor';

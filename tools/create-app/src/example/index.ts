@@ -1,5 +1,5 @@
 import {PublishingFacade} from './publishing-facade.component';
-import {Module, InjectLogger, Logger} from '@sensejs/core';
+import {InjectLogger, Logger, Module} from '@sensejs/core';
 import {SenseLogModule} from '@sensejs/logger';
 
 export default class PublishingModule extends Module({

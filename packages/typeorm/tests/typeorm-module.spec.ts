@@ -1,7 +1,7 @@
-import {ModuleRoot, Module, RequestInterceptor, RequestContext, ServiceIdentifier, Component, LoggerModule} from '@sensejs/core';
+import {Component, Module, ModuleRoot, RequestContext, RequestInterceptor, ServiceIdentifier} from '@sensejs/core';
 import {Container, inject} from 'inversify';
-import {Column, Entity, PrimaryColumn, Repository, TableInheritance, ChildEntity} from 'typeorm';
-import {InjectRepository, TypeOrmSupportInterceptor, TypeOrmModule} from '../src';
+import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
+import {InjectRepository, TypeOrmModule, TypeOrmSupportInterceptor} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {

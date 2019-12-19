@@ -26,7 +26,7 @@ export interface InstanceMethodDecorator {
   <T extends Function>(
     target: object,
     name: PropertyName,
-    pd: TypedPropertyDescriptor<T>
+    pd: TypedPropertyDescriptor<T>,
   ): TypedPropertyDescriptor<T> | void;
 }
 
@@ -63,6 +63,34 @@ function noop() {
 type NarrowTo<T> = Decorator extends T ? T : unknown;
 
 export class DecoratorBuilder {
+  private applyToClass: ClassDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to class`);
+  };
+  private applyToInstanceProperty: InstancePropertyDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to property`);
+  };
+  private applyToStaticProperty: StaticPropertyDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to static property`);
+  };
+  private applyToInstanceMethod: InstanceMethodDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to method`);
+  };
+  private applyToStaticMethod: StaticMethodDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to static method`);
+  };
+  private applyToConstructorParam: <T>(ctr: Class<T>, name: any, index: number) => void | Class<T> = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
+  };
+  private applyToStaticMethodParam: StaticMethodParamDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class static method`);
+  };
+  private applyToInstanceMethodParam: InstanceMethodParamDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class instance method`);
+  };
+  private applyToWrongPlace: () => void = () => {
+    throw new Error(`@${this.decoratorName} cannot be applied here`);
+  };
+
   constructor(private decoratorName: string, strictChecking = true) {
     if (!strictChecking) {
       this.applyToConstructorParam = noop;
@@ -170,40 +198,4 @@ export class DecoratorBuilder {
     };
     return result as NarrowTo<T>;
   }
-
-  private applyToClass: ClassDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to class`);
-  };
-
-  private applyToInstanceProperty: InstancePropertyDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to property`);
-  };
-
-  private applyToStaticProperty: StaticPropertyDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to static property`);
-  };
-
-  private applyToInstanceMethod: InstanceMethodDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to method`);
-  };
-
-  private applyToStaticMethod: StaticMethodDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to static method`);
-  };
-
-  private applyToConstructorParam: <T>(ctr: Class<T>, name: any, index: number) => void | Class<T> = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
-  };
-
-  private applyToStaticMethodParam: StaticMethodParamDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class static method`);
-  };
-
-  private applyToInstanceMethodParam: InstanceMethodParamDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class instance method`);
-  };
-
-  private applyToWrongPlace: () => void = () => {
-    throw new Error(`@${this.decoratorName} cannot be applied here`);
-  };
 }

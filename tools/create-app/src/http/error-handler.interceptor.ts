@@ -1,5 +1,5 @@
 import {Component, InjectLogger, Logger} from '@sensejs/core';
-import {HttpInterceptor, HttpContext} from '@sensejs/http';
+import {HttpContext, HttpInterceptor} from '@sensejs/http';
 import {HttpError} from './http-error';
 
 @Component()
@@ -7,6 +7,7 @@ export class ErrorHandlerInterceptor extends HttpInterceptor {
   constructor(@InjectLogger() private logger: Logger) {
     super();
   }
+
   async intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
     try {
       await next();

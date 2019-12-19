@@ -1,13 +1,13 @@
 import Redis from 'ioredis';
 import {
+  Inject,
   Module,
   ModuleConstructor,
   ModuleOption,
+  Named,
   provideConnectionFactory,
   provideOptionInjector,
   ServiceIdentifier,
-  Inject,
-  Named,
 } from '@sensejs/core';
 
 export interface RedisConnectOption extends Redis.RedisOptions {

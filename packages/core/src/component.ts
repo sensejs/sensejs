@@ -28,14 +28,14 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
     tags = [],
     name,
     id = target,
-    scope = ComponentScope.TRANSIENT
+    scope = ComponentScope.TRANSIENT,
   } = option;
   const metadata: ComponentMetadata<T> = {
     target,
     id,
     scope,
     name,
-    tags
+    tags,
   };
 
   Reflect.defineMetadata(COMPONENT_METADATA_KEY, metadata, target);

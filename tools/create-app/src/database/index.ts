@@ -1,6 +1,4 @@
 import {TypeOrmModule} from '@sensejs/typeorm';
-import {SenseLogModule} from '@sensejs/logger';
-import ConfigModule from '../config';
 import {InjectLogger, Logger} from '@sensejs/core';
 
 export default class DatabaseModule extends TypeOrmModule({
@@ -14,6 +12,7 @@ export default class DatabaseModule extends TypeOrmModule({
   constructor(@InjectLogger(DatabaseModule) private logger: Logger) {
     super();
   }
+
   async onCreate(): Promise<void> {
     this.logger.info('Creating TypeORM Module');
     await super.onCreate();

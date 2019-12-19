@@ -1,5 +1,5 @@
 import traverse from 'traverse';
-import {Module, ConstantProvider} from '@sensejs/core';
+import {ConstantProvider, Module} from '@sensejs/core';
 
 export interface ConfigModuleOption {
   config: object;

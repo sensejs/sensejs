@@ -42,7 +42,7 @@ export class MessageConsumeManager {
       consumerGroupOption: rest,
       consumeConcurrency,
       consumeTimeout,
-      commitInterval
+      commitInterval,
     };
 
     this._consumerGroupPipeline = new ConsumerGroupPipeline(pipelineOption);

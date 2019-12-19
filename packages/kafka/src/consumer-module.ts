@@ -1,6 +1,7 @@
 import {
   Class,
   composeRequestInterceptor,
+  Inject,
   invokeMethod,
   Module,
   ModuleConstructor,
@@ -9,7 +10,6 @@ import {
   provideOptionInjector,
   RequestInterceptor,
   ServiceIdentifier,
-  Inject,
 } from '@sensejs/core';
 import {Container} from 'inversify';
 import {Message} from 'kafka-node';
@@ -156,6 +156,7 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymb
       return super.onDestroy();
     }
   }
+
   return Module({requires: [KafkaConsumerGroupModule]});
 }
 

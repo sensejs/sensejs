@@ -1,4 +1,4 @@
-import {Controller, GET, Query, POST, Body, Path} from '@sensejs/http';
+import {Body, Controller, GET, Path, POST, Query} from '@sensejs/http';
 import {PublishingFacade} from '../example/publishing-facade.component';
 import {inject} from 'inversify';
 import {InjectLogger, Logger} from '@sensejs/core';
