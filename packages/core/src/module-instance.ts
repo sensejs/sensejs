@@ -1,5 +1,5 @@
 import {Container} from 'inversify';
-import {getModuleMetadata, ModuleClass, ModuleMetadata} from './module';
+import {getModuleMetadata, ModuleMetadata} from './module';
 import {invokeMethod} from './method-inject';
 import {Constructor} from './interfaces';
 
@@ -37,13 +37,11 @@ export class ModuleInstance {
       .inSingletonScope();
     this.container.load(this.moduleMetadata.containerModule);
     this.moduleInstance = this.container.get(this.moduleClass);
-    if (this.moduleMetadata.onModuleCreate) {
-      await Promise.resolve(invokeMethod(this.container, this.moduleInstance, this.moduleMetadata.onModuleCreate));
-    }
+    await Promise.resolve(invokeMethod(this.container, this.moduleInstance, this.moduleMetadata.onModuleCreate));
   }
 
   private async performDestroy() {
-    if (this.moduleInstance && this.moduleMetadata.onModuleDestroy) {
+    if (this.moduleInstance) {
       await Promise.resolve(invokeMethod(this.container, this.moduleInstance, this.moduleMetadata.onModuleDestroy));
     }
     this.container.unload(this.moduleMetadata.containerModule);

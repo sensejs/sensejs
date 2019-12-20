@@ -5,7 +5,6 @@ import {
   getModuleMetadata,
   Module,
   ModuleClass,
-  ModuleDecorator,
   OnModuleCreate, OnModuleDestroy,
 } from '../src';
 import {ModuleInstance} from '../src/module-instance';
@@ -37,7 +36,7 @@ describe('Module', () => {
       }
     }
 
-    @ModuleDecorator({
+    @ModuleClass({
       components: [TestComponent],
       constants: [{provide: ConstantSymbol, value: constant}],
       factories: [{provide: FactorySymbol, factory: Factory}],
@@ -143,15 +142,5 @@ describe('Module', () => {
     }
 
     expect(() => container.resolve(TestComponent1)).not.toThrow();
-  });
-
-  test('getModuleMetadata', () => {
-    class NonModule extends ModuleClass {
-      async onCreate(): Promise<void> {}
-
-      async onDestroy(): Promise<void> {}
-    }
-
-    expect(() => new ModuleInstance(NonModule, new Container())).toThrow();
   });
 });

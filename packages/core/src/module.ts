@@ -8,10 +8,10 @@ import {
   Constructor,
   FactoryProvider,
 } from './interfaces';
-import {AsyncContainerModule, ContainerModule, decorate, injectable, interfaces} from 'inversify';
+import {ContainerModule, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 import {ensureMethodInjectMetadata} from './method-inject';
-import {Deprecated} from './utils/deprecate';
+import {Deprecated} from './utils';
 
 export interface ModuleOption {
   /**
@@ -32,8 +32,8 @@ export interface ModuleOption {
 export interface ModuleMetadata {
   requires: ModuleConstructor[];
   containerModule: ContainerModule;
-  onModuleCreate?: Function;
-  onModuleDestroy?: Function;
+  onModuleCreate: Function;
+  onModuleDestroy: Function;
 }
 
 const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
@@ -83,13 +83,11 @@ function bindingHelper<T>(spec: BindingSpec, from: () => interfaces.BindingInSyn
   }
 }
 
-export function ModuleDecorator(spec: ModuleOption) {
-
-  const components = spec.components || [];
-  const factories = spec.factories || [];
-  const constants = spec.constants || [];
-  const requires = spec.requires || [];
-  const containerModule = new ContainerModule((bind, unbind, isBound, rebind) => {
+function createContainerModule(option: ModuleOption) {
+  const components = option.components || [];
+  const factories = option.factories || [];
+  const constants = option.constants || [];
+  return new ContainerModule((bind, unbind, isBound, rebind) => {
     constants.forEach((constantProvider) => {
       bind(constantProvider.provide).toConstantValue(constantProvider.value);
     });
@@ -112,10 +110,19 @@ export function ModuleDecorator(spec: ModuleOption) {
       );
     });
   });
+}
+
+function moduleLifecycleFallback() {}
+ensureMethodInjectMetadata(moduleLifecycleFallback);
+
+export function ModuleClass(option: ModuleOption) {
+
+  const requires = option.requires || [];
+  const containerModule = createContainerModule(option);
 
   return <T extends {}>(constructor: Constructor<T>) => {
     const methods = Object.entries(Object.getOwnPropertyDescriptors(constructor.prototype))
-      .map(([, pd]) => pd.value)
+      .map(([, pd]) => pd.value as Function)
       .filter((value) => typeof value === 'function');
     const onModuleCreateDecorated = methods.filter((func) => Reflect.hasOwnMetadata(ON_MODULE_CREATE, func));
     const onModuleDestroyDecorated = methods.filter((func) => Reflect.hasOwnMetadata(ON_MODULE_CREATE, func));
@@ -131,8 +138,8 @@ export function ModuleDecorator(spec: ModuleOption) {
     setModuleMetadata(constructor, {
       requires,
       containerModule,
-      onModuleCreate: onModuleCreateDecorated[0],
-      onModuleDestroy: onModuleDestroyDecorated[0],
+      onModuleCreate: onModuleCreateDecorated[0] ?? moduleLifecycleFallback,
+      onModuleDestroy: onModuleDestroyDecorated[0] ?? moduleLifecycleFallback,
     });
   };
 }
@@ -180,59 +187,38 @@ export function OnModuleDestroy() {
   };
 }
 
-@Deprecated({message: 'Module() is deprecated. Use @ModuleDecorator to define module instead.'})
+@Deprecated({message: 'Module() is deprecated. Use @ModuleClass to define module instead.'})
 @injectable()
-export class ModuleClass {
+class LegacyModuleClass {
   async onCreate(): Promise<void> {}
 
   async onDestroy(): Promise<void> {}
 }
 
-export type ModuleConstructor = Constructor<ModuleClass>;
+export type ModuleConstructor = Constructor<LegacyModuleClass>;
 
-export function Module(spec: ModuleOption = {}): ModuleConstructor {
-  const components = spec.components || [];
-  const factories = spec.factories || [];
-  const constants = spec.constants || [];
+/**
+ * Create a module constructor
+ * @param option
+ * @deprecated Use ModuleClass decorator, or up comming createModule function instead
+ */
+export function Module(option: ModuleOption = {}): ModuleConstructor {
+  const containerModule = createContainerModule(option);
 
-  const containerModule = new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
-    constants.forEach((constantProvider) => {
-      bind(constantProvider.provide).toConstantValue(constantProvider.value);
-    });
+  class Module extends LegacyModuleClass {}
 
-    components.map(getComponentMetadata).map(async (metadata: ComponentMetadata<unknown>) => {
-      const {target, id = target} = metadata;
-      bindingHelper(metadata, () => bind(id).to(metadata.target));
-    });
-
-    factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, factory, scope, ...rest} = factoryProvider;
-      if (!isBound(factory)) {
-        bindingHelper({scope}, () => bind(factory).toSelf());
-      }
-      bindingHelper(rest, () =>
-        bind(provide).toDynamicValue((context: interfaces.Context) => {
-          const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
-          return factoryInstance.build(context);
-        }),
-      );
-    });
-  });
-
-  class Module extends ModuleClass {}
-
-  function onModuleCreate(this: ModuleClass) {
+  function onModuleCreate(this: LegacyModuleClass) {
     return this.onCreate();
   }
 
-  function onModuleDestroy(this: ModuleClass) {
+  function onModuleDestroy(this: LegacyModuleClass) {
     return this.onDestroy();
   }
 
   ensureMethodInjectMetadata(onModuleCreate);
   ensureMethodInjectMetadata(onModuleDestroy);
   setModuleMetadata(Module, {
-    requires: spec.requires || [],
+    requires: option.requires || [],
     containerModule,
     onModuleCreate,
     onModuleDestroy,
