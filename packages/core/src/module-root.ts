@@ -12,7 +12,6 @@ export class ModuleRoot {
   public constructor(private entryModule: Constructor) {
     this.container.bind(Container).toConstantValue(this.container);
     this.analyzeDependency(this.entryModule, getModuleMetadata(this.entryModule));
-    // this.buildDependencyAndReference();
   }
 
   public async start() {
