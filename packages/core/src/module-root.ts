@@ -1,5 +1,5 @@
 import {Container} from 'inversify';
-import {getModuleMetadata, ModuleConstructor} from './module';
+import {getModuleMetadata, ModuleMetadata} from './module';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 
@@ -9,40 +9,10 @@ export class ModuleRoot {
   private readonly moduleDependencyMap: Map<Constructor, Constructor[]> = new Map();
   private readonly moduleReferencedMap: Map<Constructor, Constructor[]> = new Map();
 
-  public constructor(private entryModule: ModuleConstructor) {
+  public constructor(private entryModule: Constructor) {
     this.container.bind(Container).toConstantValue(this.container);
-
-    const moduleClasses = [entryModule];
-
-    for (; ;) {
-      const moduleClass = moduleClasses.shift();
-      if (!moduleClass) {
-        return;
-      }
-
-      const moduleMetadata = getModuleMetadata(moduleClass);
-      const moduleDependencies = moduleMetadata.requires || [];
-
-      for (const dependencyModuleClass of moduleDependencies) {
-        if (this.moduleDependencyMap.get(dependencyModuleClass)) {
-          continue;
-        }
-        if (moduleClasses.indexOf(dependencyModuleClass) < 0) {
-          moduleClasses.push(dependencyModuleClass);
-        }
-        let referencedModules = this.moduleReferencedMap.get(dependencyModuleClass);
-
-        if (referencedModules === undefined) {
-          referencedModules = [];
-          this.moduleReferencedMap.set(dependencyModuleClass, referencedModules);
-        }
-
-        if (referencedModules.indexOf(moduleClass) < 0) {
-          referencedModules.push(moduleClass);
-        }
-      }
-      this.moduleDependencyMap.set(moduleClass, moduleDependencies);
-    }
+    this.analyzeDependency(this.entryModule, getModuleMetadata(this.entryModule));
+    // this.buildDependencyAndReference();
   }
 
   public async start() {
@@ -51,6 +21,16 @@ export class ModuleRoot {
 
   public async stop(): Promise<void> {
     await Promise.all(Array.from(this.moduleInstanceMap.values()).map((module) => this.stopModule(module)));
+  }
+
+  private analyzeDependency(target: Constructor, metadata: ModuleMetadata) {
+    if (!this.moduleDependencyMap.has(target)) {
+      this.moduleDependencyMap.set(target, metadata.requires);
+      metadata.requires.forEach((module) => {
+        this.analyzeDependency(module, getModuleMetadata(module));
+        this.moduleReferencedMap.set(module, [target].concat(this.moduleReferencedMap.get(module) ?? []));
+      });
+    }
   }
 
   private async startModule(module: Constructor) {
@@ -63,7 +43,6 @@ export class ModuleRoot {
         for (const dependency of dependencies) {
           await this.startModule(dependency);
         }
-        // await Promise.all(dependencies.map((dep) => this.startModule(dep)));
       }
     }
     await moduleInstance.onSetup();
@@ -74,8 +53,8 @@ export class ModuleRoot {
     if (referencedModules) {
       await Promise.all(
         referencedModules
-          .map((module) => this.moduleInstanceMap.get(module))
-          .map((module) => module && this.stopModule(module)),
+          .map((module) => this.moduleInstanceMap.get(module)!)
+          .map((module) => this.stopModule(module)),
       );
     }
     await moduleInstance.onDestroy();

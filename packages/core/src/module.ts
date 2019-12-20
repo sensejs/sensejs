@@ -17,7 +17,7 @@ export interface ModuleOption {
   /**
    * Dependencies of this module, must be decorated
    */
-  requires?: ModuleConstructor[];
+  requires?: Constructor[];
 
   /**
    * Components provided by this module
@@ -30,7 +30,7 @@ export interface ModuleOption {
 }
 
 export interface ModuleMetadata {
-  requires: ModuleConstructor[];
+  requires: Constructor[];
   containerModule: ContainerModule;
   onModuleCreate: Function;
   onModuleDestroy: Function;
@@ -113,39 +113,55 @@ function createContainerModule(option: ModuleOption) {
 }
 
 function moduleLifecycleFallback() {}
+
 ensureMethodInjectMetadata(moduleLifecycleFallback);
 
-export function ModuleClass(option: ModuleOption) {
+function ensureOnModuleCreate<T>(constructor: Constructor<T>) {
+
+  const onModuleCreateMetadata = Reflect.getMetadata(ON_MODULE_CREATE, constructor.prototype);
+  if (typeof onModuleCreateMetadata === 'undefined') {
+    return moduleLifecycleFallback;
+  }
+
+  const onModuleCreate = constructor.prototype[onModuleCreateMetadata as keyof T];
+  if (typeof onModuleCreate !== 'function') {
+    throw new Error('@OnModuleCreate decorated function has been replaced by non-function value');
+  }
+  ensureMethodInjectMetadata(onModuleCreate);
+
+  return onModuleCreate;
+}
+
+function ensureOnModuleDestroy<T>(constructor: Constructor<T>) {
+
+  const onModulDestroyMetadata = Reflect.getMetadata(ON_MODULE_DESTROY, constructor.prototype);
+  if (typeof onModulDestroyMetadata === 'undefined') {
+    return moduleLifecycleFallback;
+  }
+
+  const onModuleDestroy = constructor.prototype[onModulDestroyMetadata as keyof T];
+  if (typeof onModuleDestroy !== 'function') {
+    throw new Error('@OnModuleDestroy decorated function has been replaced by non-function value');
+  }
+  ensureMethodInjectMetadata(onModuleDestroy);
+
+  return onModuleDestroy;
+}
+
+export function ModuleClass(option: ModuleOption = {}) {
 
   const requires = option.requires || [];
   const containerModule = createContainerModule(option);
 
   return <T extends {}>(constructor: Constructor<T>) => {
-    const methods = Object.entries(Object.getOwnPropertyDescriptors(constructor.prototype))
-      .map(([, pd]) => pd.value as Function)
-      .filter((value) => typeof value === 'function');
-    const onModuleCreateDecorated = methods.filter((func) => Reflect.hasOwnMetadata(ON_MODULE_CREATE, func));
-    const onModuleDestroyDecorated = methods.filter((func) => Reflect.hasOwnMetadata(ON_MODULE_CREATE, func));
-
-    if (onModuleCreateDecorated.length > 1) {
-      throw new Error('Multiple @OnModuleCreate applied to this module');
-    }
-
-    if (onModuleDestroyDecorated.length > 1) {
-      throw new Error('Multiple @OnModuleDestroy applied to this module');
-    }
 
     setModuleMetadata(constructor, {
       requires,
       containerModule,
-      onModuleCreate: onModuleCreateDecorated[0] ?? moduleLifecycleFallback,
-      onModuleDestroy: onModuleDestroyDecorated[0] ?? moduleLifecycleFallback,
+      onModuleCreate: ensureOnModuleCreate(constructor),
+      onModuleDestroy: ensureOnModuleDestroy(constructor),
     });
   };
-}
-
-interface ModuleLifecycle {
-  <T extends {}>(this: T): void | Promise<void>;
 }
 
 const ON_MODULE_CREATE = Symbol();
@@ -156,15 +172,14 @@ export function OnModuleCreate() {
   return <T extends {}>(
     prototype: T,
     name: keyof T,
-    propertyDescriptor: TypedPropertyDescriptor<ModuleLifecycle>,
-  ) => {
+    propertyDescriptor: PropertyDescriptor,
+  ): void => {
     const func = propertyDescriptor.value;
     if (func) {
-      if (Reflect.hasOwnMetadata(ON_MODULE_CREATE, func)) {
+      if (Reflect.hasOwnMetadata(ON_MODULE_CREATE, prototype)) {
         throw new Error('Cannot apply @OnModuleCreate multiple times');
       }
-      Reflect.defineMetadata(ON_MODULE_CREATE, undefined, func);
-      ensureMethodInjectMetadata(func);
+      Reflect.defineMetadata(ON_MODULE_CREATE, name, prototype);
     }
   };
 }
@@ -174,15 +189,14 @@ export function OnModuleDestroy() {
   return <T extends {}>(
     prototype: T,
     name: keyof T,
-    propertyDescriptor: TypedPropertyDescriptor<ModuleLifecycle>,
-  ) => {
+    propertyDescriptor: PropertyDescriptor,
+  ): void => {
     const func = propertyDescriptor.value;
     if (func) {
-      if (Reflect.hasOwnMetadata(ON_MODULE_CREATE, func)) {
+      if (Reflect.hasOwnMetadata(ON_MODULE_DESTROY, prototype)) {
         throw new Error('Cannot apply @OnModuleDestroy multiple times');
       }
-      Reflect.defineMetadata(ON_MODULE_DESTROY, undefined, func);
-      ensureMethodInjectMetadata(func);
+      Reflect.defineMetadata(ON_MODULE_DESTROY, name, prototype);
     }
   };
 }
