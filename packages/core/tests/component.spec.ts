@@ -36,15 +36,29 @@ describe('Component', () => {
     @Component({id: BaseClass})
     class MyComponent extends BaseClass {}
 
-    const metadata = getComponentMetadata(MyComponent);
     expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id: BaseClass}));
   });
 
-  xtest('Failed to use unrelated function as component id', async () => {
-    class AnyOtherClass {}
+  test('Failed to use unrelated function as component id', () => {
+    expect(() => {
+      class AnyOtherClass {}
 
-    @Component({id: AnyOtherClass})
-    class MyComponent extends AnyOtherClass {}
+      @Component({id: AnyOtherClass})
+      class MyComponent {}
+    }).toThrow();
+  });
+
+  test('Cannot apply @Component to same target multiple times', () => {
+    expect(() => {
+      @Component()
+      @Component()
+      class MyComponent {}
+    });
+    expect(() => {
+      @Component({id: Symbol()})
+      @Component()
+      class MyComponent {}
+    });
   });
 
   test('Component scope', () => {
