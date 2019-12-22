@@ -4,7 +4,7 @@ import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 
 export class ModuleRoot {
-  private readonly container: Container = new Container({skipBaseClassChecks: true});
+  readonly container: Container = new Container({skipBaseClassChecks: true});
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
   private readonly moduleDependencyMap: Map<Constructor, Constructor[]> = new Map();
   private readonly moduleReferencedMap: Map<Constructor, Constructor[]> = new Map();

@@ -1,6 +1,7 @@
-import {EntryPoint, Module, ModuleConstructor} from '../src';
-import {runModule} from '../src/entry-point';
-import '@sensejs/testing-utility/lib/mock-console';
+import {ConsoleLoggerBuilder, EntryPoint, Module, ModuleConstructor, ModuleRoot} from '../src';
+import {ApplicationRunner, RunOption} from '../src/entry-point';
+
+// import '@sensejs/testing-utility/lib/mock-console';
 
 class AppExit extends Error {
   constructor(public readonly exitCode: number) {
@@ -8,22 +9,55 @@ class AppExit extends Error {
   }
 }
 
-function runModuleForTest(module: ModuleConstructor) {
-  return new Promise((resolve, reject) => runModule(module, {
-    errorExitOption: {
-      exitCode: 101,
-      timeout: 100,
-    },
-    normalExitOption: {
+const onExit = jest.fn();
+const runOptionFixture: Omit<RunOption<number>, 'logger'> = {
+  exitSignals: {
+    SIGINT: {
       exitCode: 0,
-      timeout: 100,
-      exitImmediatelyWhenRepeated: true,
+      forcedExitWhenRepeated: true,
     },
-    onExit: (exitCode): never => {
-      reject(new AppExit(exitCode));
-      return undefined as never;
+    SIGTERM: {
+      exitCode: 0,
+      forcedExitWhenRepeated: false,
     },
-  }));
+  },
+  errorExitOption: {
+    exitCode: 101,
+    timeout: 100,
+  },
+  forcedExitOption: {
+    forcedExitWhenRepeated: false,
+    forcedExitCode: 127,
+  },
+  normalExitOption: {
+    exitCode: 0,
+    timeout: 100,
+  },
+  onExit: (exitCode) => {
+    onExit(exitCode);
+    return exitCode;
+  },
+};
+
+function runModuleForTest(module: ModuleConstructor) {
+  return new Promise((resolve) => {
+    const logger = new ConsoleLoggerBuilder().build();
+    const runOption = Object.assign({}, runOptionFixture, {
+      logger, onExit: (exitCode: number) => {
+        onExit(exitCode);
+        return resolve(exitCode);
+      },
+    });
+    const appRunner = new ApplicationRunner(process, new ModuleRoot(module), runOption, logger);
+    return appRunner.run();
+  });
+}
+
+function emitSignalOnNextTick(signal: NodeJS.Signals = 'SIGINT') {
+  setImmediate(() => {
+    // @ts-ignore
+    process.emit(signal);
+  });
 }
 
 describe('Application', () => {
@@ -33,17 +67,12 @@ describe('Application', () => {
       throw new AppExit(exitCode);
     });
   });
+
   test('no module', async () => {
-    const promise = expect(
-      runModuleForTest(Module()).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(0);
-        throw appExit;
-      }),
-    ).rejects.toThrow(AppExit);
+    const promise = runModuleForTest(Module());
     expect(process.exit).not.toHaveBeenCalled();
-    // @ts-ignore
-    setImmediate(() => process.emit('SIGINT'));
-    return promise;
+    emitSignalOnNextTick();
+    expect(await promise).toBe(runOptionFixture.normalExitOption.exitCode);
   });
 
   test('failed on start', async () => {
@@ -54,14 +83,10 @@ describe('Application', () => {
       }
     }
 
-    const promise = expect(
-      runModuleForTest(BadModule).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(101);
-        throw appExit;
-      }),
-    ).rejects.toThrow(AppExit);
-    expect(process.exit).not.toHaveBeenCalled();
+    const promise = runModuleForTest(BadModule);
+    expect(onExit).not.toHaveBeenCalled();
     await promise;
+    expect(await promise).toBe(runOptionFixture.errorExitOption.exitCode);
   });
 
   test('failed on stop', async () => {
@@ -72,17 +97,9 @@ describe('Application', () => {
       }
     }
 
-    const promise = expect(
-      runModuleForTest(BadModule).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(101);
-        throw appExit;
-      }),
-    ).rejects.toThrow(AppExit);
-    expect(process.exit).not.toHaveBeenCalled();
-
-    // @ts-ignore
-    setImmediate(() => process.emit('SIGINT'));
-    await promise;
+    const promise = runModuleForTest(BadModule);
+    emitSignalOnNextTick();
+    expect(await promise).toBe(runOptionFixture.errorExitOption.exitCode);
   });
 
   test('on caught error', async () => {
@@ -94,14 +111,9 @@ describe('Application', () => {
       }
     }
 
-    const promise = expect(
-      runModuleForTest(BadModule).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(101);
-        throw appExit;
-      }),
-    ).rejects.toThrow(AppExit);
-    expect(process.exit).not.toHaveBeenCalled();
-    await promise;
+    const promise = runModuleForTest(BadModule);
+    expect(onExit).not.toHaveBeenCalled();
+    expect(await promise).toBe(runOptionFixture.errorExitOption.exitCode);
   });
 
   test('on timeout', async () => {
@@ -111,31 +123,20 @@ describe('Application', () => {
       }
     }
 
-    const promise = expect(
-      runModuleForTest(BadModule).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(101);
-        throw appExit;
-      }),
-    ).rejects.toThrow(AppExit);
-    expect(process.exit).not.toHaveBeenCalled();
-    // @ts-ignore
-    setImmediate(() => process.emit('SIGINT'));
-    await promise;
+    const promise = runModuleForTest(BadModule);
+    emitSignalOnNextTick();
+    emitSignalOnNextTick('SIGTERM');
+    expect(await promise).toBe(runOptionFixture.errorExitOption.timeout);
   });
 
   test('on repeated', async () => {
     class BadModule extends Module() {
       async onDestroy() {
-        return new Promise<void>(() => null);
+        await new Promise<void>(() => null);
       }
     }
 
-    const promise = expect(
-      runModuleForTest(BadModule).catch((appExit: AppExit) => {
-        expect(appExit.exitCode).toBe(101);
-        throw appExit;
-      }),
-    ).rejects.toThrow(AppExit);
+    const promise = runModuleForTest(BadModule);
     expect(process.exit).not.toHaveBeenCalled();
     setImmediate(() => {
       // @ts-ignore
@@ -143,7 +144,7 @@ describe('Application', () => {
       // @ts-ignore
       setImmediate(() => process.emit('SIGINT'));
     });
-    await promise;
+    expect(await promise).toBe(runOptionFixture.forcedExitOption.forcedExitCode);
   });
 
   test('warn when multiple entrypoint', () => {

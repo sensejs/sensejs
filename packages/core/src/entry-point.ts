@@ -1,43 +1,49 @@
 import {ModuleRoot} from './module-root';
-import {ModuleConstructor} from './module';
-import {consoleLogger, Logger} from './logger';
+import {ModuleClass, ModuleConstructor} from './module';
+import {
+  consoleLogger,
+  ConsoleLoggerBuilder,
+  Logger,
+  LOGGER_BUILDER_SYMBOL,
+  LoggerBuilder,
+  LoggerModule,
+} from './logger';
+import {Constructor} from './interfaces';
 
-interface ExitOption {
+interface NormalExitOption {
   exitCode: number;
   timeout: number;
 }
 
-interface RepeatableExitOption extends ExitOption {
-  exitImmediatelyWhenRepeated: boolean;
+interface ForcedExitOption {
+  forcedExitCode: number;
+  forcedExitWhenRepeated: boolean;
+}
+
+interface ExitOption extends NormalExitOption, Partial<ForcedExitOption> {
 }
 
 type ExitSignalOption = {
-  [signal in NodeJS.Signals]?: Partial<RepeatableExitOption>;
+  [signal in NodeJS.Signals]?: Partial<ExitOption>;
 };
 
-interface RunOption {
-  normalExitOption: RepeatableExitOption;
+export interface RunOption<T = never> {
+  normalExitOption: NormalExitOption;
+  forcedExitOption: ForcedExitOption;
   errorExitOption: ExitOption;
   exitSignals: ExitSignalOption;
   logger: Logger;
-  onExit: (exitCode: number) => never;
+  onExit: (exitCode: number) => T;
 }
-
-export const defaultExitOption: ExitOption = {
-  exitCode: 0,
-  timeout: 5000,
-};
-
-export const defaultExitFailureOption: ExitOption = {
-  exitCode: 1,
-  timeout: 5000,
-};
 
 export const defaultRunOption: RunOption = {
   normalExitOption: {
     exitCode: 0,
     timeout: 5000,
-    exitImmediatelyWhenRepeated: false,
+  },
+  forcedExitOption: {
+    forcedExitWhenRepeated: false,
+    forcedExitCode: 127,
   },
   errorExitOption: {
     exitCode: 1,
@@ -45,7 +51,7 @@ export const defaultRunOption: RunOption = {
   },
   exitSignals: {
     SIGINT: {
-      exitImmediatelyWhenRepeated: true,
+      forcedExitWhenRepeated: true,
     },
     SIGTERM: {},
   },
@@ -53,67 +59,106 @@ export const defaultRunOption: RunOption = {
   onExit: (exitCode) => process.exit(exitCode),
 };
 
-function setupEventEmitter(actualRunOption: RunOption, stopApp: (option: ExitOption) => void) {
-  const onWarning = () => {
+export class ApplicationRunner {
+  private runPromise?: Promise<unknown>;
+  private isStopped = false;
+  private onProcessWarning = () => {
   };
-  const onError = (e: any) => {
-    actualRunOption.logger.info('Uncaught exception: ', e);
-    actualRunOption.logger.info('Going to quit');
-    stopApp(actualRunOption.errorExitOption);
+  private onProcessError = (e: any) => {
+    this.logger.info('Uncaught exception: ', e);
+    this.logger.info('Going to quit');
+    this.stop(this.runOption.errorExitOption);
   };
-  const registerExitSignal = (signal: NodeJS.Signals) => {
-    const exitOption = Object.assign({}, actualRunOption.normalExitOption, actualRunOption.exitSignals[signal]);
-    process.once(signal, () => {
-      actualRunOption.logger.info('Receive signal %s, going to quit', signal);
-      stopApp(exitOption);
-      if (exitOption.exitImmediatelyWhenRepeated) {
-        process.once(signal, () => {
-          actualRunOption.logger.info('Receive signal %s again, force quit immediately', signal);
-          stopApp(actualRunOption.errorExitOption);
+
+  constructor(
+    private process: NodeJS.Process,
+    private moduleRoot: ModuleRoot,
+    private runOption: RunOption<unknown>,
+    private logger: Logger,
+  ) {}
+
+  run() {
+    if (this.runPromise) {
+      return this.runPromise;
+    }
+    this.runPromise = this.performRun();
+  }
+
+  private async performRun() {
+    this.setupEventEmitter();
+    try {
+      await this.moduleRoot.start();
+    } catch (e) {
+      this.logger.fatal('Error occurred when start application: ', e);
+      this.logger.fatal('Going to quit');
+      this.stop(this.runOption.errorExitOption);
+    } finally {
+      // TODO: Cleanup event handler
+    }
+  }
+
+  private forceStop(option: ForcedExitOption) {
+    this.runOption.onExit(option.forcedExitCode);
+  }
+
+  private stop(option: ExitOption = this.runOption.normalExitOption) {
+    if (this.isStopped) {
+      return;
+    }
+
+    let promise = this.stopModuleRoot(option);
+    if (option.timeout > 0) {
+      promise = Promise.race([
+        promise, new Promise<number>((resolve) => {
+          setTimeout(() => {
+            resolve(this.runOption.errorExitOption.timeout);
+          }, option.timeout);
+        }),
+      ]);
+    }
+    promise.then((exitCode: number) => {
+      return this.runOption.onExit(exitCode);
+    });
+  }
+
+  private async stopModuleRoot(option: NormalExitOption) {
+    try {
+      await this.moduleRoot.stop();
+    } catch (e) {
+      return this.runOption.errorExitOption.exitCode;
+    }
+    return option.exitCode;
+  }
+
+  private registerExitSignal(signal: NodeJS.Signals, exitOption: ExitOption) {
+    this.process.once(signal, () => {
+      this.logger.info('Receive signal %s, going to quit', signal);
+      this.stop(exitOption);
+      if (exitOption.forcedExitWhenRepeated) {
+        this.process.once(signal, () => {
+          this.logger.info('Receive signal %s again, force quit immediately', signal);
+          const option = Object.assign({}, this.runOption.forcedExitOption, exitOption);
+          this.forceStop(option);
         });
       }
     });
-  };
-  process.on('warning', onWarning);
-  process.on('unhandledRejection', onError);
-  process.on('uncaughtException', onError);
-  (Object.keys(actualRunOption.exitSignals) as NodeJS.Signals[]).forEach(registerExitSignal);
+  }
+
+  private setupEventEmitter() {
+    this.process.on('warning', this.onProcessWarning);
+    this.process.on('unhandledRejection', this.onProcessError);
+    this.process.on('uncaughtException', this.onProcessError);
+    for (const [signal, exitOption] of Object.entries(this.runOption.exitSignals) as [NodeJS.Signals, ExitOption][]) {
+      this.registerExitSignal(signal, Object.assign({}, this.runOption.normalExitOption, exitOption));
+    }
+  }
 }
 
-export async function runModule(entryModule: ModuleConstructor, runOption: Partial<RunOption> = {}) {
-  const actualRunOption = Object.assign({}, defaultRunOption, runOption);
-  const moduleRoot = new ModuleRoot(entryModule);
-  let stopPromise: Promise<void>;
-  const runUntilExit = new Promise<number>((resolve) => {
-    let exitCode = 0;
-    const stopModuleRoot = async () => {
-      try {
-        await moduleRoot.stop();
-      } catch (e) {
-        exitCode = actualRunOption.errorExitOption.exitCode;
-      } finally {
-        resolve(exitCode);
-      }
-    };
-    const stopApp = (option: ExitOption) => {
-      exitCode = option.exitCode;
-      if (!stopPromise) {
-        stopPromise = stopModuleRoot();
-      }
-      if (option.timeout > 0) {
-        setTimeout(() => {
-          resolve(actualRunOption.errorExitOption.exitCode);
-        }, option.timeout);
-      }
-    };
-    setupEventEmitter(actualRunOption, stopApp);
+function provideBuiltin(module: Constructor) {
+  @ModuleClass({requires: [LoggerModule, module]})
+  class WrappedModule {}
 
-    moduleRoot.start().catch((e) => {
-      actualRunOption.logger.fatal('Uncaught exception: ', e);
-      actualRunOption.logger.fatal('Going to quit');
-      stopApp(actualRunOption.errorExitOption);
-    });
-  }).then((exitCode) => actualRunOption.onExit(exitCode));
+  return WrappedModule;
 }
 
 let entryPointCalled = false;
@@ -123,9 +168,16 @@ export function EntryPoint(runOption: Partial<RunOption> = {}) {
     throw new Error('only one entry point is allowed');
   }
   entryPointCalled = true;
+  const actualRunOption = Object.assign({}, defaultRunOption, runOption);
 
   return (moduleConstructor: ModuleConstructor) => {
-    // Need to run module on next tick to ensure all files are loaded?
-    process.nextTick(() => runModule(moduleConstructor, runOption));
+    const moduleRoot = new ModuleRoot(provideBuiltin(moduleConstructor));
+    const container = moduleRoot.container;
+    const loggerBuilder = container.isBound(LOGGER_BUILDER_SYMBOL)
+      ? moduleRoot.container.get<LoggerBuilder>(LOGGER_BUILDER_SYMBOL)
+      : new ConsoleLoggerBuilder();
+    const logger = loggerBuilder.build('ApplicationRunner');
+    const runner = new ApplicationRunner(process, moduleRoot, actualRunOption, logger);
+    process.nextTick(() => runner.run());
   };
 }
