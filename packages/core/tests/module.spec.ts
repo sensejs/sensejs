@@ -1,10 +1,10 @@
-import {Container, inject, named, tagged} from 'inversify';
+import {Container} from 'inversify';
 import {
   Component,
   ComponentFactory,
+  createLegacyModule,
   getModuleMetadata,
   Inject,
-  Module,
   ModuleClass,
   ModuleRoot,
   Named,
@@ -85,6 +85,7 @@ describe('@ModuleClass', () => {
       onModuleDestroy: X.prototype.bar,
     }));
   });
+
 });
 
 describe('ModuleInstance', () => {
@@ -115,6 +116,29 @@ describe('ModuleInstance', () => {
     expect(onCreateStub).toHaveBeenCalled();
     await moduleInstance.onDestroy();
     expect(onDestroyStub).toHaveBeenCalled();
+  });
+
+  test('legacy module lifecycle', async () => {
+    const legacyModule = createLegacyModule(ModuleClass, '');
+    const onCreateStub = jest.fn(), onDestroyStub = jest.fn();
+
+    class LegacyModule extends legacyModule({}) {
+
+      async onCreate(): Promise<void> {
+        onCreateStub();
+      }
+
+      async onDestroy(): Promise<void> {
+        onDestroyStub();
+      }
+    }
+
+    const moduleInstance = new ModuleInstance(LegacyModule, container);
+    await moduleInstance.onSetup();
+    expect(onCreateStub).toHaveBeenCalled();
+    await moduleInstance.onDestroy();
+    expect(onDestroyStub).toHaveBeenCalled();
+
   });
 
   test('Call inherited module lifecycle', async () => {
@@ -307,6 +331,7 @@ describe('Module Root', () => {
 
   test('component resolve', async () => {
     const xOnCreateSpy = jest.fn(), xOnDestroySpy = jest.fn();
+
     @Component()
     class A {}
 
@@ -352,6 +377,7 @@ describe('Module Root', () => {
     }
 
     const zOnCreateSpy = jest.fn(), zOnDestroySpy = jest.fn();
+
     @ModuleClass({
       requires: [X, Y],
     })
