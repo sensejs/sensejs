@@ -1,4 +1,12 @@
-import {Component, Module, ModuleRoot, RequestContext, RequestInterceptor, ServiceIdentifier} from '@sensejs/core';
+import {
+  Component,
+  ModuleClass,
+  ModuleRoot,
+  OnModuleCreate,
+  RequestContext,
+  RequestInterceptor,
+  ServiceIdentifier,
+} from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
 import {InjectRepository, TypeOrmModule, TypeOrmSupportInterceptor} from '../src';
@@ -86,17 +94,17 @@ describe('TypeOrmModule', () => {
 
     const spy = jest.fn();
 
-    class FooModule extends Module({
+    @ModuleClass({
       components: [ExampleHttpController, TypeOrmSupportInterceptor],
       requires: [typeOrmModule],
-    }) {
+    })
+    class FooModule {
       constructor(
         @inject(TypeOrmSupportInterceptor) private interceptor: RequestInterceptor,
         @inject(Container) private container: Container,
-      ) {
-        super();
-      }
+      ) {}
 
+      @OnModuleCreate()
       async onCreate() {
         const childContainer = this.container.createChild();
         const context = new MockRequestContext(childContainer);

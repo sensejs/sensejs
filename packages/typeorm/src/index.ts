@@ -1,13 +1,16 @@
 import {
   Component,
+  createLegacyModule,
+  createModule,
   Deprecated,
   Inject,
   InjectLogger,
   Logger,
   LoggerModule,
-  Module,
-  ModuleConstructor,
+  ModuleClass,
   ModuleOption,
+  OnModuleCreate,
+  OnModuleDestroy,
   provideConnectionFactory,
   provideOptionInjector,
   RequestContext,
@@ -62,7 +65,7 @@ class EntityMetadataHelper {
   }
 }
 
-const helperModule = Module({components: [EntityMetadataHelper]});
+const helperModule = createModule({components: [EntityMetadataHelper]});
 
 @Component()
 @Deprecated()
@@ -76,7 +79,7 @@ export class TypeOrmSupportInterceptor extends RequestInterceptor {
   }
 }
 
-export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
+export function TypeOrmModuleClass(option: TypeOrmModuleOption) {
   const optionProvider = provideOptionInjector<ConnectionOptions>(
     option.typeOrmOption,
     option.injectOptionFrom,
@@ -96,64 +99,70 @@ export function TypeOrmModule(option: TypeOrmModuleOption): ModuleConstructor {
     Connection,
   );
 
-  class TypeOrmConnectionModule extends Module({
-    requires: [LoggerModule, Module(option), helperModule],
+  @ModuleClass({
+    requires: [LoggerModule, createModule(option), helperModule],
     factories: [factoryProvider, optionProvider],
-  }) {
+
+  })
+  class TypeOrmConnectionModule {
     constructor(
       @Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>,
       @Inject(optionProvider.provide) private config: ConnectionOptions,
-      @InjectLogger('TypeOrm') private logger: Logger,
-      @InjectLogger('TypeOrmMigration') private migrationLogger: Logger,
-      @InjectLogger('TypeOrmQuery') private queryLogger: Logger,
-    ) {
-      super();
-    }
+    ) {}
 
-    async onCreate(): Promise<void> {
-      await super.onCreate();
-      let config = this.config;
-      if (this.config.logging === true && !this.config.logger) {
-        config = Object.assign({}, this.config, {
-          logger: createTypeOrmLogger(this.logger, this.migrationLogger, this.queryLogger),
+    @OnModuleCreate()
+    async onCreate(
+      @Inject(optionProvider.provide) config: ConnectionOptions,
+      @InjectLogger('TypeOrm') logger: Logger,
+      @InjectLogger('TypeOrmMigration') migrationLogger: Logger,
+      @InjectLogger('TypeOrmQuery') queryLogger: Logger,
+    ): Promise<void> {
+      if (config.logging === true && !config.logger) {
+        config = Object.assign({}, config, {
+          logger: createTypeOrmLogger(logger, migrationLogger, queryLogger),
         });
       }
       await this.factory.connect(config);
     }
 
+    @OnModuleDestroy()
     async onDestroy(): Promise<void> {
       await this.factory.disconnect();
-      await super.onDestroy();
     }
   }
 
-  class EntityManagerModule extends Module({
+  @ModuleClass({
     requires: [TypeOrmConnectionModule],
-  }) {
+  })
+  class EntityManagerModule {
     private readonly module: AsyncContainerModule;
 
     constructor(
       @Inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
       @Inject(Container) private container: Container,
     ) {
-      super();
-      this.module = new AsyncContainerModule(async (bind, unbind, isBound, rebind) => {
+      this.module = new AsyncContainerModule(async (bind) => {
         this.entityMetadataHelper.bindEntityManagerAndRepository((symbol, target) => {
           bind(symbol).toConstantValue(target);
         });
       });
     }
 
+    @OnModuleCreate()
     async onCreate() {
-      await super.onCreate();
       await this.container.loadAsync(this.module);
     }
 
+    @OnModuleDestroy()
     async onDestroy() {
       await this.container.unload(this.module);
-      return super.onDestroy();
     }
   }
 
-  return Module({requires: [EntityManagerModule]});
+  return ModuleClass({requires: [EntityManagerModule]});
 }
+
+export const TypeOrmModule = createLegacyModule(
+  TypeOrmModuleClass,
+  'Base class style TypeOrmModule is deprecated, use TypeOrmModuleClass decorator instead',
+);
