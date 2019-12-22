@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/logger",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -28,6 +28,6 @@
     "@sensejs/core": "workspace:0.0.11"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:0.1.0"
+    "@sensejs/core": "workspace:0.1.1"
   }
 }

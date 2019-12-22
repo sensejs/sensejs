@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/config",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -28,7 +28,7 @@
     "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:0.1.0",
+    "@sensejs/core": "workspace:0.1.1",
     "@types/traverse": "^0.6.32",
     "tslib": "^1.10.0"
   }

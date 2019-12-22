@@ -73,6 +73,7 @@ describe('Application', () => {
     });
     // tslint:disable-next-line:no-console
     expect(console.warn).toHaveBeenCalled();
+    return promise;
   });
 
   test('shutdown', async () => {

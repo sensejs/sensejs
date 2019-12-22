@@ -59,12 +59,12 @@ importers:
       '@types/config': 0.0.36
       '@types/uuid': 3.4.6
     specifiers:
-      '@sensejs/config': 'workspace:0.1.0'
-      '@sensejs/core': 'workspace:0.1.0'
-      '@sensejs/http': 'workspace:0.1.0'
-      '@sensejs/kafka': 'workspace:0.1.0'
-      '@sensejs/logger': 'workspace:0.1.0'
-      '@sensejs/typeorm': 'workspace:0.1.0'
+      '@sensejs/config': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/http': 'workspace:0.1.1'
+      '@sensejs/kafka': 'workspace:0.1.1'
+      '@sensejs/logger': 'workspace:0.1.1'
+      '@sensejs/typeorm': 'workspace:0.1.1'
       '@types/config': ^0.0.36
       '@types/uuid': ^3.4.6
       config: ^3.2.4
@@ -85,7 +85,7 @@ importers:
       '@sensejs/core': 'link:../core'
       '@types/traverse': 0.6.32
     specifiers:
-      '@sensejs/core': 'workspace:0.1.0'
+      '@sensejs/core': 'workspace:0.1.1'
       '@types/traverse': ^0.6.32
       inversify: ^5.0.1
       traverse: ^0.6.6
@@ -132,7 +132,7 @@ importers:
       supertest: 4.0.2
     specifiers:
       '@koa/cors': ^3.0.0
-      '@sensejs/core': 'workspace:0.1.0'
+      '@sensejs/core': 'workspace:0.1.1'
       '@types/koa': ^2.0.51
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.0.42
@@ -161,7 +161,7 @@ importers:
       '@types/lodash.merge': 4.6.6
       reflect-metadata: 0.1.13
     specifiers:
-      '@sensejs/core': 'workspace:0.1.0'
+      '@sensejs/core': 'workspace:0.1.1'
       '@types/lodash': ^4.14.149
       '@types/lodash.merge': ^4.6.6
       inversify: ^5.0.1
@@ -178,7 +178,7 @@ importers:
     devDependencies:
       '@sensejs/core': 'link:../core'
     specifiers:
-      '@sensejs/core': 'workspace:0.1.0'
+      '@sensejs/core': 'workspace:0.1.1'
       colors: ^1.4.0
       moment: ^2.24.0
       tslib: ^1.10.0
@@ -194,8 +194,8 @@ importers:
       supertest: 4.0.2
       tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:0.1.0'
-      '@sensejs/http': 'workspace:0.1.0'
+      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/http': 'workspace:0.1.1'
       '@types/ioredis': ^4.0.19
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
@@ -215,7 +215,7 @@ importers:
       supertest: 4.0.2
       typeorm: 0.2.20_sqlite3@4.1.0
     specifiers:
-      '@sensejs/core': 'workspace:0.1.0'
+      '@sensejs/core': 'workspace:0.1.1'
       '@sensejs/testing-utility': 'workspace:0.0.8'
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
