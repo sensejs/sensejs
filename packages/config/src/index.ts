@@ -1,5 +1,5 @@
 import traverse from 'traverse';
-import {ConstantProvider, Module} from '@sensejs/core';
+import {ConstantProvider, createModule} from '@sensejs/core';
 
 export interface ConfigModuleOption {
   config: object;
@@ -32,5 +32,5 @@ function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[]
 
 export function ConfigModule(option: ConfigModuleOption) {
   const constants = buildConfigMap(option);
-  return Module({constants});
+  return createModule({constants});
 }
