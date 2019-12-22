@@ -1,5 +1,5 @@
 import {Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '../src';
-import {BuiltinModule, BackgroundTaskQueue} from '../src/builtin-module';
+import {BackgroundTaskQueue, createBuiltinModule} from '../src/builtin-module';
 
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {
@@ -7,6 +7,7 @@ describe('BuiltinModule', () => {
     let resolvePromise: () => void;
     const longRunningTask = new Promise((resolve) => resolvePromise = resolve);
     const originWaitAllTaskFinished = BackgroundTaskQueue.prototype.waitAllTaskFinished;
+
     function mockedWaitAllTaskFinished(this: BackgroundTaskQueue) {
       const promise = originWaitAllTaskFinished.apply(this);
       expect(stoppedStub).not.toHaveBeenCalled();
@@ -15,11 +16,12 @@ describe('BuiltinModule', () => {
       });
       return promise;
     }
+
     const spy = jest
       .spyOn(BackgroundTaskQueue.prototype, 'waitAllTaskFinished')
       .mockImplementation(mockedWaitAllTaskFinished);
 
-    @ModuleClass({requires: [BuiltinModule]})
+    @ModuleClass({requires: [createBuiltinModule({onShutdown: () => null})]})
     class MyModule {
       @OnModuleCreate()
       onCreate(@Inject(BackgroundTaskQueue) queuedTask: BackgroundTaskQueue) {

@@ -54,8 +54,6 @@ export const defaultRunOption: RunOption = {
 };
 
 export class ApplicationRunner {
-  private static instance?: ApplicationRunner;
-
   static runModule(moduleConstructor: Constructor, runOption: RunOption) {
     const moduleRoot = new ModuleRoot(provideBuiltin(moduleConstructor, {
       onShutdown: () => {
@@ -68,7 +66,7 @@ export class ApplicationRunner {
       : new ConsoleLoggerBuilder();
     const logger = loggerBuilder.build('ApplicationRunner');
     const runner = new ApplicationRunner(process, moduleRoot, runOption, logger);
-    process.nextTick(() => runner.run());
+    return runner.run();
   }
 
   private runPromise?: Promise<unknown>;
@@ -86,9 +84,7 @@ export class ApplicationRunner {
     private moduleRoot: ModuleRoot,
     private runOption: RunOption<unknown>,
     private logger: Logger,
-  ) {
-    ApplicationRunner.instance = this;
-  }
+  ) {}
 
   shutdown(forced: boolean = false) {
     if (forced) {
@@ -166,6 +162,10 @@ export class ApplicationRunner {
     });
   }
 
+  private bindEventListener(event: string, fn: Function) {
+
+  }
+
   private setupEventEmitter() {
     this.process.on('warning', this.onProcessWarning);
     this.process.on('unhandledRejection', this.onProcessError);
@@ -188,13 +188,13 @@ function provideBuiltin(module: Constructor, option: {
 let entryPointCalled = false;
 
 export function EntryPoint(runOption: Partial<RunOption> = {}) {
-  if (entryPointCalled) {
-    throw new Error('only one entry point is allowed');
-  }
-  entryPointCalled = true;
   const actualRunOption = Object.assign({}, defaultRunOption, runOption);
 
   return (moduleConstructor: Constructor) => {
-    return ApplicationRunner.runModule(moduleConstructor, actualRunOption);
+    if (entryPointCalled) {
+      throw new Error('only one entry point is allowed');
+    }
+    entryPointCalled = true;
+    process.nextTick(() => ApplicationRunner.runModule(moduleConstructor, actualRunOption));
   };
 }
