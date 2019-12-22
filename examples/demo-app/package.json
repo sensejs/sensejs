@@ -1,5 +1,5 @@
 {
-  "name": "@sensejs/create-app",
+  "name": "@sensejs/ddd-demo",
   "version": "0.0.8",
   "description": "SENSE.js application boilerplate",
   "files": [
