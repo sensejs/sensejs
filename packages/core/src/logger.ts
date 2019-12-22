@@ -1,19 +1,30 @@
 /* tslint:disable no-console */
 import {Module} from './module';
-import {ComponentFactory, ComponentFactoryContext, ComponentScope} from './interfaces';
+import {Class, ComponentFactory, ComponentFactoryContext, ComponentScope} from './interfaces';
 import {targetName} from 'inversify';
 import {Component} from './component';
 import {Inject, Optional} from './decorators';
+import {DecoratorBuilder} from './utils';
+import {ensureMethodInjectMetadata} from './method-inject';
 
 const LOGGER_SYMBOL = Symbol('LOGGER_SYMBOL');
 export const LOGGER_BUILDER_SYMBOL = Symbol('LOGGER_BUILDER_SYMBOL');
 
 export function InjectLogger(name?: string | Function) {
   const labelName = typeof name === 'function' ? name.name : typeof name === 'string' ? name : '';
-  return (target: object, property: string, index: number) => {
-    Inject(LOGGER_SYMBOL)(target, property, index);
-    targetName(labelName)(target, property, index);
-  };
+  return new DecoratorBuilder('InjectLogger')
+    .whenApplyToConstructorParam(<T extends Class>(target: T, index: number) => {
+      Inject(LOGGER_SYMBOL)(target, undefined, index);
+      // @ts-ignore
+      targetName(labelName)(target, undefined, index);
+    })
+    .whenApplyToInstanceMethodParam(<T extends {}>(target: T, name: (string | symbol), index: number) => {
+      const metadata = ensureMethodInjectMetadata(Reflect.get(target, name));
+      Inject(LOGGER_SYMBOL)(target, name, index);
+      // @ts-ignore
+      targetName(labelName)(metadata.proxy, undefined, index);
+    })
+    .build();
 }
 
 export interface Logger {
