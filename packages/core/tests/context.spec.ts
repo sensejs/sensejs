@@ -1,5 +1,5 @@
 import {EventEmitter} from 'events';
-import {Component, ModuleClass, ModuleRoot, OnModuleCreate} from '../src';
+import {Component, ModuleClass, ModuleRoot, OnModuleCreate, OnModuleDestroy} from '../src';
 import {inject} from 'inversify';
 
 describe('ModuleRoot', () => {
@@ -12,6 +12,8 @@ describe('ModuleRoot', () => {
     const mockedBLifecycleDestroyed = new Promise<void>((done) => {
       mockedModuleEvent.once('destroy', done);
     });
+    const stubForCreateB = jest.fn();
+    const stubForDestroyA = jest.fn();
 
     @ModuleClass()
     class ModuleA {
@@ -20,8 +22,9 @@ describe('ModuleRoot', () => {
         await mockedALifecycleCreated;
       }
 
-      @OnModuleCreate()
+      @OnModuleDestroy()
       async onDestroy(): Promise<void> {
+        stubForDestroyA();
       }
     }
 
@@ -29,9 +32,10 @@ describe('ModuleRoot', () => {
     class ModuleB {
       @OnModuleCreate()
       async onCreate(): Promise<void> {
+        stubForCreateB();
       }
 
-      @OnModuleCreate()
+      @OnModuleDestroy()
       async onDestroy(): Promise<void> {
       }
 
@@ -43,19 +47,19 @@ describe('ModuleRoot', () => {
     }
 
     const app = new ModuleRoot(ModuleC);
-    const spyOnCreateForB = jest.spyOn(ModuleB.prototype, 'onCreate');
-    const spyOnDestroyForA = jest.spyOn(ModuleA.prototype, 'onDestroy');
     jest.spyOn(ModuleB.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
+
     const startPromise = app.start();
-    expect(spyOnCreateForB).not.toHaveBeenCalled();
+    expect(stubForCreateB).not.toHaveBeenCalled();
     mockedModuleEvent.emit('create');
     await startPromise;
-    expect(spyOnCreateForB).toHaveBeenCalled();
+    expect(stubForCreateB).toHaveBeenCalled();
+
     const stopPromise = app.stop();
-    expect(spyOnDestroyForA).not.toHaveBeenCalled();
+    expect(stubForDestroyA).not.toHaveBeenCalled();
     mockedModuleEvent.emit('destroy');
     await stopPromise;
-    expect(spyOnDestroyForA).toHaveBeenCalled();
+    expect(stubForDestroyA).toHaveBeenCalled();
   });
 
   test('component', async () => {

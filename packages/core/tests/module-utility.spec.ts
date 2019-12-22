@@ -4,8 +4,8 @@ import {
   ModuleRoot,
   provideConnectionFactory,
   provideOptionInjector,
+  Inject, OnModuleCreate, OnModuleDestroy,
 } from '../src';
-import {inject} from 'inversify';
 
 test('createConnectionFactory', async () => {
   interface Option {
@@ -34,12 +34,14 @@ test('createConnectionFactory', async () => {
 
   @ModuleClass({factories: [factoryProvider]})
   class MyFactoryModule {
-    constructor(@inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {}
+    constructor(@Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {}
 
+    @OnModuleCreate()
     async onCreate() {
       await this.factory.connect({foo});
     }
 
+    @OnModuleDestroy()
     async onDestroy() {
       return this.factory.disconnect();
     }
@@ -47,7 +49,7 @@ test('createConnectionFactory', async () => {
 
   @ModuleClass({requires: [MyFactoryModule]})
   class MyModule {
-    constructor(@inject(MockConn) conn: MockConn) {}
+    constructor(@Inject(MockConn) conn: MockConn) {}
   }
 
   const moduleRoot = new ModuleRoot(MyModule);
@@ -92,7 +94,7 @@ test('createConfigHelperFactory', async () => {
     factories,
   })
   class CorrectModule {
-    constructor(@inject(optionProvider.provide) private factory: Foo) {}
+    constructor(@Inject(optionProvider.provide) private factory: Foo) {}
   }
 
   await new ModuleRoot(CorrectModule).start();
@@ -102,7 +104,7 @@ test('createConfigHelperFactory', async () => {
     factories,
   })
   class BuggyModule {
-    constructor(@inject(optionProvider.provide) private factory: Foo) {}
+    constructor(@Inject(optionProvider.provide) private factory: Foo) {}
   }
 
   await expect(new ModuleRoot(BuggyModule).start()).rejects.toBeInstanceOf(TypeError);
