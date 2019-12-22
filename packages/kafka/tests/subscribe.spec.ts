@@ -31,7 +31,7 @@ jest.mock('kafka-pipeline', (): unknown => {
 
   return {ConsumerGroupPipeline: MockConsumerGroupPipeline};
 });
-import {Component, Inject, Module, ModuleRoot, RequestInterceptor} from '@sensejs/core';
+import {Component, Inject, ModuleRoot, RequestInterceptor, createModule} from '@sensejs/core';
 import {EventEmitter} from 'events';
 import {ConsumerGroupPipeline} from 'kafka-pipeline';
 import {
@@ -141,7 +141,7 @@ describe('Subscriber', () => {
       foo() {}
     }
 
-    const ConfigModule = Module({
+    const ConfigModule = createModule({
       constants: [
         {
           provide: 'config.consumer',

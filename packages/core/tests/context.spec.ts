@@ -1,5 +1,5 @@
 import {EventEmitter} from 'events';
-import {Component, Module, ModuleRoot} from '../src';
+import {Component, ModuleClass, ModuleRoot, OnModuleCreate} from '../src';
 import {inject} from 'inversify';
 
 describe('ModuleRoot', () => {
@@ -13,15 +13,34 @@ describe('ModuleRoot', () => {
       mockedModuleEvent.once('destroy', done);
     });
 
-    class ModuleA extends Module() {
+    @ModuleClass()
+    class ModuleA {
+      @OnModuleCreate()
       async onCreate(): Promise<void> {
         await mockedALifecycleCreated;
       }
+
+      @OnModuleCreate()
+      async onDestroy(): Promise<void> {
+      }
     }
 
-    const ModuleB = Module({requires: [ModuleA]});
+    @ModuleClass({requires: [ModuleA]})
+    class ModuleB {
+      @OnModuleCreate()
+      async onCreate(): Promise<void> {
+      }
 
-    const ModuleC = Module({requires: [ModuleA, ModuleB]});
+      @OnModuleCreate()
+      async onDestroy(): Promise<void> {
+      }
+
+    }
+
+    @ModuleClass({requires: [ModuleA, ModuleB]})
+    class ModuleC {
+
+    }
 
     const app = new ModuleRoot(ModuleC);
     const spyOnCreateForB = jest.spyOn(ModuleB.prototype, 'onCreate');
@@ -43,7 +62,8 @@ describe('ModuleRoot', () => {
     @Component()
     class FooComponent {}
 
-    const FooModule = Module({components: [FooComponent]});
+    @ModuleClass({components: [FooComponent]})
+    class FooModule {}
 
     const barComponentStub = jest.fn();
 
@@ -54,7 +74,8 @@ describe('ModuleRoot', () => {
       }
     }
 
-    class BarModule extends Module({requires: [FooModule], components: [BarComponent]}) {}
+    @ModuleClass({requires: [FooModule], components: [BarComponent]})
+    class BarModule {}
 
     const moduleRoot = new ModuleRoot(BarModule);
     await moduleRoot.start();

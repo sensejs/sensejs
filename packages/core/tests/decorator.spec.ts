@@ -1,4 +1,4 @@
-import {Component, Inject, invokeMethod, Module, ModuleRoot, Named, Optional, Tagged} from '../src';
+import {Component, Inject, invokeMethod, ModuleClass, ModuleRoot, Named, Optional, Tagged} from '../src';
 import {Container} from 'inversify';
 
 describe('Optional', () => {
@@ -14,10 +14,9 @@ describe('Optional', () => {
       }
     }
 
-    class MyModule extends Module({components: [X]}) {
-      constructor(@Inject(X) x: any) {
-        super();
-      }
+    @ModuleClass({components: [X]})
+    class MyModule {
+      constructor(@Inject(X) x: any) {}
     }
 
     await new ModuleRoot(MyModule).start();
@@ -37,9 +36,9 @@ describe('Optional', () => {
       }
     }
 
-    class MyModule extends Module({components: [X]}) {
+    @ModuleClass({components: [X]})
+    class MyModule {
       constructor(@Inject(Container) container: any) {
-        super();
         invokeMethod(container, X, X.prototype.method);
       }
     }
@@ -76,9 +75,9 @@ describe('Named', () => {
       }
     }
 
-    class MyModule extends Module({components: [MyComponent1, MyComponent2, X]}) {
+    @ModuleClass({components: [MyComponent1, MyComponent2, X]})
+    class MyModule {
       constructor(@Inject(Container) container: Container) {
-        super();
         expect(invokeMethod(container, X, X.prototype.callable)).toBe(result);
         expect(() => invokeMethod(container, X, X.prototype.nonCallable)).toThrow();
       }
@@ -105,10 +104,10 @@ describe('Named', () => {
       }
     }
 
-    class MyModule extends Module({components: [MyComponent1, MyComponent2, Resolvable]}) {
+    @ModuleClass({components: [MyComponent1, MyComponent2, Resolvable]})
+    class MyModule {
 
       constructor(@Inject(Container) container: Container) {
-        super();
         const injectable = container.get(Resolvable);
         expect(injectable).toBeInstanceOf(Resolvable);
         expect(injectable.foo1).toBeInstanceOf(MyComponent1);
@@ -145,9 +144,9 @@ describe('Decorators', () => {
       }
     }
 
-    class MyModule extends Module({components: [X, Y]}) {
+    @ModuleClass({components: [X, Y]})
+    class MyModule {
       constructor(@Inject(Container) container: Container) {
-        super();
         expect(invokeMethod(container, X, X.prototype.callable)).toBe(result);
         expect(() => invokeMethod(container, X, X.prototype.nonCallable)).toThrow();
       }
@@ -199,14 +198,14 @@ describe('Decorators', () => {
       }
     }
 
-    class MyModule extends Module({
+    @ModuleClass({
       components: [
         MyComponent1, MyComponent2, Resolvable1, NonResolvable1, NonResolvable2,
       ],
-    }) {
+    })
+    class MyModule {
 
       constructor(@Inject(Container) container: Container) {
-        super();
         const resolvable1 = container.get(Resolvable1);
         expect(resolvable1).toBeInstanceOf(Resolvable1);
         expect(resolvable1.foo1).toBeInstanceOf(MyComponent1);

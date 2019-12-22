@@ -1,4 +1,10 @@
-import {createConnectionFactory, Module, ModuleRoot, provideConnectionFactory, provideOptionInjector} from '../src';
+import {
+  createConnectionFactory,
+  ModuleClass,
+  ModuleRoot,
+  provideConnectionFactory,
+  provideOptionInjector,
+} from '../src';
 import {inject} from 'inversify';
 
 test('createConnectionFactory', async () => {
@@ -26,12 +32,9 @@ test('createConnectionFactory', async () => {
 
   const foo = `foo_${Date.now()}`;
 
-  class MyFactoryModule extends Module({
-    factories: [factoryProvider],
-  }) {
-    constructor(@inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {
-      super();
-    }
+  @ModuleClass({factories: [factoryProvider]})
+  class MyFactoryModule {
+    constructor(@inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {}
 
     async onCreate() {
       await this.factory.connect({foo});
@@ -42,12 +45,9 @@ test('createConnectionFactory', async () => {
     }
   }
 
-  class MyModule extends Module({
-    requires: [MyFactoryModule],
-  }) {
-    constructor(@inject(MockConn) conn: MockConn) {
-      super();
-    }
+  @ModuleClass({requires: [MyFactoryModule]})
+  class MyModule {
+    constructor(@inject(MockConn) conn: MockConn) {}
   }
 
   const moduleRoot = new ModuleRoot(MyModule);
@@ -87,24 +87,22 @@ test('createConfigHelperFactory', async () => {
   const optionProvider = provideOptionInjector<Foo, typeof defaultValue>(defaultValue, injectSymbol, merger);
   const factories = [optionProvider];
 
-  class CorrectModule extends Module({
+  @ModuleClass({
     constants: [{provide: injectSymbol, value: {foo: {y: 'x'}, bar: false}}],
     factories,
-  }) {
-    constructor(@inject(optionProvider.provide) private factory: Foo) {
-      super();
-    }
+  })
+  class CorrectModule {
+    constructor(@inject(optionProvider.provide) private factory: Foo) {}
   }
 
   await new ModuleRoot(CorrectModule).start();
 
-  class BuggyModule extends Module({
+  @ModuleClass({
     constants: [{provide: injectSymbol, value: {foo: {x: 'x'}}}],
     factories,
-  }) {
-    constructor(@inject(optionProvider.provide) private factory: Foo) {
-      super();
-    }
+  })
+  class BuggyModule {
+    constructor(@inject(optionProvider.provide) private factory: Foo) {}
   }
 
   await expect(new ModuleRoot(BuggyModule).start()).rejects.toBeInstanceOf(TypeError);

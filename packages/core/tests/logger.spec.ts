@@ -2,11 +2,12 @@ import {inject} from 'inversify';
 import {
   Component,
   ConsoleLoggerBuilder,
+  createModule,
   InjectLogger,
   Logger,
   LOGGER_BUILDER_SYMBOL,
   LoggerModule,
-  Module,
+  ModuleClass,
   ModuleRoot,
 } from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
@@ -70,20 +71,20 @@ describe('Logger', () => {
       }
     }
 
-    class MainModule extends Module({
+    @ModuleClass({
       requires: [
-        Module({
+        createModule({
           requires: [LoggerModule],
           constants: [{provide: LOGGER_BUILDER_SYMBOL, value: new MockLoggerBuilder()}],
         }),
       ],
       components: [FooComponent, BarComponent],
-    }) {
+    })
+    class MainModule {
       constructor(@inject(FooComponent) fooComponent: FooComponent, @inject(BarComponent) barComponent: BarComponent) {
-        super();
       }
     }
 
-    await new ModuleRoot(Module({requires: [MainModule]})).start();
+    await new ModuleRoot(createModule({requires: [MainModule]})).start();
   });
 });
