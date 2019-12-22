@@ -1,7 +1,7 @@
 import {Component, Module, ModuleRoot} from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import supertest from 'supertest';
-import {Controller, GET, HttpContext, HttpInterceptor, HttpModule} from '../src';
+import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, HttpModuleClass} from '../src';
 import {Server} from 'http';
 
 describe('HttpModule', () => {
@@ -35,13 +35,16 @@ describe('HttpModule', () => {
       }
     }
 
-    const MyHttpModule = HttpModule({
+    @HttpModuleClass({
       components: [MyComponent, FooController],
       httpOption: {
         listenPort: 3000,
         listenAddress: '0.0.0.0',
       },
-    });
+    })
+    class MyHttpModule {
+
+    }
 
     const app = new ModuleRoot(MyHttpModule);
     await app.start();
@@ -54,13 +57,16 @@ describe('HttpModule', () => {
     const stub = jest.fn();
     const serverIdentifier = Symbol();
 
-    const MyHttpModule = HttpModule({
+    @HttpModuleClass({
       serverIdentifier,
       httpOption: {
         listenPort: 0,
         listenAddress: '0.0.0.0',
       },
-    });
+    })
+    class MyHttpModule {
+
+    }
 
     class TestModule extends Module({requires: [MyHttpModule]}) {
       constructor(@inject(Container) private container: Container) {

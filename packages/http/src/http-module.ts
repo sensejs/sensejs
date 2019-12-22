@@ -7,11 +7,16 @@ import {HttpAdaptor, HttpApplicationOption, HttpInterceptor} from './http-abstra
 import {
   Constructor,
   createModule,
+  Deprecated,
   Inject,
   ModuleClass,
+  ModuleConstructor,
   ModuleOption,
+  OnModuleCreate,
+  OnModuleDestroy,
   provideOptionInjector,
   ServiceIdentifier,
+  createLegacyModule,
 } from '@sensejs/core';
 
 export interface HttpOption extends HttpApplicationOption {
@@ -43,11 +48,11 @@ export interface HttpModuleOption extends ModuleOption {
  * @param option
  * @constructor
  */
-export function HttpModule(
+export function HttpModuleClass(
   option: HttpModuleOption = {
     httpOption: defaultHttpConfig,
   },
-): Constructor {
+) {
   const httpAdaptorFactory = option.httpAdaptorFactory || (
     () => new KoaHttpApplicationBuilder()
   );
@@ -77,6 +82,7 @@ export function HttpModule(
       @Inject(optionProvider.provide) private httpOption: HttpOption,
     ) {}
 
+    @OnModuleCreate()
     async onCreate() {
       const httpAdaptor = httpAdaptorFactory();
 
@@ -104,6 +110,7 @@ export function HttpModule(
       }
     }
 
+    @OnModuleDestroy()
     async onDestroy() {
       await promisify((done: (e?: Error) => void) => {
         if (!this.httpServer) {
@@ -128,5 +135,10 @@ export function HttpModule(
     }
   }
 
-  return createModule({requires: [HttpModule]});
+  return ModuleClass({requires: [HttpModule]});
 }
+
+export const HttpModule = createLegacyModule(
+  HttpModuleClass,
+  'Base class style HttpModule is deprecated, use @HttpModuleClass decorator instead',
+);
