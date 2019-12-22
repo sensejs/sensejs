@@ -34,6 +34,7 @@ const runOptionFixture: Omit<RunOption<number>, 'logger'> = {
     exitCode: 0,
     timeout: 100,
   },
+  printWarning: true,
   onExit: (exitCode) => {
     onExit(exitCode);
     return exitCode;
@@ -63,6 +64,17 @@ function emitSignalOnNextTick(signal: NodeJS.Signals = 'SIGINT') {
 }
 
 describe('Application', () => {
+  test('print warning', () => {
+    const promise = new Promise((resolve) => {
+      const runner = createAppRunner(createModule(), resolve);
+      runner.run();
+      process.emit('warning', new Error('warning'));
+      runner.shutdown();
+    });
+    // tslint:disable-next-line:no-console
+    expect(console.warn).toHaveBeenCalled();
+  });
+
   test('shutdown', async () => {
 
     const promise = new Promise((resolve) => {

@@ -27,6 +27,7 @@ export interface RunOption<T = never> {
   errorExitOption: ExitOption;
   exitSignals: ExitSignalOption;
   logger: Logger;
+  printWarning: boolean;
   onExit: (exitCode: number) => T;
 }
 
@@ -50,6 +51,7 @@ export const defaultRunOption: RunOption = {
     SIGTERM: {},
   },
   logger: consoleLogger,
+  printWarning: true,
   onExit: (exitCode) => process.exit(exitCode),
 };
 
@@ -71,7 +73,12 @@ export class ApplicationRunner {
 
   private runPromise?: Promise<unknown>;
   private isStopped = false;
-  private onProcessWarning = () => {
+  private onProcessWarning = (e: Error) => {
+    if (this.runOption.printWarning) {
+      this.logger.warn('Warning: ', e.name);
+      this.logger.warn(e.message);
+      this.logger.warn(e.stack);
+    }
   };
   private onProcessError = (e: any) => {
     this.logger.info('Uncaught exception: ', e);
@@ -160,10 +167,6 @@ export class ApplicationRunner {
         });
       }
     });
-  }
-
-  private bindEventListener(event: string, fn: Function) {
-
   }
 
   private setupEventEmitter() {
