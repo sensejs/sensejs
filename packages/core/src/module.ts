@@ -208,6 +208,16 @@ export function OnModuleDestroy() {
   return defineModuleLifecycleMetadata(OnModuleCreate.name, ON_MODULE_DESTROY);
 }
 
+/**
+ * Create an simple module for given module option
+ * @param option
+ */
+export function createModule(option: ModuleOption = {}): Constructor {
+  @ModuleClass(option)
+  class Module {}
+  return Module;
+}
+
 @Deprecated({message: 'Module() is deprecated. Use @ModuleClass to define module instead.'})
 @injectable()
 class LegacyModuleClass {

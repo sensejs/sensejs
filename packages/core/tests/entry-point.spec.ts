@@ -1,9 +1,9 @@
 import {
   ConsoleLoggerBuilder,
   Constructor,
+  createModule,
   EntryPoint,
   Inject,
-  Module,
   ModuleClass,
   ModuleRoot,
   OnModuleCreate,
@@ -82,7 +82,7 @@ describe('Application', () => {
 
   test('shutdown', async () => {
 
-    const runner = createAppRunner(Module(), (exitCode: number) => {
+    const runner = createAppRunner(createModule(), (exitCode: number) => {
       expect(exitCode).toBe(0);
       return exitCode;
     });
@@ -96,7 +96,7 @@ describe('Application', () => {
   });
   test('forced shutdown', async () => {
 
-    const runner = createAppRunner(Module(), (exitCode: number) => {
+    const runner = createAppRunner(createModule(), (exitCode: number) => {
       expect(exitCode).toBe(0);
       return exitCode;
     });
@@ -110,14 +110,16 @@ describe('Application', () => {
   });
 
   test('no module', async () => {
-    const promise = runModuleForTest(Module());
+    const promise = runModuleForTest(createModule());
     expect(process.exit).not.toHaveBeenCalled();
     emitSignalOnNextTick();
     expect(await promise).toBe(runOptionFixture.normalExitOption.exitCode);
   });
 
   test('failed on start', async () => {
-    class BadModule extends Module() {
+    @ModuleClass()
+    class BadModule {
+      @OnModuleCreate()
       async onCreate() {
         await new Promise((resolve) => setImmediate(resolve));
         throw new Error();
@@ -131,7 +133,9 @@ describe('Application', () => {
   });
 
   test('failed on stop', async () => {
-    class BadModule extends Module() {
+    @ModuleClass()
+    class BadModule {
+      @OnModuleDestroy()
       async onDestroy() {
         await new Promise((resolve) => setImmediate(resolve));
         throw new Error();
@@ -144,7 +148,9 @@ describe('Application', () => {
   });
 
   test('on caught error', async () => {
-    class BadModule extends Module() {
+    @ModuleClass()
+    class BadModule {
+      @OnModuleCreate()
       async onCreate() {
         setImmediate(() => {
           process.emit('uncaughtException', new Error());
@@ -158,7 +164,9 @@ describe('Application', () => {
   });
 
   test('on timeout', async () => {
-    class BadModule extends Module() {
+    @ModuleClass()
+    class BadModule {
+      @OnModuleDestroy()
       async onDestroy() {
         return new Promise<void>(() => null);
       }
@@ -171,7 +179,9 @@ describe('Application', () => {
   });
 
   test('on repeated', async () => {
-    class BadModule extends Module() {
+    @ModuleClass()
+    class BadModule {
+      @OnModuleDestroy()
       async onDestroy() {
         await new Promise<void>(() => null);
       }
@@ -193,6 +203,7 @@ describe('Application', () => {
 describe('@EntrpyPoint', () => {
 
   const onDestroyStub = jest.fn();
+
   @EntryPoint()
   @ModuleClass()
   class GlobalEntryPoint {
@@ -206,10 +217,12 @@ describe('@EntrpyPoint', () => {
       onDestroyStub();
     }
   }
+
   test('warn when multiple entrypoint', () => {
     expect(() => {
       @EntryPoint()
-      class B extends Module() {
+      @ModuleClass()
+      class B {
       }
     }).toThrow();
   });
