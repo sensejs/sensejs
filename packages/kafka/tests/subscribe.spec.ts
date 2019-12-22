@@ -38,6 +38,7 @@ import {
   ConsumingContext,
   InjectSubscribeContext,
   KafkaConsumerModule,
+  KafkaConsumerModuleClass,
   Message,
   SubscribeController,
   SubscribeTopic,
@@ -158,14 +159,15 @@ describe('Subscriber', () => {
       ],
     });
 
-    class MyKafkaModule extends KafkaConsumerModule({
+    @KafkaConsumerModuleClass({
       components: [Controller],
       requires: [ConfigModule],
       defaultKafkaConsumerOption: {
         groupId,
       },
       injectOptionFrom: 'config.consumer',
-    }) {}
+    })
+    class MyKafkaModule {}
 
     const moduleRoot = new ModuleRoot(MyKafkaModule);
     await moduleRoot.start().then(() => {

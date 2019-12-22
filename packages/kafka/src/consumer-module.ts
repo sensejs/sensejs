@@ -1,11 +1,15 @@
 import {
   Class,
   composeRequestInterceptor,
+  Constructor,
+  createLegacyModule,
+  createModule,
   Inject,
   invokeMethod,
-  Module,
-  ModuleConstructor,
+  ModuleClass,
   ModuleOption,
+  OnModuleCreate,
+  OnModuleDestroy,
   provideConnectionFactory,
   provideOptionInjector,
   RequestInterceptor,
@@ -47,7 +51,7 @@ function mergeConnectOption(
 }
 
 function createSubscriberTopicModule(
-  consumerGroupModule: ModuleConstructor,
+  consumerGroupModule: Constructor,
   option: KafkaConsumerModuleOption,
   controllerMetadata: SubscribeControllerMetadata,
   subscribeMetadata: SubscribeTopicMetadata,
@@ -59,17 +63,16 @@ function createSubscriberTopicModule(
     return Object.assign({}, defaultValue, injectedValue);
   });
 
-  class TopicModule extends Module({
+  @ModuleClass({
     requires: [consumerGroupModule],
     factories: [optionProvider],
-  }) {
+  })
+  class TopicModule {
     constructor(
       @Inject(optionProvider.provide) config: ConsumeTopicOption,
       @Inject(injectSymbol) messageConsumer: MessageConsumer,
       @Inject(Container) container: Container,
     ) {
-      super();
-
       const composedInterceptor = composeRequestInterceptor(container, [
         ...(option.globalInterceptors ?? []),
         ...controllerMetadata.interceptors,
@@ -93,8 +96,8 @@ function createSubscriberTopicModule(
   return TopicModule;
 }
 
-function scanController(option: KafkaConsumerModuleOption, module: ModuleConstructor, injectSymbol: symbol) {
-  const result: ModuleConstructor[] = [];
+function scanController(option: KafkaConsumerModuleOption, module: Constructor, injectSymbol: symbol) {
+  const result: Constructor[] = [];
   for (const component of option.components || []) {
     const controllerMetadata = getSubscribeControllerMetadata(component);
     if (!controllerMetadata) {
@@ -120,7 +123,7 @@ function scanController(option: KafkaConsumerModuleOption, module: ModuleConstru
   return result;
 }
 
-function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymbol: symbol): ModuleConstructor {
+function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymbol: symbol) {
   const optionProvider = provideOptionInjector(
     option.defaultKafkaConsumerOption,
     option.injectOptionFrom,
@@ -135,51 +138,57 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymb
     exportSymbol,
   );
 
-  class KafkaConsumerGroupModule extends Module({
-    requires: [Module(option)],
+  @ModuleClass({
+    requires: [createModule(option)],
     factories: [optionProvider, factoryProvider],
-  }) {
+  })
+  class KafkaConsumerGroupModule {
     constructor(
       @Inject(factoryProvider.factory) private consumerGroupFactory: InstanceType<typeof factoryProvider.factory>,
       @Inject(optionProvider.provide) private config: KafkaConsumerOption,
-    ) {
-      super();
-    }
+    ) {}
 
+    @OnModuleCreate()
     async onCreate(): Promise<void> {
-      await super.onCreate();
       await this.consumerGroupFactory.connect(this.config);
     }
 
+    @OnModuleDestroy()
     async onDestroy(): Promise<void> {
       await this.consumerGroupFactory.disconnect();
-      return super.onDestroy();
     }
   }
 
-  return Module({requires: [KafkaConsumerGroupModule]});
+  return createModule({requires: [KafkaConsumerGroupModule]});
 }
 
-export function KafkaConsumerModule(option: KafkaConsumerModuleOption): ModuleConstructor {
+export function KafkaConsumerModuleClass(option: KafkaConsumerModuleOption) {
   const injectMessageConsumerSymbol = Symbol('MessageConsumer');
   const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
   const subscribeTopicModules = scanController(option, kafkaConnectionModule, injectMessageConsumerSymbol);
 
-  class KafkaConsumerModule extends Module({requires: subscribeTopicModules}) {
+  @ModuleClass({
+    requires: subscribeTopicModules,
+  })
+  class KafkaConsumerModule {
     constructor(@Inject(injectMessageConsumerSymbol) private messageConsumer: MessageConsumer) {
-      super();
     }
 
+    @OnModuleCreate()
     async onCreate(): Promise<void> {
-      await super.onCreate();
       await this.messageConsumer.open();
     }
 
+    @OnModuleDestroy()
     async onDestroy(): Promise<void> {
       await this.messageConsumer.close();
-      return super.onDestroy();
     }
   }
 
-  return Module({requires: [KafkaConsumerModule]});
+  return ModuleClass({requires: [KafkaConsumerModule]});
 }
+
+export const KafkaConsumerModule = createLegacyModule(
+  KafkaConsumerModuleClass,
+  'Base class module style KafkaConsumerModule is deprecated, use KafkaConsumerModuleClass instead.',
+);

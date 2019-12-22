@@ -1,12 +1,14 @@
 import {
   AbstractConnectionFactory,
-  ComponentScope,
-  createConfigHelperFactory,
-  createConnectionFactory,
+  createLegacyModule,
+  createModule,
   Inject,
-  Module,
-  ModuleConstructor,
+  ModuleClass,
   ModuleOption,
+  OnModuleCreate,
+  OnModuleDestroy,
+  provideConnectionFactory,
+  provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
 import {MessageProducer, ProducerOption} from './message-producer';
@@ -17,8 +19,8 @@ export interface KafkaPublishModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<Partial<ProducerOption>>;
 }
 
-export function KafkaProducerModule(option: KafkaPublishModuleOption): ModuleConstructor {
-  const ConfigFactory = createConfigHelperFactory<ProducerOption>(
+export function KafkaProducerModuleClass(option: KafkaPublishModuleOption) {
+  const optionFactory = provideOptionInjector(
     option.kafkaProducerOption,
     option.injectOptionFrom,
     (fallback, injected) => {
@@ -30,10 +32,8 @@ export function KafkaProducerModule(option: KafkaPublishModuleOption): ModuleCon
     },
   );
 
-  const configSymbol = Symbol();
-
-  const ConnectionFactory = createConnectionFactory<MessageProducer, ProducerOption>(
-    async (option) => {
+  const connectionFactory = provideConnectionFactory(
+    async (option: ProducerOption) => {
       const messageProducer = new MessageProducer(option);
       await messageProducer.initialize();
       return messageProducer;
@@ -41,32 +41,35 @@ export function KafkaProducerModule(option: KafkaPublishModuleOption): ModuleCon
     async (producer) => {
       await producer.close();
     },
+    MessageProducer,
   );
 
-  class KafkaPublishModule extends Module({
-    requires: [Module(option)],
-    factories: [
-      {provide: configSymbol, factory: ConfigFactory, scope: ComponentScope.SINGLETON},
-      {provide: MessageProducer, factory: ConnectionFactory, scope: ComponentScope.SINGLETON},
-    ],
-  }) {
+  @ModuleClass({
+    requires: [createModule(option)],
+    factories: [optionFactory, connectionFactory],
+  })
+  class KafkaPublishModule {
     constructor(
-      @Inject(ConnectionFactory) private factory: AbstractConnectionFactory<MessageProducer, ProducerOption>,
-      @Inject(configSymbol) private config: ProducerOption,
+      @Inject(connectionFactory.factory)
+      private factory: AbstractConnectionFactory<MessageProducer, ProducerOption>,
     ) {
-      super();
     }
 
-    async onCreate(): Promise<void> {
-      await super.onCreate();
-      await this.factory.connect(this.config);
+    @OnModuleCreate()
+    async onCreate(@Inject(optionFactory.provide) config: ProducerOption): Promise<void> {
+      await this.factory.connect(config);
     }
 
+    @OnModuleDestroy()
     async onDestroy(): Promise<void> {
       await this.factory.disconnect();
-      return super.onDestroy();
     }
   }
 
-  return Module({requires: [KafkaPublishModule]});
+  return ModuleClass({requires: [KafkaPublishModule]});
 }
+
+export const KafkaProducerModule = createLegacyModule(
+  KafkaProducerModuleClass,
+  'Base class style module KafkaProducerModule is deprecated, use KafkaProducerModuleClass decorator instead',
+);
