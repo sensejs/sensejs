@@ -21,6 +21,19 @@ test('ConsoleLogger', () => {
   logger.debug('debug');
   logger.trace('debug');
 });
+describe('InjectLogger', () => {
+  test('Inject constructor param', () => {
+    class X {
+      constructor(@InjectLogger() param: Logger) {}
+    }
+  });
+
+  test('Inject instance method param', () => {
+    class X {
+      foo(@InjectLogger() param: Logger) {}
+    }
+  });
+});
 describe('Logger', () => {
   test('Logger', async () => {
     class MockLoggerBuilder extends ConsoleLoggerBuilder {
