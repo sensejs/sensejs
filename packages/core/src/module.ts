@@ -8,6 +8,7 @@ import {
   Constructor,
   FactoryProvider,
 } from './interfaces';
+import {ClassDecorator} from './utils';
 import {ContainerModule, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 import {ensureMethodInjectMetadata} from './method-inject';
@@ -215,6 +216,7 @@ export function OnModuleDestroy() {
 export function createModule(option: ModuleOption = {}): Constructor {
   @ModuleClass(option)
   class Module {}
+
   return Module;
 }
 
@@ -258,4 +260,20 @@ export function Module(option: ModuleOption = {}): ModuleConstructor {
     onModuleDestroy,
   });
   return Module as ModuleConstructor;
+}
+
+export function createLegacyModule<T>(decorator: (option: T) => ClassDecorator<Constructor>, message: string) {
+  return (option: T): ModuleConstructor => {
+    @decorator(option)
+    @Deprecated({message})
+    class LegacyModule {
+      @OnModuleCreate()
+      async onCreate() {}
+
+      @OnModuleDestroy()
+      async onDestroy() {}
+    }
+
+    return LegacyModule;
+  };
 }

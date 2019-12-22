@@ -1,7 +1,7 @@
 import {Class} from '../interfaces';
 
-export interface ClassDecorator {
-  <T extends Class>(target: T): T | void;
+export interface ClassDecorator<Constraint = Class> {
+  <T extends Constraint>(target: T): T | void;
 }
 
 type PropertyName = string | symbol;

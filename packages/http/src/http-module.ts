@@ -6,9 +6,9 @@ import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {HttpAdaptor, HttpApplicationOption, HttpInterceptor} from './http-abstract';
 import {
   Constructor,
+  createModule,
   Inject,
-  Module,
-  ModuleConstructor,
+  ModuleClass,
   ModuleOption,
   provideOptionInjector,
   ServiceIdentifier,
@@ -47,7 +47,7 @@ export function HttpModule(
   option: HttpModuleOption = {
     httpOption: defaultHttpConfig,
   },
-): ModuleConstructor {
+): Constructor {
   const httpAdaptorFactory = option.httpAdaptorFactory || (
     () => new KoaHttpApplicationBuilder()
   );
@@ -64,19 +64,20 @@ export function HttpModule(
     },
   );
 
-  class HttpModule extends Module({requires: [Module(option)], factories: [optionProvider]}) {
+  @ModuleClass({
+    requires: [createModule(option)],
+    factories: [optionProvider],
+  })
+  class HttpModule {
     private httpServer?: http.Server;
     private interceptorModule?: ContainerModule;
 
     constructor(
       @Inject(Container) private container: Container,
       @Inject(optionProvider.provide) private httpOption: HttpOption,
-    ) {
-      super();
-    }
+    ) {}
 
     async onCreate() {
-      await super.onCreate();
       const httpAdaptor = httpAdaptorFactory();
 
       for (const inspector of option.globalInterceptors || []) {
@@ -113,7 +114,6 @@ export function HttpModule(
       if (this.interceptorModule) {
         this.container.unload(this.interceptorModule);
       }
-      await super.onDestroy();
     }
 
     private createHttpServer(httpOption: HttpOption, httpAdaptor: HttpAdaptor) {
@@ -128,5 +128,5 @@ export function HttpModule(
     }
   }
 
-  return Module({requires: [HttpModule]});
+  return createModule({requires: [HttpModule]});
 }
