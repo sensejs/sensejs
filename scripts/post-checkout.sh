@@ -5,6 +5,6 @@ fi
 echo $HUSKY_GIT_PARAMS | (
   read PREV CURR FLAG
   if [[ $PREV != $CURR ]]; then
-    pnpm m i
+    pnpm m i || true
   fi
 )
