@@ -35,6 +35,5 @@ describe('BuiltinModule', () => {
       expect(spy).toHaveBeenCalled();
       stoppedStub();
     });
-
   });
 });

@@ -1,3 +1,4 @@
+export {BackgroundTaskQueue} from './builtin-module';
 export * from './module';
 export * from './module-root';
 export * from './interfaces';

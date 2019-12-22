@@ -1,15 +1,8 @@
 import {ModuleRoot} from './module-root';
-import {ModuleClass, ModuleConstructor} from './module';
-import {
-  consoleLogger,
-  ConsoleLoggerBuilder,
-  Logger,
-  LOGGER_BUILDER_SYMBOL,
-  LoggerBuilder,
-  LoggerModule,
-} from './logger';
+import {ModuleClass} from './module';
+import {consoleLogger, ConsoleLoggerBuilder, Logger, LOGGER_BUILDER_SYMBOL, LoggerBuilder} from './logger';
 import {Constructor} from './interfaces';
-import {BuiltinModule} from './builtin-module';
+import {createBuiltinModule} from './builtin-module';
 
 interface NormalExitOption {
   exitCode: number;
@@ -61,6 +54,23 @@ export const defaultRunOption: RunOption = {
 };
 
 export class ApplicationRunner {
+  private static instance?: ApplicationRunner;
+
+  static runModule(moduleConstructor: Constructor, runOption: RunOption) {
+    const moduleRoot = new ModuleRoot(provideBuiltin(moduleConstructor, {
+      onShutdown: () => {
+        runner.shutdown();
+      },
+    }));
+    const container = moduleRoot.container;
+    const loggerBuilder = container.isBound(LOGGER_BUILDER_SYMBOL)
+      ? moduleRoot.container.get<LoggerBuilder>(LOGGER_BUILDER_SYMBOL)
+      : new ConsoleLoggerBuilder();
+    const logger = loggerBuilder.build('ApplicationRunner');
+    const runner = new ApplicationRunner(process, moduleRoot, runOption, logger);
+    process.nextTick(() => runner.run());
+  }
+
   private runPromise?: Promise<unknown>;
   private isStopped = false;
   private onProcessWarning = () => {
@@ -76,13 +86,24 @@ export class ApplicationRunner {
     private moduleRoot: ModuleRoot,
     private runOption: RunOption<unknown>,
     private logger: Logger,
-  ) {}
+  ) {
+    ApplicationRunner.instance = this;
+  }
+
+  shutdown(forced: boolean = false) {
+    if (forced) {
+      this.forceStop(this.runOption.forcedExitOption);
+    } else {
+      this.stop();
+    }
+  }
 
   run() {
     if (this.runPromise) {
       return this.runPromise;
     }
     this.runPromise = this.performRun();
+    return this.runPromise;
   }
 
   private async performRun() {
@@ -155,8 +176,10 @@ export class ApplicationRunner {
   }
 }
 
-function provideBuiltin(module: Constructor) {
-  @ModuleClass({requires: [BuiltinModule, module]})
+function provideBuiltin(module: Constructor, option: {
+  onShutdown: () => void
+}) {
+  @ModuleClass({requires: [createBuiltinModule(option), module]})
   class EntryPointModule {}
 
   return EntryPointModule;
@@ -171,14 +194,7 @@ export function EntryPoint(runOption: Partial<RunOption> = {}) {
   entryPointCalled = true;
   const actualRunOption = Object.assign({}, defaultRunOption, runOption);
 
-  return (moduleConstructor: ModuleConstructor) => {
-    const moduleRoot = new ModuleRoot(provideBuiltin(moduleConstructor));
-    const container = moduleRoot.container;
-    const loggerBuilder = container.isBound(LOGGER_BUILDER_SYMBOL)
-      ? moduleRoot.container.get<LoggerBuilder>(LOGGER_BUILDER_SYMBOL)
-      : new ConsoleLoggerBuilder();
-    const logger = loggerBuilder.build('ApplicationRunner');
-    const runner = new ApplicationRunner(process, moduleRoot, actualRunOption, logger);
-    process.nextTick(() => runner.run());
+  return (moduleConstructor: Constructor) => {
+    return ApplicationRunner.runModule(moduleConstructor, actualRunOption);
   };
 }

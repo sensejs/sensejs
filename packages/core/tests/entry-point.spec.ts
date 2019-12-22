@@ -1,7 +1,18 @@
-import {ConsoleLoggerBuilder, EntryPoint, Module, ModuleConstructor, ModuleRoot} from '../src';
+import {
+  ConsoleLoggerBuilder,
+  Constructor,
+  EntryPoint,
+  Inject,
+  Module,
+  ModuleClass,
+  ModuleRoot,
+  OnModuleCreate,
+  OnModuleDestroy,
+} from '../src';
 import {ApplicationRunner, RunOption} from '../src/entry-point';
+import {ProcessManager} from '../src/builtin-module';
 
-// import '@sensejs/testing-utility/lib/mock-console';
+import '@sensejs/testing-utility/lib/mock-console';
 
 class AppExit extends Error {
   constructor(public readonly exitCode: number) {
@@ -39,17 +50,18 @@ const runOptionFixture: Omit<RunOption<number>, 'logger'> = {
   },
 };
 
-function runModuleForTest(module: ModuleConstructor) {
+function createAppRunner(module: Constructor, onExit: (exitCode: number) => unknown) {
+
+  const logger = new ConsoleLoggerBuilder().build();
+  const runOption = Object.assign({}, runOptionFixture, {
+    logger, onExit,
+  });
+  return new ApplicationRunner(process, new ModuleRoot(module), runOption, logger);
+}
+
+function runModuleForTest(module: Constructor) {
   return new Promise((resolve) => {
-    const logger = new ConsoleLoggerBuilder().build();
-    const runOption = Object.assign({}, runOptionFixture, {
-      logger, onExit: (exitCode: number) => {
-        onExit(exitCode);
-        return resolve(exitCode);
-      },
-    });
-    const appRunner = new ApplicationRunner(process, new ModuleRoot(module), runOption, logger);
-    return appRunner.run();
+    return createAppRunner(module, resolve).run();
   });
 }
 
@@ -66,6 +78,35 @@ describe('Application', () => {
       // throw an application to emulate process.exit, not finally block will be executed anyway
       throw new AppExit(exitCode);
     });
+  });
+
+  test('shutdown', async () => {
+
+    const runner = createAppRunner(Module(), (exitCode: number) => {
+      expect(exitCode).toBe(0);
+      return exitCode;
+    });
+    const stub = jest.fn();
+    const promise = runner.run().then(() => {
+      stub();
+    });
+    runner.shutdown();
+    expect(stub).not.toHaveBeenCalled();
+    return promise;
+  });
+  test('forced shutdown', async () => {
+
+    const runner = createAppRunner(Module(), (exitCode: number) => {
+      expect(exitCode).toBe(0);
+      return exitCode;
+    });
+    const stub = jest.fn();
+    const promise = runner.run().then(() => {
+      stub();
+    });
+    runner.shutdown(true);
+    expect(stub).toHaveBeenCalled();
+    return promise;
   });
 
   test('no module', async () => {
@@ -147,15 +188,35 @@ describe('Application', () => {
     expect(await promise).toBe(runOptionFixture.forcedExitOption.forcedExitCode);
   });
 
-  test('warn when multiple entrypoint', () => {
-    @EntryPoint()
-    class A extends Module() {
+});
+
+describe('@EntrpyPoint', () => {
+
+  const onDestroyStub = jest.fn();
+  @EntryPoint()
+  @ModuleClass()
+  class GlobalEntryPoint {
+    @OnModuleCreate()
+    async onCreate(@Inject(ProcessManager) pm: ProcessManager) {
+      pm.shutdown();
     }
 
+    @OnModuleDestroy()
+    async onDestroy() {
+      onDestroyStub();
+    }
+  }
+  test('warn when multiple entrypoint', () => {
     expect(() => {
       @EntryPoint()
       class B extends Module() {
       }
     }).toThrow();
+  });
+
+  test('shutdown on demand', async () => {
+
+    await runModuleForTest(GlobalEntryPoint);
+    expect(onDestroyStub).toHaveBeenCalled();
   });
 });

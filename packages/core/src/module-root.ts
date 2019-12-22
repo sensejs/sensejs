@@ -11,7 +11,11 @@ export class ModuleRoot {
 
   public constructor(private entryModule: Constructor) {
     this.container.bind(Container).toConstantValue(this.container);
-    this.analyzeDependency(this.entryModule, getModuleMetadata(this.entryModule));
+    const metadata = getModuleMetadata(this.entryModule);
+    if (typeof metadata === 'undefined') {
+      throw new Error('Target is not a module');
+    }
+    this.analyzeDependency(this.entryModule, metadata);
   }
 
   public async start() {
