@@ -10,7 +10,7 @@ export class BackgroundTaskQueue {
 
   dispatch(task: Promise<unknown> | (() => Promise<unknown>)) {
     if (typeof task === 'function') {
-      this.taskFinished = this.taskFinished.then(() => task().finally(() => void 0));
+      this.taskFinished = this.taskFinished.then(() => task().catch(() => void 0));
     } else {
       this.taskFinished = this.taskFinished.then(() => task);
     }
