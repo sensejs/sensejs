@@ -1,5 +1,5 @@
-import {KafkaProducerModule} from '@sensejs/kafka';
+import {createKafkaProducerModule} from '@sensejs/kafka';
 
-export default KafkaProducerModule({
+export default createKafkaProducerModule({
   injectOptionFrom: 'config.kafka',
 });

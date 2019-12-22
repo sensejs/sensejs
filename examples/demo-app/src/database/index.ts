@@ -1,27 +1,10 @@
-import {TypeOrmModule} from '@sensejs/typeorm';
-import {InjectLogger, Logger} from '@sensejs/core';
+import {createTypeOrmModule} from '@sensejs/typeorm';
 
-export default class DatabaseModule extends TypeOrmModule({
+export default createTypeOrmModule({
   typeOrmOption: {
     synchronize: true,
     entities: [__dirname + '/../**/*.entity.*'],
     logging: true,
   },
   injectOptionFrom: 'config.database',
-}) {
-  constructor(@InjectLogger(DatabaseModule) private logger: Logger) {
-    super();
-  }
-
-  async onCreate(): Promise<void> {
-    this.logger.info('Creating TypeORM Module');
-    await super.onCreate();
-    this.logger.info('Created TypeORM Module');
-  }
-
-  async onDestroy() {
-    this.logger.info('Destroying TypeORM Module');
-    await super.onDestroy();
-    this.logger.info('Destroyed TypeORM Module');
-  }
-}
+});
