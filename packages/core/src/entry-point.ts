@@ -9,6 +9,7 @@ import {
   LoggerModule,
 } from './logger';
 import {Constructor} from './interfaces';
+import {BuiltinModule} from './builtin-module';
 
 interface NormalExitOption {
   exitCode: number;
@@ -155,10 +156,10 @@ export class ApplicationRunner {
 }
 
 function provideBuiltin(module: Constructor) {
-  @ModuleClass({requires: [LoggerModule, module]})
-  class WrappedModule {}
+  @ModuleClass({requires: [BuiltinModule, module]})
+  class EntryPointModule {}
 
-  return WrappedModule;
+  return EntryPointModule;
 }
 
 let entryPointCalled = false;
