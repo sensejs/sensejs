@@ -1,12 +1,12 @@
-import {ModuleRoot} from '@sensejs/core';
-import {ConfigModule} from '../src';
+import {ModuleClass, ModuleRoot} from '@sensejs/core';
+import {createConfigModule} from '../src';
 import {inject} from 'inversify';
 
 describe('ConfigModule', () => {
   test('circurlar dependency', () => {
     const config: any = {};
     config.config = config;
-    expect(() => ConfigModule({config, prefix: '$'})).toThrow();
+    expect(() => createConfigModule({config, prefix: '$'})).toThrow();
   });
 
   test('inject config', async () => {
@@ -23,7 +23,8 @@ describe('ConfigModule', () => {
 
     const spy = jest.fn();
 
-    class MyModule extends ConfigModule({config: root, prefix: 'config'}) {
+    @ModuleClass({requires: [createConfigModule({config: root, prefix: 'config'})]})
+    class MyModule {
       constructor(
         @inject('config') config: object,
         @inject('config.object.foo') nestedObject: string,
@@ -31,7 +32,6 @@ describe('ConfigModule', () => {
         @inject('config.array.2.deepNested') deepNested: object,
         @inject('config.\\\\fancy\\.name.key') fancyConfig: boolean,
       ) {
-        super();
         expect(config).toBe(root);
         expect(nestedObject).toBe(root.object.foo);
         expect(arrayElement).toBe(root.array[1]);

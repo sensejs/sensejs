@@ -1,5 +1,5 @@
 import traverse from 'traverse';
-import {ConstantProvider, createModule} from '@sensejs/core';
+import {ConstantProvider, createLegacyModule, createModule} from '@sensejs/core';
 
 export interface ConfigModuleOption {
   config: object;
@@ -30,7 +30,12 @@ function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[]
   }, []);
 }
 
-export function ConfigModule(option: ConfigModuleOption) {
+export function createConfigModule(option: ConfigModuleOption) {
   const constants = buildConfigMap(option);
   return createModule({constants});
 }
+
+export const ConfigModule = createLegacyModule(
+  createConfigModule,
+  'Base class style ConfigModule is decprecated, use createConfigModule instead',
+);

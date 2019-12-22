@@ -58,10 +58,9 @@ jest.mock('kafka-node', () => {
 });
 
 import {EventEmitter} from 'events';
-import {createModule, Inject, ModuleRoot} from '@sensejs/core';
+import {createModule, Inject, ModuleClass, ModuleRoot} from '@sensejs/core';
 import {HighLevelProducer, ProduceRequest} from 'kafka-node';
-import {KafkaProducerModuleClass} from '../src';
-import {MessageProducer} from '../src/message-producer';
+import {createKafkaProducerModule, MessageProducer} from '../src';
 
 const mockController = new EventEmitter();
 
@@ -69,9 +68,11 @@ describe('MessageProducerModule', () => {
   test('Module', async () => {
     const spy = jest.spyOn(HighLevelProducer.prototype, 'send');
 
-    @KafkaProducerModuleClass({
+    const kafkaProducerModule = createKafkaProducerModule({
       kafkaProducerOption: {kafkaHost: ''},
-    })
+    });
+
+    @ModuleClass({requires: [kafkaProducerModule]})
     class Foo {
       constructor(@Inject(MessageProducer) messageProducer: MessageProducer) {
         messageProducer.produceMessage('topic', '1', 'key');
@@ -127,13 +128,10 @@ describe('MessageProducerModule', () => {
       constants: [{provide: 'config.kafkaProducer', value: {kafkaHost}}],
     });
 
-    @KafkaProducerModuleClass({
+    const moduleRoot = new ModuleRoot(createKafkaProducerModule({
       requires: [ConfigModule],
       injectOptionFrom: 'config.kafkaProducer',
-    })
-    class ProducerModule {}
-
-    const moduleRoot = new ModuleRoot(ProducerModule);
+    }));
     mockController.once('Producer:constructor', () => {
       mockController.emit('Producer:ready');
     });

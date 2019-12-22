@@ -162,7 +162,7 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymb
   return createModule({requires: [KafkaConsumerGroupModule]});
 }
 
-export function KafkaConsumerModuleClass(option: KafkaConsumerModuleOption) {
+export function createKafkaConsumerModule(option: KafkaConsumerModuleOption): Constructor {
   const injectMessageConsumerSymbol = Symbol('MessageConsumer');
   const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
   const subscribeTopicModules = scanController(option, kafkaConnectionModule, injectMessageConsumerSymbol);
@@ -185,10 +185,10 @@ export function KafkaConsumerModuleClass(option: KafkaConsumerModuleOption) {
     }
   }
 
-  return ModuleClass({requires: [KafkaConsumerModule]});
+  return KafkaConsumerModule;
 }
 
 export const KafkaConsumerModule = createLegacyModule(
-  KafkaConsumerModuleClass,
+  createKafkaConsumerModule,
   'Base class module style KafkaConsumerModule is deprecated, use KafkaConsumerModuleClass instead.',
 );

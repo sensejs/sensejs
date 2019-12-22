@@ -107,7 +107,7 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
   return TransactionInterceptor;
 }
 
-export function TypeOrmModuleClass(option: TypeOrmModuleOption) {
+export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
   const optionProvider = provideOptionInjector<ConnectionOptions>(
     option.typeOrmOption,
     option.injectOptionFrom,
@@ -186,10 +186,10 @@ export function TypeOrmModuleClass(option: TypeOrmModuleOption) {
     }
   }
 
-  return ModuleClass({requires: [EntityManagerModule]});
+  return createModule({requires: [EntityManagerModule]});
 }
 
 export const TypeOrmModule = createLegacyModule(
-  TypeOrmModuleClass,
+  createTypeOrmModule,
   'Base class style TypeOrmModule is deprecated, use TypeOrmModuleClass decorator instead',
 );

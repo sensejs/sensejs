@@ -10,6 +10,7 @@ import {
   provideConnectionFactory,
   provideOptionInjector,
   ServiceIdentifier,
+  Constructor,
 } from '@sensejs/core';
 import {MessageProducer, ProducerOption} from './message-producer';
 import merge from 'lodash.merge';
@@ -19,7 +20,7 @@ export interface KafkaPublishModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<Partial<ProducerOption>>;
 }
 
-export function KafkaProducerModuleClass(option: KafkaPublishModuleOption) {
+export function createKafkaProducerModule(option: KafkaPublishModuleOption): Constructor {
   const optionFactory = provideOptionInjector(
     option.kafkaProducerOption,
     option.injectOptionFrom,
@@ -66,10 +67,10 @@ export function KafkaProducerModuleClass(option: KafkaPublishModuleOption) {
     }
   }
 
-  return ModuleClass({requires: [KafkaPublishModule]});
+  return KafkaPublishModule;
 }
 
 export const KafkaProducerModule = createLegacyModule(
-  KafkaProducerModuleClass,
+  createKafkaProducerModule,
   'Base class style module KafkaProducerModule is deprecated, use KafkaProducerModuleClass decorator instead',
 );

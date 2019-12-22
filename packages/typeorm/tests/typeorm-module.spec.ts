@@ -11,7 +11,7 @@ import {
 } from '@sensejs/core';
 import {Container} from 'inversify';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
-import {InjectRepository, Transactional, TypeOrmModule, TypeOrmModuleClass, TypeOrmSupportInterceptor} from '../src';
+import {InjectRepository, Transactional, TypeOrmModule, createTypeOrmModule, TypeOrmSupportInterceptor} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
@@ -84,7 +84,7 @@ describe('TypeOrmModule', () => {
       }
     }
 
-    @TypeOrmModuleClass({
+    const typeOrmModule = createTypeOrmModule({
       typeOrmOption: {
         type: 'sqlite',
         database: ':memory:',
@@ -92,14 +92,13 @@ describe('TypeOrmModule', () => {
         entities: [Photo, Video, Content],
         logging: true,
       },
-    })
-    class TypeOrmModule {}
+    });
 
     const spy = jest.fn();
 
     @ModuleClass({
       components: [ExampleHttpController, TypeOrmSupportInterceptor, Transactional()],
-      requires: [LoggerModule, TypeOrmModule],
+      requires: [LoggerModule, typeOrmModule],
     })
     class FooModule {
       constructor(

@@ -48,11 +48,11 @@ export interface HttpModuleOption extends ModuleOption {
  * @param option
  * @constructor
  */
-export function HttpModuleClass(
+export function createHttpModule(
   option: HttpModuleOption = {
     httpOption: defaultHttpConfig,
   },
-) {
+): Constructor {
   const httpAdaptorFactory = option.httpAdaptorFactory || (
     () => new KoaHttpApplicationBuilder()
   );
@@ -135,10 +135,10 @@ export function HttpModuleClass(
     }
   }
 
-  return ModuleClass({requires: [HttpModule]});
+  return HttpModule;
 }
 
 export const HttpModule = createLegacyModule(
-  HttpModuleClass,
-  'Base class style HttpModule is deprecated, use @HttpModuleClass decorator instead',
+  createHttpModule,
+  'Base class style module HttpModule is deprecated, use createHttpModuleClass instead',
 );

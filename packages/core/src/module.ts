@@ -8,11 +8,10 @@ import {
   Constructor,
   FactoryProvider,
 } from './interfaces';
-import {ClassDecorator} from './utils';
+import {Deprecated} from './utils';
 import {ContainerModule, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 import {ensureMethodInjectMetadata} from './method-inject';
-import {Deprecated} from './utils';
 
 /**
  * Options to define a module
@@ -262,10 +261,10 @@ export function Module(option: ModuleOption = {}): ModuleConstructor {
   return Module as ModuleConstructor;
 }
 
-export function createLegacyModule<T>(decorator: (option: T) => ClassDecorator<Constructor>, message: string) {
+export function createLegacyModule<T>(createModule: (option: T) => Constructor, message: string) {
   return (option: T): ModuleConstructor => {
     @Deprecated({message})
-    @decorator(option)
+    @ModuleClass({requires: [createModule(option)]})
     class LegacyModule {
     }
 

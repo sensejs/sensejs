@@ -38,7 +38,7 @@ import {
   ConsumingContext,
   InjectSubscribeContext,
   KafkaConsumerModule,
-  KafkaConsumerModuleClass,
+  createKafkaConsumerModule,
   Message,
   SubscribeController,
   SubscribeTopic,
@@ -159,17 +159,14 @@ describe('Subscriber', () => {
       ],
     });
 
-    @KafkaConsumerModuleClass({
+    const moduleRoot = new ModuleRoot(createKafkaConsumerModule({
       components: [Controller],
       requires: [ConfigModule],
       defaultKafkaConsumerOption: {
         groupId,
       },
       injectOptionFrom: 'config.consumer',
-    })
-    class MyKafkaModule {}
-
-    const moduleRoot = new ModuleRoot(MyKafkaModule);
+    }));
     await moduleRoot.start().then(() => {
       expect(stub).toHaveBeenCalledWith([
         expect.objectContaining({

@@ -11,6 +11,7 @@ import {
   OnModuleCreate,
   OnModuleDestroy,
   Tagged,
+  createModule,
 } from '../src';
 import {ModuleInstance} from '../src/module-instance';
 
@@ -119,7 +120,7 @@ describe('ModuleInstance', () => {
   });
 
   test('legacy module lifecycle', async () => {
-    const legacyModule = createLegacyModule(ModuleClass, '');
+    const legacyModule = createLegacyModule(createModule, '');
     const onCreateStub = jest.fn(), onDestroyStub = jest.fn();
 
     class LegacyModule extends legacyModule({}) {

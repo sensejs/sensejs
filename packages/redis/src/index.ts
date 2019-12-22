@@ -11,6 +11,7 @@ import {
   provideConnectionFactory,
   provideOptionInjector,
   ServiceIdentifier,
+  Constructor,
 } from '@sensejs/core';
 
 export interface RedisConnectOption extends Redis.RedisOptions {
@@ -47,7 +48,11 @@ function checkRedisOptions(options: RedisModuleOptions[]) {
   }
 }
 
-export function RedisModuleClass(options: RedisModuleOptions | RedisModuleOptions[]) {
+/**
+ * Create a module manage IORedis connection
+ * @param options Option pass to IORedis constructor
+ */
+export function createRedisModule(options: RedisModuleOptions | RedisModuleOptions[]): Constructor {
   options = ([] as RedisModuleOptions[]).concat(options);
 
   if (options.length === 1) {
@@ -56,17 +61,18 @@ export function RedisModuleClass(options: RedisModuleOptions | RedisModuleOption
 
   checkRedisOptions(options);
 
-  return ModuleClass({
-    requires: options.map((option) => {
-      @buildRedisModule(option)
-      class RedisModule {}
-      return RedisModule;
-    }),
+  return createModule({
+    requires: options.map(buildRedisModule),
   });
 }
 
+/**
+ * Create a base class style module
+ * @deprecated
+ * @see createRedisModule
+ */
 export const RedisModule = createLegacyModule(
-  RedisModuleClass,
+  createRedisModule,
   'Base class style RedisModule is deprecated, use RedisModuleClass decorator instead.',
 );
 
@@ -87,7 +93,7 @@ function destroyRedisConnection(connection: Redis.Redis) {
   return Promise.resolve(connection.disconnect());
 }
 
-function buildRedisModule(options: RedisModuleOptions) {
+function buildRedisModule(options: RedisModuleOptions): Constructor {
   const factoryProvider = provideConnectionFactory(createRedisConnection, destroyRedisConnection, Redis);
   const optionProvider = provideOptionInjector(options.options, options.injectOptionFrom, (fallback, injected) => {
     return Object.assign({}, fallback, injected);
@@ -115,5 +121,5 @@ function buildRedisModule(options: RedisModuleOptions) {
     }
   }
 
-  return ModuleClass({requires: [RedisModule]});
+  return RedisModule;
 }

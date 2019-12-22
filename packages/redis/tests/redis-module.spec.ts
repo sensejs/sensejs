@@ -3,12 +3,12 @@ import Redis from 'ioredis';
 import {Container, inject} from 'inversify';
 import {Controller} from '@sensejs/http';
 import {createModule, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
-import {InjectRedis, RedisModule, RedisModuleOptions} from '../src';
+import {createRedisModule, InjectRedis, RedisModuleOptions} from '../src';
 
 describe('RedisModule', () => {
   test('will throw without `name` field', (done) => {
     try {
-      RedisModule([{options: {uri: '1'}, name: '1'}, {options: {uri: '2'}}]);
+      createRedisModule([{options: {uri: '1'}, name: '1'}, {options: {uri: '2'}}]);
 
       done(new Error('error'));
     } catch (error) {
@@ -18,7 +18,7 @@ describe('RedisModule', () => {
 
   test('will throw with duplicated `name` field', (done) => {
     try {
-      RedisModule([
+      createRedisModule([
         {options: {uri: '1'}, name: '1'},
         {options: {uri: '2'}, name: '1'},
       ]);
@@ -67,7 +67,7 @@ describe('RedisModule', () => {
       }
     }
 
-    const redisModule = RedisModule([redisOption1, redisOption2]);
+    const redisModule = createRedisModule([redisOption1, redisOption2]);
 
     const spy = jest.fn();
 
@@ -122,7 +122,7 @@ describe('RedisModule', () => {
       }
     }
 
-    const redisModule = RedisModule({
+    const redisModule = createRedisModule({
       options: {uri: ''},
     });
 
