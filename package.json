@@ -7,6 +7,8 @@
   "license": "ISC",
   "private": true,
   "devDependencies": {
+    "@commitlint/cli": "^8.2.0",
+    "@commitlint/config-conventional": "^8.2.0",
     "@types/jest": "^24.0.23",
     "@types/koa": "^2.11.0",
     "@types/koa-router": "^7.0.42",
@@ -30,6 +32,7 @@
     "hooks": {
       "pre-commit": "pnpm recursive run prepare && lint-staged",
       "pre-push": "pnpm t",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
       "post-checkout": "sh scripts/post-checkout.sh",
       "post-merge": "pnpm m i"
     }
