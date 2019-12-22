@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/typeorm",
-  "version": "0.1.0-0",
+  "version": "0.1.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -20,7 +20,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.1.0-0",
+    "@sensejs/core": "workspace:0.1.0",
     "inversify": "^5.0.1",
     "tslib": "^1.10.0"
   },
