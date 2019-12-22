@@ -264,16 +264,11 @@ export function Module(option: ModuleOption = {}): ModuleConstructor {
 
 export function createLegacyModule<T>(decorator: (option: T) => ClassDecorator<Constructor>, message: string) {
   return (option: T): ModuleConstructor => {
-    @decorator(option)
     @Deprecated({message})
+    @decorator(option)
     class LegacyModule {
-      @OnModuleCreate()
-      async onCreate() {}
-
-      @OnModuleDestroy()
-      async onDestroy() {}
     }
 
-    return LegacyModule;
+    return Module({requires: [LegacyModule]});
   };
 }
