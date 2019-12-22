@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import Redis from 'ioredis';
 import {Container, inject} from 'inversify';
 import {Controller} from '@sensejs/http';
-import {Module, ModuleRoot} from '@sensejs/core';
+import {createModule, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
 import {InjectRedis, RedisModule, RedisModuleOptions} from '../src';
 
 describe('RedisModule', () => {
@@ -30,7 +30,7 @@ describe('RedisModule', () => {
   });
 
   test('multi redis correct', async () => {
-    const ConfigModule = Module({constants: [{provide: 'config.redis', value: {uri: 'injected'}}]});
+    const ConfigModule = createModule({constants: [{provide: 'config.redis', value: {uri: 'injected'}}]});
     const redisOption1: RedisModuleOptions = {
       options: {uri: ''},
       name: 'redis1',
@@ -71,11 +71,13 @@ describe('RedisModule', () => {
 
     const spy = jest.fn();
 
-    class FooModule extends Module({components: [ExampleHttpController], requires: [redisModule]}) {
-      constructor(@inject(Container) private container: Container) {
-        super();
-      }
+    @ModuleClass({
+      components: [ExampleHttpController], requires: [redisModule],
+    })
+    class FooModule {
+      constructor(@inject(Container) private container: Container) {}
 
+      @OnModuleCreate()
       async onCreate() {
         const controller = this.container.get(ExampleHttpController);
 
@@ -97,7 +99,6 @@ describe('RedisModule', () => {
         spy();
       }
 
-      async onDestroy() {}
     }
 
     const app = new ModuleRoot(FooModule);
@@ -127,13 +128,14 @@ describe('RedisModule', () => {
 
     const spy = jest.fn();
 
-    class FooModule extends Module({components: [ExampleHttpController], requires: [redisModule]}) {
-      constructor(@inject(Container) private container: Container) {
-        super();
-      }
+    @ModuleClass({
+      components: [ExampleHttpController], requires: [redisModule],
+    })
+    class FooModule {
 
-      async onCreate() {
-        const controller = this.container.get(ExampleHttpController);
+      @OnModuleCreate()
+      async onCreate(@Inject(Container) container: Container) {
+        const controller = container.get(ExampleHttpController);
 
         const key = 'testKey';
         const value = 'testValue';
@@ -143,8 +145,6 @@ describe('RedisModule', () => {
         expect(redisValue).toEqual(value);
         spy();
       }
-
-      async onDestroy() {}
     }
 
     const app = new ModuleRoot(FooModule);

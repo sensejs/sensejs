@@ -1,10 +1,13 @@
 import Redis from 'ioredis';
 import {
+  createLegacyModule,
+  createModule,
   Inject,
-  Module,
-  ModuleConstructor,
+  ModuleClass,
   ModuleOption,
   Named,
+  OnModuleCreate,
+  OnModuleDestroy,
   provideConnectionFactory,
   provideOptionInjector,
   ServiceIdentifier,
@@ -44,7 +47,7 @@ function checkRedisOptions(options: RedisModuleOptions[]) {
   }
 }
 
-export function RedisModule(options: RedisModuleOptions | RedisModuleOptions[]): ModuleConstructor {
+export function RedisModuleClass(options: RedisModuleOptions | RedisModuleOptions[]) {
   options = ([] as RedisModuleOptions[]).concat(options);
 
   if (options.length === 1) {
@@ -53,10 +56,19 @@ export function RedisModule(options: RedisModuleOptions | RedisModuleOptions[]):
 
   checkRedisOptions(options);
 
-  return Module({
-    requires: options.map((option) => buildRedisModule(option)),
+  return ModuleClass({
+    requires: options.map((option) => {
+      @buildRedisModule(option)
+      class RedisModule {}
+      return RedisModule;
+    }),
   });
 }
+
+export const RedisModule = createLegacyModule(
+  RedisModuleClass,
+  'Base class style RedisModule is deprecated, use RedisModuleClass decorator instead.',
+);
 
 function createRedisConnection(options: RedisConnectOption) {
   return new Promise<Redis.Redis>((done, fail) => {
@@ -75,32 +87,33 @@ function destroyRedisConnection(connection: Redis.Redis) {
   return Promise.resolve(connection.disconnect());
 }
 
-function buildRedisModule(options: RedisModuleOptions): ModuleConstructor {
+function buildRedisModule(options: RedisModuleOptions) {
   const factoryProvider = provideConnectionFactory(createRedisConnection, destroyRedisConnection, Redis);
   const optionProvider = provideOptionInjector(options.options, options.injectOptionFrom, (fallback, injected) => {
     return Object.assign({}, fallback, injected);
   });
   Object.assign(factoryProvider, {name: options.name});
 
-  class RedisModule extends Module({
-    requires: [Module(options)],
+  @ModuleClass({
+    requires: [createModule(options)],
     factories: [factoryProvider, optionProvider],
-  }) {
+  })
+  class RedisModule {
     constructor(
       @Inject(factoryProvider.factory) private redisClientFactory: InstanceType<typeof factoryProvider.factory>,
       @Inject(optionProvider.provide) private redisConnectOption: RedisConnectOption,
-    ) {
-      super();
-    }
+    ) {}
 
+    @OnModuleCreate()
     async onCreate(): Promise<void> {
       await this.redisClientFactory.connect(this.redisConnectOption);
     }
 
+    @OnModuleDestroy()
     async onDestroy(): Promise<void> {
       await this.redisClientFactory.disconnect();
     }
   }
 
-  return Module({requires: [RedisModule]});
+  return ModuleClass({requires: [RedisModule]});
 }
