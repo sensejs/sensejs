@@ -37,7 +37,6 @@ import {ConsumerGroupPipeline} from 'kafka-pipeline';
 import {
   ConsumingContext,
   InjectSubscribeContext,
-  KafkaConsumerModule,
   createKafkaConsumerModule,
   Message,
   SubscribeController,
@@ -112,7 +111,7 @@ describe('Subscriber', () => {
       }
     }
 
-    const module = KafkaConsumerModule({
+    const module = createKafkaConsumerModule({
       components: [Controller, interceptorA, interceptorB, interceptorC],
       defaultKafkaConsumerOption: {
         kafkaHost: 'any-host',
