@@ -1,5 +1,7 @@
 import {
   Component,
+  Inject,
+  LoggerModule,
   ModuleClass,
   ModuleRoot,
   OnModuleCreate,
@@ -7,9 +9,9 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {Container, inject} from 'inversify';
+import {Container} from 'inversify';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
-import {InjectRepository, TypeOrmModule, TypeOrmSupportInterceptor} from '../src';
+import {InjectRepository, TypeOrmModule, TypeOrmModuleClass, TypeOrmSupportInterceptor} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
@@ -82,7 +84,7 @@ describe('TypeOrmModule', () => {
       }
     }
 
-    const typeOrmModule = TypeOrmModule({
+    @TypeOrmModuleClass({
       typeOrmOption: {
         type: 'sqlite',
         database: ':memory:',
@@ -90,18 +92,19 @@ describe('TypeOrmModule', () => {
         entities: [Photo, Video, Content],
         logging: true,
       },
-    });
+    })
+    class TypeOrmModule {}
 
     const spy = jest.fn();
 
     @ModuleClass({
       components: [ExampleHttpController, TypeOrmSupportInterceptor],
-      requires: [typeOrmModule],
+      requires: [LoggerModule, TypeOrmModule],
     })
     class FooModule {
       constructor(
-        @inject(TypeOrmSupportInterceptor) private interceptor: RequestInterceptor,
-        @inject(Container) private container: Container,
+        @Inject(TypeOrmSupportInterceptor) private interceptor: RequestInterceptor,
+        @Inject(Container) private container: Container,
       ) {}
 
       @OnModuleCreate()

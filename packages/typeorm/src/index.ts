@@ -102,7 +102,6 @@ export function TypeOrmModuleClass(option: TypeOrmModuleOption) {
   @ModuleClass({
     requires: [LoggerModule, createModule(option), helperModule],
     factories: [factoryProvider, optionProvider],
-
   })
   class TypeOrmConnectionModule {
     constructor(
