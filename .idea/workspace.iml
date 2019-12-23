@@ -3,7 +3,8 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/.tmp" />
-      <excludeFolder url="file://$MODULE_DIR$/examples/ddd-demo/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/coverage" />
+      <excludeFolder url="file://$MODULE_DIR$/examples/demo-app/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/account-module/coverage" />
       <excludeFolder url="file://$MODULE_DIR$/packages/account-module/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/example/lib" />
