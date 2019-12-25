@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/packages/http/.idea/http.iml" filepath="$PROJECT_DIR$/packages/http/.idea/http.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/kafkajs/.idea/kafkajs.iml" filepath="$PROJECT_DIR$/packages/kafkajs/.idea/kafkajs.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/kafkajs-standalone/.idea/kafkajs-standalone.iml" filepath="$PROJECT_DIR$/packages/kafkajs-standalone/.idea/kafkajs-standalone.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packages/http-common/.idea/http-common.iml" filepath="$PROJECT_DIR$/packages/http-common/.idea/http-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/logger/.idea/logger.iml" filepath="$PROJECT_DIR$/packages/logger/.idea/logger.iml" />
       <module fileurl="file://$PROJECT_DIR$/packages/redis/.idea/redis.iml" filepath="$PROJECT_DIR$/packages/redis/.idea/redis.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/testing-utility/.idea/testing-utility.iml" filepath="$PROJECT_DIR$/tools/testing-utility/.idea/testing-utility.iml" />

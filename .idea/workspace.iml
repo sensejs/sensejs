@@ -28,5 +28,6 @@
     <orderEntry type="module" module-name="utility" />
     <orderEntry type="module" module-name="kafkajs-standalone" />
     <orderEntry type="module" module-name="kafkajs" />
+    <orderEntry type="module" module-name="http-common" />
   </component>
 </module>

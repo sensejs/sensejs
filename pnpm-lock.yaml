@@ -140,6 +140,16 @@ importers:
       reflect-metadata: ^0.1.13
       supertest: ^4.0.2
       tslib: ^1.11.0
+  packages/http-common:
+    dependencies:
+      '@sensejs/utility': 'link:../utility'
+      tslib: 1.11.0
+    devDependencies:
+      reflect-metadata: 0.1.13
+    specifiers:
+      '@sensejs/utility': 'workspace:*'
+      reflect-metadata: ^0.1.13
+      tslib: ^1.10.0
   packages/kafkajs:
     dependencies:
       '@sensejs/core': 'link:../core'
