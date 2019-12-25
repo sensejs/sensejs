@@ -168,6 +168,7 @@ importers:
       '@koa/router': ^10.0.0
       '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
+      '@sensejs/http-common': workspace:*
       '@sensejs/testing-utility': workspace:*
       '@sensejs/utility': workspace:^0.8.0
       koa: ^2.13.1
@@ -187,7 +188,21 @@ importers:
     devDependencies:
       '@sensejs/container': link:../container
       '@sensejs/core': link:../core
+      '@sensejs/http-common': link:../http-common
       '@sensejs/testing-utility': link:../../tools/testing-utility
+
+  packages/http-common:
+    specifiers:
+      '@sensejs/core': workspace:*
+      '@sensejs/utility': workspace:*
+      reflect-metadata: ^0.1.13
+      tslib: ^1.10.0
+    dependencies:
+      '@sensejs/utility': link:../utility
+      tslib: 1.14.1
+    devDependencies:
+      '@sensejs/core': link:../core
+      reflect-metadata: 0.1.13
 
   packages/kafkajs:
     specifiers:

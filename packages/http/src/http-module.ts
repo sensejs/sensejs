@@ -1,9 +1,7 @@
 import {BindingType, Container} from '@sensejs/container';
 import * as http from 'http';
-import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
-import {HttpAdaptor, HttpApplicationOption, HttpInterceptor} from './http-abstract';
 import {
   Constructor,
   createModule,
@@ -19,6 +17,7 @@ import {
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
+import {getHttpControllerMetadata, HttpApplicationOption, HttpInterceptor} from '@sensejs/http-common';
 
 export interface HttpOption extends HttpApplicationOption {
   listenAddress: string;
@@ -35,7 +34,7 @@ export interface HttpModuleOption extends ModuleOption {
   /**
    *
    */
-  httpAdaptorFactory?: () => HttpAdaptor;
+  httpAdaptorFactory?: () => KoaHttpApplicationBuilder;
 
   /**
    * Interceptors applied by this http server
@@ -127,7 +126,7 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
       })();
     }
 
-    private scanControllers(httpAdaptor: HttpAdaptor, moduleScanner: ModuleScanner) {
+    private scanControllers(httpAdaptor: KoaHttpApplicationBuilder, moduleScanner: ModuleScanner) {
       moduleScanner.scanModule((metadata) => {
         metadata.components.forEach((component) => {
           const httpControllerMetadata = getHttpControllerMetadata(component);
@@ -142,7 +141,7 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
       });
     }
 
-    private createHttpServer(httpOption: HttpOption, httpAdaptor: HttpAdaptor) {
+    private createHttpServer(httpOption: HttpOption, httpAdaptor: KoaHttpApplicationBuilder) {
       const {listenPort, listenAddress, ...httpApplicationOption} = httpOption;
       return new Promise<http.Server>((resolve, reject) => {
         const httpServer = http.createServer(httpAdaptor.build(httpApplicationOption, this.container));

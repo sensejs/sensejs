@@ -1,0 +1,34 @@
+{
+  "name": "@sensejs/http-common",
+  "version": "0.1.1",
+  "description": "",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "tsc -p tsconfig.build.json",
+    "cleanup": "rm -rf ./lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "tslib": "^1.10.0",
+    "@sensejs/utility": "workspace:*"
+  },
+  "devDependencies": {
+    "@sensejs/core": "workspace:*",
+    "reflect-metadata": "^0.1.13"
+  },
+  "peerDependencies": {
+    "@sensejs/core": "workspace:>=0.8.0 <0.9.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC"
+}

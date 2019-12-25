@@ -29,11 +29,13 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
+    "@sensejs/http-common": "workspace:*",
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
     "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
+    "@sensejs/http-common": "workspace:>=0.8.0 <0.9.0",
     "@sensejs/container": "workspace:>=0.8.0 <0.9.0",
     "@sensejs/core": "workspace:>=0.8.0 <0.9.0",
     "reflect-metadata": "^0.1.13"

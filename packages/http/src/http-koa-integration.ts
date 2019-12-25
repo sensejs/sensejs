@@ -5,16 +5,17 @@ import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
 import KoaCors from '@koa/cors';
+import koaQs from 'koa-qs';
 import {
-  HttpAdaptor,
+  ControllerMetadata,
+  getRequestMappingMetadata,
+  HttpMethod,
   HttpApplicationOption,
   HttpContext,
   HttpInterceptor,
   HttpRequest,
   HttpResponse,
-} from './http-abstract';
-import koaQs from 'koa-qs';
-import {ControllerMetadata, getRequestMappingMetadata, HttpMethod} from './http-decorators';
+} from '@sensejs/http-common';
 
 interface MethodRouteSpec<T = any> {
   path: string;
@@ -98,7 +99,7 @@ export class KoaHttpContext extends HttpContext {
   }
 }
 
-export class KoaHttpApplicationBuilder extends HttpAdaptor {
+export class KoaHttpApplicationBuilder {
   private readonly globalInterceptors: Constructor<HttpInterceptor>[] = [];
   private readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   private errorHandler?: (e: unknown) => any;

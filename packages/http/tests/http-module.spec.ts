@@ -8,17 +8,10 @@ import {
   ProcessManager,
 } from '@sensejs/core';
 import supertest from 'supertest';
-import {
-  Controller,
-  createHttpModule,
-  GET,
-  HttpContext,
-  HttpInterceptor,
-  KoaHttpApplicationBuilder,
-  Query,
-} from '../src';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
+import {Controller, GET, HttpContext, HttpInterceptor, Query} from '@sensejs/http-common';
+import {createHttpModule, KoaHttpApplicationBuilder} from '@sensejs/http';
 
 test('HttpModule', async () => {
   const serverIdentifier = Symbol();
@@ -46,8 +39,7 @@ test('HttpModule', async () => {
   @Controller('/bar')
   class BarController {
     @GET('/')
-    bar() {
-    }
+    bar() {}
   }
 
   @Controller('/foo', {interceptors: [MockInterceptor], labels: ['foo']})
@@ -63,16 +55,13 @@ test('HttpModule', async () => {
     queryTest(@Query() query: unknown) {
       return query;
     }
-
   }
 
   @ModuleClass({
     requires: [
       createHttpModule({
         httpAdaptorFactory: () => {
-          return new KoaHttpApplicationBuilder()
-            .setKoaBodyParserOption({})
-            .setQueryStringParsingMode('extended');
+          return new KoaHttpApplicationBuilder().setKoaBodyParserOption({}).setQueryStringParsingMode('extended');
         },
         requires: [createModule({components: [MyComponent, FooController]})],
         serverIdentifier,
@@ -84,28 +73,24 @@ test('HttpModule', async () => {
         },
       }),
     ],
-
   })
   class Module {
-
     @OnModuleCreate()
     async onModuleCreate(@Inject(serverIdentifier) server: Server) {
-      const port = (
-        server.address() as AddressInfo
-      ).port;
+      const port = (server.address() as AddressInfo).port;
       const baseUrl = `http://localhost:${port}`;
       await supertest(baseUrl).get('/bar').expect(404);
-      const {body} = await supertest(baseUrl)
-        .get('/foo/bar?object%5bproperty%5d=value&array%5b%5d=1&array%5b%5d=2');
-      expect(body).toEqual(expect.objectContaining({
-        object: expect.objectContaining({
-          property: 'value',
+      const {body} = await supertest(baseUrl).get('/foo/bar?object%5bproperty%5d=value&array%5b%5d=1&array%5b%5d=2');
+      expect(body).toEqual(
+        expect.objectContaining({
+          object: expect.objectContaining({
+            property: 'value',
+          }),
+          array: ['1', '2'],
         }),
-        array: ['1', '2'],
-      }));
+      );
       await supertest(baseUrl).get('/foo').expect(200);
     }
-
   }
 
   const runPromise = ApplicationRunner.runModule(Module, {

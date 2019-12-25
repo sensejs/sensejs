@@ -1,4 +1,16 @@
-import {Body, Controller, DELETE, GET, getHttpControllerMetadata, Header, PATCH, Path, POST, PUT, Query} from '../src';
+import {
+  Body,
+  Controller,
+  DELETE,
+  GET,
+  getHttpControllerMetadata,
+  Header,
+  PATCH,
+  Path,
+  POST,
+  PUT,
+  Query,
+} from '@sensejs/http-common';
 
 describe('Http decorators', () => {
   test('metadata', () => {
@@ -26,24 +38,5 @@ describe('Http decorators', () => {
     }
 
     expect(getHttpControllerMetadata(FooController)).not.toBeUndefined();
-  });
-
-  test('throw error when apply decorator multiple times', () => {
-    expect(() => {
-      @Controller('/foo')
-      @Controller('/foo')
-      class MyController {
-        @DELETE('/')
-        handleRequest() {}
-      }
-    }).toThrow();
-
-    expect(() => {
-      class MyController {
-        @GET('/')
-        @PATCH('/')
-        handleRequest() {}
-      }
-    }).toThrow();
   });
 });
