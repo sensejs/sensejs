@@ -91,7 +91,7 @@ export function resolveMethodInjectProxy(container: Container, invokerConstructo
   try {
     return container.resolve<MethodInjectProxy>(invokerConstructor);
   } catch (e) {
-    throw new MethodParamInjectError();
+    throw new MethodParamInjectError(e);
   }
 }
 

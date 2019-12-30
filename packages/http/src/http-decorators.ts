@@ -1,29 +1,69 @@
-import {Component, Constructor, Inject, Transformer, validateMethodInjectMetadata} from '@sensejs/core';
+import {Component, MethodInject, validateMethodInjectMetadata} from '@sensejs/core';
+import * as httpCommon from '@sensejs/http-common';
+import {ensureMetadataOnPrototype, HttpMethod, HttpParamType, ParamMappingMetadata} from '@sensejs/http-common';
 import {HttpContext, HttpInterceptor} from './http-abstract';
+import {Constructor, DecoratorBuilder, InstanceMethodDecorator, InstanceMethodParamDecorator} from '@sensejs/utility';
 
-export enum HttpMethod {
-  GET = 'get',
-  POST = 'post',
-  PUT = 'put',
-  DELETE = 'delete',
-  PATCH = 'patch',
-}
+/**
+ * @deprecated Use `Body` from `@sensejs/http-common` instead
+ */
+export const Body = httpCommon.Body;
+/**
+ * @deprecated Use `Header` from `@sensejs/http-common` instead
+ */
+export const Header = httpCommon.Header;
+/**
+ * @deprecated Use `Query` from `@sensejs/http-common` instead
+ */
+export const Query = httpCommon.Query;
+/**
+ * @deprecated Use `Path` from `@sensejs/http-common` instead
+ */
+export const Path = httpCommon.Path;
+/**
+ * @deprecated Use `GET` from `@sensejs/http-common` instead
+ */
+export const GET = httpCommon.GET;
+/**
+ * @deprecated Use `PUT` from `@sensejs/http-common` instead
+ */
+export const PUT = httpCommon.PUT;
+/**
+ * @deprecated Use `POST` from `@sensejs/http-common` instead
+ */
+export const POST = httpCommon.POST;
+/**
+ * @deprecated Use `DELETE` from `@sensejs/http-common` instead
+ */
+export const DELETE = httpCommon.DELETE;
+/**
+ * @deprecated Use `PATCH` from `@sensejs/http-common` instead
+ */
+export const PATCH = httpCommon.PATCH;
 
-export interface RequestMappingMetadata {
-  interceptors: Constructor<HttpInterceptor>[];
+interface MethodRouteOption {
+  path: string;
   httpMethod: HttpMethod;
-  path: string;
-}
-
-export interface RequestMappingOption {
-  interceptors?: Constructor<HttpInterceptor>[];
-}
-
-export interface ControllerMetadata {
-  path: string;
-  target: Constructor;
-  prototype: object;
   interceptors: Constructor<HttpInterceptor>[];
+  targetConstructor: Constructor;
+  targetMethod: Function;
+}
+
+interface ControllerRouteOption<T extends {}> {
+  path: string;
+  methodRouteSpecs: MethodRouteOption[];
+  methodRouteOptions: Map<keyof T, MethodRouteOption>;
+}
+
+export interface ControllerMetadata<T extends {} = {}> {
+  /** @deprecated */
+  path: string;
+  routeOption: ControllerRouteOption<T>;
+  /** @deprecated */
+  target: Constructor<T>;
+  prototype: T;
+  interceptors: Constructor<HttpInterceptor>[];
+  // routeSpec: Map<keyof T, MethodRouteOption>;
 }
 
 export interface ControllerOption {
@@ -34,141 +74,48 @@ export interface ControllerOption {
   };
 }
 
-const noop: Transformer = (x) => x;
+export interface InterceptHttpRequestDecorator extends InstanceMethodDecorator, ClassDecorator {}
 
-export function Path(name: string, transform: Transformer = noop) {
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.params[name]),
-  });
-}
-
-export function Body(transform: Transformer = noop) {
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.body),
-  });
-}
-
-export function Query(transform: Transformer = noop) {
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.query),
-  });
-}
-
-export function Header(name: string, transform: Transformer = noop) {
-  name = name.toLowerCase();
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.headers[name]),
-  });
-}
-
-export interface HttpRequestBuiltinParam {
-  body: unknown;
-  query: unknown;
-  path: {
-    [key: string]: string;
-  };
-  header: {
-    [key: string]: string;
-  };
-}
-
-const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
-
-function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMappingMetadata) {
-  if (Reflect.getMetadata(RequestMappingMetadataKey, targetMethod)) {
-    throw new Error('target method is already decorated with RequestMapping');
-  }
-  Reflect.defineMetadata(RequestMappingMetadataKey, requestMappingMetadata, targetMethod);
-}
-
-export function getRequestMappingMetadata(targetMethod: object): RequestMappingMetadata | undefined {
-  return Reflect.getMetadata(RequestMappingMetadataKey, targetMethod);
-}
-
-/**
- * RequestMapping decorator, mapping HTTP request into target method
- *
- * @param httpMethod
- * @param path
- * @param option
- * @decorator
- */
-export function RequestMapping(httpMethod: HttpMethod, path: string, option: RequestMappingOption = {}) {
-  return <T extends {}>(prototype: T, method: keyof T & string) => {
-    const targetMethod = prototype[method];
-    if (typeof targetMethod !== 'function') {
-      throw new Error('Request mapping decorator must be applied to a function');
-    }
-    validateMethodInjectMetadata(targetMethod);
-    setRequestMappingMetadata(targetMethod, {
-      httpMethod,
-      path,
-      interceptors: option.interceptors || [],
-    });
-  };
-}
-
-/**
- * HTTP request mapping shortcut for get method
- * @param path
- * @param option
- * @decorator
- */
-export function GET(path: string, option?: RequestMappingOption) {
-  return RequestMapping(HttpMethod.GET, path, option);
-}
-
-/**
- * HTTP request mapping shortcut for post method
- * @param path
- * @param option
- * @decorator
- */
-export function POST(path: string, option?: RequestMappingOption) {
-  return RequestMapping(HttpMethod.POST, path, option);
-}
-
-/**
- * HTTP request mapping shortcut for patch method
- * @param path
- * @param option
- * @decorator
- */
-export function PATCH(path: string, option?: RequestMappingOption) {
-  return RequestMapping(HttpMethod.PATCH, path, option);
-}
-
-/**
- * HTTP request mapping shortcut for delete method
- * @param path
- * @param option
- * @decorator
- */
-export function DELETE(path: string, option?: RequestMappingOption) {
-  return RequestMapping(HttpMethod.DELETE, path, option);
-}
-
-/**
- * HTTP request mapping shortcut for put method
- * @param path
- * @param option
- * @decorator
- */
-export function PUT(path: string, option?: RequestMappingOption) {
-  return RequestMapping(HttpMethod.PUT, path, option);
+export function InterceptHttpRequest(interceptors: Constructor<HttpInterceptor>[]) {
+  return new DecoratorBuilder('InterceptHttpRequest')
+    .whenApplyToInstanceMethod(() => void 0)
+    .whenApplyToConstructor(() => void 0)
+    .build();
 }
 
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
 
-function setHttpControllerMetadata(target: Constructor, controllerMetadata: ControllerMetadata) {
+function setHttpControllerMetadata<T>(target: Constructor<T>, controllerMetadata: ControllerMetadata<T>) {
   if (Reflect.getMetadata(ControllerMetadataKey, target)) {
     throw new Error('Target constructor is already has controller metadata');
   }
   Reflect.defineMetadata(ControllerMetadataKey, controllerMetadata, target);
 }
 
-export function getHttpControllerMetadata(target: object): ControllerMetadata | undefined {
+export function getHttpControllerMetadata(target: Constructor): ControllerMetadata | undefined {
   return Reflect.getMetadata(ControllerMetadataKey, target);
+}
+
+function getDecorator(paramMetadata: ParamMappingMetadata): InstanceMethodParamDecorator {
+
+  switch (paramMetadata.type) {
+    case HttpParamType.BODY:
+      return MethodInject(HttpContext, {
+        transform: (ctx) => ctx.request.body,
+      });
+    case HttpParamType.HEADER:
+      return MethodInject(HttpContext, {
+        transform: (ctx) => ctx.request.headers[paramMetadata.name],
+      });
+    case HttpParamType.PATH:
+      return MethodInject(HttpContext, {
+        transform: (ctx) => ctx.request.params[paramMetadata.name],
+      });
+    case HttpParamType.QUERY:
+      return MethodInject(HttpContext, {
+        transform: (ctx) => ctx.request.body,
+      });
+  }
 }
 
 /**
@@ -176,10 +123,41 @@ export function getHttpControllerMetadata(target: object): ControllerMetadata | 
  * @decorator
  */
 export function Controller(path: string, controllerOption: ControllerOption = {}) {
-  return (target: Constructor) => {
+  return <T extends {}>(target: Constructor<T>) => {
+    const prototype = target.prototype;
+    const methodRouteOptions = new Map<keyof T, MethodRouteOption>();
+    const metadata = ensureMetadataOnPrototype(prototype, new Map());
+    for (const [methodName, fnMetadata] of metadata.entries()) {
+      for (const [index, paramMetadata] of fnMetadata.params.entries()) {
+        const decorator = getDecorator(paramMetadata);
+        decorator(prototype, methodName as string | symbol, index);
+      }
+      const {method, path} = fnMetadata;
+      if (typeof method === 'undefined' || typeof path === 'undefined') {
+        continue;
+      }
+      const fn = prototype[methodName];
+      if (typeof fn !== 'function') {
+        throw new Error();
+      }
+
+      validateMethodInjectMetadata(fn);
+      methodRouteOptions.set(methodName, {
+        httpMethod: method,
+        path,
+        interceptors: [],
+        targetConstructor: target,
+        targetMethod: fn,
+      });
+    }
     // Decorate target as a component
     Component()(target);
     setHttpControllerMetadata(target, {
+      routeOption: {
+        path,
+        methodRouteSpecs: [],
+        methodRouteOptions,
+      },
       target,
       path,
       prototype: target.prototype,

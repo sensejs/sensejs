@@ -25,7 +25,7 @@ export interface ModuleOption {
   /**
    * Components provided by this module
    */
-  components?: (Constructor | Class)[];
+  components?: (Constructor)[];
 
   /**
    * Factories provided by this module

@@ -1,4 +1,5 @@
-import {Body, Controller, DELETE, GET, getHttpControllerMetadata, Header, PATCH, Path, POST, PUT, Query} from '../src';
+import {Controller, getHttpControllerMetadata} from '../src';
+import {Body, DELETE, GET, Header, PATCH, Path, POST, PUT, Query} from '@sensejs/http-common';
 
 describe('Http decorators', () => {
   test('metadata', () => {
@@ -36,13 +37,6 @@ describe('Http decorators', () => {
         handleRequest(body: object) {}
       }
     }).toThrow();
-
-    expect(() => {
-      class MyController {
-        @GET('/:id')
-        handleRequest(body: object, @Path('id') path: string) {}
-      }
-    }).toThrow();
   });
 
   test('throw error when apply decorator multiple times', () => {
@@ -54,28 +48,6 @@ describe('Http decorators', () => {
         handleRequest() {}
       }
     }).toThrow();
-
-    expect(() => {
-      class MyController {
-        @GET('/')
-        @PATCH('/')
-        handleRequest() {}
-      }
-    }).toThrow();
-
-    expect(() => {
-      class MyController {
-        handleRequest(@Body() @Path('id') data: any) {}
-      }
-    }).toThrow();
   });
 
-  test('throw error when misapplied', () => {
-    expect(() => {
-      class MyController {
-        @GET('/')
-        field: any;
-      }
-    }).toThrow();
-  });
 });

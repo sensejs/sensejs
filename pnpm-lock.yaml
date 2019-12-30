@@ -106,6 +106,8 @@ importers:
     dependencies:
       '@koa/cors': 3.0.0
       '@sensejs/core': 'link:../core'
+      '@sensejs/http-common': 'link:../http-common'
+      '@sensejs/utility': 'link:../utility'
       '@types/koa': 2.11.1
       '@types/koa-bodyparser': 4.3.0
       '@types/koa-router': 7.4.0
@@ -125,6 +127,8 @@ importers:
     specifiers:
       '@koa/cors': ^3.0.0
       '@sensejs/core': 'workspace:*'
+      '@sensejs/http-common': 'workspace:*'
+      '@sensejs/utility': 'workspace:*'
       '@types/koa': ^2.11.1
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.4.0

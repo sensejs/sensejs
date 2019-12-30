@@ -12,10 +12,10 @@ export const CreateAuthorForm = iots.type({
 
 export type CreateAuthorFormType = iots.TypeOf<typeof CreateAuthorForm>;
 
-export const CreateAuthorFormTransformer = createTransformer(CreateAuthorForm, throwValidationError);
+export const validateCreateAuthorForm = createTransformer(CreateAuthorForm, throwValidationError);
 export const CreateBookForm = iots.type({
   name: iots.string,
 });
 export type CreateBookFormType = iots.TypeOf<typeof CreateBookForm>;
 
-export const CreateBookFormTransformer = createTransformer(CreateBookForm, throwValidationError);
+export const validateCreateBookForm = createTransformer(CreateBookForm, throwValidationError);

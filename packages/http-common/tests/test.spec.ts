@@ -44,18 +44,19 @@ describe('Http annotations', () => {
     expect(metadata.get('handleGet')).toEqual({
       method: HttpMethod.GET,
       path: '/get',
-      params: {},
+      params: expect.any(Map),
     });
-    expect(metadata.get('handlePost')).toEqual({
+    const postMetadata = metadata.get('handlePost');
+    expect(postMetadata).toEqual({
       method: HttpMethod.POST,
       path: '/:id',
-      params: expect.objectContaining({
-        0: expect.objectContaining({type: HttpParamType.BODY}),
-        1: expect.objectContaining({type: HttpParamType.QUERY}),
-        2: expect.objectContaining({type: HttpParamType.PATH, name: 'id'}),
-        3: expect.objectContaining({type: HttpParamType.HEADER, name: 'cookie'}),
-      }),
+      params: expect.any(Map)
     });
+
+    expect(postMetadata!.params.get(0)).toEqual(expect.objectContaining({type: HttpParamType.BODY}));
+    expect(postMetadata!.params.get(1)).toEqual(expect.objectContaining({type: HttpParamType.QUERY}));
+    expect(postMetadata!.params.get(2)).toEqual(expect.objectContaining({type: HttpParamType.PATH, name: 'id'}));
+    expect(postMetadata!.params.get(3)).toEqual(expect.objectContaining({type: HttpParamType.HEADER, name: 'cookie'}));
 
     expect(metadata.get('handleDelete')).toEqual({
       method: HttpMethod.DELETE,
