@@ -52,8 +52,8 @@ importers:
       io-ts: 2.0.2_fp-ts@2.3.1
       js-yaml: 3.13.1
       reflect-metadata: 0.1.13
-      sqlite3: 4.1.1
-      typeorm: 0.2.21_sqlite3@4.1.1
+      sqlite3: 4.1.0
+      typeorm: 0.2.21_sqlite3@4.1.0
       uuid: 3.3.3
     devDependencies:
       '@types/config': 0.0.36
@@ -73,7 +73,7 @@ importers:
       io-ts: ^2.0.1
       js-yaml: ^3.13.1
       reflect-metadata: ^0.1.13
-      sqlite3: ^4.1.0
+      sqlite3: 4.1.0
       typeorm: ^0.2.20
       uuid: ^3.3.3
   packages/config:
@@ -5402,19 +5402,9 @@ packages:
       nan: 2.14.0
       node-pre-gyp: 0.11.0
       request: 2.88.0
-    dev: true
     requiresBuild: true
     resolution:
       integrity: sha512-RvqoKxq+8pDHsJo7aXxsFR18i+dU2Wp5o12qAJOV5LNcDt+fgJsc2QKKg3sIRfXrN9ZjzY1T7SNe/DFVqAXjaw==
-  /sqlite3/4.1.1:
-    dependencies:
-      nan: 2.14.0
-      node-pre-gyp: 0.11.0
-      request: 2.88.0
-    dev: false
-    requiresBuild: true
-    resolution:
-      integrity: sha512-CvT5XY+MWnn0HkbwVKJAyWEMfzpAPwnTiB3TobA5Mri44SrTovmmh499NPQP+gatkeOipqPlBLel7rn4E/PCQg==
   /sshpk/1.16.1:
     dependencies:
       asn1: 0.2.4
@@ -5962,7 +5952,7 @@ packages:
       sqlite3: ^4.1.0
     resolution:
       integrity: sha512-VxB+9qH8D+PM19MIx18Zs3Fqv/ZINnnQvUGmBEiLYDrB9etdSdamgSTCIhWdFNndeJ6ldH4jbD0Z6HWsepMPlA==
-  /typeorm/0.2.21_sqlite3@4.1.1:
+  /typeorm/0.2.21_sqlite3@4.1.0:
     dependencies:
       app-root-path: 3.0.0
       buffer: 5.4.3
@@ -5974,7 +5964,7 @@ packages:
       js-yaml: 3.13.1
       mkdirp: 0.5.1
       reflect-metadata: 0.1.13
-      sqlite3: 4.1.1
+      sqlite3: 4.1.0
       tslib: 1.10.0
       xml2js: 0.4.23
       yargonaut: 1.1.4
