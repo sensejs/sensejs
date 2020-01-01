@@ -168,6 +168,24 @@ importers:
       lodash.merge: ^4.6.2
       reflect-metadata: ^0.1.13
       tslib: ^1.10.0
+  packages/kafkajs:
+    dependencies:
+      kafkajs: 1.11.0
+      long: 4.0.0
+      rxjs: 6.5.4
+      tslib: 1.10.0
+    devDependencies:
+      '@sensejs/core': 'link:../core'
+      '@types/long': 4.0.0
+      reflect-metadata: 0.1.13
+    specifiers:
+      '@sensejs/core': 'workspace:0.1.1'
+      '@types/long': ^4.0.0
+      kafkajs: ^1.11.0
+      long: ^4.0.0
+      reflect-metadata: ^0.1.13
+      rxjs: ^6.5.4
+      tslib: ^1.10.0
   packages/logger:
     dependencies:
       colors: 1.4.0
@@ -903,6 +921,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-ijGqzZt/b7BfzcK9vTrS6MFljQRPn5BFWOx8oE0GYxribu6uV+aA9zZuXI1zc/etK9E8nrgdoF2+LgUw7+9tJQ==
+  /@types/long/4.0.0:
+    dev: true
+    resolution:
+      integrity: sha512-1w52Nyx4Gq47uuu0EVcsHBxZFJgurQ+rTKS3qMHxR1GY2T8c2AJYd6vZoZ9q1rupaDjU0yT+Jc2XTyXkjeMA+Q==
   /@types/mime/2.0.1:
     resolution:
       integrity: sha512-FwI9gX75FgVBJ7ywgnq/P7tw+/o1GUbtP0KzbtusLigAOgIgNISRK0ZPl4qertvXSIE8YbsVJueQ90cDt9YYyw==
@@ -3646,6 +3668,14 @@ packages:
       kafka-node: 'git+https://github.com/thynson/kafka-node.git#49800b96b7d27a4f6226b138253a6fd8c1f842c7'
     resolution:
       integrity: sha512-Ex2NHz1syorIEsbbTg+eOiCH6Jk7g/O1L6UbD9XZcaEsN/NicwUm9f2skiII85yz/y6MRUI51t1AfP3Ll4J9Lw==
+  /kafkajs/1.11.0:
+    dependencies:
+      long: 4.0.0
+    dev: false
+    engines:
+      node: '>=8.6.0'
+    resolution:
+      integrity: sha512-dLRCcFIBygZucR+e8U2ZqH2wgMrAu114K0szUyUseJoeOii3cG5bHZPIdqKecXxI6begPVCfGS3R0nJY4zHW2A==
   /keygrip/1.1.0:
     dependencies:
       tsscmp: 1.0.6
@@ -3969,6 +3999,10 @@ packages:
       node: '>=0.6'
     resolution:
       integrity: sha1-6u9ZUcp1UdlpJrgtokLbnWso+1M=
+  /long/4.0.0:
+    dev: false
+    resolution:
+      integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
   /loose-envify/1.4.0:
     dependencies:
       js-tokens: 4.0.0
@@ -5169,6 +5203,14 @@ packages:
       npm: '>=2.0.0'
     resolution:
       integrity: sha512-wuYsAYYFdWTAnAaPoKGNhfpWwKZbJW+HgAJ+mImp+Epl7BG8oNWBCTyRM8gba9k4lk8BgWdoYm21Mo/RYhhbgA==
+  /rxjs/6.5.4:
+    dependencies:
+      tslib: 1.10.0
+    dev: false
+    engines:
+      npm: '>=2.0.0'
+    resolution:
+      integrity: sha512-naMQXcgEo3csAEGvw/NydRA0fuS2nDZJiw1YUWFKU7aPPAPGZEsD4Iimit96qwCieH6y614MCLYwdkrWx7z/7Q==
   /safe-buffer/5.1.2:
     resolution:
       integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==

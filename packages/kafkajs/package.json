@@ -1,0 +1,37 @@
+{
+  "name": "@sensejs/kafkajs",
+  "version": "0.1.1",
+  "description": "",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "tsc",
+    "cleanup": "rm -rf ./lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC",
+  "dependencies": {
+    "kafkajs": "^1.11.0",
+    "tslib": "^1.10.0",
+    "rxjs": "^6.5.4",
+    "long": "^4.0.0"
+  },
+  "devDependencies": {
+    "@sensejs/core": "workspace:0.1.1",
+    "reflect-metadata": "^0.1.13",
+    "@types/long": "^4.0.0"
+  },
+  "peerDependencies": {
+    "@sensejs/core": "workspace:0.1.1",
+    "reflect-metadata": "^0.1.13"
+  }
+}
