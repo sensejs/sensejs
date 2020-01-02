@@ -3,7 +3,7 @@ importers:
     devDependencies:
       '@commitlint/cli': 8.2.0
       '@commitlint/config-conventional': 8.2.0
-      '@types/jest': 24.0.24
+      '@types/jest': 24.0.25
       '@types/koa': 2.11.0
       '@types/koa-router': 7.0.42
       '@types/node': 12.12.21
@@ -14,15 +14,15 @@ importers:
       reflect-metadata: 0.1.13
       source-map-support: 0.5.16
       ts-jest: 24.2.0_jest@24.9.0
-      ts-node: 8.5.4_typescript@3.7.3
+      ts-node: 8.5.4_typescript@3.7.4
       tslib: 1.10.0
-      tslint: 5.20.1_typescript@3.7.3
-      typescript: 3.7.3
-      typescript-formatter: 7.2.2_typescript@3.7.3
+      tslint: 5.20.1_typescript@3.7.4
+      typescript: 3.7.4
+      typescript-formatter: 7.2.2_typescript@3.7.4
     specifiers:
       '@commitlint/cli': ^8.2.0
       '@commitlint/config-conventional': ^8.2.0
-      '@types/jest': ^24.0.23
+      '@types/jest': ^24.0.25
       '@types/koa': ^2.11.0
       '@types/koa-router': ^7.0.42
       '@types/node': ^12.12.18
@@ -36,7 +36,7 @@ importers:
       ts-node: ^8.5.4
       tslib: ^1.10.0
       tslint: ^5.20.1
-      typescript: ^3.7.3
+      typescript: ^3.7.4
       typescript-formatter: ^7.2.2
   examples/demo-app:
     dependencies:
@@ -635,7 +635,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.1
       '@types/istanbul-reports': 1.1.1
-      '@types/yargs': 13.0.3
+      '@types/yargs': 13.0.4
     engines:
       node: '>= 6'
     resolution:
@@ -797,12 +797,12 @@ packages:
       '@types/istanbul-lib-report': 1.1.1
     resolution:
       integrity: sha512-UpYjBi8xefVChsCoBpKShdxTllC9pwISirfoZsUa2AAdQg/Jd2KQGtSbw+ya7GPo7x/wAPlH6JBhKhAsXUEZNA==
-  /@types/jest/24.0.24:
+  /@types/jest/24.0.25:
     dependencies:
       jest-diff: 24.9.0
     dev: true
     resolution:
-      integrity: sha512-vgaG968EDPSJPMunEDdZvZgvxYSmeH8wKqBlHSkBt1pV2XlLEVDzsj1ZhLuI4iG4Pv841tES61txSBF0obh4CQ==
+      integrity: sha512-hnP1WpjN4KbGEK4dLayul6lgtys6FPz0UfxMeMQCv0M+sTnzN3ConfiO72jHgLxl119guHgI8gLqDOrRLsyp2g==
   /@types/keygrip/1.0.1:
     resolution:
       integrity: sha1-/1QEYtL7TQqIRBzq8n0oewHD2Hg=
@@ -962,6 +962,11 @@ packages:
       '@types/yargs-parser': 13.1.0
     resolution:
       integrity: sha512-K8/LfZq2duW33XW/tFwEAfnZlqIfVsoyRB3kfXdPXYhl0nfM8mmh7GS0jg7WrX2Dgq/0Ha/pR1PaR+BvmWwjiQ==
+  /@types/yargs/13.0.4:
+    dependencies:
+      '@types/yargs-parser': 13.1.0
+    resolution:
+      integrity: sha512-Ke1WmBbIkVM8bpvsNEcGgQM70XcEh/nbpxQhW7FhrsbCsXSY9BmLB1+LHtD7r9zrsOcFlLiF+a/UeJsdfw3C5A==
   /JSONStream/1.3.5:
     dependencies:
       jsonparse: 1.3.1
@@ -5841,13 +5846,13 @@ packages:
       jest: '>=24 <25'
     resolution:
       integrity: sha512-Yc+HLyldlIC9iIK8xEN7tV960Or56N49MDP7hubCZUeI7EbIOTsas6rXCMB4kQjLACJ7eDOF4xWEO5qumpKsag==
-  /ts-node/8.5.4_typescript@3.7.3:
+  /ts-node/8.5.4_typescript@3.7.4:
     dependencies:
       arg: 4.1.2
       diff: 4.0.1
       make-error: 1.3.5
       source-map-support: 0.5.16
-      typescript: 3.7.3
+      typescript: 3.7.4
       yn: 3.1.1
     dev: true
     engines:
@@ -5860,7 +5865,7 @@ packages:
   /tslib/1.10.0:
     resolution:
       integrity: sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==
-  /tslint/5.20.1_typescript@3.7.3:
+  /tslint/5.20.1_typescript@3.7.4:
     dependencies:
       '@babel/code-frame': 7.5.5
       builtin-modules: 1.1.1
@@ -5874,8 +5879,8 @@ packages:
       resolve: 1.14.1
       semver: 5.7.1
       tslib: 1.10.0
-      tsutils: 2.29.0_typescript@3.7.3
-      typescript: 3.7.3
+      tsutils: 2.29.0_typescript@3.7.4
+      typescript: 3.7.4
     dev: true
     engines:
       node: '>=4.8.0'
@@ -5890,10 +5895,10 @@ packages:
       node: '>=0.6.x'
     resolution:
       integrity: sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==
-  /tsutils/2.29.0_typescript@3.7.3:
+  /tsutils/2.29.0_typescript@3.7.4:
     dependencies:
       tslib: 1.10.0
-      typescript: 3.7.3
+      typescript: 3.7.4
     dev: true
     peerDependencies:
       typescript: '>=2.1.0 || >=2.1.0-dev || >=2.2.0-dev || >=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev || >=2.6.0-dev || >=2.7.0-dev || >=2.8.0-dev || >=2.9.0-dev || >= 3.0.0-dev || >= 3.1.0-dev'
@@ -5975,11 +5980,11 @@ packages:
       sqlite3: ^4.1.0
     resolution:
       integrity: sha512-4abj5aFjwt4Y+Gs3VmykcjURUZwIezwPWYVMNl2swRk8/iluGZZ9Lbwd4tdzJ7ZdsgKyHsT8zf8zPZPL5jH+EQ==
-  /typescript-formatter/7.2.2_typescript@3.7.3:
+  /typescript-formatter/7.2.2_typescript@3.7.4:
     dependencies:
       commandpost: 1.4.0
       editorconfig: 0.15.3
-      typescript: 3.7.3
+      typescript: 3.7.4
     dev: true
     engines:
       node: '>= 4.2.0'
@@ -5988,13 +5993,13 @@ packages:
       typescript: ^2.1.6 || >=2.7.0-dev || >=2.8.0-dev || >=2.9.0-dev || >=3.0.0-dev
     resolution:
       integrity: sha512-V7vfI9XArVhriOTYHPzMU2WUnm5IMdu9X/CPxs8mIMGxmTBFpDABlbkBka64PZJ9/xgQeRpK8KzzAG4MPzxBDQ==
-  /typescript/3.7.3:
+  /typescript/3.7.4:
     dev: true
     engines:
       node: '>=4.2.0'
     hasBin: true
     resolution:
-      integrity: sha512-Mcr/Qk7hXqFBXMN7p7Lusj1ktCBydylfQM/FZCk5glCNQJrCUKPkMHdo9R0MTFWsC/4kPFvDS0fDPvukfCkFsw==
+      integrity: sha512-A25xv5XCtarLwXpcDNZzCGvW2D1S3/bACratYBx2sax8PefsFhlYmkQicKHvpYflFS8if4zne5zT5kpJ7pzuvw==
   /uglify-js/3.7.2:
     dependencies:
       commander: 2.20.3
