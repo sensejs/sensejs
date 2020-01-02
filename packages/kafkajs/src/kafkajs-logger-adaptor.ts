@@ -6,12 +6,12 @@ type LogLevel = 'NOTHING' | 'ERROR' | 'WARNING' | 'INFO' | 'DEBUG';
 export interface KafkaLoggingOption {
   level: LogLevel;
   loggerBuilder: LoggerBuilder;
-  labelPrefix: string;
+  labelPrefix?: string;
 }
 
 interface KafkaJsLoggingOption {
   level: logLevel;
-  logCreator: (level: string) => ((logEntry: LogEntry) => void);
+  logCreator: (level: string | number) => ((logEntry: LogEntry) => void);
 }
 
 export function adaptLogLevel(level: logLevel) {

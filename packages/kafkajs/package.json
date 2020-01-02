@@ -28,7 +28,9 @@
   "devDependencies": {
     "@sensejs/core": "workspace:0.1.1",
     "reflect-metadata": "^0.1.13",
-    "@types/long": "^4.0.0"
+    "@types/long": "^4.0.0",
+    "@sensejs/testing-utility": "workspace:*",
+    "@sensejs/logger": "workspace:*"
   },
   "peerDependencies": {
     "@sensejs/core": "workspace:0.1.1",
