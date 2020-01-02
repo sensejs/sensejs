@@ -1,6 +1,7 @@
 import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaConfig, KafkaMessage} from 'kafkajs';
 import Long from 'long';
 import {WorkerController} from './worker-synchronizer';
+import {createLogOption, KafkaLoggingOption} from './kafkajs-logger-adaptor';
 
 type KafkaConnectOption = Omit<KafkaConfig, 'logLevel' | 'logCreator'>;
 
@@ -10,9 +11,7 @@ interface MessageConsumerOption {
   consumeOption?: {
     commitInterval: number
   };
-  logOption: {
-    // TODO: ...
-  };
+  logOption?: KafkaLoggingOption;
 }
 
 interface ConsumeOption {
@@ -28,7 +27,9 @@ export class MessageConsumer {
   private workerController = new WorkerController<boolean>();
 
   constructor(private option: MessageConsumerOption) {
-    this.client = new Kafka(option.connectOption);
+    const {logOption} = this.option;
+    const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
+    this.client = new Kafka(kafkaOption);
     this.consumer = this.client.consumer(option.subscribeOption);
   }
 
