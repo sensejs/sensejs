@@ -2,8 +2,8 @@ import {LogLevel, LogTransport} from './definition';
 import {StreamLogTransport} from './stream-log-transport';
 import {Logger} from '@sensejs/core';
 
-const MODULE_NAME_RULE = /^[_a-zA-Z][-.=_0-9a-zA-Z]{0,31}$/;
-const TRACE_ID_RULE = /^[-.+/=_a-zA-Z0-9]{0,36}$/;
+const MODULE_NAME_RULE = /^[^<>{}*'"`]{0,36}$/;
+const TRACE_ID_RULE = /^[^<>{}*'"`]{0,36}$/;
 
 function createLogger(logTransports: LogTransport[], label: string, traceId: string = ''): Logger {
   if (label !== '' && !MODULE_NAME_RULE.test(label)) {
