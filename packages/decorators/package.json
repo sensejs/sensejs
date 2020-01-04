@@ -1,0 +1,37 @@
+{
+  "name": "@sensejs/decorators",
+  "version": "0.0.1",
+  "description": "",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "tsc",
+    "cleanup": "rm -rf ./lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@sensejs/core": "workspace:*",
+    "@sensejs/http-common": "workspace:*",
+    "@sensejs/utility": "workspace:*",
+    "axios": "^0.19.0",
+    "lodash": "^4.17.15",
+    "tslib": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.149",
+    "reflect-metadata": "^0.1.13"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.1.13"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC"
+}

@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "lib",
+    "types": ["node", "reflect-metadata"]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}

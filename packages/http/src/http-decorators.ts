@@ -97,23 +97,23 @@ export function getHttpControllerMetadata(target: Constructor): ControllerMetada
 }
 
 function getDecorator(paramMetadata: ParamMappingMetadata): InstanceMethodParamDecorator {
-
-  switch (paramMetadata.type) {
+  const {type, name} = paramMetadata;
+  switch (type) {
     case HttpParamType.BODY:
       return MethodInject(HttpContext, {
-        transform: (ctx) => ctx.request.body,
+        transform: (ctx) => (name ? (ctx.request.body as any)[name] : ctx.request.body),
       });
     case HttpParamType.HEADER:
       return MethodInject(HttpContext, {
-        transform: (ctx) => ctx.request.headers[paramMetadata.name],
+        transform: (ctx) => (name ? (ctx.request.headers as any)[name] : ctx.request.headers),
       });
     case HttpParamType.PATH:
       return MethodInject(HttpContext, {
-        transform: (ctx) => ctx.request.params[paramMetadata.name],
+        transform: (ctx) => (name ? (ctx.request.params as any)[name] : ctx.request.params),
       });
     case HttpParamType.QUERY:
       return MethodInject(HttpContext, {
-        transform: (ctx) => ctx.request.body,
+        transform: (ctx) => (name ? (ctx.request.query as any)[name] : ctx.request.query),
       });
   }
 }
@@ -126,8 +126,8 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
   return <T extends {}>(target: Constructor<T>) => {
     const prototype = target.prototype;
     const methodRouteOptions = new Map<keyof T, MethodRouteOption>();
-    const metadata = ensureMetadataOnPrototype(prototype, new Map());
-    for (const [methodName, fnMetadata] of metadata.entries()) {
+    const metadata = ensureMetadataOnPrototype<T>(prototype, {functionParamMetadata: new Map()});
+    for (const [methodName, fnMetadata] of metadata.functionParamMetadata.entries()) {
       for (const [index, paramMetadata] of fnMetadata.params.entries()) {
         const decorator = getDecorator(paramMetadata);
         decorator(prototype, methodName as string | symbol, index);

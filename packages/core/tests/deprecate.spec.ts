@@ -22,6 +22,7 @@ describe('Deprecate on class', () => {
     @decorator
     class X {
     }
+
     expect(Reflect.get(X, metadataKey)).toBe(metadata);
 
     @decorator
