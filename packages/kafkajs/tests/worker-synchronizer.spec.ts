@@ -1,4 +1,4 @@
-import {WorkerController} from '../src/worker-synchronizer';
+import {WorkerController} from '../src';
 import {Subject} from 'rxjs';
 
 describe('WorkerSynchronization', () => {

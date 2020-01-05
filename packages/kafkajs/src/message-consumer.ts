@@ -1,17 +1,23 @@
 import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaConfig, KafkaMessage} from 'kafkajs';
 import Long from 'long';
 import {WorkerController} from './worker-synchronizer';
-import {createLogOption, KafkaLoggingOption} from './kafkajs-logger-adaptor';
+import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
 
-type KafkaConnectOption = Omit<KafkaConfig, 'logLevel' | 'logCreator'>;
+export interface KafkaConnectOption extends Omit<KafkaConfig, 'logLevel' | 'logCreator'> {
 
-interface MessageConsumerOption {
+}
+
+export type KafkaFetchOption = ConsumerConfig;
+
+export interface KafkaCommitOption {
+  commitInterval: number;
+}
+
+export interface MessageConsumerOption {
   connectOption: KafkaConnectOption;
-  subscribeOption: ConsumerConfig;
-  consumeOption?: {
-    commitInterval: number
-  };
-  logOption?: KafkaLoggingOption;
+  fetchOption: KafkaFetchOption;
+  commitOption?: KafkaCommitOption;
+  logOption?: KafkaLogOption;
 }
 
 interface ConsumeOption {
@@ -25,12 +31,14 @@ export class MessageConsumer {
   private consumeOptions: Map<string, ConsumeOption> = new Map();
   private runPromise?: Promise<unknown>;
   private workerController = new WorkerController<boolean>();
+  private startedPromise?: Promise<void>;
+  private stoppedPromise?: Promise<void>;
 
   constructor(private option: MessageConsumerOption) {
     const {logOption} = this.option;
     const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
     this.client = new Kafka(kafkaOption);
-    this.consumer = this.client.consumer(option.subscribeOption);
+    this.consumer = this.client.consumer(option.fetchOption);
   }
 
   subscribe(topic: string, consumer: (message: KafkaMessage) => Promise<void>, fromBeginning: boolean = false): this {
@@ -39,11 +47,32 @@ export class MessageConsumer {
   }
 
   async start() {
+    if (this.startedPromise) {
+      return this.startedPromise;
+    }
+    this.startedPromise = this.performStart();
+    return this.startedPromise;
+  }
+
+  async stop() {
+    if (this.stoppedPromise) {
+      return this.stoppedPromise;
+    }
+    this.stoppedPromise = new Promise((resolve, reject) => {
+      this.workerController.synchronize(async () => {
+        setImmediate(() => this.consumer.stop().then(resolve, reject));
+        return true;
+      });
+    });
+    return this.stoppedPromise;
+  }
+
+  private async performStart() {
     const topics = Array.from(this.consumeOptions.keys());
     const admin = this.client.admin();
     try {
       await admin.connect();
-      const metadata = await this.client.admin().fetchTopicMetadata({topics});
+      const metadata = await admin.fetchTopicMetadata({topics});
 
       const totalPartitions = metadata.topics
         .reduce((result, topicMetadata) => result + topicMetadata.partitions.length, 0);
@@ -54,7 +83,7 @@ export class MessageConsumer {
 
       this.runPromise = this.consumer.run({
         autoCommit: true,
-        autoCommitInterval: this.option.consumeOption?.commitInterval,
+        autoCommitInterval: this.option.commitOption?.commitInterval,
         eachBatchAutoResolve: false,
         partitionsConsumedConcurrently: totalPartitions,
         eachBatch: this.eachBatch.bind(this),
@@ -62,15 +91,6 @@ export class MessageConsumer {
     } finally {
       await admin.disconnect();
     }
-  }
-
-  async stop() {
-    return new Promise((resolve, reject) => {
-      this.workerController.synchronize(async () => {
-        setImmediate(() => this.consumer.stop().then(resolve, reject));
-        return true;
-      });
-    });
   }
 
   private async eachBatch(payload: EachBatchPayload) {

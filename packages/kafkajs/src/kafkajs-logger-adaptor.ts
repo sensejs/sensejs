@@ -1,10 +1,10 @@
 import {LogEntry, logLevel} from 'kafkajs';
 import {ConsoleLoggerBuilder, LoggerBuilder} from '@sensejs/core';
 
-type LogLevel = 'NOTHING' | 'ERROR' | 'WARNING' | 'INFO' | 'DEBUG';
+export type KafkaLogLevel = 'NOTHING' | 'ERROR' | 'WARNING' | 'INFO' | 'DEBUG';
 
-export interface KafkaLoggingOption {
-  level: LogLevel;
+export interface KafkaLogOption {
+  level: KafkaLogLevel;
   loggerBuilder: LoggerBuilder;
   labelPrefix?: string;
 }
@@ -14,7 +14,7 @@ interface KafkaJsLoggingOption {
   logCreator: (level: string | number) => ((logEntry: LogEntry) => void);
 }
 
-export function adaptLogLevel(level: logLevel) {
+function adaptLogLevel(level: logLevel) {
   switch (level) {
     case logLevel.WARN:
       return 'warn';
@@ -29,7 +29,7 @@ export function adaptLogLevel(level: logLevel) {
   }
 }
 
-export function createLogOption(option?: KafkaLoggingOption): KafkaJsLoggingOption {
+export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {
 
   if (option === undefined) {
     return {
