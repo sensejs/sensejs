@@ -1,5 +1,5 @@
 {
-  "name": "@sensejs/kafkajs",
+  "name": "@sensejs/kafkajs-standalone",
   "version": "0.1.1",
   "description": "",
   "files": [
@@ -28,7 +28,6 @@
   },
   "devDependencies": {
     "@sensejs/core": "workspace:0.1.1",
-    "reflect-metadata": "^0.1.13",
     "@types/long": "^4.0.0",
     "@sensejs/testing-utility": "workspace:*"
   },

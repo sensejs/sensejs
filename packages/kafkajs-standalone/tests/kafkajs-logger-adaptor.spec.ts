@@ -1,7 +1,6 @@
 // tslint:disable:no-console
 import '@sensejs/testing-utility/lib/mock-console';
 import {createLogOption} from '../src/kafkajs-logger-adaptor';
-import {SenseLoggerBuilder} from '@sensejs/logger';
 import {consoleLogger} from '@sensejs/utility';
 
 const fixture = {

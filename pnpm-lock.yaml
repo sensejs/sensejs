@@ -168,7 +168,7 @@ importers:
       lodash.merge: ^4.6.2
       reflect-metadata: ^0.1.13
       tslib: ^1.10.0
-  packages/kafkajs:
+  packages/kafkajs-standalone:
     dependencies:
       '@sensejs/utility': 'link:../utility'
       kafkajs: 1.11.0
@@ -179,7 +179,6 @@ importers:
       '@sensejs/core': 'link:../core'
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/long': 4.0.0
-      reflect-metadata: 0.1.13
     specifiers:
       '@sensejs/core': 'workspace:0.1.1'
       '@sensejs/testing-utility': 'workspace:*'
@@ -187,7 +186,6 @@ importers:
       '@types/long': ^4.0.0
       kafkajs: ^1.11.0
       long: ^4.0.0
-      reflect-metadata: ^0.1.13
       rxjs: ^6.5.4
       tslib: ^1.10.0
   packages/logger:
