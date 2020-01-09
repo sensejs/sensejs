@@ -30,10 +30,10 @@
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^4.1.0",
     "supertest": "^4.0.2",
-    "typeorm": "0.2.20"
+    "typeorm": "^0.2.22"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.1.13",
-    "typeorm": "0.2.20"
+    "typeorm": "^0.2.22"
   }
 }
