@@ -2,6 +2,7 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {createLogOption} from '../src/kafkajs-logger-adaptor';
 import {SenseLoggerBuilder} from '@sensejs/logger';
+import {consoleLogger} from '@sensejs/utility';
 
 const fixture = {
   log: {
@@ -29,10 +30,9 @@ describe('createLogOption', () => {
   });
 
   test('specified logger', () => {
-    const loggerBuilder = new SenseLoggerBuilder('', '', []);
     const opt = createLogOption({
       level: 'DEBUG',
-      loggerBuilder,
+      loggerBuilder: () => consoleLogger,
       labelPrefix: 'KafkaJS'
     });
 

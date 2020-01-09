@@ -23,17 +23,16 @@
     "kafkajs": "^1.11.0",
     "tslib": "^1.10.0",
     "rxjs": "^6.5.4",
-    "long": "^4.0.0"
+    "long": "^4.0.0",
+    "@sensejs/utility": "workspace:*"
   },
   "devDependencies": {
     "@sensejs/core": "workspace:0.1.1",
     "reflect-metadata": "^0.1.13",
     "@types/long": "^4.0.0",
-    "@sensejs/testing-utility": "workspace:*",
-    "@sensejs/logger": "workspace:*"
+    "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:0.1.1",
     "reflect-metadata": "^0.1.13"
   }
 }

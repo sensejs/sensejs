@@ -1,11 +1,12 @@
 import {LogEntry, logLevel} from 'kafkajs';
-import {ConsoleLoggerBuilder, LoggerBuilder} from '@sensejs/core';
+
+import {Logger} from '@sensejs/utility';
 
 export type KafkaLogLevel = 'NOTHING' | 'ERROR' | 'WARNING' | 'INFO' | 'DEBUG';
 
 export interface KafkaLogOption {
   level: KafkaLogLevel;
-  loggerBuilder: LoggerBuilder;
+  loggerBuilder?: (label: string) => Logger;
   labelPrefix?: string;
 }
 
@@ -31,14 +32,14 @@ function adaptLogLevel(level: logLevel) {
 
 export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {
 
-  if (option === undefined) {
+  if (typeof option === 'undefined' || typeof option.loggerBuilder === 'undefined') {
     return {
       level: 0,
       logCreator: () => () => void 0,
     };
   }
 
-  const {level: desiredLevel = 'WARNING', labelPrefix = 'KafkaJS', loggerBuilder = new ConsoleLoggerBuilder()} = option;
+  const {level: desiredLevel = 'WARNING', labelPrefix = 'KafkaJS', loggerBuilder} = option;
 
   // Typings file for kafkajs incorrectly defined log related types, need cast
   return {
@@ -51,7 +52,7 @@ export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {
         if (filteredLevel <= logEntry.level) {
           const {timestamp, message, ...rest} = logEntry.log;
           const label = [labelPrefix, logEntry.namespace].filter((x) => !!x).join(':');
-          const logger = loggerBuilder.build(label);
+          const logger = loggerBuilder(label);
           logger[adaptLogLevel(logEntry.level)](`${message}\nDetail:`, rest);
           if (filteredLevel <= logLevel.DEBUG) {
             logger.debug('Detail: ', rest);

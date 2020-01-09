@@ -170,20 +170,20 @@ importers:
       tslib: ^1.10.0
   packages/kafkajs:
     dependencies:
+      '@sensejs/utility': 'link:../utility'
       kafkajs: 1.11.0
       long: 4.0.0
       rxjs: 6.5.4
       tslib: 1.10.0
     devDependencies:
       '@sensejs/core': 'link:../core'
-      '@sensejs/logger': 'link:../logger'
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/long': 4.0.0
       reflect-metadata: 0.1.13
     specifiers:
       '@sensejs/core': 'workspace:0.1.1'
-      '@sensejs/logger': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
+      '@sensejs/utility': 'workspace:*'
       '@types/long': ^4.0.0
       kafkajs: ^1.11.0
       long: ^4.0.0
