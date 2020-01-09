@@ -3,10 +3,10 @@ import {decorate, inject, named, optional, tagged} from 'inversify';
 import {
   ConstructorParamDecorator,
   DecoratorBuilder,
-  makeDeprecateMessageEmitter,
   MethodParamDecorator,
   ParamDecorator,
-} from './utils';
+} from '@sensejs/utility';
+import {makeDeprecateMessageEmitter} from './utils';
 import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
 
 function applyToParamBindingInvoker<Parameter>(

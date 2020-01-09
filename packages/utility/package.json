@@ -1,0 +1,28 @@
+{
+  "name": "@sensejs/utility",
+  "version": "0.0.1",
+  "description": "",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "prepare": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC",
+  "dependencies": {
+    "tslib": "^1.10.0"
+  },
+  "devDependencies": {
+    "@sensejs/testing-utility": "workspace:0.0.8"
+  }
+}

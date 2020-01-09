@@ -1,4 +1,4 @@
-import {ClassDecorator, Decorator, DecoratorBuilder} from './decorator-builder';
+import {ClassDecorator, Decorator, DecoratorBuilder} from '@sensejs/utility';
 import {Class} from '../interfaces';
 
 function getName(func: Function | string | symbol) {

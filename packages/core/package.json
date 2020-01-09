@@ -22,7 +22,8 @@
   "dependencies": {
     "inversify": "^5.0.1",
     "tslib": "^1.10.0",
-    "uuid": "^3.3.3"
+    "uuid": "^3.3.3",
+    "@sensejs/utility": "workspace:*"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:0.0.8",

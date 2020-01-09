@@ -4,7 +4,7 @@ import {Class, ComponentFactory, ComponentFactoryContext, ComponentScope} from '
 import {targetName} from 'inversify';
 import {Component} from './component';
 import {Inject, Optional} from './decorators';
-import {DecoratorBuilder} from './utils';
+import {DecoratorBuilder} from '@sensejs/utility';
 import {ensureMethodInjectMetadata} from './method-inject';
 
 const LOGGER_SYMBOL = Symbol('LOGGER_SYMBOL');

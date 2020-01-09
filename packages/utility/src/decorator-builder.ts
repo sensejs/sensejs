@@ -1,4 +1,4 @@
-import {Class} from '../interfaces';
+import {Class} from './types';
 
 export interface ClassDecorator<Constraint = Class> {
   <T extends Constraint>(target: T): T | void;
