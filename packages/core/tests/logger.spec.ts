@@ -12,16 +12,6 @@ import {
 } from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
-test('ConsoleLogger', () => {
-  const logger = new ConsoleLoggerBuilder().build();
-  logger.fatal('fatal');
-  logger.error('error');
-  logger.warn('warn');
-  logger.info('info');
-  logger.log('log');
-  logger.debug('debug');
-  logger.trace('debug');
-});
 describe('InjectLogger', () => {
   test('Inject constructor param', () => {
     class X {

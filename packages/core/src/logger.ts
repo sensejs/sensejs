@@ -1,11 +1,11 @@
-/* tslint:disable no-console */
-import {Module} from './module';
 import {Class, ComponentFactory, ComponentFactoryContext, ComponentScope} from './interfaces';
 import {targetName} from 'inversify';
 import {Component} from './component';
 import {Inject, Optional} from './decorators';
-import {DecoratorBuilder} from '@sensejs/utility';
+import {DecoratorBuilder, Logger, consoleLogger} from '@sensejs/utility';
 import {ensureMethodInjectMetadata} from './method-inject';
+import {createModule} from './module';
+export {consoleLogger, Logger} from '@sensejs/utility';
 
 const LOGGER_SYMBOL = Symbol('LOGGER_SYMBOL');
 export const LOGGER_BUILDER_SYMBOL = Symbol('LOGGER_BUILDER_SYMBOL');
@@ -27,85 +27,9 @@ export function InjectLogger(name?: string | Function) {
     .build();
 }
 
-export interface Logger {
-  /**
-   * Log message with severity of trace
-   * @param content messages
-   */
-  trace(...content: [unknown, ...unknown[]]): void;
-
-  /**
-   * Log message with severity of debug
-   * @param content messages
-   */
-  debug(...content: [unknown, ...unknown[]]): void;
-
-  /**
-   * alias of info
-   * @param content messages
-   */
-  log(...content: [unknown, ...unknown[]]): void;
-
-  /**
-   * Log message with severity of info
-   * @param content messages
-   */
-  info(...content: [unknown, ...unknown[]]): void;
-
-  /**
-   * Log message with severity of warning
-   * @param content messages
-   */
-  warn(...content: [unknown, ...unknown[]]): void;
-
-  /**
-   * Log message with severity of error
-   * @param content messages
-   */
-  error(...content: [unknown, ...unknown[]]): void;
-
-  /**
-   * Log message with severity of error
-   * @param content messages
-   */
-  fatal(...content: [unknown, ...unknown[]]): void;
-}
-
-class ConsoleLogger implements Logger {
-  debug(...content: [unknown, ...unknown[]]): void {
-    console.debug(...content);
-  }
-
-  error(...content: [unknown, ...unknown[]]): void {
-    console.error(...content);
-  }
-
-  fatal(...content: [unknown, ...unknown[]]): void {
-    console.error(...content);
-  }
-
-  info(...content: [unknown, ...unknown[]]): void {
-    console.info(...content);
-  }
-
-  log(...content: [unknown, ...unknown[]]): void {
-    console.log(...content);
-  }
-
-  trace(...content: [unknown, ...unknown[]]): void {
-    console.trace(...content);
-  }
-
-  warn(...content: [unknown, ...unknown[]]): void {
-    console.warn(...content);
-  }
-}
-
 export interface LoggerBuilder {
   build(loggerLabel: string): Logger;
 }
-
-export const consoleLogger = new ConsoleLogger();
 
 @Component()
 export class ConsoleLoggerBuilder implements LoggerBuilder {
@@ -144,7 +68,7 @@ export class LoggerFactory extends ComponentFactory<Logger> {
   }
 }
 
-export const LoggerModule = Module({
+export const LoggerModule = createModule({
   factories: [
     {
       provide: LOGGER_SYMBOL,
