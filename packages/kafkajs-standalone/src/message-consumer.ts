@@ -1,11 +1,8 @@
-import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaConfig, KafkaMessage} from 'kafkajs';
+import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage} from 'kafkajs';
 import Long from 'long';
 import {WorkerController} from './worker-synchronizer';
 import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
-
-export interface KafkaConnectOption extends Omit<KafkaConfig, 'logLevel' | 'logCreator'> {
-
-}
+import {KafkaConnectOption} from './types';
 
 export type KafkaFetchOption = ConsumerConfig;
 
@@ -38,7 +35,7 @@ export class MessageConsumer {
     const {logOption} = this.option;
     const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
     this.client = new Kafka(kafkaOption);
-    this.consumer = this.client.consumer(option.fetchOption);
+    this.consumer = new Kafka(kafkaOption).consumer(option.fetchOption);
   }
 
   subscribe(topic: string, consumer: (message: KafkaMessage) => Promise<void>, fromBeginning: boolean = false): this {
