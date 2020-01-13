@@ -29,10 +29,10 @@ before_install:
 
 after_success:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-  - coveralls
+  - cat coverage/lcov.info | coveralls
 
 after_script:
   - docker-compose down -v
-  -
+
 before_cache:
   - docker save -o /tmp/.docker-images $(docker images -a -q)

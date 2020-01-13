@@ -44,11 +44,9 @@
   },
   "scripts": {
     "test": "jest",
-    "posttest": "[ -n \"$COVERALLS_REPO_TOKEN\" ] && coveralls || echo 'No coverall token specified, skip.'",
     "lint": "tslint --project .",
     "build": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",
-    "coveralls": "cat coverage/lcov.info | coveralls",
     "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx release-it -c `pwd`/.release-it.yaml --non-interactive",
     "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\"",
     "format": "tsfmt -r"
