@@ -44,6 +44,7 @@
   },
   "scripts": {
     "test": "jest",
+    "posttest": "[ -n \"$COVERALLS_REPO_TOKEN\" ] && coveralls || true",
     "lint": "tslint --project .",
     "build": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",

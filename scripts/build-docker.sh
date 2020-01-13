@@ -7,7 +7,7 @@
 
 function baseImage() {
 
-    echo "FROM node:lts as base"
+    echo "FROM node:${NODE_VERSION-lts} as base"
     echo "RUN npm i -g pnpm typescript"
     echo "WORKDIR /opt/sensejs"
     echo "ADD package.json pnpm-lock.yaml pnpm-workspace.yaml ./"
