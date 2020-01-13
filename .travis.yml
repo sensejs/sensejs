@@ -1,3 +1,5 @@
+language: node_js
+
 services:
   - docker
 
@@ -17,9 +19,11 @@ before_install:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
   - docker-compose up -d kafka zookeeper
+  - npm i -g coveralls
 
 after_success:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+  - coveralls
 
 after_script:
   - docker-compose down -v

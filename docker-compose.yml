@@ -49,13 +49,6 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-    environment:
-      COVERALLS_SERVICE_NAME: ${TRAVIS_JOB_NAME-}
-      COVERALLS_REPO_TOKEN: ${COVERALLS_REPO_TOKEN-}
-      COVERALLS_GIT_BRANCH: ${TRAVIS_BRANCH-}
-      COVERALLS_SERVICE_JOB_ID: ${TRAVIS_JOB_NUMBER-}
     volumes:
       - ./coverage:/opt/sensejs/coverage
-
-
     command: ['pnpm', 'run', 'test', '--', '--coverage']
