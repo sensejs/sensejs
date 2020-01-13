@@ -1,15 +1,10 @@
 import 'reflect-metadata';
-import {FeignClient} from '.';
+import {TouchClient} from '../src/touch/touch';
 import {RequestMapping, Path, Body, POST} from '@sensejs/http-common';
 
 @RequestMapping('https://city-api.sensoro.com/')
-@FeignClient({
-  loggerFactory: (f: FeignService) => f.logger as any,
-  errorHandler: (e: any) => e.response.data,
-})
+@TouchClient()
 class FeignService {
-  logger: Console = console;
-
   @POST('/sessions/{uid}')
   async test(@Path('uid') uid: string, @Body() body: any) {}
 }

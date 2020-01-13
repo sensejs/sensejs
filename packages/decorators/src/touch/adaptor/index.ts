@@ -4,7 +4,7 @@ export interface IRequestMetadata {
   headers?: any;
 }
 
-export abstract class AbstractRequestClass {
+export abstract class AbstractTouchAdaptor {
   abstract post(path: string, metadata: IRequestMetadata): Promise<any>;
   abstract get(path: string, metadata: IRequestMetadata): Promise<any>;
   abstract delete(path: string, metadata: IRequestMetadata): Promise<any>;
@@ -12,4 +12,8 @@ export abstract class AbstractRequestClass {
   abstract head(path: string, metadata: IRequestMetadata): Promise<any>;
   abstract options(path: string, metadata: IRequestMetadata): Promise<any>;
   abstract patch(path: string, metadata: IRequestMetadata): Promise<any>;
+}
+
+export interface ITouchAdaptorBuilder {
+  build(): AbstractTouchAdaptor;
 }

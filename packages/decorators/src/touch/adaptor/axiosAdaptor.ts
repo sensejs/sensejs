@@ -1,9 +1,17 @@
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
-import {AbstractRequestClass, IRequestMetadata} from './';
+import {AbstractTouchAdaptor, IRequestMetadata, ITouchAdaptorBuilder} from '.';
+import {Component} from '@sensejs/core';
 
 const axiosDataUnwrapper: <T>(data: AxiosResponse) => T = (data) => data.data;
 
-export class AxiosAdaptor extends AbstractRequestClass {
+@Component()
+export class AxiosTouchBuilder implements ITouchAdaptorBuilder {
+  build() {
+    return new AxiosAdaptor();
+  }
+}
+
+export class AxiosAdaptor extends AbstractTouchAdaptor {
   private _axiosInstance: AxiosInstance;
   constructor(options?: AxiosRequestConfig) {
     super();
@@ -27,5 +35,3 @@ export class AxiosAdaptor extends AbstractRequestClass {
   async options() {}
   async patch(...args: any) {}
 }
-
-export const DefaultAxiosAdaptorFactory = (options: AxiosRequestConfig) => new AxiosAdaptor(options);
