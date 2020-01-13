@@ -7,7 +7,7 @@ env:
   - NODE_VERSION=12
 
 script:
-  - docker-compose run test
+  - docker-compose run -T test
 
 install:
   - bash scripts/build-docker.sh
