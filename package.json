@@ -44,7 +44,7 @@
   },
   "scripts": {
     "test": "jest",
-    "posttest": "[ -n \"$COVERALLS_REPO_TOKEN\" ] && coveralls || true",
+    "posttest": "[ -n \"$COVERALLS_REPO_TOKEN\" ] && coveralls || echo 'No coverall token specified, skip.'",
     "lint": "tslint --project .",
     "build": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",
