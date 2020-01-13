@@ -15,12 +15,7 @@ script:
 install:
   - bash scripts/build-docker.sh
 
-cache:
-  directories:
-    - /tmp/.docker-images
-
 before_install:
-  - docker load -i /tmp/.docker-images || true
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
@@ -33,6 +28,3 @@ after_success:
 
 after_script:
   - docker-compose down -v
-
-before_cache:
-  - docker save -o /tmp/.docker-images $(docker images -a -q)
