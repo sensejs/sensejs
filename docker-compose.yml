@@ -1,0 +1,56 @@
+version: '2.4'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "bash", "-c", "unset" , "JMX_PORT" ,";" ,"kafka-topics.sh","--zookeeper","zookeeper:2181","--list"]
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/server-jaas.conf -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider"
+    volumes:
+      - ./testHelpers/kafka/server-jaas.conf:/etc/kafka/server-jaas.conf
+
+  kafka:
+    image: confluentinc/cp-kafka:3.3.3
+    hostname: kafka
+    container_name: kafka
+    labels:
+      - "custom.project=kafkajs"
+      - "custom.service=kafka1"
+    depends_on:
+      - zookeeper
+#    healthcheck:
+#      interval: 3s
+#      test: ["CMD", "sh", "-c", "nc -z localhost 9092 || exit 1"]
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "29093:29093"
+      - "9093:9093"
+      - "29094:29094"
+      - "9094:9094"
+    environment:
+      KAFKA_BROKER_ID: 0
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # suppress verbosity
+      # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+  test:
+    image: sensejs
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./coverage:/opt/sensejs/coverage
+
+
+    command: ['pnpm', 'run', 'test', '--', '--coverage']
