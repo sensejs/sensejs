@@ -1,6 +1,12 @@
+const performEndToEndTest = typeof process.env.END_TO_END_TEST === 'string';
+
+const testRegex = performEndToEndTest
+  ? './packages/[^/]+/tests/.+\\.ts$'
+  : './packages/[^/]+/tests/.+\\.(test|spec).ts$';
+
 module.exports = {
   collectCoverageFrom: ['packages/*/src/**/*.ts'],
-  testRegex: './packages/[^/]+/tests/.+\\.ts$',
+  testRegex,
   testEnvironment: 'node',
   transform: {
     '^.+\\.tsx?$': 'ts-jest',

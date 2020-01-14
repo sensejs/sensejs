@@ -15,29 +15,60 @@ services:
     volumes:
       - ./testHelpers/kafka/server-jaas.conf:/etc/kafka/server-jaas.conf
 
-  kafka:
+  kafka-1:
     image: confluentinc/cp-kafka:3.3.3
-    hostname: kafka
-    container_name: kafka
+    hostname: kafka-1
+    container_name: kafka-1
     labels:
       - "custom.project=kafkajs"
       - "custom.service=kafka1"
     depends_on:
       - zookeeper
-#    healthcheck:
-#      interval: 3s
-#      test: ["CMD", "sh", "-c", "nc -z localhost 9092 || exit 1"]
-    ports:
-      - "29092:29092"
-      - "9092:9092"
-      - "29093:29093"
-      - "9093:9093"
-      - "29094:29094"
-      - "9094:9094"
     environment:
       KAFKA_BROKER_ID: 0
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # suppress verbosity
+      # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+  kafka-2:
+    image: confluentinc/cp-kafka:3.3.3
+    hostname: kafka-2
+    container_name: kafka-2
+    labels:
+      - "custom.project=kafkajs"
+      - "custom.service=kafka1"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_DELETE_TOPIC_ENABLE: 'true'
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # suppress verbosity
+      # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
+      KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+  kafka-3:
+    image: confluentinc/cp-kafka:3.3.3
+    hostname: kafka-3
+    container_name: kafka-3
+    labels:
+      - "custom.project=kafkajs"
+      - "custom.service=kafka1"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
@@ -47,8 +78,11 @@ services:
   test:
     image: sensejs
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    environment:
+      END_TO_END_TEST: 'true'
     volumes:
       - ./coverage:/opt/sensejs/coverage
     command: ['pnpm', 'run', 'test', '--', '--coverage']

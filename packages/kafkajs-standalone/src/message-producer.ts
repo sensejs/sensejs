@@ -4,9 +4,9 @@ import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
 
 export interface MessageProducerConfig {
   connectOption: KafkaConnectOption;
-  logOption: KafkaLogOption;
-  producerOption: KafkaProducerOption;
-  sendOption: KafkaSendOption;
+  logOption?: KafkaLogOption;
+  producerOption?: KafkaProducerOption;
+  sendOption?: KafkaSendOption;
 }
 
 export class MessageProducer {
@@ -17,13 +17,9 @@ export class MessageProducer {
   private allMessageSend: Promise<unknown> = Promise.resolve();
 
   constructor(private option: MessageProducerConfig) {
-    const {logOption} = option;
+    const {logOption, producerOption = {}} = option;
     const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
     this.client = new Kafka(kafkaOption);
-    this.producer = this.client.producer({
-      ...option.producerOption,
-      createPartitioner: Partitioners.JavaCompatiblePartitioner,
-    });
   }
 
   async connect() {
@@ -55,6 +51,7 @@ export class MessageProducer {
     });
 
     this.allMessageSend = this.allMessageSend.then(() => promise.catch(() => void 0));
+    return promise;
   }
 
   /**
@@ -81,7 +78,7 @@ export class MessageProducer {
     const sender = await producer.transaction();
     let error;
     try {
-      return this.internalSendBatch(topicMessage, sender);
+      return await this.internalSendBatch(topicMessage, sender);
     } catch (e) {
       error = e || new Error('unknown error');
       throw e;

@@ -19,7 +19,7 @@ before_install:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
-  - docker-compose up -d kafka zookeeper
+  - docker-compose up -d zookeeper kafka-1 kafka-2 kafka-3
   - npm i -g coveralls
 
 after_success:

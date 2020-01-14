@@ -7,6 +7,8 @@ function MockKafka(...args: unknown[]) {
 const mockedConsumer = {
   subscribe: jest.fn(), run: jest.fn(),
   stop: jest.fn(),
+  connect: jest.fn(),
+  disconnect: jest.fn()
 };
 
 const mockedAdmin = {fetchTopicMetadata: jest.fn(), connect: jest.fn(), disconnect: jest.fn()};

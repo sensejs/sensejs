@@ -35,7 +35,7 @@ export class MessageConsumer {
     const {logOption} = this.option;
     const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
     this.client = new Kafka(kafkaOption);
-    this.consumer = new Kafka(kafkaOption).consumer(option.fetchOption);
+    this.consumer = this.client.consumer(option.fetchOption);
   }
 
   subscribe(topic: string, consumer: (message: KafkaMessage) => Promise<void>, fromBeginning: boolean = false): this {
@@ -61,6 +61,7 @@ export class MessageConsumer {
         return true;
       });
     });
+    await this.consumer.disconnect();
     return this.stoppedPromise;
   }
 
@@ -74,8 +75,9 @@ export class MessageConsumer {
       const totalPartitions = metadata.topics
         .reduce((result, topicMetadata) => result + topicMetadata.partitions.length, 0);
 
-      for (const topicMetadata of metadata.topics) {
-        await this.consumer.subscribe({topic: topicMetadata.name});
+      await this.consumer.connect();
+      for (const [topic, option] of this.consumeOptions) {
+        await this.consumer.subscribe({topic, fromBeginning: option.fromBeginning});
       }
 
       this.runPromise = this.consumer.run({
