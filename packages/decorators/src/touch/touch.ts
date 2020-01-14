@@ -5,12 +5,12 @@ import {
   Logger,
   FactoryProvider,
   ComponentScope,
+  Component,
   ComponentFactory,
+  Inject,
   InjectLogger,
   ModuleClass,
-  Inject,
   Optional,
-  Component,
 } from '@sensejs/core';
 import {ensureMetadataOnPrototype} from '@sensejs/http-common';
 import {buildPath, extractParams} from './utils';
@@ -43,7 +43,11 @@ function checkTouchDecorated(...constructors: Class[]) {
   }
 }
 
-function createTouchClientFactory<T>(target: Class<T>): FactoryProvider<T> {
+function createTouchClientFactory<T extends {}>(target: Class<T>): FactoryProvider<T> {
+
+  const Implementation = class TouchClient extends (target as Constructor<any>) {
+  } as Constructor<T>;
+
   @Component()
   class TouchFactory extends ComponentFactory<T> {
     private target: Constructor<T>;
@@ -62,8 +66,8 @@ function createTouchClientFactory<T>(target: Class<T>): FactoryProvider<T> {
       this.implementTouchMethod();
     }
 
-    build() {
-      return new this.target();
+    build(): T {
+      return new Implementation();
     }
 
     implementTouchMethod() {
@@ -79,7 +83,7 @@ function createTouchClientFactory<T>(target: Class<T>): FactoryProvider<T> {
         const pathCompiler = _.template(subPath, {interpolate: /{([\s\S]+?)}/g});
 
         // build request method
-        this.target.prototype[name] = (async (...args: any[]) => {
+        Implementation.prototype[name] = (async (...args: any[]) => {
           const paramsObject = extractParams(params, args);
           const {query, body, headers, param} = paramsObject;
           const compiledSubpath = pathCompiler(param);
