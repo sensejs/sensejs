@@ -1,7 +1,7 @@
 import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage} from 'kafkajs';
 import Long from 'long';
 import {WorkerController} from './worker-synchronizer';
-import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
+import {convertConnectOption, createLogOption, KafkaLogOption} from './utils';
 import {KafkaConnectOption} from './types';
 
 export type KafkaFetchOption = ConsumerConfig;
@@ -43,9 +43,7 @@ export class MessageConsumer {
   private stoppedPromise?: Promise<void>;
 
   constructor(private option: MessageConsumerOption) {
-    const {logOption} = this.option;
-    const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
-    this.client = new Kafka(kafkaOption);
+    this.client = new Kafka(convertConnectOption(option.connectOption, option.logOption));
     this.consumer = this.client.consumer(option.fetchOption);
   }
 

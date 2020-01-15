@@ -1,6 +1,7 @@
-import {LogEntry, logLevel} from 'kafkajs';
+import {KafkaConfig, LogEntry, logLevel} from 'kafkajs';
 
 import {Logger} from '@sensejs/utility';
+import {KafkaConnectOption} from './types';
 
 export type KafkaLogLevel = 'NOTHING' | 'ERROR' | 'WARNING' | 'INFO' | 'DEBUG';
 
@@ -28,6 +29,17 @@ function adaptLogLevel(level: logLevel) {
     default:
       return 'error';
   }
+}
+
+export function convertConnectOption(connectOption: KafkaConnectOption, logOption?: KafkaLogOption): KafkaConfig {
+  const {brokers, ...kafkaConfig} = connectOption;
+  return {
+    brokers: typeof brokers === 'string'
+      ? brokers.split(',')
+      : brokers,
+    ...createLogOption(logOption),
+    ...kafkaConfig,
+  };
 }
 
 export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {

@@ -1,6 +1,6 @@
 import {Kafka, Offsets, Partitioners, Producer, ProducerConfig, TopicMessages} from 'kafkajs';
 import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, MessageKeyProvider} from './types';
-import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
+import {convertConnectOption, KafkaLogOption} from './utils';
 import {uuidV1} from '@sensejs/utility';
 
 export interface MessageProducerConfig {
@@ -39,12 +39,13 @@ export class MessageProducer {
 
   constructor(private option: MessageProducerConfig) {
     const {
-      logOption, producerOption: {
+      connectOption,
+      logOption,
+      producerOption: {
         messageKeyProvider = defaultKeyPolicy, ...producerConfig
       } = {},
     } = option;
-    const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
-    this.client = new Kafka(kafkaOption);
+    this.client = new Kafka(convertConnectOption(connectOption, logOption));
     this.messageKeyProvider = messageKeyProvider;
     this.producerConfig = producerConfig;
   }

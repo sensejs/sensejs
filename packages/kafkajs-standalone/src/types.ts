@@ -1,7 +1,7 @@
 import * as k from 'kafkajs';
 
-export interface KafkaConnectOption extends Omit<k.KafkaConfig, 'logLevel' | 'logCreator'> {
-
+export interface KafkaConnectOption extends Omit<k.KafkaConfig, 'logLevel' | 'logCreator' | 'brokers'> {
+  brokers: string | string[];
 }
 
 export interface MessageKeyProvider {
