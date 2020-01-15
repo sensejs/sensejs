@@ -5,7 +5,5 @@
     "outDir": "lib",
     "types": ["node", "reflect-metadata"]
   },
-  "include": [
-    "src/**/*.ts", "examples/touch.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }

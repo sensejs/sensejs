@@ -1,14 +1,15 @@
+import {Body, GET, Header, Path, POST, Query} from '@sensejs/http-common';
+import {Container} from 'inversify';
+import {Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
 import {
-  TouchClient,
-  createTouchModule,
-  ITouchAdaptorBuilder,
   AbstractTouchAdaptor,
-  TouchBuilderSymbol,
+  createTouchModule,
   IRequestMetadata,
-} from '../src/touch';
-import {GET, POST, PUT, PATCH, Header, DELETE, Query, Body, Path} from '@sensejs/http-common';
-import {Container, decorate} from 'inversify';
-import {ModuleRoot, Inject, OnModuleCreate, ModuleClass, LoggerModule, Component, Decorator} from '@sensejs/core';
+  ITouchAdaptorBuilder,
+  TouchBuilderSymbol,
+  TouchClient,
+} from '../src';
+import {Decorator} from '@sensejs/utility';
 
 const mockTouchAdaptor: AbstractTouchAdaptor = {
   post: jest.fn(),
@@ -28,7 +29,7 @@ class MockAdaptorBuilder implements ITouchAdaptorBuilder {
 
 const mockTouchAdaptorConstant = {provide: TouchBuilderSymbol, value: new MockAdaptorBuilder()};
 
-const testPath: {[key in keyof AbstractTouchAdaptor]: string} = {
+const testPath: { [key in keyof AbstractTouchAdaptor]: string } = {
   post: '/post',
   get: '/get',
   head: '/head',
@@ -68,7 +69,7 @@ describe('Test @TouchClient', () => {
     const spy = jest.fn();
 
     @ModuleClass({
-      requires: [createTouchModule(MyTouchClientService)],
+      requires: [createTouchModule({client: MyTouchClientService})],
       constants: [mockTouchAdaptorConstant],
     })
     class TestModule {
@@ -153,7 +154,7 @@ describe('Test @TouchClient', () => {
       });
 
       @ModuleClass({
-        requires: [createTouchModule(MyTouchClientService)],
+        requires: [createTouchModule({client: MyTouchClientService})],
         constants: [mockTouchAdaptorConstant],
       })
       class TestModule {
@@ -227,7 +228,7 @@ describe('Test @TouchClient', () => {
       });
 
       @ModuleClass({
-        requires: [createTouchModule(MyTouchClientService)],
+        requires: [createTouchModule({client: MyTouchClientService})],
         constants: [mockTouchAdaptorConstant],
       })
       class TestModule {
@@ -251,6 +252,7 @@ describe('Test @TouchClient', () => {
 
   test('throw error without @TouchClient decorated', () => {
     class WillThrowWithoutTouchClient {}
-    expect(() => createTouchModule(WillThrowWithoutTouchClient)).toThrow();
+
+    expect(() => createTouchModule({client: WillThrowWithoutTouchClient})).toThrow();
   });
 });

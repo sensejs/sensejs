@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import {Class, DecoratorBuilder} from '@sensejs/utility';
+import {Container} from 'inversify';
 import {
   Constructor,
   Logger,
@@ -14,16 +15,13 @@ import {
 } from '@sensejs/core';
 import {ensureMetadataOnPrototype} from '@sensejs/http-common';
 import {buildPath, extractParams} from './utils';
-import {AbstractTouchAdaptor, ITouchAdaptorBuilder} from './adaptor';
-import {AxiosTouchBuilder} from './adaptor/axiosAdaptor';
+import {AbstractTouchAdaptor, ITouchAdaptorBuilder} from './adaptor/interface';
+import {AxiosTouchAdaptorBuilder} from './adaptor/axiosAdaptor';
+import {ITouchClientOptions, ITouchModuleOptions} from './interface';
 
 const TouchSymbol = Symbol('sensejs#decorator#touch');
 const TouchOptionsSymbol = Symbol('sensejs#decorator#touchOptions');
 export const TouchBuilderSymbol = Symbol('sensejs#decorator#touchBuilder');
-
-export interface ITouchClientOptions {
-  adaptorBuilder?: ITouchAdaptorBuilder;
-}
 
 export function TouchClient(options: ITouchClientOptions = {}) {
   return new DecoratorBuilder('TouchClient')
@@ -43,10 +41,12 @@ function checkTouchDecorated(...constructors: Class[]) {
   }
 }
 
-function createTouchClientFactory<T extends {}>(target: Class<T>): FactoryProvider<T> {
-
-  const Implementation = class TouchClient extends (target as Constructor<any>) {
-  } as Constructor<T>;
+function createTouchClientFactory<T extends {}>(
+  target: Class<T>,
+  globalOptions: ITouchClientOptions,
+): FactoryProvider<T> {
+  const options: ITouchClientOptions = Reflect.getMetadata(TouchOptionsSymbol, target) || {};
+  const Implementation = class TouchClient extends (target as Constructor<any>) {} as Constructor<T>;
 
   @Component()
   class TouchFactory extends ComponentFactory<T> {
@@ -56,7 +56,7 @@ function createTouchClientFactory<T extends {}>(target: Class<T>): FactoryProvid
     constructor(
       @Inject(TouchBuilderSymbol)
       @Optional()
-      private touchBuilder: ITouchAdaptorBuilder = new AxiosTouchBuilder(),
+      private touchBuilder: ITouchAdaptorBuilder = new AxiosTouchAdaptorBuilder(),
       @InjectLogger() @Optional() private logger: Logger,
     ) {
       super();
@@ -145,15 +145,15 @@ function createTouchClientFactory<T extends {}>(target: Class<T>): FactoryProvid
   };
 }
 
-export function createTouchModule(...constructors: Class[]): Constructor {
-  checkTouchDecorated(...constructors);
+export function createTouchModule(options: ITouchModuleOptions): Constructor {
+  const {client, ...globalClientOptions} = options;
+  checkTouchDecorated(client);
 
-  const factories: FactoryProvider<unknown>[] = constructors.map((target) => createTouchClientFactory(target));
+  const touchFactory = createTouchClientFactory(client, globalClientOptions);
 
   @ModuleClass({
-    factories,
+    factories: [touchFactory],
   })
   class TouchModule {}
-
   return TouchModule;
 }

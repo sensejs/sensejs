@@ -1,3 +1,5 @@
+import {ITouchClientOptions} from '../interface';
+
 export interface IRequestMetadata {
   query?: any;
   body?: any;
@@ -15,5 +17,5 @@ export abstract class AbstractTouchAdaptor {
 }
 
 export interface ITouchAdaptorBuilder {
-  build(): AbstractTouchAdaptor;
+  build(options?: unknown): AbstractTouchAdaptor;
 }

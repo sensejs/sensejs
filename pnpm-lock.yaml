@@ -102,28 +102,6 @@ importers:
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
       tslib: ^1.11.0
-  packages/decorators:
-    dependencies:
-      '@sensejs/core': 'link:../core'
-      '@sensejs/http-common': 'link:../http-common'
-      '@sensejs/utility': 'link:../utility'
-      axios: 0.19.2
-      inversify: 5.0.1
-      lodash: 4.17.15
-      tslib: 1.11.0
-    devDependencies:
-      '@types/lodash': 4.14.149
-      reflect-metadata: 0.1.13
-    specifiers:
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/http-common': 'workspace:*'
-      '@sensejs/utility': 'workspace:*'
-      '@types/lodash': ^4.14.149
-      axios: ^0.19.0
-      inversify: ^5.0.1
-      lodash: ^4.17.15
-      reflect-metadata: ^0.1.13
-      tslib: ^1.10.0
   packages/http:
     dependencies:
       '@koa/cors': 3.0.0
@@ -247,6 +225,28 @@ importers:
       ioredis: ^4.16.0
       supertest: ^4.0.2
       tslib: ^1.11.0
+  packages/touch:
+    dependencies:
+      '@sensejs/core': 'link:../core'
+      '@sensejs/http-common': 'link:../http-common'
+      '@sensejs/utility': 'link:../utility'
+      axios: 0.19.2
+      inversify: 5.0.1
+      lodash: 4.17.15
+      tslib: 1.11.0
+    devDependencies:
+      '@types/lodash': 4.14.149
+      reflect-metadata: 0.1.13
+    specifiers:
+      '@sensejs/core': 'workspace:*'
+      '@sensejs/http-common': 'workspace:*'
+      '@sensejs/utility': 'workspace:*'
+      '@types/lodash': ^4.14.149
+      axios: ^0.19.0
+      inversify: ^5.0.1
+      lodash: ^4.17.15
+      reflect-metadata: ^0.1.13
+      tslib: ^1.10.0
   packages/typeorm:
     dependencies:
       '@sensejs/core': 'link:../core'

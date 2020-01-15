@@ -1,13 +1,13 @@
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
-import {AbstractTouchAdaptor, IRequestMetadata, ITouchAdaptorBuilder} from '.';
+import {AbstractTouchAdaptor, IRequestMetadata, ITouchAdaptorBuilder} from './interface';
 import {Component} from '@sensejs/core';
 
 const axiosDataUnwrapper: <T>(data: AxiosResponse) => T = (data) => data.data;
 
 @Component()
-export class AxiosTouchBuilder implements ITouchAdaptorBuilder {
-  build() {
-    return new AxiosAdaptor();
+export class AxiosTouchAdaptorBuilder implements ITouchAdaptorBuilder {
+  build(options?: AxiosRequestConfig) {
+    return new AxiosAdaptor(options);
   }
 }
 
@@ -32,6 +32,25 @@ export class AxiosAdaptor extends AbstractTouchAdaptor {
   async head(path: string, {query, headers}: IRequestMetadata) {
     return this._axiosInstance.head(path, {headers, params: query}).then(axiosDataUnwrapper);
   }
-  async options() {}
-  async patch(...args: any) {}
+  async options(path: string, {query, headers}: IRequestMetadata) {
+    return this._axiosInstance
+      .request({
+        method: 'options',
+        url: path,
+        params: query,
+        headers,
+      })
+      .then(axiosDataUnwrapper);
+  }
+  async patch(path: string, {query, headers, body}: IRequestMetadata) {
+    return this._axiosInstance
+      .request({
+        method: 'patch',
+        url: path,
+        params: query,
+        headers,
+        data: body,
+      })
+      .then(axiosDataUnwrapper);
+  }
 }

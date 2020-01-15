@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {TouchClient} from '../src/touch/touch';
+import {TouchClient} from '../src/';
 import {RequestMapping, Path, Body, POST} from '@sensejs/http-common';
 
 @RequestMapping('https://city-api.sensoro.com/')
