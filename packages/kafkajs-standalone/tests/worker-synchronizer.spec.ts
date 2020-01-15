@@ -13,6 +13,19 @@ describe('WorkerSynchronization', () => {
     expect(stub).not.toHaveBeenCalled();
   });
 
+  test('no worker', async () => {
+    const controller = new WorkerController();
+    const stub = jest.fn().mockResolvedValue(true);
+    await controller.synchronize(stub);
+    expect(stub).toHaveBeenCalledTimes(1);
+
+    const worker = controller.createSynchronizer();
+    await worker.checkSynchronized(stub);
+    worker.detach();
+    await controller.synchronize(stub);
+    expect(stub).toHaveBeenCalledTimes(2);
+  });
+
   test('synchronize', async () => {
     const controller = new WorkerController<boolean>();
 

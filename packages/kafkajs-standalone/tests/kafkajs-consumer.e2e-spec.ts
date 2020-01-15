@@ -16,17 +16,20 @@ test('KafkaJS', async () => {
   let stopped = false;
   await producerA.connect();
   await producerA.send(TOPIC, {key: new Date().toString(), value: firstMessage});
-
   async function sendBatch() {
-    await producerA.sendBatch([{topic: TOPIC, messages: [{key: new Date().toString(), value: new Date().toString()}]}]);
-    if (!stopped) {
-      setTimeout(sendBatch, 1000);
-    } else {
-      await producerA.disconnect();
+    while (!stopped) {
+      await new Promise((done) => setTimeout(done, 1000));
+      await producerA.sendBatch([
+        {
+          topic: TOPIC,
+          messages: [{key: new Date().toString(), value: new Date().toString()}],
+        },
+      ]);
     }
+    await producerA.disconnect();
   }
 
-  await sendBatch();
+  const producingPromise = sendBatch();
   const observableA = new Subject(), observableB = new Subject();
 
   const consumerStubA = jest.fn().mockImplementationOnce(() => observableA.complete());
@@ -53,11 +56,15 @@ test('KafkaJS', async () => {
     consumerStubB(message.value.toString());
   }, true);
 
-  const p = Promise.all([observableA.toPromise(), observableB.toPromise()]);
+  const p = Promise.all([
+    observableA.toPromise(),
+    observableB.toPromise(),
+  ]);
   await messageConsumerA.start();
   await messageConsumerB.start();
   await p;
   stopped = true;
+  await producingPromise;
   await messageConsumerA.stop();
   await messageConsumerB.stop();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));

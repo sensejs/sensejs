@@ -62,7 +62,7 @@ export class WorkerSynchronizer<T = void> {
       await onSynchronized();
       this.cancellationSubscriber.complete();
     }
-    return await this.synchronizer;
+    return this.synchronizer;
   }
 
   detach() {

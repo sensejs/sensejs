@@ -60,8 +60,7 @@ export class MessageConsumer {
         setImmediate(() => this.consumer.stop().then(resolve, reject));
         return true;
       });
-    });
-    await this.consumer.disconnect();
+    }).then(() => this.consumer.disconnect());
     return this.stoppedPromise;
   }
 
