@@ -1,6 +1,7 @@
+import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, MessageProducer} from '../src';
 import {Subject} from 'rxjs';
-import {uuidV1} from '@sensejs/utility';
+import {uuidV1, consoleLogger} from '@sensejs/utility';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
@@ -18,7 +19,7 @@ test('KafkaJS', async () => {
   const firstMessage = new Date().toString();
   let stopped = false;
   await producerA.connect();
-  await producerA.send(TOPIC, {key: new Date().toString(), value: firstMessage});
+  await producerA.send(TOPIC, {value: firstMessage});
 
   async function sendBatch() {
     while (!stopped) {
@@ -26,7 +27,7 @@ test('KafkaJS', async () => {
       await producerA.sendBatch([
         {
           topic: TOPIC,
-          messages: [{key: new Date().toString(), value: new Date().toString()}],
+          messages: [{value: new Date().toString()}],
         },
       ]);
     }
@@ -43,6 +44,10 @@ test('KafkaJS', async () => {
     fetchOption: {
       groupId: 'e2etest-latest',
     },
+    logOption: {
+      loggerBuilder: () => consoleLogger,
+      level: 'DEBUG'
+    }
   });
 
   messageConsumerA.subscribe(TOPIC, async (message, metadata) => {

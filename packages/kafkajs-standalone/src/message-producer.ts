@@ -123,22 +123,22 @@ export class MessageProducer {
     return this.disconnectPromise;
   }
 
-  private provideKeyForMessage(topic: string, messages: KafkaMessage[]) {
-    return messages.map((message) => {
+  private provideKeyForMessage(topic: string, messages: KafkaMessage[]): KafkaMessage[] {
+    return messages.map((message): KafkaMessage => {
       const {key, value, ...rest} = message;
       return {key: key ?? this.messageKeyProvider(value, topic), value, ...rest};
     });
   }
 
-  private async performSendBatch(producer: Producer, topicMessage: TopicMessages[], option: BatchSendOption) {
+  private async performSendBatch(producer: Producer, topicMessages: TopicMessages[], option: BatchSendOption) {
     if (!option.transactional) {
       // @ts-ignore typing error of kafkajs
-      return this.producer.sendBatch(topicMessage);
+      return this.producer.sendBatch({...this.option.sendOption, topicMessages});
     }
     const sender = await producer.transaction();
     try {
       // @ts-ignore typing error of kafkajs
-      await sender.sendBatch({topicMessage});
+      await sender.sendBatch({...this.option.sendOption, topicMessages});
       if (option.transactionalCommit) {
         await sender.sendOffsets({
           consumerGroupId: option.transactionalCommit.consumerGroupId,
