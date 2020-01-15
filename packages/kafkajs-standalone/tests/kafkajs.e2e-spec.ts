@@ -16,6 +16,7 @@ test('KafkaJS', async () => {
   let stopped = false;
   await producerA.connect();
   await producerA.send(TOPIC, {key: new Date().toString(), value: firstMessage});
+
   async function sendBatch() {
     while (!stopped) {
       await new Promise((done) => setTimeout(done, 1000));
@@ -25,6 +26,12 @@ test('KafkaJS', async () => {
           messages: [{key: new Date().toString(), value: new Date().toString()}],
         },
       ]);
+      await producerA.sendBatch([
+        {
+          topic: TOPIC,
+          messages: [{key: new Date().toString(), value: new Date().toString()}],
+        },
+      ], {transactional: true});
     }
     await producerA.disconnect();
   }
@@ -61,11 +68,13 @@ test('KafkaJS', async () => {
     observableB.toPromise(),
   ]);
   await messageConsumerA.start();
+  await messageConsumerA.start(); // safe to call start multiple times
   await messageConsumerB.start();
   await p;
   stopped = true;
   await producingPromise;
   await messageConsumerA.stop();
+  await messageConsumerA.stop(); // safe to call stop multiple times
   await messageConsumerB.stop();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));
   expect(consumerStubB).toHaveBeenCalledWith(firstMessage);

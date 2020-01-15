@@ -1,4 +1,4 @@
-import {Kafka, Partitioners, Producer, RecordMetadata, Sender, TopicMessages} from 'kafkajs';
+import {Kafka, Offsets, Partitioners, Producer, RecordMetadata, Sender, TopicMessages} from 'kafkajs';
 import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption} from './types';
 import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
 
@@ -7,6 +7,14 @@ export interface MessageProducerConfig {
   logOption?: KafkaLogOption;
   producerOption?: KafkaProducerOption;
   sendOption?: KafkaSendOption;
+}
+
+export interface BatchSendOption {
+  transactional?: boolean;
+  transactionalCommit?: {
+    consumerGroupId: string;
+    offsets: Offsets
+  };
 }
 
 export class MessageProducer {
@@ -58,31 +66,17 @@ export class MessageProducer {
    * Send batched messages. And ensure messages to be sent in one transaction if required
    *
    * @param topicMessage
-   * @param transactional
+   * @param option
    *
    * @beta
    */
-  async sendBatch(topicMessage: TopicMessages[], transactional = true) {
+  async sendBatch(topicMessage: TopicMessages[], option: BatchSendOption = {}) {
     if (!this.producer) {
       throw new Error('producer is not connected');
     }
-    const promise = this.performSendBatch(this.producer, topicMessage, transactional);
+    const promise = this.performSendBatch(this.producer, topicMessage, option);
     this.allMessageSend = this.allMessageSend.then(() => promise.catch(() => void 0));
     return promise;
-  }
-
-  private async performSendBatch(producer: Producer, topicMessage: TopicMessages[], transactional = true) {
-    if (!transactional) {
-      return this.internalSendBatch(topicMessage, producer);
-    }
-    const sender = await producer.transaction();
-    try {
-      await this.internalSendBatch(topicMessage, sender);
-      await sender.commit();
-    } catch (e) {
-      await sender.abort();
-      throw e;
-    }
   }
 
   async disconnect() {
@@ -96,6 +90,26 @@ export class MessageProducer {
       return producer.disconnect();
     });
     return this.disconnectPromise;
+  }
+
+  private async performSendBatch(producer: Producer, topicMessage: TopicMessages[], option: BatchSendOption) {
+    if (!option.transactional) {
+      return this.internalSendBatch(topicMessage, producer);
+    }
+    const sender = await producer.transaction();
+    try {
+      await this.internalSendBatch(topicMessage, sender);
+      if (option.transactionalCommit) {
+        await sender.sendOffsets({
+          consumerGroupId: option.transactionalCommit.consumerGroupId,
+          ...option.transactionalCommit.offsets
+        });
+      }
+      await sender.commit();
+    } catch (e) {
+      await sender.abort();
+      throw e;
+    }
   }
 
   private async internalSendBatch(topicMessages: TopicMessages[], sender: Sender) {
