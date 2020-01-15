@@ -40,7 +40,7 @@ test('KafkaJS', async () => {
   const consumerStubA = jest.fn().mockImplementationOnce(() => observableA.complete());
   const consumerStubB = jest.fn().mockImplementationOnce(() => observableB.complete());
   const messageConsumerA = new MessageConsumer({
-    connectOption: {brokers: ['kafka-1:9092'], clientId: 'kafkajs-2'},
+    connectOption: {brokers: ['kafka-2:9092'], clientId: 'kafkajs-2'},
     fetchOption: {
       groupId: 'e2etest-latest',
     },
@@ -56,7 +56,7 @@ test('KafkaJS', async () => {
   });
 
   const messageConsumerB = new MessageConsumer({
-    connectOption: {brokers: ['kafka-1:9092'], clientId: 'kafkajs-3'},
+    connectOption: {brokers: ['kafka-3:9092'], clientId: 'kafkajs-3'},
     fetchOption: {
       groupId: 'e2etest-earliest',
     },
