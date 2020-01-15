@@ -1,14 +1,14 @@
 import {Body, GET, Header, Path, POST, Query} from '@sensejs/http-common';
+import {Component, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
 import {Container} from 'inversify';
-import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, Component} from '@sensejs/core';
 import {
   AbstractTouchAdaptor,
   createTouchModule,
   IRequestMetadata,
   ITouchAdaptorBuilder,
+  ITouchClientOptions,
   TouchBuilderSymbol,
   TouchClient,
-  ITouchClientOptions,
 } from '../src';
 import {Decorator} from '@sensejs/utility';
 
