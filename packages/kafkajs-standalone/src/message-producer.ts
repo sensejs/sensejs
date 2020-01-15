@@ -1,7 +1,7 @@
 import {Kafka, Offsets, Partitioners, Producer, TopicMessages} from 'kafkajs';
 import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption} from './types';
 import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
-import {uuidV1ClusterSafe} from '@sensejs/utility';
+import {uuidV1} from '@sensejs/utility';
 
 export interface MessageProducerConfig {
   connectOption: KafkaConnectOption;
@@ -41,7 +41,7 @@ export class MessageProducer {
     if (this.connectPromise) {
       return this.connectPromise;
     }
-    const {producerOption: {transactionalId = uuidV1ClusterSafe(), ...producerOption} = {}} = this.option;
+    const {producerOption: {transactionalId = uuidV1(), ...producerOption} = {}} = this.option;
     this.producer = this.client.producer({
       maxInFlightRequests: 1,
       idempotent: true,
