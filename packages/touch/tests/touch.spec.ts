@@ -1,6 +1,6 @@
 import {Body, GET, Header, Path, POST, Query} from '@sensejs/http-common';
 import {Container} from 'inversify';
-import {Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
+import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, Component} from '@sensejs/core';
 import {
   AbstractTouchAdaptor,
   createTouchModule,
@@ -8,6 +8,7 @@ import {
   ITouchAdaptorBuilder,
   TouchBuilderSymbol,
   TouchClient,
+  ITouchClientOptions,
 } from '../src';
 import {Decorator} from '@sensejs/utility';
 
@@ -69,7 +70,7 @@ describe('Test @TouchClient', () => {
     const spy = jest.fn();
 
     @ModuleClass({
-      requires: [createTouchModule({client: MyTouchClientService})],
+      requires: [createTouchModule({clients: MyTouchClientService})],
       constants: [mockTouchAdaptorConstant],
     })
     class TestModule {
@@ -154,7 +155,7 @@ describe('Test @TouchClient', () => {
       });
 
       @ModuleClass({
-        requires: [createTouchModule({client: MyTouchClientService})],
+        requires: [createTouchModule({clients: MyTouchClientService})],
         constants: [mockTouchAdaptorConstant],
       })
       class TestModule {
@@ -228,7 +229,7 @@ describe('Test @TouchClient', () => {
       });
 
       @ModuleClass({
-        requires: [createTouchModule({client: MyTouchClientService})],
+        requires: [createTouchModule({clients: MyTouchClientService})],
         constants: [mockTouchAdaptorConstant],
       })
       class TestModule {
@@ -253,6 +254,162 @@ describe('Test @TouchClient', () => {
   test('throw error without @TouchClient decorated', () => {
     class WillThrowWithoutTouchClient {}
 
-    expect(() => createTouchModule({client: WillThrowWithoutTouchClient})).toThrow();
+    expect(() => createTouchModule({clients: WillThrowWithoutTouchClient})).toThrow();
+  });
+
+  test('options', async () => {
+    const globalOptions: ITouchClientOptions = {
+      retry: 10,
+      baseUrl: 'http://test-url',
+    };
+    const spy = jest.fn();
+    const adaptorSpy = jest.fn();
+    const mockPost = jest.spyOn(mockTouchAdaptor, 'post').mockRejectedValue(null);
+
+    @TouchClient()
+    class MyTouchClientService {
+      @POST('/')
+      post() {
+        return Promise.resolve();
+      }
+    }
+
+    @Component()
+    class MockAdaptorBuilder implements ITouchAdaptorBuilder {
+      build(option: any) {
+        adaptorSpy(option);
+        return mockTouchAdaptor;
+      }
+    }
+
+    @ModuleClass({
+      requires: [createTouchModule(Object.assign({clients: MyTouchClientService}, globalOptions))],
+      constants: [{provide: TouchBuilderSymbol, value: new MockAdaptorBuilder()}],
+    })
+    class TestModule {
+      constructor(@Inject(Container) private container: Container) {}
+
+      @OnModuleCreate()
+      async onCreate() {
+        const touchClient = this.container.get(MyTouchClientService);
+        try {
+          await touchClient.post();
+        } catch (error) {
+          spy();
+        }
+      }
+    }
+
+    const app = new ModuleRoot(TestModule);
+    await app.start();
+    await app.stop();
+
+    expect(spy).toBeCalled();
+    expect(adaptorSpy).toBeCalledWith(expect.objectContaining(globalOptions));
+    expect(mockTouchAdaptor.post).toBeCalledTimes(globalOptions.retry!);
+    mockPost.mockReset();
+  });
+
+  test('options merge order', async () => {
+    const globalOptions: ITouchClientOptions = {
+      retry: 10,
+      baseUrl: 'http://global-url/',
+    };
+    const clientOptions: ITouchClientOptions = {
+      retry: 11,
+      baseUrl: 'http://clients-url',
+    };
+    const assignedOptions = Object.assign({}, globalOptions, clientOptions);
+    const spy = jest.fn();
+    const adaptorSpy = jest.fn();
+    const mockPost = jest.spyOn(mockTouchAdaptor, 'post').mockRejectedValue(null);
+
+    @TouchClient(clientOptions)
+    class MyTouchClientService {
+      @POST('/')
+      post() {
+        return Promise.resolve();
+      }
+    }
+
+    @Component()
+    class MockAdaptorBuilder implements ITouchAdaptorBuilder {
+      build(option: any) {
+        adaptorSpy(option);
+        return mockTouchAdaptor;
+      }
+    }
+
+    @ModuleClass({
+      requires: [createTouchModule(Object.assign({clients: MyTouchClientService}, globalOptions))],
+      constants: [{provide: TouchBuilderSymbol, value: new MockAdaptorBuilder()}],
+    })
+    class TestModule {
+      constructor(@Inject(Container) private container: Container) {}
+
+      @OnModuleCreate()
+      async onCreate() {
+        const touchClient = this.container.get(MyTouchClientService);
+        try {
+          await touchClient.post();
+        } catch (error) {
+          spy();
+        }
+      }
+    }
+
+    const app = new ModuleRoot(TestModule);
+    await app.start();
+    await app.stop();
+
+    expect(spy).toBeCalled();
+    expect(adaptorSpy).toBeCalledWith(expect.objectContaining(assignedOptions));
+    expect(mockTouchAdaptor.post).toBeCalledTimes(assignedOptions.retry!);
+    mockPost.mockReset();
+  });
+
+  test('multi touch clients', async () => {
+    @TouchClient()
+    class TouchClient1 {
+      @POST(testPath.post)
+      post() {
+        return Promise.resolve();
+      }
+    }
+
+    @TouchClient()
+    class TouchClient2 {
+      @GET(testPath.get)
+      get() {
+        return Promise.resolve();
+      }
+    }
+
+    const spy = jest.fn();
+
+    @ModuleClass({
+      requires: [createTouchModule({clients: [TouchClient1, TouchClient2]})],
+      constants: [mockTouchAdaptorConstant],
+    })
+    class TestModule {
+      constructor(@Inject(Container) private container: Container) {}
+
+      @OnModuleCreate()
+      async onCreate() {
+        const touchClient1 = this.container.get(TouchClient1);
+        const touchClient2 = this.container.get(TouchClient2);
+        await touchClient1.post();
+        await touchClient2.get();
+
+        spy();
+      }
+    }
+
+    const app = new ModuleRoot(TestModule);
+    await app.start();
+    await app.stop();
+
+    expect(mockTouchAdaptor.post).toBeCalled();
+    expect(mockTouchAdaptor.get).toBeCalled();
   });
 });

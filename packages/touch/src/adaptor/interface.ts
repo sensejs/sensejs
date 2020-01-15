@@ -17,5 +17,5 @@ export abstract class AbstractTouchAdaptor {
 }
 
 export interface ITouchAdaptorBuilder {
-  build(options?: unknown): AbstractTouchAdaptor;
+  build(options?: ITouchClientOptions): AbstractTouchAdaptor;
 }

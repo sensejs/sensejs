@@ -1,11 +1,12 @@
-import {Class} from '@sensejs/core';
+import {Class, ServiceIdentifier} from '@sensejs/core';
 
 export interface ITouchClientOptions {
   baseUrl?: string;
   adaptorOptions?: unknown;
   retry?: number;
+  injectOptionFrom?: ServiceIdentifier;
 }
 
 export interface ITouchModuleOptions extends ITouchClientOptions {
-  client: Class;
+  clients: Class | Class[];
 }

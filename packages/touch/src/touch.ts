@@ -12,12 +12,15 @@ import {
   InjectLogger,
   ModuleClass,
   Optional,
+  provideOptionInjector,
+  ServiceIdentifier,
 } from '@sensejs/core';
 import {ensureMetadataOnPrototype} from '@sensejs/http-common';
 import {buildPath, extractParams} from './utils';
 import {AbstractTouchAdaptor, ITouchAdaptorBuilder} from './adaptor/interface';
 import {AxiosTouchAdaptorBuilder} from './adaptor/axiosAdaptor';
 import {ITouchClientOptions, ITouchModuleOptions} from './interface';
+import {DEFAULT_RETRY_COUNT} from './constants';
 
 const TouchSymbol = Symbol('sensejs#decorator#touch');
 const TouchOptionsSymbol = Symbol('sensejs#decorator#touchOptions');
@@ -43,9 +46,8 @@ function checkTouchDecorated(...constructors: Class[]) {
 
 function createTouchClientFactory<T extends {}>(
   target: Class<T>,
-  globalOptions: ITouchClientOptions,
+  injectOptionsSymbol: ServiceIdentifier,
 ): FactoryProvider<T> {
-  const options: ITouchClientOptions = Reflect.getMetadata(TouchOptionsSymbol, target) || {};
   const Implementation = class TouchClient extends (target as Constructor<any>) {} as Constructor<T>;
 
   @Component()
@@ -53,15 +55,19 @@ function createTouchClientFactory<T extends {}>(
     private target: Constructor<T>;
     private adaptor: AbstractTouchAdaptor;
 
+    private options: ITouchClientOptions = {};
+
     constructor(
       @Inject(TouchBuilderSymbol)
       @Optional()
       private touchBuilder: ITouchAdaptorBuilder = new AxiosTouchAdaptorBuilder(),
       @InjectLogger() @Optional() private logger: Logger,
+      @Inject(Container) private container: Container,
     ) {
       super();
+      this.options = container.get(injectOptionsSymbol);
       this.target = target as Constructor<T>;
-      this.adaptor = touchBuilder.build();
+      this.adaptor = touchBuilder.build(this.options);
 
       this.implementTouchMethod();
     }
@@ -71,6 +77,7 @@ function createTouchClientFactory<T extends {}>(
     }
 
     implementTouchMethod() {
+      const {retry = DEFAULT_RETRY_COUNT} = this.options;
       const className = this.target.name;
       const prototypeMetadata = ensureMetadataOnPrototype<T>(this.target.prototype, {functionParamMetadata: new Map()});
       const {path: mainPath = '/', functionParamMetadata} = prototypeMetadata;
@@ -101,37 +108,43 @@ function createTouchClientFactory<T extends {}>(
             headers,
           );
 
-          try {
-            this.logger?.info(
-              'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> <args: %j>',
-              className,
-              name,
-              path,
-              method,
-              args,
-            );
-            const response = await this.adaptor[method](path, {query, body, headers});
-            this.logger?.info(
-              'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> <response: %j>',
-              className,
-              name,
-              path,
-              method,
-              response,
-            );
+          let counter = 1;
+          while (true) {
+            try {
+              this.logger?.info(
+                'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> <args: %j>',
+                className,
+                name,
+                path,
+                method,
+                args,
+              );
+              const response = await this.adaptor[method](path, {query, body, headers});
+              this.logger?.info(
+                'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> <response: %j>',
+                className,
+                name,
+                path,
+                method,
+                response,
+              );
 
-            return response;
-          } catch (error) {
-            this.logger?.error(
-              'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> error: ',
-              className,
-              name,
-              path,
-              method,
-              error.message ?? error,
-            );
+              return response;
+            } catch (error) {
+              this.logger?.error(
+                'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> error: ',
+                className,
+                name,
+                path,
+                method,
+                error.message ?? error,
+              );
 
-            throw error;
+              counter++;
+              if (counter > retry) {
+                throw error;
+              }
+            }
           }
         }) as any;
       }
@@ -145,15 +158,42 @@ function createTouchClientFactory<T extends {}>(
   };
 }
 
-export function createTouchModule(options: ITouchModuleOptions): Constructor {
-  const {client, ...globalClientOptions} = options;
+function createSingleTouchModule(client: Class, options: ITouchModuleOptions): Constructor {
   checkTouchDecorated(client);
+  const {injectOptionFrom, ...globalClientOptions} = options;
+  const clientOptions: ITouchClientOptions = Reflect.getMetadata(TouchOptionsSymbol, client);
 
-  const touchFactory = createTouchClientFactory(client, globalClientOptions);
+  const injectOptionsSymbol = Symbol('sensejs#touch#options');
+  const touchFactory = createTouchClientFactory(client, injectOptionsSymbol);
+  const optionsFactory = provideOptionInjector(
+    globalClientOptions,
+    clientOptions.injectOptionFrom || injectOptionFrom,
+    (globalOptions, injectedOptions) => Object.assign({}, globalOptions, clientOptions, injectedOptions),
+    injectOptionsSymbol,
+  );
 
   @ModuleClass({
-    factories: [touchFactory],
+    factories: [touchFactory, optionsFactory],
   })
   class TouchModule {}
   return TouchModule;
+}
+
+function createMultiTouchModule(clients: Class[], options: ITouchModuleOptions): Constructor {
+  const touchModules = clients.map((client) => createSingleTouchModule(client, options));
+
+  @ModuleClass({
+    requires: touchModules,
+  })
+  class MultiTouchModule {}
+  return MultiTouchModule;
+}
+
+export function createTouchModule(options: ITouchModuleOptions) {
+  const {clients} = options;
+  if (Array.isArray(clients)) {
+    return createMultiTouchModule(clients, options);
+  }
+
+  return createSingleTouchModule(clients, options);
 }

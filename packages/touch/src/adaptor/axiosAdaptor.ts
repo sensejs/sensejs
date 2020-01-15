@@ -1,13 +1,16 @@
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
 import {AbstractTouchAdaptor, IRequestMetadata, ITouchAdaptorBuilder} from './interface';
 import {Component} from '@sensejs/core';
+import {ITouchClientOptions} from '../interface';
 
 const axiosDataUnwrapper: <T>(data: AxiosResponse) => T = (data) => data.data;
 
 @Component()
 export class AxiosTouchAdaptorBuilder implements ITouchAdaptorBuilder {
-  build(options?: AxiosRequestConfig) {
-    return new AxiosAdaptor(options);
+  build(options?: ITouchClientOptions) {
+    return new AxiosAdaptor(
+      Object.assign<AxiosRequestConfig, any>({baseURL: options?.baseUrl}, options?.adaptorOptions),
+    );
   }
 }
 
