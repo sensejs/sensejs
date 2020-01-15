@@ -1,6 +1,7 @@
-import {Kafka, Offsets, Partitioners, Producer, RecordMetadata, Sender, TopicMessages} from 'kafkajs';
+import {Kafka, Offsets, Partitioners, Producer, TopicMessages} from 'kafkajs';
 import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption} from './types';
 import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
+import {uuidV1ClusterSafe} from '@sensejs/utility';
 
 export interface MessageProducerConfig {
   connectOption: KafkaConnectOption;
@@ -10,7 +11,13 @@ export interface MessageProducerConfig {
 }
 
 export interface BatchSendOption {
+  /**
+   * Whether messages be sent in one transaction
+   */
   transactional?: boolean;
+  /**
+   * If messages be sent in one transaction, also commit offsets of topic and partitions for given consumer group
+   */
   transactionalCommit?: {
     consumerGroupId: string;
     offsets: Offsets
@@ -25,7 +32,7 @@ export class MessageProducer {
   private allMessageSend: Promise<unknown> = Promise.resolve();
 
   constructor(private option: MessageProducerConfig) {
-    const {logOption, producerOption = {}} = option;
+    const {logOption} = option;
     const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
     this.client = new Kafka(kafkaOption);
   }
@@ -34,9 +41,13 @@ export class MessageProducer {
     if (this.connectPromise) {
       return this.connectPromise;
     }
+    const {producerOption: {transactionalId = uuidV1ClusterSafe(), ...producerOption} = {}} = this.option;
     this.producer = this.client.producer({
-      ...this.option.producerOption,
+      maxInFlightRequests: 1,
+      idempotent: true,
       createPartitioner: Partitioners.JavaCompatiblePartitioner,
+      transactionalId,
+      ...producerOption,
     });
     this.connectPromise = this.producer.connect();
     return this.connectPromise;
@@ -94,15 +105,17 @@ export class MessageProducer {
 
   private async performSendBatch(producer: Producer, topicMessage: TopicMessages[], option: BatchSendOption) {
     if (!option.transactional) {
-      return this.internalSendBatch(topicMessage, producer);
+      // @ts-ignore typing error of kafkajs
+      return this.producer.sendBatch(topicMessage);
     }
     const sender = await producer.transaction();
     try {
-      await this.internalSendBatch(topicMessage, sender);
+      // @ts-ignore typing error of kafkajs
+      await sender.sendBatch({topicMessage});
       if (option.transactionalCommit) {
         await sender.sendOffsets({
           consumerGroupId: option.transactionalCommit.consumerGroupId,
-          ...option.transactionalCommit.offsets
+          ...option.transactionalCommit.offsets,
         });
       }
       await sender.commit();
@@ -111,14 +124,4 @@ export class MessageProducer {
       throw e;
     }
   }
-
-  private async internalSendBatch(topicMessages: TopicMessages[], sender: Sender) {
-
-    let result: RecordMetadata[] = [];
-    for (const {topic, messages} of topicMessages) {
-      result = result.concat(await sender.send({...this.option.sendOption, topic, messages}));
-    }
-    return result;
-  }
-
 }

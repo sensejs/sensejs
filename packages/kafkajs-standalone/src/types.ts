@@ -4,7 +4,8 @@ export interface KafkaConnectOption extends Omit<k.KafkaConfig, 'logLevel' | 'lo
 
 }
 
-export interface KafkaProducerOption extends Omit<k.ProducerConfig, 'createPartitioner'> {
+export interface KafkaProducerOption
+  extends Omit<k.ProducerConfig, 'createPartitioner' | 'maxInFlightRequests' | 'idempotent'> {
 
 }
 
