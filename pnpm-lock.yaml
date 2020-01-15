@@ -171,7 +171,6 @@ importers:
   packages/kafkajs-standalone:
     dependencies:
       '@sensejs/utility': 'link:../utility'
-      kafkajs: 1.11.0
       long: 4.0.0
       rxjs: 6.5.4
       tslib: 1.10.0
@@ -179,6 +178,7 @@ importers:
       '@sensejs/core': 'link:../core'
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/long': 4.0.0
+      kafkajs: 1.11.0
     specifiers:
       '@sensejs/core': 'workspace:0.1.1'
       '@sensejs/testing-utility': 'workspace:*'
@@ -3677,7 +3677,7 @@ packages:
   /kafkajs/1.11.0:
     dependencies:
       long: 4.0.0
-    dev: false
+    dev: true
     engines:
       node: '>=8.6.0'
     resolution:
@@ -4006,7 +4006,6 @@ packages:
     resolution:
       integrity: sha1-6u9ZUcp1UdlpJrgtokLbnWso+1M=
   /long/4.0.0:
-    dev: false
     resolution:
       integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
   /loose-envify/1.4.0:
