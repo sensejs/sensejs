@@ -17,8 +17,19 @@ export interface MessageConsumerOption {
   logOption?: KafkaLogOption;
 }
 
+export interface MessageMetadata extends Omit<KafkaMessage, 'value'> {
+  topic: string;
+  partition: number;
+  offset: string;
+  consumerGroupId: string;
+}
+
+export interface MessageConsumeCallback {
+  (message: Buffer, metadata: MessageMetadata): Promise<void>;
+}
+
 interface ConsumeOption {
-  consumer: (message: KafkaMessage, topic: string, partition: number) => Promise<void>;
+  consumer: MessageConsumeCallback;
   fromBeginning: boolean;
 }
 
@@ -38,7 +49,7 @@ export class MessageConsumer {
     this.consumer = this.client.consumer(option.fetchOption);
   }
 
-  subscribe(topic: string, consumer: (message: KafkaMessage) => Promise<void>, fromBeginning: boolean = false): this {
+  subscribe(topic: string, consumer: MessageConsumeCallback, fromBeginning: boolean = false): this {
     this.consumeOptions.set(topic, {consumer, fromBeginning});
     return this;
   }
@@ -115,7 +126,11 @@ export class MessageConsumer {
 
     await this.processBatch(
       async (message: KafkaMessage) => {
-        await consumeOption.consumer(message, topic, partition);
+        const {value, ...metadata} = message;
+        await consumeOption.consumer(
+          value,
+          {topic, partition, consumerGroupId: this.option.fetchOption.groupId, ...metadata},
+        );
         await payload.resolveOffset(message.offset);
       },
       heartbeat,
