@@ -76,18 +76,12 @@ export class MessageProducer {
       return this.internalSendBatch(topicMessage, producer);
     }
     const sender = await producer.transaction();
-    let error;
     try {
-      return await this.internalSendBatch(topicMessage, sender);
+      await this.internalSendBatch(topicMessage, sender);
+      await sender.commit();
     } catch (e) {
-      error = e || new Error('unknown error');
+      await sender.abort();
       throw e;
-    } finally {
-      if (typeof error === 'undefined') {
-        await sender.commit();
-      } else {
-        await sender.abort();
-      }
     }
   }
 

@@ -13,17 +13,20 @@ test('KafkaJS', async () => {
   });
 
   const firstMessage = new Date().toString();
-  const t = Date.now();
+  let stopped = false;
   await producerA.connect();
   await producerA.send(TOPIC, {key: new Date().toString(), value: firstMessage});
-  const timer = setInterval(async () => {
+
+  async function sendBatch() {
     await producerA.sendBatch([{topic: TOPIC, messages: [{key: new Date().toString(), value: new Date().toString()}]}]);
-    if (Date.now() - t > 30000) {
-      clearInterval(timer);
-      observableA.error(new Error());
-      observableB.error(new Error());
+    if (!stopped) {
+      setTimeout(sendBatch, 1000);
+    } else {
+      await producerA.disconnect();
     }
-  }, 1000);
+  }
+
+  await sendBatch();
   const observableA = new Subject(), observableB = new Subject();
 
   const consumerStubA = jest.fn().mockImplementationOnce(() => observableA.complete());
@@ -53,10 +56,8 @@ test('KafkaJS', async () => {
   const p = Promise.all([observableA.toPromise(), observableB.toPromise()]);
   await messageConsumerA.start();
   await messageConsumerB.start();
-
   await p;
-  clearInterval(timer);
-  await producerA.disconnect();
+  stopped = true;
   await messageConsumerA.stop();
   await messageConsumerB.stop();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));
