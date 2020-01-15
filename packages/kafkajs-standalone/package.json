@@ -30,8 +30,5 @@
     "@sensejs/core": "workspace:0.1.1",
     "@types/long": "^4.0.0",
     "@sensejs/testing-utility": "workspace:*"
-  },
-  "peerDependencies": {
-    "reflect-metadata": "^0.1.13"
   }
 }
