@@ -4,9 +4,12 @@ export interface KafkaConnectOption extends Omit<k.KafkaConfig, 'logLevel' | 'lo
 
 }
 
-export interface KafkaProducerOption
-  extends Omit<k.ProducerConfig, 'createPartitioner' | 'maxInFlightRequests' | 'idempotent'> {
+export interface MessageKeyProvider {
+  (value: Buffer | string | null, topic: string): Buffer | string | null;
+}
 
+export interface KafkaProducerOption extends k.ProducerConfig {
+  messageKeyProvider?: MessageKeyProvider;
 }
 
 export interface KafkaSendOption {

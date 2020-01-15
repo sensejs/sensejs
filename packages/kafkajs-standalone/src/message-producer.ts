@@ -1,5 +1,5 @@
-import {Kafka, Offsets, Partitioners, Producer, TopicMessages} from 'kafkajs';
-import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption} from './types';
+import {Kafka, Offsets, Partitioners, Producer, ProducerConfig, TopicMessages} from 'kafkajs';
+import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, MessageKeyProvider} from './types';
 import {createLogOption, KafkaLogOption} from './kafkajs-logger-adaptor';
 import {uuidV1} from '@sensejs/utility';
 
@@ -24,28 +24,45 @@ export interface BatchSendOption {
   };
 }
 
+function defaultKeyPolicy() {
+  return null;
+}
+
 export class MessageProducer {
-  private client: Kafka;
+  private readonly client: Kafka;
   private producer?: Producer;
   private connectPromise?: Promise<void>;
   private disconnectPromise: Promise<void> = Promise.resolve();
   private allMessageSend: Promise<unknown> = Promise.resolve();
+  private readonly messageKeyProvider: MessageKeyProvider;
+  private readonly producerConfig: ProducerConfig;
 
   constructor(private option: MessageProducerConfig) {
-    const {logOption} = option;
+    const {
+      logOption, producerOption: {
+        messageKeyProvider = defaultKeyPolicy, ...producerConfig
+      } = {},
+    } = option;
     const kafkaOption = {...createLogOption(logOption), ...option.connectOption};
     this.client = new Kafka(kafkaOption);
+    this.messageKeyProvider = messageKeyProvider;
+    this.producerConfig = producerConfig;
   }
 
   async connect() {
     if (this.connectPromise) {
       return this.connectPromise;
     }
-    const {producerOption: {transactionalId = uuidV1(), ...producerOption} = {}} = this.option;
+    const {
+      transactionalId = uuidV1(),
+      maxInFlightRequests = 1,
+      idempotent = true,
+      createPartitioner = Partitioners.JavaCompatiblePartitioner,
+      ...producerOption
+    } = this.producerConfig;
     this.producer = this.client.producer({
-      maxInFlightRequests: 1,
-      idempotent: true,
-      createPartitioner: Partitioners.JavaCompatiblePartitioner,
+      maxInFlightRequests,
+      idempotent,
       transactionalId,
       ...producerOption,
     });
@@ -66,7 +83,7 @@ export class MessageProducer {
     const promise = this.producer.send({
       ...this.option.sendOption,
       topic,
-      messages: Array.isArray(messages) ? messages : [messages],
+      messages: this.provideKeyForMessage(topic, Array.isArray(messages) ? messages : [messages]),
     });
 
     this.allMessageSend = this.allMessageSend.then(() => promise.catch(() => void 0));
@@ -76,16 +93,19 @@ export class MessageProducer {
   /**
    * Send batched messages. And ensure messages to be sent in one transaction if required
    *
-   * @param topicMessage
+   * @param topicMessages
    * @param option
    *
    * @beta
    */
-  async sendBatch(topicMessage: TopicMessages[], option: BatchSendOption = {}) {
+  async sendBatch(topicMessages: TopicMessages[], option: BatchSendOption = {}) {
     if (!this.producer) {
       throw new Error('producer is not connected');
     }
-    const promise = this.performSendBatch(this.producer, topicMessage, option);
+    const promise = this.performSendBatch(this.producer, topicMessages.map((topicMessage) => {
+      const {topic, messages} = topicMessage;
+      return {topic, messages: this.provideKeyForMessage(topic, messages)};
+    }), option);
     this.allMessageSend = this.allMessageSend.then(() => promise.catch(() => void 0));
     return promise;
   }
@@ -101,6 +121,13 @@ export class MessageProducer {
       return producer.disconnect();
     });
     return this.disconnectPromise;
+  }
+
+  private provideKeyForMessage(topic: string, messages: KafkaMessage[]) {
+    return messages.map((message) => {
+      const {key, value, ...rest} = message;
+      return {key: key ?? this.messageKeyProvider(value, topic), value, ...rest};
+    });
   }
 
   private async performSendBatch(producer: Producer, topicMessage: TopicMessages[], option: BatchSendOption) {

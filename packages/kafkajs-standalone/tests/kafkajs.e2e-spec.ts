@@ -1,5 +1,6 @@
 import {MessageConsumer, MessageProducer} from '../src';
 import {Subject} from 'rxjs';
+import {uuidV1} from '@sensejs/utility';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
@@ -10,6 +11,7 @@ test('KafkaJS', async () => {
     connectOption: {brokers: ['kafka-1:9092'], clientId: 'kafkajs-1'},
     producerOption: {
       transactionalId: 'txid' + Date.now(),
+      messageKeyProvider: () => uuidV1(),
     },
   });
 
@@ -43,8 +45,9 @@ test('KafkaJS', async () => {
     },
   });
 
-  messageConsumerA.subscribe(TOPIC, async (message) => {
+  messageConsumerA.subscribe(TOPIC, async (message, metadata) => {
     consumerStubA(message.toString());
+    expect(Buffer.isBuffer(metadata.key));
   });
 
   const messageConsumerB = new MessageConsumer({
@@ -57,12 +60,13 @@ test('KafkaJS', async () => {
   messageConsumerB.subscribe(TOPIC, async (message, metadata) => {
     consumerStubB(message.toString());
     const {consumerGroupId, topic, partition, offset} = metadata;
-    await producerA.sendBatch([
-      {
-        topic: TOPIC,
-        messages: [{key: new Date().toString(), value: new Date().toString()}],
-      },
-    ],
+    await producerA.sendBatch(
+      [
+        {
+          topic: TOPIC,
+          messages: [{key: new Date().toString(), value: new Date().toString()}],
+        },
+      ],
       {
         transactional: true,
         transactionalCommit: {consumerGroupId, offsets: {topics: [{topic, partitions: [{partition, offset}]}]}},
