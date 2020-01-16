@@ -3,7 +3,7 @@ import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, 
 import {convertConnectOption, KafkaLogOption} from './utils';
 import {uuidV1} from '@sensejs/utility';
 
-export interface MessageProducerConfig {
+export interface MessageProducerOption {
   connectOption: KafkaConnectOption;
   logOption?: KafkaLogOption;
   producerOption?: KafkaProducerOption;
@@ -37,7 +37,7 @@ export class MessageProducer {
   private readonly messageKeyProvider: MessageKeyProvider;
   private readonly producerConfig: ProducerConfig;
 
-  constructor(private option: MessageProducerConfig) {
+  constructor(private option: MessageProducerOption) {
     const {
       connectOption,
       logOption,
