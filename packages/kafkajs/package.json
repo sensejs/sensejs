@@ -20,20 +20,18 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
+    "@sensejs/core": "workspace:*",
     "@sensejs/kafkajs-standalone": "workspace:*",
     "inversify": "^5.0.1",
-    "tslib": "^1.10.0"
-  },
-  "peerDependencies": {
-    "@sensejs/core": "workspace:0.0.11",
-    "kafkajs": "^1.11.0",
+    "tslib": "^1.10.0",
     "reflect-metadata": "^0.1.13"
   },
+  "peerDependencies": {
+    "kafkajs": "^1.11.0"
+  },
   "devDependencies": {
-    "@sensejs/core": "workspace:0.1.1",
     "@sensejs/testing-utility": "workspace:*",
     "kafkajs": "^1.11.0",
-    "reflect-metadata": "^0.1.13",
     "rxjs": "^6.5.4"
   }
 }

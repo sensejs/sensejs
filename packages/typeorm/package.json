@@ -20,20 +20,19 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:0.1.1",
+    "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
-    "tslib": "^1.10.0"
+    "tslib": "^1.10.0",
+    "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:0.0.8",
     "@types/supertest": "^2.0.8",
-    "reflect-metadata": "^0.1.13",
     "sqlite3": "4.1.0",
     "supertest": "^4.0.2",
     "typeorm": "^0.2.22"
   },
   "peerDependencies": {
-    "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.22"
   }
 }

@@ -19,16 +19,13 @@
   },
   "author": "LAN Xingcan",
   "license": "ISC",
-  "peerDependencies": {
-    "@sensejs/core": "workspace:0.0.11"
-  },
   "dependencies": {
+    "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
     "traverse": "^0.6.6",
     "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:0.1.1",
     "@types/traverse": "^0.6.32",
     "tslib": "^1.10.0"
   }

@@ -5,7 +5,6 @@ importers:
       '@commitlint/config-conventional': 8.3.4
       '@types/jest': 24.9.0
       '@types/node': 12.12.24
-      coveralls: 3.0.9
       husky: 4.0.10
       jest: 24.9.0
       lint-staged: 9.5.0
@@ -22,7 +21,6 @@ importers:
       '@commitlint/config-conventional': ^8.3.4
       '@types/jest': ^24.0.25
       '@types/node': ^12.12.18
-      coveralls: ^3.0.9
       husky: '4'
       jest: ^24.9.0
       lint-staged: ^9.5.0
@@ -54,11 +52,11 @@ importers:
       '@types/config': 0.0.36
       '@types/uuid': 3.4.6
     specifiers:
-      '@sensejs/config': 'workspace:0.1.1'
-      '@sensejs/core': 'workspace:0.1.1'
-      '@sensejs/http': 'workspace:0.1.1'
-      '@sensejs/logger': 'workspace:0.1.1'
-      '@sensejs/typeorm': 'workspace:0.1.1'
+      '@sensejs/config': 'workspace:*'
+      '@sensejs/core': 'workspace:*'
+      '@sensejs/http': 'workspace:*'
+      '@sensejs/logger': 'workspace:*'
+      '@sensejs/typeorm': 'workspace:*'
       '@types/config': ^0.0.36
       '@types/uuid': ^3.4.6
       config: ^3.2.4
@@ -72,14 +70,14 @@ importers:
       uuid: ^3.3.3
   packages/config:
     dependencies:
+      '@sensejs/core': 'link:../core'
       inversify: 5.0.1
       traverse: 0.6.6
       tslib: 1.10.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
       '@types/traverse': 0.6.32
     specifiers:
-      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:*'
       '@types/traverse': ^0.6.32
       inversify: ^5.0.1
       traverse: ^0.6.6
@@ -109,6 +107,7 @@ importers:
   packages/http:
     dependencies:
       '@koa/cors': 3.0.0
+      '@sensejs/core': 'link:../core'
       '@types/koa': 2.11.0
       '@types/koa-bodyparser': 4.3.0
       '@types/koa-router': 7.4.0
@@ -117,18 +116,17 @@ importers:
       koa-bodyparser: 4.2.1
       koa-router: 7.4.0
       lodash.uniq: 4.5.0
+      reflect-metadata: 0.1.13
       tslib: 1.10.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
       '@types/koa__cors': 3.0.1
       '@types/lodash.uniq': 4.5.6
       '@types/node': 12.12.24
       '@types/supertest': 2.0.8
-      reflect-metadata: 0.1.13
       supertest: 4.0.2
     specifiers:
       '@koa/cors': ^3.0.0
-      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:*'
       '@types/koa': ^2.11.0
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa-router': ^7.0.42
@@ -146,17 +144,17 @@ importers:
       tslib: ^1.10.0
   packages/kafkajs:
     dependencies:
+      '@sensejs/core': 'link:../core'
       '@sensejs/kafkajs-standalone': 'link:../kafkajs-standalone'
       inversify: 5.0.1
+      reflect-metadata: 0.1.13
       tslib: 1.10.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       kafkajs: 1.11.0
-      reflect-metadata: 0.1.13
       rxjs: 6.5.4
     specifiers:
-      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:*'
       '@sensejs/kafkajs-standalone': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
       inversify: ^5.0.1
@@ -176,7 +174,7 @@ importers:
       '@types/long': 4.0.0
       kafkajs: 1.11.0
     specifiers:
-      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
       '@sensejs/utility': 'workspace:*'
       '@types/long': ^4.0.0
@@ -186,30 +184,29 @@ importers:
       tslib: ^1.10.0
   packages/logger:
     dependencies:
+      '@sensejs/core': 'link:../core'
       colors: 1.4.0
       moment: 2.24.0
       tslib: 1.10.0
-    devDependencies:
-      '@sensejs/core': 'link:../core'
     specifiers:
-      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:*'
       colors: ^1.4.0
       moment: ^2.24.0
       tslib: ^1.10.0
   packages/redis:
     dependencies:
-      '@sensejs/http': 'link:../http'
+      '@sensejs/core': 'link:../core'
       '@types/ioredis': 4.14.3
       inversify: 5.0.1
       ioredis: 4.14.1
+      tslib: 1.10.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
+      '@sensejs/http': 'link:../http'
       '@types/supertest': 2.0.8
       supertest: 4.0.2
-      tslib: 1.10.0
     specifiers:
-      '@sensejs/core': 'workspace:0.1.1'
-      '@sensejs/http': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:*'
+      '@sensejs/http': 'workspace:*'
       '@types/ioredis': ^4.14.3
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
@@ -220,16 +217,16 @@ importers:
     dependencies:
       '@sensejs/core': 'link:../core'
       inversify: 5.0.1
+      reflect-metadata: 0.1.13
       tslib: 1.10.0
     devDependencies:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/supertest': 2.0.8
-      reflect-metadata: 0.1.13
       sqlite3: 4.1.0
       supertest: 4.0.2
       typeorm: 0.2.22_sqlite3@4.1.0
     specifiers:
-      '@sensejs/core': 'workspace:0.1.1'
+      '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:0.0.8'
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
@@ -246,7 +243,7 @@ importers:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/uuid': 3.4.6
     specifiers:
-      '@sensejs/testing-utility': 'workspace:0.0.8'
+      '@sensejs/testing-utility': 'workspace:*'
       '@types/uuid': ^3.4.6
       tslib: ^1.10.0
       uuid: ^3.3.3
@@ -1713,19 +1710,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-xb3ZL6+L8b9JLLCx3ZdoZy4+2ECphCMo2PwqgP1tlfVq6M6YReyzBJtvWWtbDSpNr9hn96pkCiZqUcFEc+54Qg==
-  /coveralls/3.0.9:
-    dependencies:
-      js-yaml: 3.13.1
-      lcov-parse: 1.0.0
-      log-driver: 1.2.7
-      minimist: 1.2.0
-      request: 2.88.0
-    dev: true
-    engines:
-      node: '>=6'
-    hasBin: true
-    resolution:
-      integrity: sha512-nNBg3B1+4iDox5A5zqHKzUTiwl2ey4k2o0NEcVZYvl+GOSJdKBj4AJGKLv6h3SvWch7tABHePAQOSZWM9E2hMg==
   /cross-spawn/6.0.5:
     dependencies:
       nice-try: 1.0.5
@@ -3249,6 +3233,9 @@ packages:
       node: '>=6'
     peerDependencies:
       jest-resolve: '*'
+    peerDependenciesMeta:
+      jest-resolve:
+        optional: true
     resolution:
       integrity: sha512-pgFw2tm54fzgYvc/OHrnysABEObZCUNFnhjoRjaVOCN8NYc032/gVjPaHD4Aq6ApkSieWtfKAFQtmDKAmhupnQ==
   /jest-regex-util/24.9.0:
@@ -3626,11 +3613,6 @@ packages:
       node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4
     resolution:
       integrity: sha512-EpR9dElBTDlaDgyhDMiLkXrPwp6ZqgAIBvhhmxQ9XN4TFgW+gEz6tkcsNI6BnUbUftrKDjVFj4lW2/J2aNBMMA==
-  /lcov-parse/1.0.0:
-    dev: true
-    hasBin: true
-    resolution:
-      integrity: sha1-6w1GtUER68VhrLTECO+TY73I9+A=
   /left-pad/1.3.0:
     deprecated: use String.prototype.padStart()
     resolution:
@@ -3798,12 +3780,6 @@ packages:
   /lodash/4.17.15:
     resolution:
       integrity: sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
-  /log-driver/1.2.7:
-    dev: true
-    engines:
-      node: '>=0.8.6'
-    resolution:
-      integrity: sha512-U7KCmLdqsGHBLeWqYlFA0V0Sl6P08EE1ZrmA9cxjUE0WVqT9qnyVDPz1kzpFEP0jdJuFnasWIfSd7fsaNXkpbg==
   /log-symbols/1.0.2:
     dependencies:
       chalk: 1.1.3

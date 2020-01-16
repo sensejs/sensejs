@@ -20,19 +20,15 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/http": "workspace:0.1.1",
+    "@sensejs/core": "workspace:*",
     "@types/ioredis": "^4.14.3",
     "inversify": "^5.0.1",
-    "ioredis": "^4.14.1"
+    "ioredis": "^4.14.1",
+    "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:0.1.1",
+    "@sensejs/http": "workspace:*",
     "@types/supertest": "^2.0.8",
-    "supertest": "^4.0.2",
-    "tslib": "^1.10.0"
-  },
-  "peerDependencies": {
-    "@sensejs/core": "workspace:0.0.11",
-    "tslib": "^1.10.0"
+    "supertest": "^4.0.2"
   }
 }

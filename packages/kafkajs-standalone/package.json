@@ -29,7 +29,7 @@
     "kafkajs": "^1.11.0"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:0.1.1",
+    "@sensejs/core": "workspace:*",
     "@sensejs/testing-utility": "workspace:*",
     "@types/long": "^4.0.0",
     "kafkajs": "^1.11.0"

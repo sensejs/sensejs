@@ -22,12 +22,7 @@
   "dependencies": {
     "colors": "^1.4.0",
     "moment": "^2.24.0",
-    "tslib": "^1.10.0"
-  },
-  "peerDependencies": {
-    "@sensejs/core": "workspace:0.0.11"
-  },
-  "devDependencies": {
-    "@sensejs/core": "workspace:0.1.1"
+    "tslib": "^1.10.0",
+    "@sensejs/core": "workspace:*"
   }
 }
