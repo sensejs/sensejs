@@ -1,7 +1,7 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, MessageProducer} from '../src';
 import {Subject} from 'rxjs';
-import {uuidV1, consoleLogger} from '@sensejs/utility';
+import {consoleLogger, uuidV1} from '@sensejs/utility';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
@@ -46,13 +46,13 @@ test('KafkaJS', async () => {
     },
     logOption: {
       loggerBuilder: () => consoleLogger,
-      level: 'DEBUG'
-    }
+      level: 'DEBUG',
+    },
   });
 
-  messageConsumerA.subscribe(TOPIC, async (message, metadata) => {
-    consumerStubA(message.toString());
-    expect(Buffer.isBuffer(metadata.key));
+  messageConsumerA.subscribe(TOPIC, async (message) => {
+    consumerStubA(message.value?.toString());
+    expect(Buffer.isBuffer(message.key));
   });
 
   const messageConsumerB = new MessageConsumer({
@@ -62,19 +62,22 @@ test('KafkaJS', async () => {
     },
   });
 
-  messageConsumerB.subscribe(TOPIC, async (message, metadata) => {
-    consumerStubB(message.toString());
-    const {consumerGroupId, topic, partition, offset} = metadata;
+  messageConsumerB.subscribe(TOPIC, async (message) => {
+    consumerStubB(message.value?.toString());
+    const {topic, partition, offset} = message;
     await producerA.sendBatch(
       [
         {
-          topic: TOPIC,
+          topic: TX_TOPIC,
           messages: [{key: new Date().toString(), value: new Date().toString()}],
         },
       ],
       {
         transactional: true,
-        transactionalCommit: {consumerGroupId, offsets: {topics: [{topic, partitions: [{partition, offset}]}]}},
+        transactionalCommit: {
+          consumerGroupId: 'e2etest-earliest',
+          offsets: {topics: [{topic, partitions: [{partition, offset}]}]},
+        },
       },
     );
   }, true);

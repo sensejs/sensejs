@@ -1,8 +1,8 @@
-import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage} from 'kafkajs';
+import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage as KafkaJsMessage} from 'kafkajs';
 import Long from 'long';
 import {WorkerController} from './worker-synchronizer';
-import {convertConnectOption, createLogOption, KafkaLogOption} from './utils';
-import {KafkaConnectOption} from './types';
+import {convertConnectOption, KafkaLogOption} from './utils';
+import {KafkaConnectOption, KafkaReceivedMessage} from './types';
 
 export type KafkaFetchOption = ConsumerConfig;
 
@@ -17,15 +17,8 @@ export interface MessageConsumerOption {
   logOption?: KafkaLogOption;
 }
 
-export interface MessageMetadata extends Omit<KafkaMessage, 'value'> {
-  topic: string;
-  partition: number;
-  offset: string;
-  consumerGroupId: string;
-}
-
 export interface MessageConsumeCallback {
-  (message: Buffer, metadata: MessageMetadata): Promise<void>;
+  (message: KafkaReceivedMessage): Promise<void>;
 }
 
 interface ConsumeOption {
@@ -123,11 +116,10 @@ export class MessageConsumer {
     };
 
     await this.processBatch(
-      async (message: KafkaMessage) => {
-        const {value, ...metadata} = message;
+      async (message: KafkaJsMessage) => {
+        // const {value, ...metadata} = message;
         await consumeOption.consumer(
-          value,
-          {topic, partition, consumerGroupId: this.option.fetchOption.groupId, ...metadata},
+          {topic, partition, ...message},
         );
         await payload.resolveOffset(message.offset);
       },
@@ -138,10 +130,10 @@ export class MessageConsumer {
   }
 
   private async processBatch(
-    consumer: (message: KafkaMessage) => Promise<void>,
+    consumer: (message: KafkaJsMessage) => Promise<void>,
     heartbeat: () => Promise<void>,
     commitOffset: (offset: string) => Promise<void>,
-    messages: KafkaMessage[],
+    messages: KafkaJsMessage[],
   ) {
     const synchronizer = this.workerController.createSynchronizer(false);
     try {

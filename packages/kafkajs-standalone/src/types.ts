@@ -19,3 +19,9 @@ export interface KafkaSendOption {
 }
 
 export type KafkaMessage = k.Message;
+
+export interface KafkaReceivedMessage extends KafkaMessage {
+  topic: string;
+  partition: number;
+  offset: string;
+}
