@@ -15,8 +15,6 @@ export interface SubscribeTopicMetadata {
 
 export interface SubscribeTopicOption {
   topic?: string;
-  consumeConcurrency?: number;
-  consumeTimeout?: number;
 }
 
 export interface SubscribeControllerMetadata {

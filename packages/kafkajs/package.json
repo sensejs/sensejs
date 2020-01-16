@@ -1,5 +1,5 @@
 {
-  "name": "@sensejs/kafka",
+  "name": "@sensejs/kafkajs",
   "version": "0.1.1",
   "description": "",
   "files": [
@@ -21,19 +21,19 @@
   "license": "ISC",
   "dependencies": {
     "inversify": "^5.0.1",
-    "kafka-node": "git+https://github.com/thynson/kafka-node.git#49800b96b7d27a4f6226b138253a6fd8c1f842c7",
-    "kafka-pipeline": "^3.2.0",
-    "lodash.merge": "^4.6.2",
-    "tslib": "^1.10.0"
-  },
-  "devDependencies": {
-    "@sensejs/core": "workspace:0.1.1",
-    "@types/lodash": "^4.14.149",
-    "@types/lodash.merge": "^4.6.6",
-    "reflect-metadata": "^0.1.13"
+    "tslib": "^1.10.0",
+    "@sensejs/kafkajs-standalone": "workspace:*"
   },
   "peerDependencies": {
+    "kafkajs": "^1.11.0",
     "@sensejs/core": "workspace:0.0.11",
     "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "kafkajs": "^1.11.0",
+    "rxjs": "^6.5.4",
+    "@sensejs/core": "workspace:0.1.1",
+    "reflect-metadata": "^0.1.13",
+    "@sensejs/testing-utility": "workspace:*"
   }
 }

@@ -1,49 +1,15 @@
-jest.mock('kafka-pipeline', (): unknown => {
-  class MockConsumerGroupPipeline {
-    private consumingPromise: Promise<unknown> = Promise.resolve();
-    private topics: string[] = [];
-    private messageConsumer: Function;
-
-    constructor(option: any) {
-      this.topics = this.topics.concat(option.topic);
-      this.messageConsumer = option.messageConsumer;
-      mockController.emit('MockConsumerGroupPipeline:constructor', [option]);
-    }
-
-    async close(): Promise<void> {
-      await this.consumingPromise;
-    }
-
-    async wait(): Promise<void> {
-      await this.consumingPromise;
-    }
-
-    async start(): Promise<void> {
-      this.topics.forEach((topic) => {
-        mockController.on(`message:${topic}`, (message) => {
-          this.consumingPromise = this.consumingPromise.then(() => {
-            return this.messageConsumer(message);
-          });
-        });
-      });
-    }
-  }
-
-  return {ConsumerGroupPipeline: MockConsumerGroupPipeline};
-});
-import {Component, Inject, ModuleRoot, RequestInterceptor, createModule} from '@sensejs/core';
-import {EventEmitter} from 'events';
-import {ConsumerGroupPipeline} from 'kafka-pipeline';
+jest.mock('@sensejs/kafkajs-standalone');
+import {Component, createModule, Inject, ModuleRoot, RequestInterceptor} from '@sensejs/core';
+import {MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
-  ConsumingContext,
-  InjectSubscribeContext,
+  ConsumerContext,
   createKafkaConsumerModule,
+  InjectSubscribeContext,
   Message,
   SubscribeController,
   SubscribeTopic,
 } from '../src';
-
-const mockController = new EventEmitter();
+import {Subject} from 'rxjs';
 
 describe('Subscribe decorators', () => {
   test('Missing param binding', () => {
@@ -76,16 +42,27 @@ describe('Subscribe decorators', () => {
 
 describe('Subscriber', () => {
   test('consume message', async () => {
-    const startSpy = jest.spyOn(ConsumerGroupPipeline.prototype, 'start');
-    const stopSpy = jest.spyOn(ConsumerGroupPipeline.prototype, 'close');
-    const fooSpy = jest.fn();
+    const startSpy = jest.spyOn(MessageConsumer.prototype, 'start');
+    const stopSpy = jest.spyOn(MessageConsumer.prototype, 'stop').mockResolvedValue();
+
+    function mockSubscribe(this: MessageConsumer, topic: string, callback: Function) {
+      expect(startSpy).not.toHaveBeenCalled();
+      startSpy.mockImplementation(async () => {
+        setImmediate(() => {
+          callback({topic: 'foo', value: 'value', key: 'key', partition: 0, offset: '0'});
+        });
+      });
+      return this;
+    }
+
+    const subscribeSpy = jest.spyOn(MessageConsumer.prototype, 'subscribe').mockImplementation(mockSubscribe);
     const symbolA = Symbol(),
       symbolB = Symbol(),
       symbolC = Symbol();
     const makeInterceptor = (symbol: symbol) => {
       @Component()
-      class Interceptor extends RequestInterceptor<ConsumingContext> {
-        async intercept(context: ConsumingContext, next: () => Promise<void>): Promise<void> {
+      class Interceptor extends RequestInterceptor<ConsumerContext> {
+        async intercept(context: ConsumerContext, next: () => Promise<void>): Promise<void> {
           context.bindContextValue(symbol, Math.random());
           await next();
         }
@@ -97,43 +74,50 @@ describe('Subscriber', () => {
       interceptorB = makeInterceptor(symbolB),
       interceptorC = makeInterceptor(symbolC);
 
+    const consumerReceivedMessage = new Subject();
+
     @SubscribeController({interceptors: [interceptorB]})
     class Controller {
       @SubscribeTopic({option: {topic: 'foo'}, interceptors: [interceptorC]})
       foo(
-        @InjectSubscribeContext() ctx: ConsumingContext,
+        @InjectSubscribeContext() ctx: ConsumerContext,
         @Inject(symbolA) global: any,
         @Inject(symbolB) controller: any,
         @Inject(symbolC) fromTopic: any,
         @Message() message: string | Buffer,
       ) {
-        fooSpy();
+        consumerReceivedMessage.complete();
       }
     }
 
     const module = createKafkaConsumerModule({
       components: [Controller, interceptorA, interceptorB, interceptorC],
-      defaultKafkaConsumerOption: {
-        kafkaHost: 'any-host',
-        groupId: 'any-group',
+      messageConsumerOption: {
+        connectOption: {
+          brokers: 'any-host',
+        },
+        fetchOption: {
+          groupId: 'any-group',
+        },
       },
       globalInterceptors: [interceptorA],
     });
     const moduleRoot = new ModuleRoot(module);
     await moduleRoot.start();
     expect(startSpy).toBeCalled();
-    mockController.emit('message:foo', {topic: ''});
+    expect(subscribeSpy).toBeCalledTimes(1);
+    expect(subscribeSpy).toBeCalledWith('foo', expect.any(Function), undefined);
+    await consumerReceivedMessage.toPromise();
     await moduleRoot.stop();
-    expect(fooSpy).toBeCalled();
     expect(stopSpy).toBeCalled();
   });
 
   test('injected config', async () => {
-    const kafkaHost = `host_${Date.now()}`; // for random string
+    jest.spyOn(MessageConsumer.prototype, 'start').mockResolvedValue();
+    jest.spyOn(MessageConsumer.prototype, 'stop').mockResolvedValue();
+    const brokers = `host_${Date.now()}`; // for random string
     const groupId = `group_${Date.now()}`;
     const topic = `topic_${Date.now()}`;
-    const stub = jest.fn();
-    mockController.once('MockConsumerGroupPipeline:constructor', stub);
 
     @SubscribeController()
     class Controller {
@@ -146,7 +130,7 @@ describe('Subscriber', () => {
         {
           provide: 'config.consumer',
           value: {
-            kafkaHost,
+            connectOption: {brokers},
           },
         },
         {
@@ -161,21 +145,19 @@ describe('Subscriber', () => {
     const moduleRoot = new ModuleRoot(createKafkaConsumerModule({
       components: [Controller],
       requires: [ConfigModule],
-      defaultKafkaConsumerOption: {
-        groupId,
+      messageConsumerOption: {
+        fetchOption: {
+          groupId,
+        },
       },
       injectOptionFrom: 'config.consumer',
     }));
-    await moduleRoot.start().then(() => {
-      expect(stub).toHaveBeenCalledWith([
-        expect.objectContaining({
-          topic,
-          consumerGroupOption: expect.objectContaining({
-            kafkaHost,
-            groupId,
-          }),
-        }),
-      ]);
-    });
+    await moduleRoot.start();
+
+    expect(MessageConsumer).toHaveBeenCalledWith(expect.objectContaining({
+      connectOption: expect.objectContaining({
+        brokers,
+      }),
+    }));
   });
 });

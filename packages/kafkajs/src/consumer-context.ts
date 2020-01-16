@@ -1,10 +1,9 @@
 import {Inject, RequestContext, ServiceIdentifier, Transformer} from '@sensejs/core';
 import {Container} from 'inversify';
-import * as kafkaNode from 'kafka-node';
-export import KafkaMessage = kafkaNode.Message;
+import {KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
 
-export class ConsumingContext extends RequestContext {
-  constructor(private readonly container: Container, readonly message: kafkaNode.Message) {
+export class ConsumerContext extends RequestContext {
+  constructor(private readonly container: Container, readonly message: KafkaReceivedMessage) {
     super();
   }
 
@@ -14,9 +13,9 @@ export class ConsumingContext extends RequestContext {
 }
 
 export function InjectSubscribeContext(transform: Transformer = (x) => x) {
-  return Inject(ConsumingContext, {transform});
+  return Inject(ConsumerContext, {transform});
 }
 
 export function Message() {
-  return InjectSubscribeContext((x: ConsumingContext) => x.message);
+  return InjectSubscribeContext((x: ConsumerContext) => x.message);
 }
