@@ -1,5 +1,5 @@
 workspaces:
-    - '.'
+    - './tools/**'
     - './packages/**'
     - './examples/**'
-    - './tools/**'
+    - '.'

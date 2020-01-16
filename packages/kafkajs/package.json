@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs",
-  "version": "0.2.0-0",
+  "version": "0.2.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -23,8 +23,8 @@
     "@sensejs/core": "workspace:*",
     "@sensejs/kafkajs-standalone": "workspace:*",
     "inversify": "^5.0.1",
-    "tslib": "^1.10.0",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "tslib": "^1.10.0"
   },
   "peerDependencies": {
     "kafkajs": "^1.11.0"

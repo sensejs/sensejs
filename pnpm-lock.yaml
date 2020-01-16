@@ -42,7 +42,7 @@ importers:
       config: 3.2.4
       fp-ts: 2.4.1
       inversify: 5.0.1
-      io-ts: 2.0.4_fp-ts@2.4.1
+      io-ts: 2.0.5_fp-ts@2.4.1
       js-yaml: 3.13.1
       reflect-metadata: 0.1.13
       sqlite3: 4.1.0
@@ -227,7 +227,7 @@ importers:
       typeorm: 0.2.22_sqlite3@4.1.0
     specifiers:
       '@sensejs/core': 'workspace:*'
-      '@sensejs/testing-utility': 'workspace:0.0.8'
+      '@sensejs/testing-utility': 'workspace:*'
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
@@ -2708,14 +2708,14 @@ packages:
     dev: false
     resolution:
       integrity: sha512-Ieh06s48WnEYGcqHepdsJUIJUXpwH5o5vodAX+DK2JA/gjy4EbEcQZxw+uFfzysmKjiLXGYwNG3qDZsKVMcINQ==
-  /io-ts/2.0.4_fp-ts@2.4.1:
+  /io-ts/2.0.5_fp-ts@2.4.1:
     dependencies:
       fp-ts: 2.4.1
     dev: false
     peerDependencies:
       fp-ts: ^2.0.0
     resolution:
-      integrity: sha512-GqCi13q6FFWbHZa6a+Aza6pJ66OqfYvEQwZyvKbKs21bez207NEQWhXH43JvwYIFk6R7rYidG8p/xqTYzvX2tQ==
+      integrity: sha512-pL7uUptryanI5Glv+GUv7xh+aLBjxGEDmLwmEYNSx0yOD3djK0Nw5Bt0N6BAkv9LadOUU7QKpRsLcqnTh3UlLA==
   /ioredis/4.14.1:
     dependencies:
       cluster-key-slot: 1.1.0
@@ -3233,9 +3233,6 @@ packages:
       node: '>=6'
     peerDependencies:
       jest-resolve: '*'
-    peerDependenciesMeta:
-      jest-resolve:
-        optional: true
     resolution:
       integrity: sha512-pgFw2tm54fzgYvc/OHrnysABEObZCUNFnhjoRjaVOCN8NYc032/gVjPaHD4Aq6ApkSieWtfKAFQtmDKAmhupnQ==
   /jest-regex-util/24.9.0:

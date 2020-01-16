@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/typeorm",
-  "version": "0.2.0-0",
+  "version": "0.2.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -22,11 +22,11 @@
   "dependencies": {
     "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
-    "tslib": "^1.10.0",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "tslib": "^1.10.0"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:0.0.8",
+    "@sensejs/testing-utility": "workspace:*",
     "@types/supertest": "^2.0.8",
     "sqlite3": "4.1.0",
     "supertest": "^4.0.2",
