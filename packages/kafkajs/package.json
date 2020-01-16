@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs",
-  "version": "0.1.1",
+  "version": "0.2.0-0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -20,20 +20,20 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
+    "@sensejs/kafkajs-standalone": "workspace:*",
     "inversify": "^5.0.1",
-    "tslib": "^1.10.0",
-    "@sensejs/kafkajs-standalone": "workspace:*"
+    "tslib": "^1.10.0"
   },
   "peerDependencies": {
-    "kafkajs": "^1.11.0",
     "@sensejs/core": "workspace:0.0.11",
+    "kafkajs": "^1.11.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "kafkajs": "^1.11.0",
-    "rxjs": "^6.5.4",
     "@sensejs/core": "workspace:0.1.1",
+    "@sensejs/testing-utility": "workspace:*",
+    "kafkajs": "^1.11.0",
     "reflect-metadata": "^0.1.13",
-    "@sensejs/testing-utility": "workspace:*"
+    "rxjs": "^6.5.4"
   }
 }

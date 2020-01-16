@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/utility",
-  "version": "0.0.1",
+  "version": "0.2.0-0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -24,7 +24,7 @@
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "@types/uuid": "^3.4.6",
-    "@sensejs/testing-utility": "workspace:0.0.8"
+    "@sensejs/testing-utility": "workspace:0.0.8",
+    "@types/uuid": "^3.4.6"
   }
 }

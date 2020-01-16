@@ -5,8 +5,7 @@ if [[ -n "$DIST_TAG" ]]; then
 fi
 pnpm recursive run cleanup
 pnpm recursive run prepare
-pnpm recursive --workspace-concurrency 1 --filter ./packages exec \
-  -- pnpm version --no-git-tag-version $1
+PNPM_RECURSIVE='pnpm recursive --workspace-concurrency=1 --filter ./packages'
+$PNPM_RECURSIVE exec -- pnpm version --no-git-tag-version $1
 ALL_VERSIONS=`pnpm recursive ls --depth=-1 | cut -d ' ' -f 1 | tr '\n' ' '`;
-pnpm recursive update $ALL_VERSIONS
-pnpm recursive --no-bail --workspace-concurrency=1 exec -- pnpm publish $DIST_TAG
+$PNPM_RECURSIVE exec -- pnpm publish $DIST_TAG

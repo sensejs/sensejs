@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs-standalone",
-  "version": "0.1.1",
+  "version": "0.2.0-0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -20,18 +20,18 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "tslib": "^1.10.0",
-    "rxjs": "^6.5.4",
+    "@sensejs/utility": "workspace:*",
     "long": "^4.0.0",
-    "@sensejs/utility": "workspace:*"
+    "rxjs": "^6.5.4",
+    "tslib": "^1.10.0"
   },
   "peerDependencies": {
     "kafkajs": "^1.11.0"
   },
   "devDependencies": {
-    "kafkajs": "^1.11.0",
     "@sensejs/core": "workspace:0.1.1",
+    "@sensejs/testing-utility": "workspace:*",
     "@types/long": "^4.0.0",
-    "@sensejs/testing-utility": "workspace:*"
+    "kafkajs": "^1.11.0"
   }
 }
