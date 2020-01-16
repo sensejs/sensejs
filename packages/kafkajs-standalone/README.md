@@ -1,7 +1,7 @@
 # Standalone Wrapper for KafkaJS
 
-This package provide an advanced consumer based on [kafkajs], and can be
-used without the core parts of sense.js.
+This package provides easy to use kafka consumer and producer based on
+[kafkajs], without core parts of sense.js as dependencies.
 
 ## Install
 
