@@ -50,8 +50,10 @@ importers:
       io-ts: 2.1.2_fp-ts@2.5.3
       js-yaml: 3.13.1
       reflect-metadata: 0.1.13
+      rxjs: 6.5.4
       sqlite3: 4.1.0
       typeorm: 0.2.24_sqlite3@4.1.0
+      uuid: 3.4.0
     devDependencies:
       '@types/config': 0.0.36
     specifiers:
@@ -68,8 +70,10 @@ importers:
       io-ts: ^2.1.2
       js-yaml: ^3.13.1
       reflect-metadata: ^0.1.13
+      rxjs: ^6.5.4
       sqlite3: 4.1.0
       typeorm: ^0.2.24
+      uuid: ^3.4.0
   packages/config:
     dependencies:
       '@sensejs/core': 'link:../core'
