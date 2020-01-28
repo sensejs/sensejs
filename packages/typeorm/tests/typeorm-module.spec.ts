@@ -95,14 +95,15 @@ describe('TypeOrmModule', () => {
     });
 
     const spy = jest.fn();
+    const transactionalSupportInterceptor = Transactional();
 
     @ModuleClass({
-      components: [ExampleHttpController, TypeOrmSupportInterceptor, Transactional()],
+      components: [ExampleHttpController, TypeOrmSupportInterceptor, transactionalSupportInterceptor],
       requires: [LoggerModule, typeOrmModule],
     })
     class FooModule {
       constructor(
-        @Inject(TypeOrmSupportInterceptor) private interceptor: RequestInterceptor,
+        @Inject(transactionalSupportInterceptor) private interceptor: RequestInterceptor,
         @Inject(Container) private container: Container,
       ) {}
 

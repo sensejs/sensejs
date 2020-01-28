@@ -18,8 +18,8 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {AsyncContainerModule, Container} from 'inversify';
-import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
+import {Container, ContainerModule} from 'inversify';
+import {Connection, ConnectionOptions, createConnection, EntityManager, Repository} from 'typeorm';
 import {createTypeOrmLogger} from './logger';
 
 export interface TypeOrmModuleOption extends ModuleOption {
@@ -45,35 +45,25 @@ export function InjectRepository(entityConstructor: string | Function) {
   return Inject(symbol);
 }
 
-@Component()
-class EntityMetadataHelper {
-  constructor(@Inject(Connection) private connection: Connection) {
-  }
+function enumerateEntityAndRepository(
+  entityManager: EntityManager,
+  callback: <T>(entityConstructor: Constructor<T>, repository: Repository<T>) => void,
+) {
 
-  bindEntityManagerAndRepository(binder: <T>(symbol: ServiceIdentifier<T>, target: T) => void) {
-    const entityManager = this.connection.createEntityManager();
-    binder(EntityManager, entityManager);
-    for (const entityMetadata of this.connection.entityMetadatas) {
-      const inheritanceTree = entityMetadata.inheritanceTree;
-      const constructor = inheritanceTree[0];
-      const entityInjectToken = ensureInjectRepositoryToken(constructor);
-      if (entityMetadata.treeType) {
-        binder(entityInjectToken, entityManager.getTreeRepository(constructor));
-      } else {
-        binder(entityInjectToken, entityManager.getRepository(constructor));
-      }
+  for (const entityMetadata of entityManager.connection.entityMetadatas) {
+    const inheritanceTree = entityMetadata.inheritanceTree;
+    const constructor = inheritanceTree[0] as Constructor;
+    if (entityMetadata.treeType) {
+      callback(constructor, entityManager.getTreeRepository(constructor));
+    } else {
+      callback(constructor, entityManager.getRepository(constructor));
     }
   }
 }
 
-const helperModule = createModule({components: [EntityMetadataHelper]});
-
 @Component()
 @Deprecated()
 export class TypeOrmSupportInterceptor extends RequestInterceptor {
-  constructor(@Inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper) {
-    super();
-  }
 
   async intercept(context: RequestContext, next: () => Promise<void>) {
     return next();
@@ -97,10 +87,17 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
     }
 
     async intercept(context: RequestContext, next: () => Promise<void>) {
+      const runInTransaction = async (entityManager: EntityManager) => {
+        context.bindContextValue(EntityManager, entityManager);
+        enumerateEntityAndRepository(entityManager, (constructor, repository) => {
+          context.bindContextValue(ensureInjectRepositoryToken(constructor), repository);
+        });
+        return next();
+      };
       if (level) {
-        return this.entityManager.transaction(level, next);
+        return this.entityManager.transaction(level, runInTransaction);
       }
-      return this.entityManager.transaction(next);
+      return this.entityManager.transaction(runInTransaction);
     }
   }
 
@@ -128,7 +125,7 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
   );
 
   @ModuleClass({
-    requires: [LoggerModule, createModule(option), helperModule],
+    requires: [LoggerModule, createModule(option)],
     factories: [factoryProvider, optionProvider],
   })
   class TypeOrmConnectionModule {
@@ -162,22 +159,26 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     requires: [TypeOrmConnectionModule],
   })
   class EntityManagerModule {
-    private readonly module: AsyncContainerModule;
+    private readonly module: ContainerModule;
+    private readonly entityManager = this.connection.createEntityManager();
 
     constructor(
-      @Inject(EntityMetadataHelper) private entityMetadataHelper: EntityMetadataHelper,
       @Inject(Container) private container: Container,
+      @Inject(Connection) private connection: Connection,
     ) {
-      this.module = new AsyncContainerModule(async (bind) => {
-        this.entityMetadataHelper.bindEntityManagerAndRepository((symbol, target) => {
-          bind(symbol).toConstantValue(target);
+      this.entityManager = connection.createEntityManager();
+      this.module = new ContainerModule(async (bind) => {
+        bind(EntityManager).toConstantValue(this.entityManager);
+        enumerateEntityAndRepository(this.entityManager, (constructor, repository) => {
+          const symbol = ensureInjectRepositoryToken(constructor);
+          bind(symbol).toConstantValue(repository);
         });
       });
     }
 
     @OnModuleCreate()
     async onCreate() {
-      await this.container.loadAsync(this.module);
+      this.container.load(this.module);
     }
 
     @OnModuleDestroy()
