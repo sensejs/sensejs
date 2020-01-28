@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2018",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "strictFunctionTypes": true,
@@ -14,7 +14,7 @@
     "importHelpers": true,
     "sourceMap": true,
     "declaration": true,
-    "lib": ["es2017"],
+    "lib": ["es2018"],
     "skipLibCheck": true,
     "noEmit": true,
     "incremental": true,
