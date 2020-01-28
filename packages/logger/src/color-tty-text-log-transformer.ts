@@ -2,11 +2,7 @@ import colors from 'colors/safe';
 import moment from 'moment';
 import {BasicTextLogTransformer} from './basic-text-log-transformer';
 import {LogLevel, RawLogData} from './definition';
-import {format, formatWithOptions} from 'util';
-
-// @ts-ignore
-const optionFormat = (...args: [unknown, ...unknown[]]) => formatWithOptions({colors: true}, ...args);
-const availableFormat = formatWithOptions ? optionFormat : format;
+import {formatWithOptions} from 'util';
 
 function logLevelColorMap(level: LogLevel) {
   switch (level) {
@@ -58,6 +54,7 @@ export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
   }
 
   contentFormatter(...messages: [unknown, ...unknown[]]) {
-    return availableFormat(...messages);
+    // @ts-ignore
+    return formatWithOptions({colors: true}, ...messages);
   }
 }
