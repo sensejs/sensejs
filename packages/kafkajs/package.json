@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
-    "kafkajs": "^1.11.0",
+    "kafkajs": "^1.12.0",
     "rxjs": "^6.5.4"
   }
 }
