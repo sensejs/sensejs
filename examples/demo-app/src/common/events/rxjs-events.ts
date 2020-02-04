@@ -1,4 +1,4 @@
-import {EventChannel, EventListener, EventReceiver, EventTransmitter} from './types';
+import {EventChannel, EventListener, EventReceiver, EventAnnouncer} from './types';
 import {Subject, Subscription} from 'rxjs';
 
 /**
@@ -32,11 +32,11 @@ class RxjsEventReceiver<T> implements EventReceiver<T> {
 
 }
 
-class RxjsEventTransmitter<T> implements EventTransmitter<T> {
+class RxjsEventTransmitter<T> implements EventAnnouncer<T> {
   constructor(private subject: Subject<EventBroadcast<T>>) {
   }
 
-  async transmit(...payloads: T[]) {
+  async announce(...payloads: T[]) {
     const consumePromises: Promise<void>[] = [];
     this.subject.next({
       payloads,
@@ -51,7 +51,7 @@ class RxjsEventChannel<T> extends EventChannel<T> {
   readonly symbol = Symbol();
   private readonly subject = new Subject<EventBroadcast<T>>();
   readonly receiver = new RxjsEventReceiver<T>(this.subject);
-  readonly transmitter = new RxjsEventTransmitter<T>(this.subject);
+  readonly announcer = new RxjsEventTransmitter<T>(this.subject);
 
 }
 

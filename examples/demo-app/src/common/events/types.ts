@@ -6,11 +6,11 @@ export interface EventListener {
 }
 
 export interface EventReceiver<T> {
-  listen(callback: (...payloads: T[]) => Promise<void>): EventListener;
+  listen(callback: (...messages: T[]) => Promise<void>): EventListener;
 }
 
-export interface EventTransmitter<T> {
-  transmit(...payload: T[]): Promise<void>;
+export interface EventAnnouncer<T> {
+  announce(...payload: T[]): Promise<void>;
 }
 
 /**
@@ -36,21 +36,25 @@ export abstract class EventChannel<T> {
   /**
    * The transmitter that will broadcast to this channel
    */
-  abstract readonly transmitter: EventTransmitter<T>;
+  abstract readonly announcer: EventAnnouncer<T>;
 }
 
-export class BufferedEventTransmitter<T> implements EventTransmitter<T> {
+export class BatchedEventAnnouncer<T> implements EventAnnouncer<T> {
 
-  private bufferedPayload: T[] = [];
+  private bufferedMessages: T[] = [];
 
-  constructor(private targetEventPublisher: EventTransmitter<T>) {}
+  constructor(private targetEventPublisher: EventAnnouncer<T>) {}
 
-  async transmit(...payload: T[]) {
-    this.bufferedPayload = this.bufferedPayload.concat(payload);
+  async announce(...messages: T[]) {
+    this.bufferedMessages = this.bufferedMessages.concat(messages);
   }
 
   async flush() {
-    return this.targetEventPublisher.transmit(...this.bufferedPayload);
+    await this.targetEventPublisher.announce(...this.bufferedMessages);
+  }
+
+  getBatchedEvents() {
+    return this.bufferedMessages;
   }
 }
 
@@ -58,10 +62,10 @@ export function InjectEventTransmitter(channel: EventChannel<unknown>) {
   return Inject(channel.symbol);
 }
 
-export function provideEventTransmitter<T>(channel: EventChannel<T>): ConstantProvider<EventTransmitter<T>> {
+export function provideEventTransmitter<T>(channel: EventChannel<T>): ConstantProvider<EventAnnouncer<T>> {
   return {
     provide: channel.symbol,
-    value: channel.transmitter,
+    value: channel.announcer,
   };
 }
 
@@ -70,10 +74,10 @@ export function transactionalTransmitInterceptor(channels: EventChannel<unknown>
 
     async intercept(context: RequestContext, next: () => Promise<void>) {
 
-      const bufferedEventPublishers: BufferedEventTransmitter<unknown>[] = [];
+      const bufferedEventPublishers: BatchedEventAnnouncer<unknown>[] = [];
       for (const channel of channels) {
-        const provider = channel.transmitter;
-        const publisher = new BufferedEventTransmitter(provider);
+        const provider = channel.announcer;
+        const publisher = new BatchedEventAnnouncer(provider);
         bufferedEventPublishers.push(publisher);
         context.bindContextValue(channel.symbol, publisher);
       }
