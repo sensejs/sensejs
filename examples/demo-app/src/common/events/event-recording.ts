@@ -8,25 +8,27 @@ interface EventRecordMetadata<Payload, Record, Entity> {
   recorder: EventRecorder<Payload, Record, Entity>;
 }
 
-interface EventRecordedMethod<Payload> {
-  (...args: unknown[]): (void | Payload | (Payload[]));
-}
+export type EventRecordedMethod<Payload> = (...args: any[]) => (void | Payload | undefined);
 
-export class EventRecorder<Payload, Record, Entity> {
+export class EventRecorder<Payload, Record, Entity extends {}> {
 
-  static from<Payload, Record, Entity>(
+  static from<Payload, Record, Entity extends {}>(
     recordEntityConstructor: Constructor,
     recorder: (payload: Payload, entity: Entity) => Record,
   ) {
     return new EventRecorder(recordEntityConstructor, recorder);
   }
 
-  readonly entityEventStore = new WeakMap<object, Payload[]>();
+  readonly entityEventStore = new WeakMap<Entity, Payload[]>();
 
   private constructor(
-    readonly recordEntityConstructor: Constructor,
+    readonly recordConstructor: Constructor<Record>,
     readonly recorder: (payload: Payload, entity: Entity) => Record,
   ) {}
+
+  getRecordedEvent(entity: Entity) {
+    return this.entityEventStore.get(entity) ?? [];
+  }
 }
 
 export interface EnableEventRecordDecorator<Payload, Entity = {}> {
@@ -44,7 +46,7 @@ export interface EnableEventRecordDecorator<Payload, Entity = {}> {
     prototype: Entity,
     name: string | symbol,
     descriptor: TypedPropertyDescriptor<F>,
-  ): TypedPropertyDescriptor<F>;
+  ): void;
 
   /**
    * When apply to constructor, event recording is enabled on its instance
@@ -54,13 +56,12 @@ export interface EnableEventRecordDecorator<Payload, Entity = {}> {
   (constructor: Constructor<Entity>): void;
 }
 
-export function EnableEventRecord<Payload, Record, Entity>(domainEvent: EventRecorder<Payload, Record, Entity>) {
+export function EnableEventRecord<Payload, Record, Entity>(recorder: EventRecorder<Payload, Record, Entity>) {
   return new DecoratorBuilder(EnableEventRecord.name)
     .whenApplyToConstructor((constructor: Class) => {
       const metadata: EventRecordMetadata<Payload, Record, Entity> = {
         sourceConstructor: constructor,
-        // recordConstructor: domainEvent.recordEntityConstructor,
-        recorder: domainEvent,
+        recorder,
       };
       Reflect.defineMetadata(ENTITY_EVENT_RECORD_METADATA, metadata, constructor);
     })
@@ -69,8 +70,8 @@ export function EnableEventRecord<Payload, Record, Entity>(domainEvent: EventRec
         apply: (target, thisArg, argArray) => {
           const result = target.apply(thisArg, argArray);
           if (typeof result !== 'undefined') {
-            const allEvents = domainEvent.entityEventStore.get(thisArg) ?? [];
-            domainEvent.entityEventStore.set(thisArg, allEvents.concat(result));
+            const allEvents = recorder.entityEventStore.get(thisArg) ?? [];
+            recorder.entityEventStore.set(thisArg, allEvents.concat(result));
             return result;
           }
         },

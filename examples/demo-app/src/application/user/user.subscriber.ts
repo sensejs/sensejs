@@ -1,5 +1,5 @@
-import {AfterInsert, AfterUpdate, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent} from 'typeorm';
-import {User, UserEvent} from '../../domains/user';
+import {EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent} from 'typeorm';
+import {User, UserEventRecorder} from '../../domains/user';
 
 @EventSubscriber()
 export class UserDomainEventSubscriber implements EntitySubscriberInterface<User> {
@@ -8,12 +8,19 @@ export class UserDomainEventSubscriber implements EntitySubscriberInterface<User
     return User;
   }
 
-  @AfterInsert()
-  @AfterUpdate()
-  async persistUserDomainEvent(event: InsertEvent<User> | UpdateEvent<User>) {
-    const entityManager = event.manager;
-    const userEventRepository = entityManager.getRepository(UserEvent);
-    const user = event.entity;
-    await userEventRepository.save(new UserEvent(user));
+  async afterInsert(event: InsertEvent<User>) {
+    return this.persistUserDomainEvent(event);
+  }
+
+  async afterUpdate(event: InsertEvent<User>) {
+    return this.persistUserDomainEvent(event);
+  }
+
+  private async persistUserDomainEvent(event: InsertEvent<User> | UpdateEvent<User>) {
+    const eventRecords = UserEventRecorder.getRecordedEvent(event.entity);
+    if (eventRecords.length > 0) {
+      const repository = event.manager.getRepository(UserEventRecorder.recordConstructor);
+      await repository.save(eventRecords);
+    }
   }
 }

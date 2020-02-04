@@ -1,46 +1,26 @@
 import {PasswordHash} from './password-hash';
 import {Email} from './email';
-import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique, VersionColumn} from 'typeorm';
+import {Column, Entity, PrimaryGeneratedColumn, Unique, VersionColumn} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
+import {EnableEventRecord, EventRecorder} from '../../common/events/event-recording';
+import {
+  UserCreatedEvent,
+  UserEmailChangedEvent,
+  UserEvent,
+  UserEventPayload,
+  UserEventType,
+  UserNameChangedEvent,
+  UserPasswordChangedEvent,
+} from './user-event.entity';
 
-export enum UserEventType {
-  CREATED = 'CREATED',
-  NAME_CHANGED = 'NAME_CHANGED',
-  EMAIL_CHANGED = 'EMAIL_CHANGED',
-  PASSWORD_CHANGED = 'PASSWORD_CHANGED'
-}
-
-export interface UserEmailChangedEvent {
-  type: UserEventType.EMAIL_CHANGED;
-  userId: string;
-  originEmailAddress?: string;
-  currentEmailAddress?: string;
-}
-
-export interface UserPasswordChangedEvent {
-  type: UserEventType.PASSWORD_CHANGED;
-  userId: string;
-}
-
-export interface UserCreatedEvent {
-  type: UserEventType.CREATED;
-  userId: string;
-  name: string;
-}
-
-export interface UserNameChangedEvent {
-  userId: string;
-  originName: string;
-  currentName: string;
-}
-
-export type UserEventPayload = UserCreatedEvent
-  | UserNameChangedEvent
-  | UserEmailChangedEvent
-  | UserPasswordChangedEvent;
+export const UserEventRecorder = EventRecorder.from(
+  UserEvent,
+  (payload: UserEventPayload, user: User) => new UserEvent(user, payload),
+);
 
 @Entity()
 @Unique(['user.email'])
+@EnableEventRecord(UserEventRecorder)
 export class User {
 
   @PrimaryGeneratedColumn()
@@ -48,9 +28,6 @@ export class User {
 
   @VersionColumn()
   readonly version: number = 0;
-
-  @OneToMany(() => UserEvent, (userEvent) => userEvent.user, {cascade: true})
-  readonly pendingEvents: UserEventPayload[] = [];
 
   @Column({unique: true})
   private name: string;
@@ -64,62 +41,54 @@ export class User {
   constructor(name: string) {
     this.name = name;
     this.createdTime = new Date();
-    this.pendingEvents.push({
-      type: UserEventType.CREATED,
-      userId: this.id,
-      name,
-    });
+    this.created();
   }
 
-  changeEmail(email?: Email) {
+  @EnableEventRecord(UserEventRecorder)
+  changeEmail(email?: Email): UserEmailChangedEvent | void {
     if (email !== undefined && email.equalTo(this.email)) {
-      return this;
+      return;
     }
     if (email === this.email) {
-      return this;
+      return;
     }
     const originEmail = this.email;
     this.email = email;
-    this.pendingEvents.push({
+    return {
       type: UserEventType.EMAIL_CHANGED,
       userId: this.id,
       originEmailAddress: originEmail?.address,
       currentEmailAddress: email?.address,
-    });
-    return this;
+    };
   }
 
-  changePassword(password: PasswordHash) {
+  @EnableEventRecord(UserEventRecorder)
+  changePassword(password: PasswordHash): UserPasswordChangedEvent {
     this.password = password;
-    this.pendingEvents.push({
+    return {
       type: UserEventType.PASSWORD_CHANGED,
       userId: this.id,
-    });
-    return this;
+    };
   }
-}
 
-@Entity()
-export class UserEvent {
+  @EnableEventRecord(UserEventRecorder)
+  changeName(name: string): UserNameChangedEvent {
+    const originName = this.name;
+    this.name = name;
+    return {
+      type: UserEventType.NAME_CHANGED,
+      userId: this.id,
+      originName,
+      currentName: name,
+    };
+  }
 
-  @PrimaryGeneratedColumn('uuid')
-  readonly id = uuidV1();
-
-  @Column()
-  readonly timestamp: Date = new Date();
-
-  @Column()
-  readonly version: number;
-
-  @ManyToOne(() => User)
-  readonly user: User;
-
-  @Column('json')
-  readonly payload: UserEventPayload[];
-
-  constructor(user: User) {
-    this.user = user;
-    this.version = user.version;
-    this.payload = user.pendingEvents;
+  @EnableEventRecord(UserEventRecorder)
+  private created(): UserCreatedEvent {
+    return {
+      type: UserEventType.CREATED,
+      userId: this.id,
+      name: this.name,
+    };
   }
 }

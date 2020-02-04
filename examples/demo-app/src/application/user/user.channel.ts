@@ -1,5 +1,5 @@
 import {createRxjsEventChannel} from '../../common/events/rxjs-events';
-import {UserEvent} from '../../domains/user';
+import {UserEvent} from '../../domains/user/user-event.entity';
 
 const userEventChannel = createRxjsEventChannel<UserEvent>();
 
