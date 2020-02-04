@@ -3,7 +3,7 @@ import {EventBroadcaster, TransactionEventBroadcaster} from './event-support';
 import {EntityManager} from 'typeorm';
 import {EventRecordPersistenceService} from './event-record-persist.service';
 
-export class TransactionalEventTransmitInterceptor extends RequestInterceptor {
+export class TransactionalEventAnnounceInterceptor extends RequestInterceptor {
   constructor(
     @InjectLogger() private logger: Logger,
     @Inject(EventBroadcaster) private eventBus: EventBroadcaster,
@@ -15,17 +15,20 @@ export class TransactionalEventTransmitInterceptor extends RequestInterceptor {
 
   async intercept(context: RequestContext, next: () => Promise<void>) {
     context.bindContextValue(EventBroadcaster, this.transactionalEventBus);
+
+    // Perform business operation in single transaction, event record
     await this.entityManager.transaction(async (entityManager) => {
       context.bindContextValue(EntityManager, entityManager);
       EventRecordPersistenceService.weakMap.set(entityManager, this.transactionalEventBus);
       await next();
     });
+
     await Promise.all(
       Array
         .from(this.transactionalEventBus.announcers.entries())
-        .map(async ([recordConstructor, transmitter]) => {
+        .map(async ([recordConstructor, announcer]) => {
           try {
-            await transmitter.flush();
+            await announcer.flush();
             const repository = this.entityManager.getRepository(recordConstructor);
           } catch (e) {
             this.logger.error('Failed to mark event record %s as published', recordConstructor.name);

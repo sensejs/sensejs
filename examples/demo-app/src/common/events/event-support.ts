@@ -40,7 +40,7 @@ export class TransactionEventBroadcaster extends EventBroadcaster {
 
   static weakMap = new WeakMap<object, TransactionEventBroadcaster>();
 
-  readonly announcers: Map<Constructor, BatchedEventAnnouncer<any>> = new Map();
+  readonly announcers: Map<Constructor, BatchedEventAnnouncer<unknown>> = new Map();
 
   constructor(@Inject(EventBroadcaster) private eventBus: EventBroadcaster) {
     super();
