@@ -3,7 +3,7 @@ import {Class} from '@sensejs/core';
 
 const ENTITY_EVENT_RECORD_METADATA = Symbol();
 
-interface EventRecordMetadata<Payload, Record, Entity> {
+export interface EventRecordMetadata<Payload, Record, Entity> {
   sourceConstructor: Class;
   recorder: EventRecorder<Payload, Record, Entity>;
 }
@@ -79,4 +79,8 @@ export function EnableEventRecord<Payload, Record, Entity>(recorder: EventRecord
       return descriptor;
     })
     .build<EnableEventRecordDecorator<Payload, Entity>>();
+}
+
+export function getEventRecordMetadata(constructor: any): EventRecordMetadata<unknown, unknown, unknown> {
+  return Reflect.getMetadata(ENTITY_EVENT_RECORD_METADATA, constructor);
 }
