@@ -24,3 +24,10 @@ class SomeRequestService {
 export const RequestModule = createTouchModule({clients: SomeRequestService})
 
 ```
+
+
+# TODO
+
+- [ ] support interceptor
+- [ ] support tracing
+- [ ] validator
