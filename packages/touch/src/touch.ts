@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import {Class, DecoratorBuilder} from '@sensejs/utility';
+import {Class, DecoratorBuilder, InstanceMethodDecorator} from '@sensejs/utility';
 import {Container} from 'inversify';
 import {
   Constructor,
@@ -14,15 +14,19 @@ import {
   Optional,
   provideOptionInjector,
   ServiceIdentifier,
+  composeRequestInterceptor,
+  RequestInterceptor,
 } from '@sensejs/core';
-import {ensureMetadataOnPrototype} from '@sensejs/http-common';
+import {ensureMetadataOnPrototype, ensureMetadataOnMethod} from '@sensejs/http-common';
 import {buildPath, extractParams} from './utils';
 import {AbstractTouchAdaptor, ITouchAdaptorBuilder} from './adaptor/interface';
 import {AxiosTouchAdaptorBuilder} from './adaptor/axiosAdaptor';
 import {ITouchClientOptions, ITouchModuleOptions} from './interface';
 import {DEFAULT_RETRY_COUNT} from './constants';
+import {TouchRequestContext} from './interceptor';
 
 const TouchSymbol = Symbol('sensejs#decorator#touch');
+const TouchInterceptorSymbol = Symbol('sensejs#decorator#touchInterceptor');
 const TouchOptionsSymbol = Symbol('sensejs#decorator#touchOptions');
 export const TouchBuilderSymbol = Symbol('sensejs#decorator#touchBuilder');
 
@@ -34,6 +38,36 @@ export function TouchClient(options: ITouchClientOptions = {}) {
       Reflect.defineMetadata(TouchOptionsSymbol, options, target);
     })
     .build<ClassDecorator>();
+}
+
+export function TouchInterceptor(interceptors: Class<RequestInterceptor>[]) {
+  return new DecoratorBuilder('TouchInterceptor')
+    .whenApplyToInstanceMethod((target: object, methodName: PropertyKey) => {
+      let interceptorMetadata = getTouchInterceptorMetadata(target);
+      if (!interceptorMetadata) {
+        interceptorMetadata = {};
+        Reflect.defineMetadata(TouchInterceptorSymbol, interceptorMetadata, target);
+      }
+      interceptorMetadata[methodName] = interceptors;
+    })
+    .build<InstanceMethodDecorator>();
+}
+
+function getTouchInterceptorMetadata(target: any) {
+  return Reflect.getMetadata(TouchInterceptorSymbol, target);
+}
+
+function getTouchInterceptor(target: any, propertyName?: PropertyKey): Class<RequestInterceptor>[] {
+  const interceptorMetadata: {[propertyName: string]: Class<RequestInterceptor>[]} =
+    getTouchInterceptorMetadata(target) || {};
+  if (typeof propertyName === 'undefined') {
+    return Object.keys(interceptorMetadata).reduce((prev, key) => {
+      prev = prev.concat(interceptorMetadata[key] || []);
+      return prev;
+    }, [] as Class<RequestInterceptor>[]);
+  }
+
+  return interceptorMetadata[propertyName as string] || [];
 }
 
 function checkTouchDecorated(...constructors: Class[]) {
@@ -87,65 +121,46 @@ function createTouchClientFactory<T extends {}>(
           continue;
         }
 
+        const allInterceptors = [
+          ...(this.options.interceptors || []),
+          ...getTouchInterceptor(this.target.prototype, name),
+        ];
         const pathCompiler = _.template(subPath, {interpolate: /{([\s\S]+?)}/g});
+        const composedInterceptor = composeRequestInterceptor(this.container, allInterceptors);
 
         // build request method
         Implementation.prototype[name] = (async (...args: any[]) => {
+          const container = this.container.createChild();
+
           const paramsObject = extractParams(params, args);
-          const {query, body, headers, param} = paramsObject;
-          const compiledSubpath = pathCompiler(param);
-          const path = buildPath(mainPath, compiledSubpath);
-
-          this.logger?.info(
-            'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> <query: %j> <body: %j> <param: %j> <headers: %j>',
+          const context = new TouchRequestContext(container, {
+            ...paramsObject,
             className,
-            name,
-            path,
             method,
-            query,
-            body,
-            param,
-            headers,
-          );
+            methodName: name as string,
+            path: subPath,
+            args,
+          });
 
-          let counter = 1;
-          while (true) {
-            try {
-              this.logger?.info(
-                'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> <args: %j>',
-                className,
-                name,
-                path,
-                method,
-                args,
-              );
-              const response = await this.adaptor[method](path, {query, body, headers});
-              this.logger?.info(
-                'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> <response: %j>',
-                className,
-                name,
-                path,
-                method,
-                response,
-              );
+          const interceptor = container.get(composedInterceptor);
+          await interceptor.intercept(context, async () => {
+            const compiledSubpath = pathCompiler(paramsObject.param);
+            const path = buildPath(mainPath, compiledSubpath);
+            context.path = path;
 
-              return response;
-            } catch (error) {
-              this.logger?.error(
-                'Request <class: %s> <classMethod: %s> <path: %s> <method: %s> error: ',
-                className,
-                name,
-                path,
-                method,
-                error.message ?? error,
-              );
-
-              counter++;
-              if (counter > retry) {
-                throw error;
+            while (true) {
+              try {
+                return (context.response = await this.adaptor[method](path, paramsObject));
+              } catch (error) {
+                context.retryCount++;
+                if (context.retryCount >= retry) {
+                  throw error;
+                }
               }
             }
-          }
+          });
+
+          return context.response;
         }) as any;
       }
     }
@@ -160,20 +175,26 @@ function createTouchClientFactory<T extends {}>(
 
 function createSingleTouchModule(client: Class, options: ITouchModuleOptions): Constructor {
   checkTouchDecorated(client);
-  const {injectOptionFrom, ...globalClientOptions} = options;
-  const clientOptions: ITouchClientOptions = Reflect.getMetadata(TouchOptionsSymbol, client);
+  const {injectOptionFrom, interceptors: globalInterceptor = [], ...globalClientOptions} = options;
+  const {interceptors: clientInterceptors = [], ...clientOptions}: ITouchClientOptions =
+    Reflect.getMetadata(TouchOptionsSymbol, client) || {};
+
+  const interceptors = [...globalInterceptor, ...clientInterceptors];
 
   const injectOptionsSymbol = Symbol('sensejs#touch#options');
   const touchFactory = createTouchClientFactory(client, injectOptionsSymbol);
   const optionsFactory = provideOptionInjector(
     globalClientOptions,
     clientOptions.injectOptionFrom || injectOptionFrom,
-    (globalOptions, injectedOptions) => Object.assign({}, globalOptions, clientOptions, injectedOptions),
+    (globalOptions, injectedOptions) => Object.assign({interceptors}, globalOptions, clientOptions, injectedOptions),
     injectOptionsSymbol,
   );
 
+  const allInterceptors = [...interceptors, ...getTouchInterceptor(client.prototype)];
+
   @ModuleClass({
     factories: [touchFactory, optionsFactory],
+    components: allInterceptors as Constructor<RequestInterceptor>[],
   })
   class TouchModule {}
   return TouchModule;

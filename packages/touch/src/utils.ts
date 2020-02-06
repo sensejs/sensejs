@@ -1,11 +1,13 @@
 import url from 'url';
+import {Container} from 'inversify';
 import {ParamMappingMetadata, HttpParamType} from '@sensejs/http-common';
+import {Class, RequestInterceptor} from '@sensejs/core';
 
 export function buildPath(from: string, to: string) {
   return url.resolve(from, to);
 }
 
-interface IParamObject {
+export interface IParamObject {
   [key: string]: any;
 }
 
@@ -52,4 +54,10 @@ export function extractParams(params: Map<number, ParamMappingMetadata>, args: a
   }
 
   return paramsObject;
+}
+
+export function buildInterceptor(container: Container, interceptor: Class<RequestInterceptor>) {
+  if (!container.isBound(interceptor)) {
+    container.bind(interceptor);
+  }
 }

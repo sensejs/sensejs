@@ -1,5 +1,6 @@
-import {Body, GET, Header, Path, POST, Query} from '@sensejs/http-common';
-import {Component, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
+import {GET, POST, Header, Query, Body, Path} from '@sensejs/http-common';
+import {Decorator} from '@sensejs/utility';
+import {ModuleRoot, Inject, OnModuleCreate, ModuleClass, Component, RequestInterceptor} from '@sensejs/core';
 import {Container} from 'inversify';
 import {
   AbstractTouchAdaptor,
@@ -9,8 +10,9 @@ import {
   ITouchClientOptions,
   TouchBuilderSymbol,
   TouchClient,
+  TouchInterceptor,
 } from '../src';
-import {Decorator} from '@sensejs/utility';
+import { TouchRequestContext } from '../src/interceptor';
 
 const mockTouchAdaptor: AbstractTouchAdaptor = {
   post: jest.fn(),
@@ -325,7 +327,7 @@ describe('Test @TouchClient', () => {
     const mockPost = jest.spyOn(mockTouchAdaptor, 'post').mockRejectedValue(null);
 
     @TouchClient(clientOptions)
-    class MyTouchClientService {
+    class TestOptionsMergeClientService {
       @POST('/')
       post() {
         return Promise.resolve();
@@ -341,7 +343,7 @@ describe('Test @TouchClient', () => {
     }
 
     @ModuleClass({
-      requires: [createTouchModule(Object.assign({clients: MyTouchClientService}, globalOptions))],
+      requires: [createTouchModule(Object.assign({clients: TestOptionsMergeClientService}, globalOptions))],
       constants: [{provide: TouchBuilderSymbol, value: new MockAdaptorBuilder()}],
     })
     class TestModule {
@@ -349,7 +351,7 @@ describe('Test @TouchClient', () => {
 
       @OnModuleCreate()
       async onCreate() {
-        const touchClient = this.container.get(MyTouchClientService);
+        const touchClient = this.container.get(TestOptionsMergeClientService);
         try {
           await touchClient.post();
         } catch (error) {
@@ -412,4 +414,65 @@ describe('Test @TouchClient', () => {
     expect(mockTouchAdaptor.post).toBeCalled();
     expect(mockTouchAdaptor.get).toBeCalled();
   });
+
+  test('use interceptor', async () => {
+    function makeInterceptor(spy: jest.Mock) {
+      @Component()
+      class Interceptor extends RequestInterceptor<TouchRequestContext> {
+        async intercept(context: TouchRequestContext, next: () => Promise<void>) {
+          spy();
+          await next();
+          spy();
+        }
+      }
+
+      return Interceptor;
+    }
+
+    const globalSpy = jest.fn();
+    const clientSpy = jest.fn();
+    const methodSpy = jest.fn();
+
+    const TestGlobalInterceptor = makeInterceptor(globalSpy);
+    const TestClientInterceptor = makeInterceptor(clientSpy);
+    const TestMethodInterceptor = makeInterceptor(methodSpy);
+
+    @TouchClient({interceptors: [TestClientInterceptor]})
+    class TestInterceptorClientService {
+      @POST('/')
+      @TouchInterceptor([TestMethodInterceptor])
+      post() {
+        return Promise.resolve();
+      }
+    }
+
+    const touchModule = createTouchModule({
+      clients: TestInterceptorClientService,
+      interceptors: [TestGlobalInterceptor],
+    });
+    @ModuleClass({
+      requires: [touchModule],
+      constants: [mockTouchAdaptorConstant],
+    })
+    class TestModule {
+      constructor(@Inject(Container) private container: Container) {}
+
+      @OnModuleCreate()
+      async onCreate() {
+        const touchClient = this.container.get(TestInterceptorClientService);
+        await touchClient.post();
+      }
+    }
+
+    const app = new ModuleRoot(TestModule);
+    await app.start();
+    await app.stop();
+
+    expect(globalSpy).toBeCalledTimes(2);
+    expect(clientSpy).toBeCalledTimes(2);
+    expect(methodSpy).toBeCalledTimes(2);
+  });
+
+  // TODO(nathan): complete test
+  test.todo('interceptor context');
 });
