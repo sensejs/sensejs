@@ -1,4 +1,26 @@
+# @sensejs/touch
 
-# @sensejs/http-common
+touch is a decorator for build http request service and inspired by `Feign`
 
-Common facility for HTTP protocol, for both client side and server side
+# Usage
+
+```ts
+import {GET, POST, Path, Body} from '@sensejs/http-common'
+import {TouchClient, createTouchModule} from '@sensejs/touch'
+
+@TouchClient({
+  retry: 10,
+  baseUrl: 'http://host/'
+})
+class SomeRequestService {
+
+  @GET('/user/{userId}')
+  getUser(@Path() userId: string) {}
+
+  @POST('/user')
+  createUser(@Body() userData: object) {}
+}
+
+export const RequestModule = createTouchModule({clients: SomeRequestService})
+
+```
