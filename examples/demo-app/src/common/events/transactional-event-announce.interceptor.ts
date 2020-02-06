@@ -1,7 +1,6 @@
 import {Inject, InjectLogger, Logger, RequestContext, RequestInterceptor} from '@sensejs/core';
 import {EventBroadcaster, TransactionEventBroadcaster} from './event-support';
 import {EntityManager} from 'typeorm';
-import {EventRecordPersistenceService} from './event-record-persist.service';
 
 export class TransactionalEventAnnounceInterceptor extends RequestInterceptor {
   constructor(
@@ -19,7 +18,7 @@ export class TransactionalEventAnnounceInterceptor extends RequestInterceptor {
     // Perform business operation in single transaction, event record
     await this.entityManager.transaction(async (entityManager) => {
       context.bindContextValue(EntityManager, entityManager);
-      EventRecordPersistenceService.weakMap.set(entityManager, this.transactionalEventBus);
+      TransactionEventBroadcaster.contextMap.set(entityManager, this.transactionalEventBus);
       await next();
     });
 

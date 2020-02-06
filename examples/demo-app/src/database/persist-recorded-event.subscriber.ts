@@ -1,6 +1,7 @@
 import {EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent} from 'typeorm';
 import {EventRecordMetadata, getEventRecordMetadata} from '../common/events/event-recording';
 import {EventRecordPersistenceService} from '../common/events/event-record-persist.service';
+import {TransactionEventBroadcaster} from '../common/events/event-support';
 
 @EventSubscriber()
 export class PersistRecordedEventSubscriber implements EntitySubscriberInterface<unknown> {
@@ -22,7 +23,7 @@ export class PersistRecordedEventSubscriber implements EntitySubscriberInterface
       if (eventRecords.length > 0) {
         const repository = event.manager.getRepository(recorder.recordConstructor);
         await repository.save(eventRecords);
-        const eventBus = EventRecordPersistenceService.weakMap.get(entityManager);
+        const eventBus = TransactionEventBroadcaster.contextMap.get(entityManager);
         eventBus?.getAnnouncerOf(recorder.recordConstructor)?.announce(...eventRecords);
       }
     }

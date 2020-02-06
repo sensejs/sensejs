@@ -1,5 +1,5 @@
 import {Component, ComponentScope, Constructor, Inject} from '@sensejs/core';
-import {BatchedEventAnnouncer, EventChannel, EventAnnouncer} from './types';
+import {BatchedEventAnnouncer, EventAnnouncer, EventChannel} from './types';
 import {createRxjsEventChannel} from './rxjs-events';
 
 export abstract class EventBroadcaster {
@@ -38,7 +38,7 @@ export class GlobalEventBroadcaster extends EventBroadcaster {
 @Component({scope: ComponentScope.TRANSIENT})
 export class TransactionEventBroadcaster extends EventBroadcaster {
 
-  static weakMap = new WeakMap<object, TransactionEventBroadcaster>();
+  static readonly contextMap = new WeakMap<object, TransactionEventBroadcaster>();
 
   readonly announcers: Map<Constructor, BatchedEventAnnouncer<unknown>> = new Map();
 
@@ -53,12 +53,5 @@ export class TransactionEventBroadcaster extends EventBroadcaster {
       this.announcers.set(recordConstructor, transmitter);
     }
     return transmitter;
-  }
-
-  async commit(postCommit: <Record>(
-    constructor: Constructor<Record>,
-    record: Record[],
-  ) => Promise<void> = () => Promise.resolve()) {
-    return Promise.all(Array.from(this.announcers.values()).map((transmitter) => transmitter.flush()));
   }
 }
