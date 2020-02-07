@@ -1,7 +1,7 @@
 import {User} from './user.entity';
-import {EventRecorder} from '../../common/events/event-recording';
 import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique, VersionColumn} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
+import {EventRecorder} from '../../common/events/event-recorder';
 
 export enum UserEventType {
   CREATED = 'CREATED',

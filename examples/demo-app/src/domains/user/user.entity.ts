@@ -2,7 +2,7 @@ import {PasswordHash} from './password-hash';
 import {Email} from './email';
 import {Column, Entity, PrimaryGeneratedColumn, Unique, VersionColumn} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
-import {EnableEventRecord, EventRecorder} from '../../common/events/event-recording';
+import {EventRecording} from '../../common/events/event-recording';
 import {
   UserCreatedEvent,
   UserEmailChangedEvent,
@@ -12,6 +12,7 @@ import {
   UserNameChangedEvent,
   UserPasswordChangedEvent,
 } from './user-event.entity';
+import {EventRecorder} from '../../common/events/event-recorder';
 
 export const UserEventRecorder = EventRecorder.from(
   UserEvent,
@@ -20,7 +21,7 @@ export const UserEventRecorder = EventRecorder.from(
 
 @Entity()
 @Unique(['user.email'])
-@EnableEventRecord(UserEventRecorder)
+@EventRecording(UserEventRecorder)
 export class User {
 
   @PrimaryGeneratedColumn()
@@ -44,7 +45,7 @@ export class User {
     this.created();
   }
 
-  @EnableEventRecord(UserEventRecorder)
+  @EventRecording(UserEventRecorder)
   changeEmail(email?: Email): UserEmailChangedEvent | void {
     if (email !== undefined && email.equalTo(this.email)) {
       return;
@@ -62,7 +63,7 @@ export class User {
     };
   }
 
-  @EnableEventRecord(UserEventRecorder)
+  @EventRecording(UserEventRecorder)
   changePassword(password: PasswordHash): UserPasswordChangedEvent {
     this.password = password;
     return {
@@ -71,7 +72,7 @@ export class User {
     };
   }
 
-  @EnableEventRecord(UserEventRecorder)
+  @EventRecording(UserEventRecorder)
   changeName(name: string): UserNameChangedEvent {
     const originName = this.name;
     this.name = name;
@@ -83,7 +84,7 @@ export class User {
     };
   }
 
-  @EnableEventRecord(UserEventRecorder)
+  @EventRecording(UserEventRecorder)
   private created(): UserCreatedEvent {
     return {
       type: UserEventType.CREATED,

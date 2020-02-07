@@ -1,5 +1,5 @@
 import {EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent} from 'typeorm';
-import {EventRecordMetadata, getEventRecordMetadata} from '../common/events/event-recording';
+import {EventRecordingMetadata, getEventRecordingMetadata} from '../common/events/event-recording';
 import {EventRecordPersistenceService} from '../common/events/event-record-persist.service';
 import {TransactionEventBroadcaster} from '../common/events/event-support';
 
@@ -15,10 +15,10 @@ export class PersistRecordedEventSubscriber implements EntitySubscriberInterface
   }
 
   private async persistUserDomainEvent(event: InsertEvent<unknown> | UpdateEvent<unknown>) {
-    const metadata = getEventRecordMetadata(event.metadata.inheritanceTree[0]);
+    const metadata = getEventRecordingMetadata(event.metadata.inheritanceTree[0]);
     const entityManager = event.manager;
     if (typeof metadata !== 'undefined') {
-      const {recorder} = metadata as EventRecordMetadata<unknown, unknown, unknown>;
+      const {recorder} = metadata as EventRecordingMetadata<unknown, unknown, unknown>;
       const eventRecords = recorder.getRecordedEvent(event.entity);
       if (eventRecords.length > 0) {
         const repository = event.manager.getRepository(recorder.recordConstructor);

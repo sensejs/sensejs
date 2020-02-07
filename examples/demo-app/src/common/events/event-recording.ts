@@ -1,38 +1,16 @@
 import {Constructor, DecoratorBuilder} from '@sensejs/utility';
 import {Class} from '@sensejs/core';
+import {EventRecorder, EventRecordingMethod} from './event-recorder';
 
 const ENTITY_EVENT_RECORD_METADATA = Symbol();
 
-export interface EventRecordMetadata<Payload, Record, Entity> {
+export interface EventRecordingMetadata<Payload, Record, Entity> {
   sourceConstructor: Class;
   recorder: EventRecorder<Payload, Record, Entity>;
 }
 
-export type EventRecordedMethod<Payload> = (...args: any[]) => (void | Payload | undefined);
-
-export class EventRecorder<Payload, Record, Entity extends {}> {
-
-  static from<Payload, Record, Entity extends {}>(
-    recordEntityConstructor: Constructor,
-    recorder: (payload: Payload, entity: Entity) => Record,
-  ) {
-    return new EventRecorder(recordEntityConstructor, recorder);
-  }
-
-  readonly entityEventStore = new WeakMap<Entity, Payload[]>();
-
-  private constructor(
-    readonly recordConstructor: Constructor<Record>,
-    readonly recorder: (payload: Payload, entity: Entity) => Record,
-  ) {}
-
-  getRecordedEvent(entity: Entity) {
-    return this.entityEventStore.get(entity) ?? [];
-  }
-}
-
-export interface EnableEventRecordDecorator<Payload, Entity = {}> {
-  /**
+export interface EventRecordingDecorator<Payload, Entity = {}> {
+  /*
    * When apply to instance method, its return value can be recorded by
    * event recorder
    *
@@ -42,7 +20,8 @@ export interface EnableEventRecordDecorator<Payload, Entity = {}> {
    * @param descriptor
    * @note The constructor also need to be decorated to enable event recording
    *
-   */<F extends EventRecordedMethod<Payload>>(
+   */
+  <F extends EventRecordingMethod<Payload>>(
     prototype: Entity,
     name: string | symbol,
     descriptor: TypedPropertyDescriptor<F>,
@@ -56,10 +35,10 @@ export interface EnableEventRecordDecorator<Payload, Entity = {}> {
   (constructor: Constructor<Entity>): void;
 }
 
-export function EnableEventRecord<Payload, Record, Entity>(recorder: EventRecorder<Payload, Record, Entity>) {
-  return new DecoratorBuilder(EnableEventRecord.name)
+export function EventRecording<Payload, Record, Entity>(recorder: EventRecorder<Payload, Record, Entity>) {
+  return new DecoratorBuilder(EventRecording.name)
     .whenApplyToConstructor((constructor: Class) => {
-      const metadata: EventRecordMetadata<Payload, Record, Entity> = {
+      const metadata: EventRecordingMetadata<Payload, Record, Entity> = {
         sourceConstructor: constructor,
         recorder,
       };
@@ -78,9 +57,9 @@ export function EnableEventRecord<Payload, Record, Entity>(recorder: EventRecord
       });
       return descriptor;
     })
-    .build<EnableEventRecordDecorator<Payload, Entity>>();
+    .build<EventRecordingDecorator<Payload, Entity>>();
 }
 
-export function getEventRecordMetadata(constructor: any): EventRecordMetadata<unknown, unknown, unknown> {
+export function getEventRecordingMetadata(constructor: any): EventRecordingMetadata<unknown, unknown, unknown> {
   return Reflect.getMetadata(ENTITY_EVENT_RECORD_METADATA, constructor);
 }
