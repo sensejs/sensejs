@@ -11,6 +11,7 @@ interface ITouchRequestMetadata extends IParamsIndexObject {
   args: unknown[];
 }
 
+// TODO: abstract client and server context
 export class TouchRequestContext extends RequestContext {
   body!: IParamObject;
   param!: IParamObject;

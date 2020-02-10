@@ -40,6 +40,7 @@ export function TouchClient(options: ITouchClientOptions = {}) {
     .build<ClassDecorator>();
 }
 
+// TODO: add `@Interceptor` decorator
 export function TouchInterceptor(interceptors: Class<RequestInterceptor>[]) {
   return new DecoratorBuilder('TouchInterceptor')
     .whenApplyToInstanceMethod((target: object, methodName: PropertyKey) => {
@@ -130,6 +131,7 @@ function createTouchClientFactory<T extends {}>(
 
         // build request method
         Implementation.prototype[name] = (async (...args: any[]) => {
+          // TODO: remove container
           const container = this.container.createChild();
 
           const paramsObject = extractParams(params, args);
