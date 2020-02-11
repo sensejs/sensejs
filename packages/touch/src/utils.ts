@@ -61,3 +61,5 @@ export function buildInterceptor(container: Container, interceptor: Class<Reques
     container.bind(interceptor);
   }
 }
+
+export {adaptorTester} from '../tests/utils';

@@ -28,6 +28,11 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.149",
+    "@types/koa-bodyparser": "^4.3.0",
+    "inversify": "^5.0.1",
+    "koa": "^2.11.0",
+    "koa-bodyparser": "^4.2.1",
+    "koa-router": "^8.0.7",
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {

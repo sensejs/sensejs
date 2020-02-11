@@ -26,8 +26,8 @@ export class AxiosAdaptor extends AbstractTouchAdaptor {
   async get(path: string, {query, headers}: IRequestMetadata) {
     return this._axiosInstance.get(path, {params: query, headers}).then(axiosDataUnwrapper);
   }
-  async put(path: string, {body, headers}: IRequestMetadata) {
-    return this._axiosInstance.put(path, body, {headers}).then(axiosDataUnwrapper);
+  async put(path: string, {body, headers, query}: IRequestMetadata) {
+    return this._axiosInstance.put(path, body, {params: query, headers}).then(axiosDataUnwrapper);
   }
   async delete(path: string, {query, body, headers}: IRequestMetadata) {
     return this._axiosInstance.delete(path, {params: query, data: body, headers}).then(axiosDataUnwrapper);
