@@ -45,7 +45,7 @@ export function adaptorTester(adaptorConstructor: Constructor<AbstractTouchAdapt
           adaptor[methodName as keyof AbstractTouchAdaptor](requestUrl, metadata)
             .then((res: ITestResponse) => {
               if (methodName === 'head') {
-                return done();
+                return;
               }
               expect(res.method.toLowerCase()).toEqual(methodName);
               expect(res.path).toContain(methodName);
@@ -55,11 +55,11 @@ export function adaptorTester(adaptorConstructor: Constructor<AbstractTouchAdapt
               }
               expect(res.query).toEqual(metadata.query);
               expect(res.headers).toEqual(expect.objectContaining(metadata.headers));
-              done();
             })
-            .catch((e) => done(e))
-            .finally(() => {
+            .catch((e) => e)
+            .then((e) => {
               server.close();
+              done(e);
             });
         });
       });
