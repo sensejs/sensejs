@@ -1,9 +1,9 @@
 import {EntityManager, EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent} from 'typeorm';
 import {getEventRecordingMetadata} from '../common/events/event-recording';
-import {getAnnounceRecordedEventMetadata} from '../common/events/announce-recorded-event';
 import {Constructor} from '@sensejs/utility';
 import {EventAnnounceService} from '../infrastructure/event/event-announce.service';
 import {EventAnnouncement} from '../domains/infrastructure/event-annoucement.entity';
+import {getAnnounceRecordedEventMetadata} from '../domains/infrastructure/announce-recorded-event';
 
 @EventSubscriber()
 export class PersistRecordedEventSubscriber implements EntitySubscriberInterface<unknown> {

@@ -1,8 +1,8 @@
 import {User} from './user.entity';
 import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
-import {AnnounceRecordedEvent} from '../../common/events/announce-recorded-event';
 import {EventAnnouncement} from '../infrastructure/event-annoucement.entity';
+import {AnnounceRecordedEvent} from '../infrastructure/announce-recorded-event';
 
 export enum UserEventType {
   CREATED = 'CREATED',
