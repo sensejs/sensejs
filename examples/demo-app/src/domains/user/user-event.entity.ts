@@ -14,6 +14,7 @@ export enum UserEventType {
 export interface UserEmailChangedEvent {
   type: UserEventType.EMAIL_CHANGED;
   userId: string;
+  index: number;
   originEmailAddress?: string;
   currentEmailAddress?: string;
 }
@@ -21,17 +22,20 @@ export interface UserEmailChangedEvent {
 export interface UserPasswordChangedEvent {
   type: UserEventType.PASSWORD_CHANGED;
   userId: string;
+  index: number;
 }
 
 export interface UserCreatedEvent {
   type: UserEventType.CREATED;
   userId: string;
+  index: number;
   name: string;
 }
 
 export interface UserNameChangedEvent {
   type: UserEventType.NAME_CHANGED;
   userId: string;
+  index: number;
   originName: string;
   currentName: string;
 }
@@ -54,9 +58,6 @@ export class UserEvent {
   @Column()
   readonly timestamp: Date = new Date();
 
-  @Column()
-  readonly version: number;
-
   @ManyToOne(() => User)
   readonly user: User;
 
@@ -65,7 +66,6 @@ export class UserEvent {
 
   constructor(user: User, payloads: UserEventPayload[]) {
     this.user = user;
-    this.version = user.version;
     this.payloads = payloads;
   }
 }

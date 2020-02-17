@@ -28,7 +28,10 @@ export class User {
   readonly id: string = uuidV1();
 
   @VersionColumn()
-  readonly version: number = 0;
+  private readonly version: number = 0;
+
+  @Column()
+  private eventIndex: number = 0;
 
   @Column({unique: true})
   private name: string;
@@ -58,6 +61,7 @@ export class User {
     return {
       type: UserEventType.EMAIL_CHANGED,
       userId: this.id,
+      index: this.eventIndex++,
       originEmailAddress: originEmail?.address,
       currentEmailAddress: email?.address,
     };
@@ -69,6 +73,7 @@ export class User {
     return {
       type: UserEventType.PASSWORD_CHANGED,
       userId: this.id,
+      index: this.eventIndex++,
     };
   }
 
@@ -79,6 +84,7 @@ export class User {
     return {
       type: UserEventType.NAME_CHANGED,
       userId: this.id,
+      index: this.eventIndex++,
       originName,
       currentName: name,
     };
@@ -89,6 +95,7 @@ export class User {
     return {
       type: UserEventType.CREATED,
       userId: this.id,
+      index: this.eventIndex++,
       name: this.name,
     };
   }
