@@ -1,5 +1,5 @@
 import {Column} from 'typeorm';
-import {ByteColumn} from '../../common/bytes-column';
+import {ByteColumn} from '../../utils/bytes-column';
 
 export class PasswordHash {
 

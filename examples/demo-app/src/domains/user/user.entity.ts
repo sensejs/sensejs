@@ -16,7 +16,7 @@ import {EventRecorder} from '../../common/events/event-recorder';
 
 export const UserEventRecorder = EventRecorder.from(
   UserEvent,
-  (payload: UserEventPayload, user: User) => new UserEvent(user, payload),
+  (payload: UserEventPayload[], user: User) => new UserEvent(user, payload),
 );
 
 @Entity()

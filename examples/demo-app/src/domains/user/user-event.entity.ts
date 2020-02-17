@@ -1,7 +1,8 @@
 import {User} from './user.entity';
-import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, Unique, VersionColumn} from 'typeorm';
+import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
-import {EventRecorder} from '../../common/events/event-recorder';
+import {AnnounceRecordedEvent} from '../../common/events/announce-recorded-event';
+import {EventAnnouncement} from '../infrastructure/event-annoucement.entity';
 
 export enum UserEventType {
   CREATED = 'CREATED',
@@ -9,6 +10,7 @@ export enum UserEventType {
   EMAIL_CHANGED = 'EMAIL_CHANGED',
   PASSWORD_CHANGED = 'PASSWORD_CHANGED'
 }
+
 export interface UserEmailChangedEvent {
   type: UserEventType.EMAIL_CHANGED;
   userId: string;
@@ -40,6 +42,10 @@ export type UserEventPayload = UserCreatedEvent
   | UserPasswordChangedEvent;
 
 @Entity()
+@AnnounceRecordedEvent(
+  (userEvent: UserEvent, metadata) => new EventAnnouncement(metadata.name, userEvent.id, userEvent.user.id),
+  (userEvent) => userEvent.payloads,
+)
 export class UserEvent {
 
   @PrimaryGeneratedColumn('uuid')
@@ -55,11 +61,11 @@ export class UserEvent {
   readonly user: User;
 
   @Column('json')
-  readonly payload: UserEventPayload;
+  readonly payloads: UserEventPayload[];
 
-  constructor(user: User, payload: UserEventPayload) {
+  constructor(user: User, payloads: UserEventPayload[]) {
     this.user = user;
     this.version = user.version;
-    this.payload = payload;
+    this.payloads = payloads;
   }
 }

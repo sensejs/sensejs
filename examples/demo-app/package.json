@@ -29,7 +29,8 @@
     "sqlite3": "4.1.0",
     "typeorm": "^0.2.24",
     "uuid": "^3.4.0",
-    "rxjs": "^6.5.4"
+    "rxjs": "^6.5.4",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
     "@types/config": "^0.0.36"

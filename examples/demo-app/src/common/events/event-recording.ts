@@ -4,7 +4,7 @@ import {EventRecorder, EventRecordingMethod} from './event-recorder';
 
 const ENTITY_EVENT_RECORD_METADATA = Symbol();
 
-export interface EventRecordingMetadata<Payload, Record, Entity> {
+export interface EventRecordingMetadata<Payload extends {}, Record extends {}, Entity extends {}> {
   sourceConstructor: Class;
   recorder: EventRecorder<Payload, Record, Entity>;
 }
@@ -60,6 +60,6 @@ export function EventRecording<Payload, Record, Entity>(recorder: EventRecorder<
     .build<EventRecordingDecorator<Payload, Entity>>();
 }
 
-export function getEventRecordingMetadata(constructor: any): EventRecordingMetadata<unknown, unknown, unknown> {
+export function getEventRecordingMetadata(constructor: any): EventRecordingMetadata<{}, {}, {}> {
   return Reflect.getMetadata(ENTITY_EVENT_RECORD_METADATA, constructor);
 }
