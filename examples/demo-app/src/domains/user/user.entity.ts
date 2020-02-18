@@ -2,7 +2,6 @@ import {PasswordHash} from './password-hash';
 import {Email} from './email';
 import {Column, Entity, PrimaryGeneratedColumn, Unique, VersionColumn} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
-import {EventRecording} from '../../common/events/event-recording';
 import {
   UserCreatedEvent,
   UserEmailChangedEvent,
@@ -12,7 +11,8 @@ import {
   UserNameChangedEvent,
   UserPasswordChangedEvent,
 } from './user-event.entity';
-import {EventRecorder} from '../../common/events/event-recorder';
+import {EventRecorder} from '../common/event-recorder';
+import {EventRecording} from '../common/event-recording';
 
 export const UserEventRecorder = EventRecorder.from(
   UserEvent,

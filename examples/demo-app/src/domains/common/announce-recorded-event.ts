@@ -1,7 +1,7 @@
 import {Constructor, DecoratorBuilder} from '@sensejs/utility';
 import {Class} from '@sensejs/core';
 import {EntityMetadata} from 'typeorm';
-import {EventAnnouncement} from '../../domains/infrastructure/event-annoucement.entity';
+import {EventAnnouncement} from './/event-annoucement.entity';
 
 export interface AnnounceRecordedEventMetadata<Record extends {} = {}> {
   announcer: (record: Record, recordEntityMetadata: EntityMetadata) => EventAnnouncement;

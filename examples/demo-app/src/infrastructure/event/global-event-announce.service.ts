@@ -1,12 +1,12 @@
 import {EntityManager, Repository} from 'typeorm';
 import {BackgroundTaskQueue, Component, ComponentScope, Constructor, Inject, InjectLogger, Logger} from '@sensejs/core';
-import {EventAnnouncement} from '../../domains/infrastructure/event-annoucement.entity';
-import {EventBroadcaster} from '../../common/events/event-support';
+import {EventAnnouncement} from '../../domains/common/event-annoucement.entity';
+import {EventBroadcaster} from '../../application/common/event-support';
 import {EventAnnounceService} from './event-announce.service';
 import {
   AnnounceRecordedEventMetadata,
   getAnnounceRecordedEventMetadata,
-} from '../../domains/infrastructure/announce-recorded-event';
+} from '../../domains/common/announce-recorded-event';
 
 @Component({scope: ComponentScope.SINGLETON, id: EventAnnounceService})
 export class GlobalEventAnnounceService extends EventAnnounceService {

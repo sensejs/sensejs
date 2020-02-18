@@ -1,6 +1,3 @@
-import {ConstantProvider, Inject, RequestContext, RequestInterceptor} from '@sensejs/core';
-import {Constructor} from '@sensejs/utility';
-
 export interface EventListener {
   close(): void;
 }
@@ -16,7 +13,7 @@ export interface EventAnnouncer<T> {
 /**
  * Source of the event
  *
- * Typically instantiate within your domain layer, to ensure events can only be
+ * Typically instantiate within your domain layer, to ensure application can only be
  * transmitted from related module, only the receiver need be export to external modules
  *
  * @example
@@ -37,15 +34,4 @@ export abstract class EventChannel<T> {
    * The transmitter that will broadcast to this channel
    */
   abstract readonly announcer: EventAnnouncer<T>;
-}
-
-export function InjectEventTransmitter(channel: EventChannel<unknown>) {
-  return Inject(channel.symbol);
-}
-
-export function provideEventTransmitter<T>(channel: EventChannel<T>): ConstantProvider<EventAnnouncer<T>> {
-  return {
-    provide: channel.symbol,
-    value: channel.announcer,
-  };
 }

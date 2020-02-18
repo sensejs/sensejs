@@ -1,13 +1,12 @@
 import {Inject, InjectLogger, Logger, RequestContext, RequestInterceptor} from '@sensejs/core';
 import {EntityManager} from 'typeorm';
-import {GlobalEventAnnounceService} from '../../infrastructure/event/global-event-announce.service';
 import {TransactionEventAnnounceService} from '../../infrastructure/event/transaction-event-announce.service';
 import {EventAnnounceService} from '../../infrastructure/event/event-announce.service';
 
 export class TransactionalEventAnnounceInterceptor extends RequestInterceptor {
   constructor(
     @InjectLogger() private logger: Logger,
-    @Inject(GlobalEventAnnounceService) private eventAnnounceService: GlobalEventAnnounceService,
+    @Inject(EventAnnounceService) private eventAnnounceService: EventAnnounceService,
     @Inject(EntityManager) private entityManager: EntityManager,
   ) {
     super();
