@@ -9,7 +9,7 @@ import {Constructor} from './interfaces';
 export class ModuleInstance {
   private setupPromise?: Promise<void>;
   private destroyPromise?: Promise<void>;
-  private moduleInstance?: object;
+  private moduleInstance?: any;
   private moduleMetadata: ModuleMetadata = getModuleMetadata(this.moduleClass);
 
   constructor(readonly moduleClass: Constructor, private readonly container: Container) {}
@@ -36,13 +36,21 @@ export class ModuleInstance {
       .toSelf()
       .inSingletonScope();
     this.container.load(this.moduleMetadata.containerModule);
-    this.moduleInstance = this.container.get(this.moduleClass);
-    await Promise.resolve(invokeMethod(this.container, this.moduleInstance, this.moduleMetadata.onModuleCreate));
+    this.moduleInstance = this.container.get<object>(this.moduleClass);
+    for (const method of this.moduleMetadata.onModuleCreate) {
+      if (typeof method === 'function') {
+        await invokeMethod(this.container, this.moduleInstance, method);
+      }
+    }
   }
 
   private async performDestroy() {
     if (this.moduleInstance) {
-      await Promise.resolve(invokeMethod(this.container, this.moduleInstance, this.moduleMetadata.onModuleDestroy));
+      for (const method of this.moduleMetadata.onModuleDestroy.reverse()) {
+        if (typeof method === 'function') {
+          await invokeMethod(this.container, this.moduleInstance, method);
+        }
+      }
     }
     this.container.unload(this.moduleMetadata.containerModule);
   }

@@ -98,6 +98,9 @@ export function resolveMethodInjectProxy(container: Container, invokerConstructo
 export function invokeMethod<T>(container: Container, target: T, method: Function) {
   const metadata = getMethodInjectMetadata(method);
   if (!metadata) {
+    if (method.length === 0) {
+      return method.apply(target);
+    }
     throw new MethodParamInjectError();
   }
 

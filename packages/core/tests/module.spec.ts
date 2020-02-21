@@ -17,54 +17,6 @@ import {ModuleInstance} from '../src/module-instance';
 
 describe('@ModuleClass', () => {
 
-  test('Applied multiple times to one function', () => {
-    expect(() => {
-      class X {
-        @OnModuleCreate()
-        @OnModuleCreate()
-        foo() {}
-      }
-    }).toThrow();
-  });
-
-  test('@OnModuleCreate applied to multiple methods in one class', () => {
-
-    expect(() => {
-      @ModuleClass()
-      class X {
-        @OnModuleCreate()
-        foo() {}
-
-        @OnModuleCreate()
-        bar() {}
-      }
-    }).toThrow();
-  });
-
-  test('@OnModuleCreate pplied multiple times to one function', () => {
-    expect(() => {
-      class X {
-        @OnModuleDestroy()
-        @OnModuleDestroy()
-        foo() {}
-      }
-    });
-  });
-
-  test('@OnModuleDestroy applied to multiple methods in one class', () => {
-
-    expect(() => {
-      @ModuleClass()
-      class X {
-        @OnModuleDestroy()
-        foo() {}
-
-        @OnModuleDestroy()
-        bar() {}
-      }
-    });
-  });
-
   test('metadata', () => {
     @ModuleClass()
     class Y {}
@@ -76,14 +28,20 @@ describe('@ModuleClass', () => {
       @OnModuleCreate()
       foo() {}
 
+      @OnModuleCreate()
+      onModuleCreate() {}
+
       @OnModuleDestroy()
       bar() {}
+
+      @OnModuleDestroy()
+      onModuleDestroy() {}
     }
 
     expect(getModuleMetadata(X)).toEqual(expect.objectContaining({
       requires: [Y],
-      onModuleCreate: X.prototype.foo,
-      onModuleDestroy: X.prototype.bar,
+      onModuleCreate: [X.prototype.foo, X.prototype.onModuleCreate],
+      onModuleDestroy: [X.prototype.bar, X.prototype.onModuleDestroy]
     }));
   });
 

@@ -41,8 +41,8 @@ export interface ModuleOption {
 export interface ModuleMetadata {
   requires: Constructor[];
   containerModule: ContainerModule;
-  onModuleCreate: Function;
-  onModuleDestroy: Function;
+  onModuleCreate: Function[];
+  onModuleDestroy: Function[];
 }
 
 const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
@@ -133,19 +133,12 @@ const ON_MODULE_DESTROY = Symbol();
  * @param constructor Constructor of a module
  * @param metadataKey Metadata key of lifecycle function, must be ON_MODULE_CREATE or ON_MODULE_CREATE
  */
-function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: symbol) {
+function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: symbol): Function[] {
 
-  const onModuleCreateMetadata = Reflect.getMetadata(metadataKey, constructor.prototype);
-  if (typeof onModuleCreateMetadata === 'undefined') {
-    return moduleLifecycleFallback;
-  }
-
-  const onModuleCreate = constructor.prototype[onModuleCreateMetadata as keyof T];
-  if (typeof onModuleCreate !== 'function') {
-    return null;
-  }
-  ensureMethodInjectMetadata(onModuleCreate);
-  return onModuleCreate;
+  const lifecycleMethods = Reflect.getMetadata(metadataKey, constructor.prototype);
+  return Array.isArray(lifecycleMethods)
+    ? lifecycleMethods
+    : [];
 }
 
 /**
@@ -162,13 +155,9 @@ export function ModuleClass(option: ModuleOption = {}) {
   return <T extends {}>(constructor: Constructor<T>) => {
 
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
-    if (!onModuleCreate) {
-      throw new Error('@OnModuleCreate decorated function has been replaced by non-function value');
-    }
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
-    if (!onModuleDestroy) {
-      throw new Error('@OnModuleDestroy decorated function has been replaced by non-function value');
-    }
+    onModuleCreate.forEach(ensureMethodInjectMetadata);
+    onModuleDestroy.forEach(ensureMethodInjectMetadata);
     setModuleMetadata(constructor, {
       requires,
       containerModule,
@@ -178,18 +167,20 @@ export function ModuleClass(option: ModuleOption = {}) {
   };
 }
 
-function defineModuleLifecycleMetadata(decoratorName: string, metadataKey: symbol) {
+function defineModuleLifecycleMetadata(metadataKey: symbol) {
   return <T extends {}>(
     prototype: T,
     name: keyof T,
     propertyDescriptor: PropertyDescriptor,
   ): void => {
-    const func = propertyDescriptor.value;
-    if (func) {
-      if (Reflect.hasOwnMetadata(metadataKey, prototype)) {
-        throw new Error(`Cannot apply @${decoratorName} multiple times`);
+    const value = propertyDescriptor.value;
+    if (typeof value === 'function') {
+      let lifecycleMethods = Reflect.getMetadata(metadataKey, prototype);
+      if (!Array.isArray(lifecycleMethods)) {
+        lifecycleMethods = [];
+        Reflect.defineMetadata(metadataKey, lifecycleMethods, prototype);
       }
-      Reflect.defineMetadata(metadataKey, name, prototype);
+      lifecycleMethods.push(value);
     }
   };
 }
@@ -198,14 +189,14 @@ function defineModuleLifecycleMetadata(decoratorName: string, metadataKey: symbo
  * Decorator for marking a method function to be called when module is created
  */
 export function OnModuleCreate() {
-  return defineModuleLifecycleMetadata(OnModuleCreate.name, ON_MODULE_CREATE);
+  return defineModuleLifecycleMetadata(ON_MODULE_CREATE);
 }
 
 /**
  * Decorator for marking a method function to be called when module is destroyed
  */
 export function OnModuleDestroy() {
-  return defineModuleLifecycleMetadata(OnModuleCreate.name, ON_MODULE_DESTROY);
+  return defineModuleLifecycleMetadata(ON_MODULE_DESTROY);
 }
 
 /**
@@ -250,13 +241,11 @@ export function Module(option: ModuleOption = {}): ModuleConstructor {
     return this.onDestroy();
   }
 
-  ensureMethodInjectMetadata(onModuleCreate);
-  ensureMethodInjectMetadata(onModuleDestroy);
   setModuleMetadata(Module, {
     requires: option.requires || [],
     containerModule,
-    onModuleCreate,
-    onModuleDestroy,
+    onModuleCreate: [onModuleCreate],
+    onModuleDestroy: [onModuleDestroy],
   });
   return Module as ModuleConstructor;
 }
