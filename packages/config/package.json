@@ -23,7 +23,7 @@
     "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
     "traverse": "^0.6.6",
-    "tslib": "^1.10.0"
+    "tslib": "^1.11.0"
   },
   "devDependencies": {
     "@types/traverse": "^0.6.32",
