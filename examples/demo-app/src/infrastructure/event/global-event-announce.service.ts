@@ -1,19 +1,18 @@
 import {EntityManager, Repository} from 'typeorm';
 import {BackgroundTaskQueue, Component, ComponentScope, Constructor, Inject, InjectLogger, Logger} from '@sensejs/core';
 import {EventAnnouncement} from '../../domains/common/event-annoucement.entity';
-import {EventBroadcaster} from '../../application/common/event-support';
 import {EventAnnounceService} from './event-announce.service';
 import {
   AnnounceRecordedEventMetadata,
   getAnnounceRecordedEventMetadata,
 } from '../../domains/common/announce-recorded-event';
+import {ensureEventChannel} from '../../domains/common/event-channels';
 
 @Component({scope: ComponentScope.SINGLETON, id: EventAnnounceService})
 export class GlobalEventAnnounceService extends EventAnnounceService {
   constructor(
     @Inject(EntityManager) private entityManager: EntityManager,
     @Inject(BackgroundTaskQueue) private backgroundTaskQueue: BackgroundTaskQueue,
-    @Inject(EventBroadcaster) private eventBroadcaster: EventBroadcaster,
     @InjectLogger() private logger: Logger,
   ) {
     super();
@@ -59,7 +58,7 @@ export class GlobalEventAnnounceService extends EventAnnounceService {
     const {events: getEvents} = announceMetadata;
     const record = await recordRepository.findOneOrFail(announcement.recordId);
     const events = getEvents(record);
-    const announcer = this.eventBroadcaster.getAnnouncerOf(recordConstructor);
+    const announcer = ensureEventChannel(recordConstructor).announcer;
     try {
       while (announcement.announcedIndex < events.length) {
         const event = events[announcement.announcedIndex];
