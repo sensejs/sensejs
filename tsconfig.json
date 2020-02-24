@@ -17,8 +17,7 @@
     "lib": ["es2018"],
     "skipLibCheck": true,
     "noEmit": true,
-    "incremental": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "emitDecoratorMetadata": true
   }
 }
