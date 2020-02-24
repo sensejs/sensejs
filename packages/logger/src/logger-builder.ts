@@ -2,16 +2,16 @@ import {LogLevel, LogTransport} from './definition';
 import {StreamLogTransport} from './stream-log-transport';
 import {Logger, LoggerBuilder} from '@sensejs/core';
 
-const MODULE_NAME_RULE = /^[^<>{}*'"`]{0,36}$/;
-const TRACE_ID_RULE = /^[^<>{}*'"`]{0,36}$/;
+const MODULE_NAME_RULE = /^[^<>{}*'"`]{0,80}$/;
+const TRACE_ID_RULE = /^[^<>{}*'"`]{0,80}$/;
 
 function createLogger(logTransports: LogTransport[], label: string, traceId: string = ''): Logger {
   if (label !== '' && !MODULE_NAME_RULE.test(label)) {
-    throw new Error('Invalid label');
+    throw new Error('Invalid label: ' + label);
   }
 
   if (traceId !== '' && !TRACE_ID_RULE.test(traceId)) {
-    throw new Error('Invalid trace id');
+    throw new Error('Invalid trace id: ' + traceId);
   }
 
   const doLog = (level: LogLevel) => {
