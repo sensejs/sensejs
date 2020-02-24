@@ -11,13 +11,25 @@ export class Email {
   @Column()
   readonly updatedTime: Date;
 
-  constructor(address: string, updatedTime = new Date()) {
+  @Column('varchar', {nullable: true})
+  verifiedTime?: Date;
+
+  constructor(address: string, updatedTime = new Date(), verifiedTime?: Date) {
     this.address = address;
     this.addressNormalized = address.toLowerCase();
     this.updatedTime = updatedTime;
+    this.verifiedTime = verifiedTime;
   }
 
   equalTo(email?: Email) {
     return typeof email !== 'undefined' && this.addressNormalized === email.addressNormalized;
+  }
+
+  verifyEmail() {
+    this.verifiedTime = new Date();
+  }
+
+  isVerified() {
+    return typeof this.verifiedTime !== 'undefined';
   }
 }

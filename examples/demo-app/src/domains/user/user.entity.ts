@@ -1,10 +1,11 @@
 import {PasswordHash} from './password-hash';
 import {Email} from './email';
-import {Column, Entity, PrimaryGeneratedColumn, Unique, VersionColumn} from 'typeorm';
+import {Column, Entity, PrimaryColumn, VersionColumn} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
 import {
   UserCreatedEvent,
   UserEmailChangedEvent,
+  UserEmailVerifiedEvent,
   UserEvent,
   UserEventPayload,
   UserEventType,
@@ -19,12 +20,18 @@ export const UserEventRecorder = EventRecorder.from(
   (payload: UserEventPayload[], user: User) => new UserEvent(user, payload),
 );
 
+export class UserDomainError extends Error {
+  constructor(readonly reason: string) {
+    super();
+    Error.captureStackTrace(this, UserDomainError);
+  }
+}
+
 @Entity()
-@Unique(['user.email'])
 @EventRecording(UserEventRecorder)
 export class User {
 
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   readonly id: string = uuidV1();
 
   @VersionColumn()
@@ -36,16 +43,24 @@ export class User {
   @Column({unique: true})
   private name: string;
 
+  @Column(() => Email)
   private email?: Email;
 
+  @Column(() => PasswordHash)
   private password?: PasswordHash;
 
+  @Column()
   private createdTime: Date;
 
   constructor(name: string) {
     this.name = name;
     this.createdTime = new Date();
-    this.created();
+  }
+
+  static create(name: string) {
+    const user = new User(name);
+    user.created();
+    return user;
   }
 
   @EventRecording(UserEventRecorder)
@@ -64,6 +79,23 @@ export class User {
       index: this.eventIndex++,
       originEmailAddress: originEmail?.address,
       currentEmailAddress: email?.address,
+    };
+  }
+
+  @EventRecording(UserEventRecorder)
+  verifyEmail(): UserEmailVerifiedEvent | void {
+    if (typeof this.email === 'undefined') {
+      throw new UserDomainError('email is not binded yet');
+    }
+    if (this.email.isVerified()) {
+      return;
+    }
+    this.email.verifyEmail();
+    return {
+      type: UserEventType.EMAIL_VERIFIED,
+      userId: this.id,
+      index: this.eventIndex++,
+      emailAddress: this.email.addressNormalized
     };
   }
 

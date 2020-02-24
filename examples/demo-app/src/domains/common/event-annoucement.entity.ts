@@ -1,10 +1,10 @@
-import {Entity, Column} from 'typeorm';
+import {Entity, PrimaryColumn, Column} from 'typeorm';
 import {uuidV1} from '@sensejs/utility';
 
 @Entity()
 export class EventAnnouncement {
 
-  @Column()
+  @PrimaryColumn()
   readonly id: string = uuidV1();
 
   @Column()
@@ -20,7 +20,7 @@ export class EventAnnouncement {
   readonly recordKey: string;
 
   @Column()
-  announcedIndex = 0;
+  announcedIndex: number = 0;
 
   constructor(recordName: string, recordId: string, recordKey: string) {
     this.recordName = recordName;

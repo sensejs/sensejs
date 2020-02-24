@@ -32,7 +32,8 @@
     "sqlite3": "4.1.0",
     "supertest": "^4.0.2",
     "ts-jest": "^25.2.1",
-    "typeorm": "^0.2.24"
+    "typeorm": "^0.2.24",
+    "pg": "^7.18.2"
   },
   "peerDependencies": {
     "typeorm": "^0.2.22"

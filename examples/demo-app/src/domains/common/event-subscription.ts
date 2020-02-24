@@ -40,12 +40,12 @@ export function EventSubscription(channel: unknown, option: EventSubscriptionOpt
       channel,
       interceptors: option.interceptors ?? [],
     };
-    Reflect.defineMetadata(EVENT_SUBSCRIPTION_KEY, prototype[name], metadata);
+    Reflect.defineMetadata(EVENT_SUBSCRIPTION_KEY, metadata, prototype[name]);
   };
 }
 
-function getEventSubscriptionMetadata<P extends {}>(constructor: P): EventSubscriptionMetadata<P> | undefined {
-  return Reflect.getMetadata(EVENT_SUBSCRIPTION_KEY, constructor);
+function getEventSubscriptionMetadata<P extends {} = {}>(target: Function): EventSubscriptionMetadata<P> | undefined {
+  return Reflect.getMetadata(EVENT_SUBSCRIPTION_KEY, target);
 }
 
 export interface EventSubscriptionModuleOption extends ModuleOption {
@@ -71,7 +71,7 @@ export function EventSubscriptionModule(option: EventSubscriptionModuleOption = 
 
   return (constructor: Constructor) => {
 
-    const metadataList = Object.values(Object.getOwnPropertyDescriptors(constructor))
+    const metadataList = Object.values(Object.getOwnPropertyDescriptors(constructor.prototype))
       .map((pd) => pd.value)
       .filter((value) => typeof value === 'function')
       .map(getEventSubscriptionMetadata)
@@ -92,7 +92,7 @@ export function EventSubscriptionModule(option: EventSubscriptionModuleOption = 
           const composedInterceptor = childContainer.get(composedInterceptorConstructor);
 
           return composedInterceptor.intercept(context, () => {
-            return Promise.resolve(invokeMethod(container, this, metadata.prototype[metadata.name]));
+            return Promise.resolve(invokeMethod(childContainer, this, metadata.prototype[metadata.name]));
           });
         }));
       });
@@ -118,7 +118,7 @@ export function EventSubscriptionModule(option: EventSubscriptionModuleOption = 
     Inject(Container)(constructor.prototype, onModuleCreateSymbol, 0);
     Inject(Container)(constructor.prototype, onModuleDestroySymbol, 0);
     OnModuleCreate()(constructor.prototype, onModuleCreateSymbol, {value: onModuleCreate});
-    OnModuleDestroy()(constructor.prototype, onModuleDestroySymbol, {value: onModuleCreate});
+    OnModuleDestroy()(constructor.prototype, onModuleDestroySymbol, {value: onModuleDestroy});
     ModuleClass(option)(constructor);
   };
 }

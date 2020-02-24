@@ -1,6 +1,12 @@
-database:
-  type: sqlite
-  database: ":memory:"
+postgres:
+  type: postgres
+  host: localhost
+  port: 5432
+  username: postgres
+  password:
+  database: demo-app
+  synchronize: true
+  migrationRun: false
 http:
   listenPort: 3000
   listenAddress: "0.0.0.0"

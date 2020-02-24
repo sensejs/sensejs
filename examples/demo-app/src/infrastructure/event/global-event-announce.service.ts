@@ -13,7 +13,7 @@ export class GlobalEventAnnounceService extends EventAnnounceService {
   constructor(
     @Inject(EntityManager) private entityManager: EntityManager,
     @Inject(BackgroundTaskQueue) private backgroundTaskQueue: BackgroundTaskQueue,
-    @InjectLogger() private logger: Logger,
+    @InjectLogger(GlobalEventAnnounceService) private logger: Logger,
   ) {
     super();
   }

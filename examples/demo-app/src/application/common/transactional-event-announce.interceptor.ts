@@ -5,7 +5,7 @@ import {EventAnnounceService} from '../../infrastructure/event/event-announce.se
 
 export class TransactionalEventAnnounceInterceptor extends RequestInterceptor {
   constructor(
-    @InjectLogger() private logger: Logger,
+    @InjectLogger(TransactionalEventAnnounceInterceptor) private logger: Logger,
     @Inject(EventAnnounceService) private eventAnnounceService: EventAnnounceService,
     @Inject(EntityManager) private entityManager: EntityManager,
   ) {

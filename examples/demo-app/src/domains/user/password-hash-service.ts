@@ -1,7 +1,9 @@
 import {PasswordHash} from './password-hash';
 import {randomBytes, scrypt, timingSafeEqual} from 'crypto';
 import {promisify} from 'util';
+import {Component, ComponentScope} from '@sensejs/core';
 
+@Component({scope: ComponentScope.SINGLETON})
 export class PasswordHashService {
 
   constructor(

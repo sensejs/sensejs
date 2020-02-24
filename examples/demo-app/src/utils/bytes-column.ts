@@ -2,18 +2,13 @@ import {Column} from 'typeorm';
 
 export function ByteColumn() {
   return Column({
-    type: 'bytea',
+    type: 'varchar',
     transformer: {
-      from: (value: any) => {
+      from: (string: string) => {
+        return Buffer.from(string, 'hex');
       },
-      to: (input: unknown) => {
-        if (typeof input === 'string') {
-          input = Buffer.from(input);
-        }
-        if (Buffer.isBuffer(input)) {
-          return `\\x${input.toString('hex').toUpperCase()}`;
-        }
-        throw new Error('Unsupported types');
+      to: (input: Buffer) => {
+        return input.toString('hex');
       },
     },
   });

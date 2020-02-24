@@ -20,7 +20,7 @@ export function AnnounceRecordedEvent<Record>(
         announcer,
         events
       };
-      Reflect.defineMetadata(ANNOUNCE_RECORDED_EVENT_METADATA_KEY, constructor, metadata);
+      Reflect.defineMetadata(ANNOUNCE_RECORDED_EVENT_METADATA_KEY, metadata, constructor);
     })
     .build<(constructor: Constructor<Record>) => void>();
 }

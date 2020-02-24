@@ -23,6 +23,7 @@ function buildRoot() {
     echo "RUN pnpm recursive install --frozen-lockfile "
     echo "COPY . ./"
     echo "RUN pnpm run build"
+    echo "EXPOSE 3000"
 }
 
 (baseImage; buildRoot) | docker build -f - -t sensejs . $@

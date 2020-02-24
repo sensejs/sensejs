@@ -8,6 +8,7 @@ export enum UserEventType {
   CREATED = 'CREATED',
   NAME_CHANGED = 'NAME_CHANGED',
   EMAIL_CHANGED = 'EMAIL_CHANGED',
+  EMAIL_VERIFIED = 'EMAIL_VERIFIED',
   PASSWORD_CHANGED = 'PASSWORD_CHANGED'
 }
 
@@ -17,6 +18,13 @@ export interface UserEmailChangedEvent {
   index: number;
   originEmailAddress?: string;
   currentEmailAddress?: string;
+}
+
+export interface UserEmailVerifiedEvent {
+  type: UserEventType.EMAIL_VERIFIED;
+  userId: string;
+  index: number;
+  emailAddress: string;
 }
 
 export interface UserPasswordChangedEvent {
@@ -43,6 +51,7 @@ export interface UserNameChangedEvent {
 export type UserEventPayload = UserCreatedEvent
   | UserNameChangedEvent
   | UserEmailChangedEvent
+  | UserEmailVerifiedEvent
   | UserPasswordChangedEvent;
 
 @Entity()
@@ -61,7 +70,13 @@ export class UserEvent {
   @ManyToOne(() => User)
   readonly user: User;
 
-  @Column('json')
+  @Column({
+    transformer: {
+      to: (value) => JSON.stringify(value),
+      from: (json) => JSON.parse(json)
+    },
+    type: 'json',
+  })
   readonly payloads: UserEventPayload[];
 
   constructor(user: User, payloads: UserEventPayload[]) {

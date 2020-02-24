@@ -75,6 +75,28 @@ services:
       # suppress verbosity
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_DB: demo
+      POSTGRES_PASSWORD: demo
+
+  demo:
+    image: sensejs
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USERNAME: demo
+      POSTGRES_DATABASE: demo
+      POSTGRES_PASSWORD: demo
+    working_dir: /opt/sensejs/examples/demo-app
+    ports:
+      - '3000:3000'
+    command: ['node', 'lib/index.js']
+
   test:
     image: sensejs
     depends_on:
