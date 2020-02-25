@@ -1,7 +1,7 @@
 const performEndToEndTest = typeof process.env.END_TO_END_TEST === 'string';
 
 const testRegex = performEndToEndTest
-  ? './packages/[^/]+/tests/.+\\.ts$'
+  ? './packages/[^/]+/tests/.+\\.(e2e-)?(test|spec).ts$'
   : './packages/[^/]+/tests/.+\\.(test|spec).ts$';
 
 module.exports = {
