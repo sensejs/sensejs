@@ -29,5 +29,6 @@
     <orderEntry type="module" module-name="kafkajs-standalone" />
     <orderEntry type="module" module-name="kafkajs" />
     <orderEntry type="module" module-name="http-common" />
+    <orderEntry type="module" module-name="touch" />
   </component>
 </module>
