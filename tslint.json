@@ -25,7 +25,16 @@
     "no-empty": false,
     "no-unnecessary-initializer": false,
     "semicolon": [true, "always", "strict-bound-class-methods"],
-    "member-ordering": [true, "static-first"]
+    "member-ordering": [true, "static-first"],
+    "whitespace": [true,
+      "check-branch",
+      "check-decl",
+      "check-operator",
+      "check-rest-spread",
+      "check-type",
+      "check-typecast",
+      "check-type-operator"
+    ]
   },
   "rulesDirectory": []
 }

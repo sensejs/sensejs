@@ -1,4 +1,4 @@
-import {DecoratorBuilder, Decorator, Class} from '@sensejs/utility';
+import {DecoratorBuilder, Class} from '@sensejs/utility';
 
 export enum HttpMethod {
   GET = 'get',
@@ -196,4 +196,3 @@ export const DELETE = buildHttpRequestMappingDecorator(HttpMethod.DELETE);
  * @decorator
  */
 export const PUT = buildHttpRequestMappingDecorator(HttpMethod.PUT);
-
