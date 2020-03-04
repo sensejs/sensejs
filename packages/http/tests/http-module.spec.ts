@@ -1,7 +1,7 @@
-import {Component, Module, ModuleRoot, ModuleClass, OnModuleCreate} from '@sensejs/core';
+import {Component, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
 import {Container, inject} from 'inversify';
 import supertest from 'supertest';
-import {Controller, GET, HttpContext, HttpInterceptor, HttpModule, createHttpModule} from '../src';
+import {Controller, createHttpModule, GET, HttpContext, HttpInterceptor} from '../src';
 import {Server} from 'http';
 
 describe('HttpModule', () => {
