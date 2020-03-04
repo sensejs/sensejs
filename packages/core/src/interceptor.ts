@@ -45,6 +45,7 @@ export function composeRequestInterceptor<Context extends RequestContext>(
     }
   }
 
+  interceptors.forEach((interceptor) => container.bind(interceptor).toSelf());
   container.bind(ComposedRequestInterceptor).toSelf();
   return ComposedRequestInterceptor;
 }

@@ -30,8 +30,6 @@ class MockRequestContext extends RequestContext {
 
 describe('Interceptor', () => {
   const container = new Container();
-  container.bind(FooInterceptor).toSelf();
-  container.bind(BarInterceptor).toSelf();
 
   function prepareRequestContext() {
     const childContainer = container.createChild();
@@ -46,13 +44,13 @@ describe('Interceptor', () => {
 
   test('empty', async () => {
     const {childContainer, context: ctx} = prepareRequestContext();
-    const emptyInterceptor = composeRequestInterceptor(container, []);
+    const emptyInterceptor = composeRequestInterceptor(childContainer, []);
     await childContainer.get(emptyInterceptor).intercept(ctx, () => Promise.resolve());
   });
   test('single', async () => {
     const {childContainer, context: ctx} = prepareRequestContext();
     const fooSpy = jest.spyOn(FooInterceptor.prototype, 'intercept');
-    const singleInterceptor = composeRequestInterceptor(container, [FooInterceptor]);
+    const singleInterceptor = composeRequestInterceptor(childContainer, [FooInterceptor]);
     await childContainer.get(singleInterceptor).intercept(ctx, async () => {
       expect(container.isBound(FOO_SYMBOL));
     });
@@ -63,7 +61,7 @@ describe('Interceptor', () => {
     const {childContainer, context} = prepareRequestContext();
     const fooSpy = jest.spyOn(FooInterceptor.prototype, 'intercept');
     const barSpy = jest.spyOn(FooInterceptor.prototype, 'intercept');
-    const result = composeRequestInterceptor(container, [FooInterceptor, BarInterceptor]);
+    const result = composeRequestInterceptor(childContainer, [FooInterceptor, BarInterceptor]);
 
     await childContainer.get(result).intercept(context, async () => {
       expect(container.isBound(FOO_SYMBOL));
@@ -84,9 +82,8 @@ describe('Interceptor', () => {
       }
     }
 
-    container.bind(BadInterceptor).toSelf();
     const fooSpy = jest.spyOn(FooInterceptor.prototype, 'intercept');
-    const result = composeRequestInterceptor(container, [BadInterceptor, FooInterceptor]);
+    const result = composeRequestInterceptor(childContainer, [BadInterceptor, FooInterceptor]);
 
     await expect(childContainer.get(result).intercept(context, () => Promise.resolve())).rejects.toEqual(
       expect.any(MyError),
@@ -110,8 +107,7 @@ describe('Interceptor', () => {
       }
     }
 
-    container.bind(InjectArgsInterceptor).toSelf();
-    const result = composeRequestInterceptor(container, [FooInterceptor, BarInterceptor, InjectArgsInterceptor]);
+    const result = composeRequestInterceptor(childContainer, [FooInterceptor, BarInterceptor, InjectArgsInterceptor]);
     await childContainer.get(result).intercept(context, () => Promise.resolve());
     expect(spy).toHaveBeenCalledWith(expect.any(Number));
   });
@@ -126,9 +122,8 @@ describe('Interceptor', () => {
       }
     }
 
-    container.bind(BadInterceptor).toSelf();
     const barSpy = jest.spyOn(BarInterceptor.prototype, 'intercept');
-    const result = composeRequestInterceptor(container, [FooInterceptor, BadInterceptor, BarInterceptor]);
+    const result = composeRequestInterceptor(childContainer, [FooInterceptor, BadInterceptor, BarInterceptor]);
 
     await expect(childContainer.get(result).intercept(context, () => Promise.resolve())).rejects.toEqual(
       expect.any(Error),

@@ -155,10 +155,10 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       const controllerRouter = new KoaRouter();
       for (const methodRouteSpec of controllerRouteSpec.methodRouteSpecs) {
         const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
-        const composedInterceptor = composeRequestInterceptor(container, interceptors);
 
         controllerRouter[httpMethod](path, async (ctx) => {
           const childContainer = container.createChild();
+          const composedInterceptor = composeRequestInterceptor(childContainer, interceptors);
           childContainer.bind(Container).toConstantValue(childContainer);
           const context = new KoaHttpContext(childContainer, ctx);
           childContainer.bind(HttpContext).toConstantValue(context);

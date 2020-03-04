@@ -73,15 +73,15 @@ function createSubscriberTopicModule(
       @Inject(injectSymbol) messageConsumer: MessageConsumer,
       @Inject(Container) container: Container,
     ) {
-      const composedInterceptor = composeRequestInterceptor(container, [
-        ...(option.globalInterceptors ?? []),
-        ...controllerMetadata.interceptors,
-        ...subscribeMetadata.interceptors,
-      ]);
 
       const consumeCallback = async (message: KafkaReceivedMessage) => {
         const childContainer = container.createChild();
         childContainer.bind(Container).toConstantValue(childContainer);
+        const composedInterceptor = composeRequestInterceptor(childContainer, [
+          ...(option.globalInterceptors ?? []),
+          ...controllerMetadata.interceptors,
+          ...subscribeMetadata.interceptors,
+        ]);
         const context = new ConsumerContext(childContainer, message);
         childContainer.bind(ConsumerContext).toConstantValue(context);
         const interceptor = childContainer.get(composedInterceptor);

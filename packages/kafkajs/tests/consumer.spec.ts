@@ -91,7 +91,7 @@ describe('Subscriber', () => {
     }
 
     const module = createKafkaConsumerModule({
-      components: [Controller, interceptorA, interceptorB, interceptorC],
+      components: [Controller],
       messageConsumerOption: {
         connectOption: {
           brokers: 'any-host',
