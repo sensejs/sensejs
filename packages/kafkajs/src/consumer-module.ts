@@ -81,6 +81,7 @@ function createSubscriberTopicModule(
 
       const consumeCallback = async (message: KafkaReceivedMessage) => {
         const childContainer = container.createChild();
+        childContainer.bind(Container).toConstantValue(childContainer);
         const context = new ConsumerContext(childContainer, message);
         childContainer.bind(ConsumerContext).toConstantValue(context);
         const interceptor = childContainer.get(composedInterceptor);
