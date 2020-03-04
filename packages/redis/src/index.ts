@@ -1,6 +1,5 @@
 import Redis from 'ioredis';
 import {
-  createLegacyModule,
   createModule,
   Inject,
   ModuleClass,
@@ -96,16 +95,6 @@ export function createRedisModule(options: RedisModuleOptions | RedisModuleOptio
     requires: options.map(buildRedisModule),
   });
 }
-
-/**
- * Create a base class style module
- * @deprecated
- * @see createRedisModule
- */
-export const RedisModule = createLegacyModule(
-  createRedisModule,
-  'Base class style RedisModule is deprecated, use RedisModuleClass decorator instead.',
-);
 
 function createRedisConnection(options: RedisConnectOption) {
   return new Promise<Redis.Redis>((done, fail) => {

@@ -1,7 +1,6 @@
 import {
   Component,
   Constructor,
-  createLegacyModule,
   createModule,
   Deprecated,
   Inject,
@@ -189,8 +188,3 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
 
   return createModule({requires: [EntityManagerModule]});
 }
-
-export const TypeOrmModule = createLegacyModule(
-  createTypeOrmModule,
-  'Base class style TypeOrmModule is deprecated, use TypeOrmModuleClass decorator instead',
-);

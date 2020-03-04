@@ -2,7 +2,6 @@ import {Container} from 'inversify';
 import {
   Component,
   ComponentFactory,
-  createLegacyModule,
   getModuleMetadata,
   Inject,
   ModuleClass,
@@ -17,7 +16,16 @@ import {ModuleInstance} from '../src/module-instance';
 
 describe('@ModuleClass', () => {
 
-  test('metadata', () => {
+  test('created module metadata', () => {
+    const dependency = createModule();
+    expect(getModuleMetadata(createModule({requires: [dependency]}))).toEqual(expect.objectContaining({
+      requires: [dependency],
+      onModuleCreate: [],
+      onModuleDestroy: []
+    }));
+  });
+
+  test('decorated module metadata', () => {
     @ModuleClass()
     class Y {}
 
@@ -75,29 +83,6 @@ describe('ModuleInstance', () => {
     expect(onCreateStub).toHaveBeenCalled();
     await moduleInstance.onDestroy();
     expect(onDestroyStub).toHaveBeenCalled();
-  });
-
-  test('legacy module lifecycle', async () => {
-    const legacyModule = createLegacyModule(createModule, '');
-    const onCreateStub = jest.fn(), onDestroyStub = jest.fn();
-
-    class LegacyModule extends legacyModule({}) {
-
-      async onCreate(): Promise<void> {
-        onCreateStub();
-      }
-
-      async onDestroy(): Promise<void> {
-        onDestroyStub();
-      }
-    }
-
-    const moduleInstance = new ModuleInstance(LegacyModule, container);
-    await moduleInstance.onSetup();
-    expect(onCreateStub).toHaveBeenCalled();
-    await moduleInstance.onDestroy();
-    expect(onDestroyStub).toHaveBeenCalled();
-
   });
 
   test('Call inherited module lifecycle', async () => {

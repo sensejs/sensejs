@@ -7,16 +7,13 @@ import {HttpAdaptor, HttpApplicationOption, HttpInterceptor} from './http-abstra
 import {
   Constructor,
   createModule,
-  Deprecated,
   Inject,
   ModuleClass,
-  ModuleConstructor,
   ModuleOption,
   OnModuleCreate,
   OnModuleDestroy,
   provideOptionInjector,
   ServiceIdentifier,
-  createLegacyModule,
 } from '@sensejs/core';
 
 export interface HttpOption extends HttpApplicationOption {
@@ -132,8 +129,3 @@ export function createHttpModule(
 
   return HttpModule;
 }
-
-export const HttpModule = createLegacyModule(
-  createHttpModule,
-  'Base class style module HttpModule is deprecated, use createHttpModuleClass instead',
-);

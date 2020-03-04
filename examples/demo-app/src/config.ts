@@ -1,4 +1,4 @@
-import {ConfigModule} from '@sensejs/config';
+import {createConfigModule} from '@sensejs/config';
 import config from 'config';
 
-export default ConfigModule({prefix: 'config', config});
+export default createConfigModule({prefix: 'config', config});

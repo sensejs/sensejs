@@ -8,7 +8,6 @@ import {
   Constructor,
   FactoryProvider,
 } from './interfaces';
-import {Deprecated} from './utils';
 import {ContainerModule, decorate, injectable, interfaces} from 'inversify';
 import {getComponentMetadata} from './component';
 import {ensureMethodInjectMetadata} from './method-inject';
@@ -208,55 +207,4 @@ export function createModule(option: ModuleOption = {}): Constructor {
   class Module {}
 
   return Module;
-}
-
-@Deprecated({message: 'Module() is deprecated. Use @ModuleClass to define module instead.'})
-@injectable()
-class LegacyModuleClass {
-  async onCreate(): Promise<void> {}
-
-  async onDestroy(): Promise<void> {}
-}
-
-/**
- * @deprecated
- */
-export type ModuleConstructor = Constructor<LegacyModuleClass>;
-
-/**
- * Create a module constructor
- * @param option
- * @deprecated Use ModuleClass decorator, or up comming createModule function instead
- */
-export function Module(option: ModuleOption = {}): ModuleConstructor {
-  const containerModule = createContainerModule(option);
-
-  class Module extends LegacyModuleClass {}
-
-  function onModuleCreate(this: LegacyModuleClass) {
-    return this.onCreate();
-  }
-
-  function onModuleDestroy(this: LegacyModuleClass) {
-    return this.onDestroy();
-  }
-
-  setModuleMetadata(Module, {
-    requires: option.requires || [],
-    containerModule,
-    onModuleCreate: [onModuleCreate],
-    onModuleDestroy: [onModuleDestroy],
-  });
-  return Module as ModuleConstructor;
-}
-
-export function createLegacyModule<T>(createModule: (option: T) => Constructor, message: string) {
-  return (option: T): ModuleConstructor => {
-    @Deprecated({message})
-    @ModuleClass({requires: [createModule(option)]})
-    class LegacyModule {
-    }
-
-    return Module({requires: [LegacyModule]});
-  };
 }
