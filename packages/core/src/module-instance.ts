@@ -7,12 +7,32 @@ import {Constructor} from './interfaces';
  * @private
  */
 export class ModuleInstance {
+  public readonly dependencies: ModuleInstance[] = [];
+  public referencedCounter = 0;
+  private readonly moduleMetadata: ModuleMetadata;
   private setupPromise?: Promise<void>;
   private destroyPromise?: Promise<void>;
   private moduleInstance?: any;
-  private moduleMetadata: ModuleMetadata = getModuleMetadata(this.moduleClass);
 
-  constructor(readonly moduleClass: Constructor, private readonly container: Container) {}
+  constructor(
+    readonly moduleClass: Constructor,
+    private readonly container: Container,
+    instanceMap: Map<Constructor, ModuleInstance> = new Map(),
+  ) {
+    this.moduleMetadata = getModuleMetadata(this.moduleClass);
+    if (typeof this.moduleMetadata === 'undefined') {
+      throw new Error('Target is not a module');
+    }
+    instanceMap.set(moduleClass, this);
+    this.moduleMetadata.requires.forEach((moduleClass) => {
+      let dependency = instanceMap.get(moduleClass);
+      if (!dependency) {
+        dependency = new ModuleInstance(moduleClass, container, instanceMap);
+      }
+      this.dependencies.push(dependency);
+      dependency.referencedCounter++;
+    });
+  }
 
   async onSetup() {
     if (this.setupPromise) {

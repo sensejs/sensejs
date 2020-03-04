@@ -1,67 +1,44 @@
 import {Container} from 'inversify';
-import {getModuleMetadata, ModuleMetadata} from './module';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 
 export class ModuleRoot {
   readonly container: Container = new Container({skipBaseClassChecks: true});
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
-  private readonly moduleDependencyMap: Map<Constructor, Constructor[]> = new Map();
-  private readonly moduleReferencedMap: Map<Constructor, Constructor[]> = new Map();
+  private readonly entryModuleInstance: ModuleInstance;
 
-  public constructor(private entryModule: Constructor) {
+  public constructor(entryModule: Constructor) {
     this.container.bind(Container).toConstantValue(this.container);
-    const metadata = getModuleMetadata(this.entryModule);
-    if (typeof metadata === 'undefined') {
-      throw new Error('Target is not a module');
-    }
-    this.analyzeDependency(this.entryModule, metadata);
+    this.entryModuleInstance = new ModuleInstance(entryModule, this.container, this.moduleInstanceMap);
   }
 
   public async start() {
-    await this.startModule(this.entryModule);
+
+    await this.startModule(this.entryModuleInstance);
   }
 
   public async stop(): Promise<void> {
-    await Promise.all(Array.from(this.moduleInstanceMap.values()).map((module) => this.stopModule(module)));
+    await this.stopModule(this.entryModuleInstance);
   }
 
-  private analyzeDependency(target: Constructor, metadata: ModuleMetadata) {
-    if (!this.moduleDependencyMap.has(target)) {
-      this.moduleDependencyMap.set(target, metadata.requires);
-      metadata.requires.forEach((module) => {
-        this.analyzeDependency(module, getModuleMetadata(module));
-        this.moduleReferencedMap.set(module, [target].concat(this.moduleReferencedMap.get(module) ?? []));
-      });
-    }
-  }
-
-  private async startModule(module: Constructor) {
-    let moduleInstance = this.moduleInstanceMap.get(module);
-    if (!moduleInstance) {
-      moduleInstance = new ModuleInstance(module, this.container);
-      this.moduleInstanceMap.set(module, moduleInstance);
-      const dependencies = this.moduleDependencyMap.get(module);
-      if (dependencies) {
-        for (const dependency of dependencies) {
-          await this.startModule(dependency);
-        }
-      }
+  private async startModule(moduleInstance: ModuleInstance) {
+    for (const dependency of moduleInstance.dependencies) {
+      await this.startModule(dependency);
     }
     await moduleInstance.onSetup();
   }
 
   private async stopModule(moduleInstance: ModuleInstance) {
-    const referencedModules = this.moduleReferencedMap.get(moduleInstance.moduleClass);
-    if (referencedModules) {
-      await Promise.all(
-        referencedModules
-          .map((module) => this.moduleInstanceMap.get(module))
-          // XXX: Work-around no-non-null-assertion linting
-          .filter((module): module is ModuleInstance => module instanceof ModuleInstance)
-          .map((module) => this.stopModule(module)),
-      );
-    }
     await moduleInstance.onDestroy();
+    for (; ;) {
+      const dependency = moduleInstance.dependencies.pop();
+      if (!dependency) {
+        return;
+      }
+      dependency.referencedCounter--;
+      if (dependency.referencedCounter === 0) {
+        await this.stopModule(dependency);
+      }
+    }
   }
 }
