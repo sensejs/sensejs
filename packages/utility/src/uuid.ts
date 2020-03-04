@@ -1,5 +1,5 @@
 import * as os from 'os';
-import uuid from 'uuid/v1';
+import {v1 as uuid} from 'uuid';
 
 const networkInterfaces = os.networkInterfaces();
 const allMacAddresses = Object.values(networkInterfaces)

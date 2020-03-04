@@ -19,18 +19,17 @@
     "@sensejs/http": "workspace:*",
     "@sensejs/logger": "workspace:*",
     "@sensejs/typeorm": "workspace:*",
-    "config": "^3.2.5",
-    "fp-ts": "^2.5.1",
+    "@sensejs/utility": "workspace:*",
+    "config": "^3.3.0",
+    "fp-ts": "^2.5.3",
     "inversify": "^5.0.1",
-    "io-ts": "^2.1.1",
+    "io-ts": "^2.1.2",
     "js-yaml": "^3.13.1",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "4.1.0",
-    "typeorm": "^0.2.22",
-    "uuid": "^3.4.0"
+    "typeorm": "^0.2.24"
   },
   "devDependencies": {
-    "@types/config": "^0.0.36",
-    "@types/uuid": "^3.4.7"
+    "@types/config": "^0.0.36"
   }
 }

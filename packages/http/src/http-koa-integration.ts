@@ -3,7 +3,7 @@ import {RequestListener} from 'http';
 import {Container} from 'inversify';
 import Koa from 'koa';
 import koaBodyParser from 'koa-bodyparser';
-import KoaRouter from 'koa-router';
+import KoaRouter from '@koa/router';
 import KoaCors from '@koa/cors';
 import {
   HttpAdaptor,

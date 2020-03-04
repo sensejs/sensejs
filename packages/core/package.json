@@ -22,13 +22,13 @@
   "dependencies": {
     "@sensejs/utility": "workspace:*",
     "inversify": "^5.0.1",
-    "tslib": "^1.11.0"
+    "tslib": "^1.11.1"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:0.0.8",
     "@types/superagent": "^4.1.7",
     "@types/supertest": "^2.0.8",
-    "@types/uuid": "^3.4.7",
+    "@types/uuid": "^3.4.8",
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {

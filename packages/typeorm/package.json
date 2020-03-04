@@ -23,14 +23,14 @@
     "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13",
-    "tslib": "^1.11.0"
+    "tslib": "^1.11.1"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
     "@types/supertest": "^2.0.8",
     "sqlite3": "4.1.0",
     "supertest": "^4.0.2",
-    "typeorm": "^0.2.22"
+    "typeorm": "^0.2.24"
   },
   "peerDependencies": {
     "typeorm": "^0.2.22"
