@@ -10,7 +10,7 @@ function baseImage() {
     echo "FROM node:${NODE_VERSION-lts} as base"
     echo "RUN curl -L https://unpkg.com/@pnpm/self-installer | node"
     echo "WORKDIR /opt/sensejs"
-    echo "ADD package.json pnpm-lock.yaml pnpm-workspace.yaml ./"
+    echo "ADD pnpmfile.js package.json pnpm-lock.yaml pnpm-workspace.yaml ./"
     for package in packages/* tools/* examples/*; do
         if [[ -f ${package}/package.json ]]; then
             echo "COPY ${package}/*.json ${package}/"
