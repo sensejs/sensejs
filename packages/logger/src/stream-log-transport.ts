@@ -26,9 +26,14 @@ export class StreamLogTransport implements LogTransport {
     private _transformer = defaultLogFormatter(_writeStream),
   ) {
     this._writeStream.on('drain', () => {
-      while (this._bufferedLogContent.length > 0) {
+
+      for (; ;) {
         const fn = this._bufferedLogContent.shift();
-        if (!fn!()) {
+        if (typeof fn !== 'function') {
+          break;
+        }
+
+        if (!fn()) {
           return;
         }
       }

@@ -3,12 +3,6 @@ import {AuthorEntity} from './author.entity';
 
 @Entity()
 export class BookEntity {
-  static create(name: string, author: AuthorEntity): BookEntity {
-    const result = new BookEntity();
-    result.name = name;
-    result.author = author;
-    return result;
-  }
 
   @PrimaryGeneratedColumn()
   id?: number;
@@ -18,4 +12,11 @@ export class BookEntity {
 
   @ManyToOne(() => AuthorEntity)
   author?: AuthorEntity;
+
+  static create(name: string, author: AuthorEntity): BookEntity {
+    const result = new BookEntity();
+    result.name = name;
+    result.author = author;
+    return result;
+  }
 }

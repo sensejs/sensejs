@@ -21,7 +21,7 @@ export function uuidV1() {
   const milliseconds = second * 1000 + milliParts;
 
   return uuid({
-    node: uuidV1Suffixes[nano % uuidV1Suffixes.length]!,
+    node: uuidV1Suffixes[nano % uuidV1Suffixes.length],
     msecs: processStartupTime + second + milliseconds,
     nsecs: Math.trunc(nanoRemains / 100),
   });

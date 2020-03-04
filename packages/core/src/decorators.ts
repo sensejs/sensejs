@@ -79,6 +79,8 @@ export function Named(name: string | symbol) {
     .build<InjectionConstraintDecorator>();
 }
 
+const deprecatedMessageEmitter = makeDeprecateMessageEmitter(ParamBinding, Inject);
+
 /**
  * @param target Identifier of target wanted to be injected
  * @param option
@@ -90,5 +92,3 @@ export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: Met
   deprecatedMessageEmitter();
   return MethodInject(target, option);
 }
-
-const deprecatedMessageEmitter = makeDeprecateMessageEmitter(ParamBinding, Inject);

@@ -31,17 +31,6 @@ function adaptLogLevel(level: logLevel) {
   }
 }
 
-export function convertConnectOption(connectOption: KafkaConnectOption, logOption?: KafkaLogOption): KafkaConfig {
-  const {brokers, ...kafkaConfig} = connectOption;
-  return {
-    brokers: typeof brokers === 'string'
-      ? brokers.split(',')
-      : brokers,
-    ...createLogOption(logOption),
-    ...kafkaConfig,
-  };
-}
-
 export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {
 
   if (typeof option === 'undefined' || typeof option.loggerBuilder === 'undefined') {
@@ -74,3 +63,15 @@ export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {
     },
   };
 }
+
+export function convertConnectOption(connectOption: KafkaConnectOption, logOption?: KafkaLogOption): KafkaConfig {
+  const {brokers, ...kafkaConfig} = connectOption;
+  return {
+    brokers: typeof brokers === 'string'
+      ? brokers.split(',')
+      : brokers,
+    ...createLogOption(logOption),
+    ...kafkaConfig,
+  };
+}
+

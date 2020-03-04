@@ -84,15 +84,15 @@ describe('@Inject', () => {
   });
 
   test('Performance test', () => {
-    const x = Symbol(),
-      y = Symbol();
+    const a = Symbol(),
+      b = Symbol();
 
     @Component()
     class Test {}
 
     const container = new Container();
-    container.bind(x).toConstantValue('deadbeef');
-    container.bind(y).toConstantValue(2);
+    container.bind(a).toConstantValue('deadbeef');
+    container.bind(b).toConstantValue(2);
     let constructor: any;
     for (let i = 0; i < 10000; i++) {
       if (i % 100) {
@@ -121,8 +121,8 @@ describe('@Inject', () => {
     @Component()
     class Foo {
       bar(
-        @MethodInject(x, {transform: (x: string) => x.repeat(2)}) param: string,
-        @MethodInject(y, {transform: (x: number) => x * x}) number: number,
+        @MethodInject(a, {transform: (x: string) => x.repeat(2)}) param: string,
+        @MethodInject(b, {transform: (x: number) => x * x}) number: number,
         @MethodInject(Test) test: Test,
         @MethodInject(constructor) x: any,
       ) {

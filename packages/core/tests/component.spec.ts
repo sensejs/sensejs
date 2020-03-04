@@ -69,6 +69,7 @@ describe('Component', () => {
   });
 
   test('Component explicit using self as component id', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     @Component({id: MyComponent})
     class MyComponent {}
 

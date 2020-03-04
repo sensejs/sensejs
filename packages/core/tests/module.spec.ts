@@ -290,6 +290,8 @@ describe('Module Root', () => {
 
   test('component resolve', async () => {
     const xOnCreateSpy = jest.fn(), xOnDestroySpy = jest.fn();
+    const yOnCreateSpy = jest.fn(), yOnDestroySpy = jest.fn();
+    const zOnCreateSpy = jest.fn(), zOnDestroySpy = jest.fn();
 
     @Component()
     class A {}
@@ -313,7 +315,6 @@ describe('Module Root', () => {
       }
     }
 
-    const yOnCreateSpy = jest.fn(), yOnDestroySpy = jest.fn();
 
     @ModuleClass({
       requires: [X],
@@ -335,7 +336,6 @@ describe('Module Root', () => {
       }
     }
 
-    const zOnCreateSpy = jest.fn(), zOnDestroySpy = jest.fn();
 
     @ModuleClass({
       requires: [X, Y],

@@ -5,7 +5,7 @@ export type MetadataView = (metadata: RawLogData) => {text: string; length: numb
 export abstract class BasicTextLogTransformer implements LogTransformer {
   abstract contentFormatter(...messages: [unknown, ...unknown[]]): string;
 
-  abstract getMetadataView(): Array<MetadataView>;
+  abstract getMetadataView(): MetadataView[];
 
   getEventMark(rawData: RawLogData) {
     return '+';

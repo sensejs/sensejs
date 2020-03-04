@@ -60,6 +60,7 @@ describe('Deprecate on class', () => {
 
   test('injectable', async () => {
     const warningStub = jest.spyOn(process, 'emitWarning');
+    const stub = jest.fn();
 
     @injectable()
     @Deprecated({replacedBy: 'unknown'})
@@ -69,8 +70,6 @@ describe('Deprecate on class', () => {
         stub(X);
       }
     }
-
-    const stub = jest.fn();
 
     @Deprecated({replacedBy: X})
     @injectable()

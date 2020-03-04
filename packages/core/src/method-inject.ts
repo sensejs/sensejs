@@ -66,15 +66,15 @@ export function ensureMethodInjectMetadata(target: any): MethodInjectMetadata {
   return result;
 }
 
+export function getMethodInjectMetadata(method: Function): MethodInjectMetadata {
+  return Reflect.getMetadata(METHOD_INJECT_KEY, method);
+}
+
 export function getFunctionParamBindingMetadata(method: Function): MethodInjectMetadata {
   process.nextTick(() => {
     process.emitWarning('getFunctionParamBindingMetadata is deprecated, use getMethodInjectMetadata instead');
   });
   return getMethodInjectMetadata(method);
-}
-
-export function getMethodInjectMetadata(method: Function): MethodInjectMetadata {
-  return Reflect.getMetadata(METHOD_INJECT_KEY, method);
 }
 
 export function validateMethodInjectMetadata(method: Function): MethodInjectMetadata {

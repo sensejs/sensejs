@@ -48,6 +48,37 @@ function checkRedisOptions(options: RedisModuleOptions[]) {
   }
 }
 
+function buildRedisModule(options: RedisModuleOptions): Constructor {
+  const factoryProvider = provideConnectionFactory(createRedisConnection, destroyRedisConnection, Redis);
+  const optionProvider = provideOptionInjector(options.options, options.injectOptionFrom, (fallback, injected) => {
+    return Object.assign({}, fallback, injected);
+  });
+  Object.assign(factoryProvider, {name: options.name});
+
+  @ModuleClass({
+    requires: [createModule(options)],
+    factories: [factoryProvider, optionProvider],
+  })
+  class RedisModule {
+    constructor(
+      @Inject(factoryProvider.factory) private redisClientFactory: InstanceType<typeof factoryProvider.factory>,
+      @Inject(optionProvider.provide) private redisConnectOption: RedisConnectOption,
+    ) {}
+
+    @OnModuleCreate()
+    async onCreate(): Promise<void> {
+      await this.redisClientFactory.connect(this.redisConnectOption);
+    }
+
+    @OnModuleDestroy()
+    async onDestroy(): Promise<void> {
+      await this.redisClientFactory.disconnect();
+    }
+  }
+
+  return RedisModule;
+}
+
 /**
  * Create a module manage IORedis connection
  * @param options Option pass to IORedis constructor
@@ -93,33 +124,3 @@ function destroyRedisConnection(connection: Redis.Redis) {
   return Promise.resolve(connection.disconnect());
 }
 
-function buildRedisModule(options: RedisModuleOptions): Constructor {
-  const factoryProvider = provideConnectionFactory(createRedisConnection, destroyRedisConnection, Redis);
-  const optionProvider = provideOptionInjector(options.options, options.injectOptionFrom, (fallback, injected) => {
-    return Object.assign({}, fallback, injected);
-  });
-  Object.assign(factoryProvider, {name: options.name});
-
-  @ModuleClass({
-    requires: [createModule(options)],
-    factories: [factoryProvider, optionProvider],
-  })
-  class RedisModule {
-    constructor(
-      @Inject(factoryProvider.factory) private redisClientFactory: InstanceType<typeof factoryProvider.factory>,
-      @Inject(optionProvider.provide) private redisConnectOption: RedisConnectOption,
-    ) {}
-
-    @OnModuleCreate()
-    async onCreate(): Promise<void> {
-      await this.redisClientFactory.connect(this.redisConnectOption);
-    }
-
-    @OnModuleDestroy()
-    async onDestroy(): Promise<void> {
-      await this.redisClientFactory.disconnect();
-    }
-  }
-
-  return RedisModule;
-}

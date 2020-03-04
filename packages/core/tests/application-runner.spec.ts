@@ -13,10 +13,12 @@ import '@sensejs/testing-utility/lib/mock-console';
 const onExit = jest.fn();
 const runOptionFixture: Omit<RunOption<number>, 'logger'> = {
   exitSignals: {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     SIGINT: {
       exitCode: 0,
       forcedExitWhenRepeated: true,
     },
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     SIGTERM: {
       exitCode: 0,
       forcedExitWhenRepeated: false,

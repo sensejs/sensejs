@@ -8,7 +8,8 @@ export interface ComponentOption<T extends {} = {}> {
   id?: string | symbol | Class<T>;
   name?: string | symbol;
   tags?: {
-    key: string | number | symbol, value: unknown
+    key: string | number | symbol;
+    value: unknown;
   }[];
 }
 

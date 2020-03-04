@@ -63,6 +63,19 @@ function noop() {
 type NarrowTo<T> = Decorator extends T ? T : unknown;
 
 export class DecoratorBuilder {
+  constructor(private decoratorName: string, strictChecking = true) {
+    if (!strictChecking) {
+      this.applyToConstructorParam = noop;
+      this.applyToStaticMethodParam = noop;
+      this.applyToInstanceMethodParam = noop;
+      this.applyToInstanceProperty = noop;
+      this.applyToStaticProperty = noop;
+      this.applyToInstanceMethod = noop;
+      this.applyToStaticMethod = noop;
+      this.applyToClass = noop;
+    }
+  }
+
   private applyToClass: ClassDecorator = () => {
     throw new Error(`@${this.decoratorName} cannot apply to class`);
   };
@@ -91,18 +104,6 @@ export class DecoratorBuilder {
     throw new Error(`@${this.decoratorName} cannot be applied here`);
   };
 
-  constructor(private decoratorName: string, strictChecking = true) {
-    if (!strictChecking) {
-      this.applyToConstructorParam = noop;
-      this.applyToStaticMethodParam = noop;
-      this.applyToInstanceMethodParam = noop;
-      this.applyToInstanceProperty = noop;
-      this.applyToStaticProperty = noop;
-      this.applyToInstanceMethod = noop;
-      this.applyToStaticMethod = noop;
-      this.applyToClass = noop;
-    }
-  }
 
   whenApplyToConstructor(fn: ClassDecorator) {
     this.applyToClass = fn;

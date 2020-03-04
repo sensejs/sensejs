@@ -96,7 +96,7 @@ describe('Logger', () => {
 
   test('Plain text transformer', () => {
     const transformer = new PlainTextLogTransformer();
-    const regexp = /^\+\s+([^ ]+)\s+(\w+)\s+(\<[^ >]+\>|-)\s+(\{[^ }]+\}|-)\s+\| .+/;
+    const regexp = /^\+\s+([^ ]+)\s+(\w+)\s+(<[^ >]+>|-)\s+(\{[^ }]+\}|-)\s+\| .+/;
     for (const level of Object.values(LogLevel)) {
       if (typeof level !== 'number') {
         continue;

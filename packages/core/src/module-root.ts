@@ -56,7 +56,9 @@ export class ModuleRoot {
     if (referencedModules) {
       await Promise.all(
         referencedModules
-          .map((module) => this.moduleInstanceMap.get(module)!)
+          .map((module) => this.moduleInstanceMap.get(module))
+          // XXX: Work-around no-non-null-assertion linting
+          .filter((module): module is ModuleInstance => module instanceof ModuleInstance)
           .map((module) => this.stopModule(module)),
       );
     }

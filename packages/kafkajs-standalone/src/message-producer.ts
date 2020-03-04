@@ -20,7 +20,7 @@ export interface BatchSendOption {
    */
   transactionalCommit?: {
     consumerGroupId: string;
-    offsets: Offsets
+    offsets: Offsets;
   };
 }
 

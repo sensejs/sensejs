@@ -25,11 +25,6 @@ export interface HttpOption extends HttpApplicationOption {
   trustProxy?: boolean;
 }
 
-export enum HttpConfigType {
-  static,
-  injected,
-}
-
 const defaultHttpConfig = {
   listenAddress: '0.0.0.0',
   listenPort: 3000,

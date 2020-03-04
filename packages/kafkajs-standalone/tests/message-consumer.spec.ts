@@ -18,7 +18,8 @@ MockKafka.prototype.consumer = jest.fn();
 
 jest.mock('kafkajs', () => {
   return {
-    Kafka: MockKafka,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    'Kafka': MockKafka,
   };
 });
 

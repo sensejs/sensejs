@@ -48,7 +48,7 @@ class ProcessManagerFactory extends ComponentFactory<ProcessManager> {
 }
 
 export function createBuiltinModule(option: {
-  onShutdown: () => void
+  onShutdown: () => void;
 }): Constructor {
   @ModuleClass({
     requires: [LoggerModule],
@@ -67,7 +67,6 @@ export function createBuiltinModule(option: {
       return queuedTask.waitAllTaskFinished();
     }
   }
-
   return BuiltinModule;
 
 }

@@ -45,9 +45,11 @@ export const defaultRunOption: RunOption = {
     timeout: 5000,
   },
   exitSignals: {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     SIGINT: {
       forcedExitWhenRepeated: true,
     },
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     SIGTERM: {},
   },
   logger: consoleLogger,
@@ -55,12 +57,29 @@ export const defaultRunOption: RunOption = {
   onExit: (exitCode) => process.exit(exitCode),
 };
 
+function provideBuiltin(module: Constructor, option: {
+  onShutdown: () => void;
+}) {
+  @ModuleClass({requires: [createBuiltinModule(option), module]})
+  class EntryPointModule {}
+
+  return EntryPointModule;
+}
+
 export class ApplicationRunner {
+  private runPromise?: Promise<unknown>;
+  private isStopped = false;
+
+  constructor(
+    private process: NodeJS.Process,
+    private moduleRoot: ModuleRoot,
+    private runOption: RunOption<unknown>,
+    private logger: Logger,
+  ) {}
+
   static runModule(moduleConstructor: Constructor, runOption: RunOption) {
     const moduleRoot = new ModuleRoot(provideBuiltin(moduleConstructor, {
-      onShutdown: () => {
-        runner.shutdown();
-      },
+      onShutdown,
     }));
     const container = moduleRoot.container;
     const loggerBuilder = container.isBound(LOGGER_BUILDER_SYMBOL)
@@ -68,11 +87,12 @@ export class ApplicationRunner {
       : new ConsoleLoggerBuilder();
     const logger = loggerBuilder.build('ApplicationRunner');
     const runner = new ApplicationRunner(process, moduleRoot, runOption, logger);
+    function onShutdown() {
+      runner.shutdown();
+    }
     return runner.run();
   }
 
-  private runPromise?: Promise<unknown>;
-  private isStopped = false;
   private onProcessWarning = (e: Error) => {
     if (this.runOption.printWarning) {
       this.logger.warn('Warning: ', e.name);
@@ -85,13 +105,6 @@ export class ApplicationRunner {
     this.logger.info('Going to quit');
     this.stop(this.runOption.errorExitOption);
   };
-
-  constructor(
-    private process: NodeJS.Process,
-    private moduleRoot: ModuleRoot,
-    private runOption: RunOption<unknown>,
-    private logger: Logger,
-  ) {}
 
   shutdown(forced: boolean = false) {
     if (forced) {
@@ -179,14 +192,6 @@ export class ApplicationRunner {
   }
 }
 
-function provideBuiltin(module: Constructor, option: {
-  onShutdown: () => void
-}) {
-  @ModuleClass({requires: [createBuiltinModule(option), module]})
-  class EntryPointModule {}
-
-  return EntryPointModule;
-}
 
 let entryPointCalled = false;
 

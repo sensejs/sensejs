@@ -108,8 +108,8 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
   const optionProvider = provideOptionInjector<ConnectionOptions>(
     option.typeOrmOption,
     option.injectOptionFrom,
-    (defaultValue, InjectedValue) => {
-      const result = Object.assign({}, defaultValue, InjectedValue);
+    (defaultValue, injectedValue) => {
+      const result = Object.assign({}, defaultValue, injectedValue);
       if (typeof result.type !== 'string') {
         throw new Error('invalid TypeORM config, type is missing');
       }

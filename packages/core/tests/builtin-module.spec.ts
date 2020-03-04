@@ -7,6 +7,7 @@ describe('BuiltinModule', () => {
     let resolvePromise: () => void;
     const longRunningTask = new Promise((resolve) => resolvePromise = resolve);
     const originWaitAllTaskFinished = BackgroundTaskQueue.prototype.waitAllTaskFinished;
+    const stoppedStub = jest.fn();
 
     function mockedWaitAllTaskFinished(this: BackgroundTaskQueue) {
       const promise = originWaitAllTaskFinished.apply(this);
@@ -32,7 +33,6 @@ describe('BuiltinModule', () => {
 
     const moduleRoot = new ModuleRoot(MyModule);
     await moduleRoot.start();
-    const stoppedStub = jest.fn();
     await moduleRoot.stop().then(() => {
       expect(spy).toHaveBeenCalled();
       stoppedStub();

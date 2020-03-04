@@ -3,11 +3,6 @@ import {BookEntity} from './book.entity';
 
 @Entity()
 export class AuthorEntity {
-  static create(name: string) {
-    const author = new AuthorEntity();
-    author.name = name;
-    return author;
-  }
 
   @PrimaryGeneratedColumn()
   id?: string;
@@ -17,6 +12,12 @@ export class AuthorEntity {
 
   @Column()
   bookCount: number = 0;
+
+  static create(name: string) {
+    const author = new AuthorEntity();
+    author.name = name;
+    return author;
+  }
 
   writeBook(bookName: string): BookEntity {
     this.bookCount++;
