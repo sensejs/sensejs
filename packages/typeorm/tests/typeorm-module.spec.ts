@@ -11,7 +11,7 @@ import {
 } from '@sensejs/core';
 import {Container} from 'inversify';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
-import {createTypeOrmModule, InjectRepository, Transactional, TypeOrmModule, TypeOrmSupportInterceptor} from '../src';
+import {createTypeOrmModule, InjectRepository, Transactional, TypeOrmSupportInterceptor} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
