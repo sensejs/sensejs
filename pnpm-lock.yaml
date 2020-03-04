@@ -126,7 +126,7 @@ importers:
       supertest: 4.0.2
     specifiers:
       '@koa/cors': ^3.0.0
-      '@koa/router': ^8.0.0
+      '@koa/router': ^8.0.8
       '@sensejs/core': 'workspace:*'
       '@types/koa': ^2.11.2
       '@types/koa-bodyparser': ^4.3.0
@@ -238,7 +238,7 @@ importers:
   packages/utility:
     dependencies:
       tslib: 1.11.1
-      uuid: 7.0.1
+      uuid: 7.0.2
     devDependencies:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/uuid': 7.0.0
@@ -246,7 +246,7 @@ importers:
       '@sensejs/testing-utility': 'workspace:*'
       '@types/uuid': ^7.0.0
       tslib: ^1.11.1
-      uuid: ^7.0.1
+      uuid: ^7.0.2
   tools/testing-utility:
     specifiers: {}
 lockfileVersion: 5.1
@@ -2314,7 +2314,7 @@ packages:
       ignore: 4.0.6
       import-fresh: 3.2.1
       imurmurhash: 0.1.4
-      inquirer: 7.0.5
+      inquirer: 7.0.6
       is-glob: 4.0.1
       js-yaml: 3.13.1
       json-stable-stringify-without-jsonify: 1.0.1
@@ -3049,7 +3049,7 @@ packages:
   /ini/1.3.5:
     resolution:
       integrity: sha512-RZY5huIKCMRWDUqZlEi72f/lmXKMvuszcMBduliQ3nnWbx9X/ZBQO7DijMEYS9EhHBb2qacRUMtC7svLwe0lcw==
-  /inquirer/7.0.5:
+  /inquirer/7.0.6:
     dependencies:
       ansi-escapes: 4.3.1
       chalk: 3.0.0
@@ -3068,7 +3068,7 @@ packages:
     engines:
       node: '>=6.0.0'
     resolution:
-      integrity: sha512-6Z5cP+LAO0rzNE7xWjWtT84jxKa5ScLEGLgegPXeO3dGeU8lNe5Ii7SlXH6KVtLGlDuaEhsvsFjrjWjw8j5lFg==
+      integrity: sha512-7SVO4h+QIdMq6XcqIqrNte3gS5MzCCKZdsq9DO4PJziBFNYzP3PGFbDjgadDb//MCahzgjCxvQ/O2wa7kx9o4w==
   /inversify/5.0.1:
     dev: false
     resolution:
@@ -6315,11 +6315,11 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
-  /uuid/7.0.1:
+  /uuid/7.0.2:
     dev: false
     hasBin: true
     resolution:
-      integrity: sha512-yqjRXZzSJm9Dbl84H2VDHpM3zMjzSJQ+hn6C4zqd5ilW+7P4ZmLEEqwho9LjP+tGuZlF4xrHQXT0h9QZUS/pWA==
+      integrity: sha512-vy9V/+pKG+5ZTYKf+VcphF5Oc6EFiu3W8Nv3P3zIh0EqVI80ZxOzuPfe9EHjkFNvf8+xuTHVeei4Drydlx4zjw==
   /v8-compile-cache/2.1.0:
     dev: true
     resolution:

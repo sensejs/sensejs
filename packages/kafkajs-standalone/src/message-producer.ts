@@ -133,12 +133,10 @@ export class MessageProducer {
 
   private async performSendBatch(producer: Producer, topicMessages: TopicMessages[], option: BatchSendOption) {
     if (!option.transactional) {
-      // @ts-ignore typing error of kafkajs
-      return this.producer.sendBatch({...this.option.sendOption, topicMessages});
+      return producer.sendBatch({...this.option.sendOption, topicMessages});
     }
     const sender = await producer.transaction();
     try {
-      // @ts-ignore typing error of kafkajs
       await sender.sendBatch({...this.option.sendOption, topicMessages});
       if (option.transactionalCommit) {
         await sender.sendOffsets({
