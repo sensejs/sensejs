@@ -78,11 +78,13 @@ importers:
       tslib: 1.11.1
     devDependencies:
       '@types/traverse': 0.6.32
+      ts-jest: 25.2.1
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@types/traverse': ^0.6.32
       inversify: ^5.0.1
       traverse: ^0.6.6
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
   packages/core:
     dependencies:
@@ -95,6 +97,7 @@ importers:
       '@types/supertest': 2.0.8
       '@types/uuid': 3.4.8
       reflect-metadata: 0.1.13
+      ts-jest: 25.2.1
     specifiers:
       '@sensejs/testing-utility': 'workspace:0.0.8'
       '@sensejs/utility': 'workspace:*'
@@ -103,6 +106,7 @@ importers:
       '@types/uuid': ^3.4.8
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
   packages/http:
     dependencies:
@@ -124,6 +128,7 @@ importers:
       '@types/node': 12.12.29
       '@types/supertest': 2.0.8
       supertest: 4.0.2
+      ts-jest: 25.2.1
     specifiers:
       '@koa/cors': ^3.0.0
       '@koa/router': ^8.0.8
@@ -141,6 +146,7 @@ importers:
       lodash.uniq: ^4.5.0
       reflect-metadata: ^0.1.13
       supertest: ^4.0.2
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
   packages/kafkajs:
     dependencies:
@@ -153,6 +159,7 @@ importers:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       kafkajs: 1.12.0
       rxjs: 6.5.4
+      ts-jest: 25.2.1
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/kafkajs-standalone': 'workspace:*'
@@ -161,6 +168,7 @@ importers:
       kafkajs: ^1.12.0
       reflect-metadata: ^0.1.13
       rxjs: ^6.5.4
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
   packages/kafkajs-standalone:
     dependencies:
@@ -173,6 +181,7 @@ importers:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/long': 4.0.1
       kafkajs: 1.12.0
+      ts-jest: 25.2.1
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
@@ -181,6 +190,7 @@ importers:
       kafkajs: ^1.12.0
       long: ^4.0.0
       rxjs: ^6.5.4
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
   packages/logger:
     dependencies:
@@ -188,10 +198,13 @@ importers:
       colors: 1.4.0
       moment: 2.24.0
       tslib: 1.11.1
+    devDependencies:
+      ts-jest: 25.2.1
     specifiers:
       '@sensejs/core': 'workspace:*'
       colors: ^1.4.0
       moment: ^2.24.0
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
   packages/redis:
     dependencies:
@@ -204,6 +217,7 @@ importers:
       '@sensejs/http': 'link:../http'
       '@types/supertest': 2.0.8
       supertest: 4.0.2
+      ts-jest: 25.2.1
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/http': 'workspace:*'
@@ -212,6 +226,7 @@ importers:
       inversify: ^5.0.1
       ioredis: ^4.16.0
       supertest: ^4.0.2
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
   packages/typeorm:
     dependencies:
@@ -224,6 +239,7 @@ importers:
       '@types/supertest': 2.0.8
       sqlite3: 4.1.0
       supertest: 4.0.2
+      ts-jest: 25.2.1
       typeorm: 0.2.24_sqlite3@4.1.0
     specifiers:
       '@sensejs/core': 'workspace:*'
@@ -233,6 +249,7 @@ importers:
       reflect-metadata: ^0.1.13
       sqlite3: 4.1.0
       supertest: ^4.0.2
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
       typeorm: ^0.2.24
   packages/utility:
@@ -242,9 +259,11 @@ importers:
     devDependencies:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/uuid': 7.0.0
+      ts-jest: 25.2.1
     specifiers:
       '@sensejs/testing-utility': 'workspace:*'
       '@types/uuid': ^7.0.0
+      ts-jest: ^25.2.1
       tslib: ^1.11.1
       uuid: ^7.0.2
   tools/testing-utility:
@@ -6105,6 +6124,26 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-n5up2e+odkw4dpi8v+sshI8RrbM=
+  /ts-jest/25.2.1:
+    dependencies:
+      bs-logger: 0.2.6
+      buffer-from: 1.1.1
+      fast-json-stable-stringify: 2.1.0
+      json5: 2.1.1
+      lodash.memoize: 4.1.2
+      make-error: 1.3.6
+      mkdirp: 0.5.1
+      resolve: 1.15.1
+      semver: 5.7.1
+      yargs-parser: 16.1.0
+    dev: true
+    engines:
+      node: '>= 6'
+    hasBin: true
+    peerDependencies:
+      jest: '>=25 <26'
+    resolution:
+      integrity: sha512-TnntkEEjuXq/Gxpw7xToarmHbAafgCaAzOpnajnFC6jI7oo1trMzAHA04eWpc3MhV6+yvhE8uUBAmN+teRJh0A==
   /ts-jest/25.2.1_jest@25.1.0:
     dependencies:
       bs-logger: 0.2.6

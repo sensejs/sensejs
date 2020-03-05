@@ -30,6 +30,7 @@
     "@types/supertest": "^2.0.8",
     "sqlite3": "4.1.0",
     "supertest": "^4.0.2",
+    "ts-jest": "^25.2.1",
     "typeorm": "^0.2.24"
   },
   "peerDependencies": {

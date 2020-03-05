@@ -37,8 +37,8 @@
     "@types/lodash.uniq": "^4.5.6",
     "@types/node": "^12.12.29",
     "@types/supertest": "^2.0.8",
-    "reflect-metadata": "^0.1.13",
-    "supertest": "^4.0.2"
+    "supertest": "^4.0.2",
+    "ts-jest": "^25.2.1"
   },
   "author": "LAN Xingcan",
   "license": "ISC"

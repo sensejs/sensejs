@@ -24,5 +24,8 @@
     "colors": "^1.4.0",
     "moment": "^2.24.0",
     "tslib": "^1.11.1"
+  },
+  "devDependencies": {
+    "ts-jest": "^25.2.1"
   }
 }

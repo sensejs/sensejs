@@ -32,6 +32,7 @@
     "@sensejs/core": "workspace:*",
     "@sensejs/testing-utility": "workspace:*",
     "@types/long": "^4.0.1",
+    "ts-jest": "^25.2.1",
     "kafkajs": "^1.12.0"
   }
 }

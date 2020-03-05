@@ -29,6 +29,7 @@
   "devDependencies": {
     "@sensejs/http": "workspace:*",
     "@types/supertest": "^2.0.8",
-    "supertest": "^4.0.2"
+    "supertest": "^4.0.2",
+    "ts-jest": "^25.2.1"
   }
 }
