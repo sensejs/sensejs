@@ -1,8 +1,5 @@
 {
-  "extends": "../../../tsconfig",
-  "compilerOptions": {
-    "types": ["node", "jest"]
-  },
+  "extends": "../../../tsconfig.test",
   "include": [
     "**/*.ts",
     "../src/**/*.ts"

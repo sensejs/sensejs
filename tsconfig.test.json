@@ -1,10 +1,14 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
-    "types": ["node", "jest"]
+    "types": ["node", "jest", "reflect-metadata"]
   },
   "include": [
-    "packages/**/*.ts"
+    "../src/**/*.ts",
+    "./**/*.spec.ts",
+    "./**/*.test.ts",
+    "./**/*.e2e-spec.ts",
+    "./**/*.e2etest.ts"
   ],
   "exclude": [
     "**/node_modules"
