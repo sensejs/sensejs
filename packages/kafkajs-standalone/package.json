@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs-standalone",
-  "version": "0.2.1",
+  "version": "0.3.0-0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -32,7 +32,7 @@
     "@sensejs/core": "workspace:*",
     "@sensejs/testing-utility": "workspace:*",
     "@types/long": "^4.0.1",
-    "ts-jest": "^25.2.1",
-    "kafkajs": "^1.12.0"
+    "kafkajs": "^1.12.0",
+    "ts-jest": "^25.2.1"
   }
 }
