@@ -49,7 +49,7 @@ function createAppRunner(module: Constructor, onExit: (exitCode: number) => unkn
   const runOption = Object.assign({}, runOptionFixture, {
     logger, onExit,
   });
-  return new ApplicationRunner(process, new ModuleRoot(module), runOption, logger);
+  return new ApplicationRunner(process, new ModuleRoot(module), runOption);
 }
 
 function runModuleForTest(module: Constructor) {
