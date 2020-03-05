@@ -15,8 +15,8 @@ function createLogger(logTransports: LogTransport[], label: string, traceId: str
   }
 
   const doLog = (level: LogLevel) => {
-    const timestamp = Date.now();
     return (...messages: [unknown, ...unknown[]]) => {
+      const timestamp = Date.now();
       logTransports.forEach((transport) =>
         transport.write({
           timestamp,
@@ -44,22 +44,22 @@ function createLogger(logTransports: LogTransport[], label: string, traceId: str
  * Simple Log Factory
  */
 export class SenseLoggerBuilder {
-  constructor(private label: string = '', private traceId: string = '', private logTransports: LogTransport[]) {}
+  constructor(private logTransports: LogTransport[], private label = '', private traceId = '') {}
 
   setLabel(label: string) {
-    return new SenseLoggerBuilder(label, this.traceId, this.logTransports);
+    return new SenseLoggerBuilder(this.logTransports, label, this.traceId);
   }
 
   setTraceId(traceId: string) {
-    return new SenseLoggerBuilder(this.label, traceId, this.logTransports);
+    return new SenseLoggerBuilder(this.logTransports, this.label, traceId);
   }
 
   resetLogTransports() {
-    return new SenseLoggerBuilder(this.label, this.traceId, []);
+    return new SenseLoggerBuilder([], this.label, this.traceId);
   }
 
   addLogTransports(transport: LogTransport) {
-    return new SenseLoggerBuilder(this.label, this.traceId, this.logTransports.concat([transport]));
+    return new SenseLoggerBuilder(this.logTransports.concat([transport]), this.label, this.traceId);
   }
 
   build(label?: string): Logger {
@@ -67,7 +67,7 @@ export class SenseLoggerBuilder {
   }
 }
 
-export const defaultLoggerBuilder = new SenseLoggerBuilder('', '', [
+export const defaultLoggerBuilder = new SenseLoggerBuilder([
   new StreamLogTransport(process.stdout, [LogLevel.TRACE, LogLevel.DEBUG, LogLevel.INFO]),
   new StreamLogTransport(process.stderr, [LogLevel.WARN, LogLevel.ERROR, LogLevel.FATAL]),
 ]);
