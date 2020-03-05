@@ -1,6 +1,6 @@
 import {ModuleRoot} from './module-root';
 import {ModuleClass} from './module';
-import {consoleLogger, ConsoleLoggerBuilder, Logger, LOGGER_BUILDER_SYMBOL, LoggerBuilder} from './logger';
+import {consoleLogger, Logger} from './logger';
 import {Constructor} from './interfaces';
 import {createBuiltinModule} from './builtin-module';
 
@@ -67,26 +67,23 @@ function provideBuiltin(module: Constructor, option: {
 }
 
 export class ApplicationRunner {
+
   private runPromise?: Promise<unknown>;
   private isStopped = false;
+  private logger: Logger = this.runOption.logger;
+  private signalHandler = new Map<NodeJS.Signals, () => void>();
 
   constructor(
     private process: NodeJS.Process,
     private moduleRoot: ModuleRoot,
     private runOption: RunOption<unknown>,
-    private logger: Logger,
   ) {}
 
   static runModule(moduleConstructor: Constructor, runOption: RunOption) {
     const moduleRoot = new ModuleRoot(provideBuiltin(moduleConstructor, {
       onShutdown,
     }));
-    const container = moduleRoot.container;
-    const loggerBuilder = container.isBound(LOGGER_BUILDER_SYMBOL)
-      ? moduleRoot.container.get<LoggerBuilder>(LOGGER_BUILDER_SYMBOL)
-      : new ConsoleLoggerBuilder();
-    const logger = loggerBuilder.build('ApplicationRunner');
-    const runner = new ApplicationRunner(process, moduleRoot, runOption, logger);
+    const runner = new ApplicationRunner(process, moduleRoot, runOption);
     function onShutdown() {
       runner.shutdown();
     }
@@ -123,15 +120,13 @@ export class ApplicationRunner {
   }
 
   private async performRun() {
-    this.setupEventEmitter();
+    this.setupEventListeners();
     try {
       await this.moduleRoot.start();
     } catch (e) {
       this.logger.fatal('Error occurred when start application: ', e);
       this.logger.fatal('Going to quit');
       this.stop(this.runOption.errorExitOption);
-    } finally {
-      // TODO: Cleanup event handler
     }
   }
 
@@ -164,25 +159,31 @@ export class ApplicationRunner {
       await this.moduleRoot.stop();
     } catch (e) {
       return this.runOption.errorExitOption.exitCode;
+    } finally {
+      this.clearEventListeners();
     }
     return option.exitCode;
   }
 
   private registerExitSignal(signal: NodeJS.Signals, exitOption: ExitOption) {
-    this.process.once(signal, () => {
+    const handler = () => {
       this.logger.info('Receive signal %s, going to quit', signal);
       this.stop(exitOption);
       if (exitOption.forcedExitWhenRepeated) {
-        this.process.once(signal, () => {
+        const repeatedHandler = () => {
           this.logger.info('Receive signal %s again, force quit immediately', signal);
           const option = Object.assign({}, this.runOption.forcedExitOption, exitOption);
           this.forceStop(option);
-        });
+        };
+        this.signalHandler.set(signal, repeatedHandler);
+        this.process.once(signal, repeatedHandler);
       }
-    });
+    };
+    this.signalHandler.set(signal, handler);
+    this.process.once(signal, handler);
   }
 
-  private setupEventEmitter() {
+  private setupEventListeners() {
     this.process.on('warning', this.onProcessWarning);
     this.process.on('unhandledRejection', this.onProcessError);
     this.process.on('uncaughtException', this.onProcessError);
@@ -190,8 +191,16 @@ export class ApplicationRunner {
       this.registerExitSignal(signal, Object.assign({}, this.runOption.normalExitOption, exitOption));
     }
   }
-}
 
+  private clearEventListeners() {
+    this.process.removeListener('warning', this.onProcessWarning);
+    this.process.removeListener('unhandledRejection', this.onProcessError);
+    this.process.removeListener('uncaughtException', this.onProcessError);
+    for (const [signal, handler] of this.signalHandler) {
+      this.process.removeListener(signal, handler);
+    }
+  }
+}
 
 let entryPointCalled = false;
 
