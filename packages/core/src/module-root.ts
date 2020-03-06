@@ -31,16 +31,16 @@ export class ModuleRoot {
   }
 
   private async stopModule(moduleInstance: ModuleInstance) {
+    if (--moduleInstance.referencedCounter > 0) {
+      return;
+    }
     await moduleInstance.onDestroy();
     for (; ;) {
       const dependency = moduleInstance.dependencies.pop();
       if (!dependency) {
         return;
       }
-      dependency.referencedCounter--;
-      if (dependency.referencedCounter === 0) {
-        await this.stopModule(dependency);
-      }
+      await this.stopModule(dependency);
     }
   }
 }

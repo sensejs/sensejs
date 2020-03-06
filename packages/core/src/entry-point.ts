@@ -148,6 +148,7 @@ export class ApplicationRunner {
     if (this.isStopped) {
       return;
     }
+    this.isStopped = true;
 
     let promise = this.stopModuleRoot(option);
     if (option.timeout > 0) {
