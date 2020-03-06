@@ -15,6 +15,7 @@ export interface SubscribeTopicMetadata {
 
 export interface SubscribeTopicOption {
   topic?: string;
+  fromBeginning?: boolean;
 }
 
 export interface SubscribeControllerMetadata {

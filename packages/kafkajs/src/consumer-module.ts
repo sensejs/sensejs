@@ -7,6 +7,7 @@ import {
   invokeMethod,
   ModuleClass,
   ModuleOption,
+  ModuleScanner,
   OnModuleCreate,
   OnModuleDestroy,
   provideConnectionFactory,
@@ -15,24 +16,20 @@ import {
   ServiceIdentifier,
 } from '@sensejs/core';
 import {Container} from 'inversify';
-import {MessageConsumer, MessageConsumerOption, KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
+import {KafkaReceivedMessage, MessageConsumer, MessageConsumerOption} from '@sensejs/kafkajs-standalone';
 import {ConsumerContext} from './consumer-context';
 import {
   getSubscribeControllerMetadata,
   getSubscribeTopicMetadata,
   SubscribeControllerMetadata,
   SubscribeTopicMetadata,
+  SubscribeTopicOption,
 } from './consumer-decorators';
 
 export interface KafkaConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Class<RequestInterceptor>[];
   messageConsumerOption?: Partial<MessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier;
-}
-
-export interface KafkaTopicSubscriptionOption {
-  topic: string;
-  fromBeginning?: boolean;
 }
 
 function mergeConnectOption(
@@ -50,35 +47,77 @@ function mergeConnectOption(
   return {connectOption, fetchOption, ...rest};
 }
 
-function createSubscriberTopicModule(
-  consumerGroupModule: Constructor,
+function scanSubscriber(
   option: KafkaConsumerModuleOption,
-  controllerMetadata: SubscribeControllerMetadata,
-  subscribeMetadata: SubscribeTopicMetadata,
-  method: Function,
-  injectSymbol: symbol,
+  connectionModule: Constructor,
+  messageConsumerSymbol: symbol,
 ) {
-  const {fallbackOption, injectOptionFrom} = subscribeMetadata;
-  const optionProvider = provideOptionInjector(fallbackOption, injectOptionFrom, (defaultValue, injectedValue) => {
-    return Object.assign({}, defaultValue, injectedValue);
-  });
 
   @ModuleClass({
-    requires: [consumerGroupModule],
-    factories: [optionProvider],
+    requires: [connectionModule],
   })
-  class TopicModule {
-    constructor(
-      @Inject(optionProvider.provide) config: KafkaTopicSubscriptionOption,
-      @Inject(injectSymbol) messageConsumer: MessageConsumer,
-      @Inject(Container) container: Container,
-    ) {
+  class SubscriberScanModule {
 
-      const consumeCallback = async (message: KafkaReceivedMessage) => {
-        const childContainer = container.createChild();
+    constructor(
+      @Inject(Container) private container: Container,
+      @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
+    ) {}
+
+    @OnModuleCreate()
+    async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
+      moduleScanner.scanModule((moduleMetadata) => {
+        moduleMetadata.components.forEach((component) => {
+
+          const controllerMetadata = getSubscribeControllerMetadata(component);
+          if (!controllerMetadata) {
+            return;
+          }
+          this.scanPrototypeMethod(component, controllerMetadata);
+        });
+      });
+
+      return this.messageConsumer.start();
+    }
+
+    @OnModuleDestroy()
+    async onDestroy() {
+      return this.messageConsumer.stop();
+    }
+
+    private scanPrototypeMethod(component: Constructor, controllerMetadata: SubscribeControllerMetadata) {
+      for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(component.prototype))) {
+        const subscribeMetadata = getSubscribeTopicMetadata(propertyDescriptor.value);
+        const method = propertyDescriptor.value;
+
+        if (!subscribeMetadata || method === undefined) {
+          continue;
+        }
+
+        const {fallbackOption = {}, injectOptionFrom} = subscribeMetadata;
+        const injected = injectOptionFrom ? this.container.get<SubscribeTopicOption>(injectOptionFrom) : {};
+
+        const subscribeOption = Object.assign({}, fallbackOption, injected);
+        if (typeof subscribeOption.topic !== 'string') {
+          throw new TypeError('subscribe topic must be a string');
+        }
+
+        const consumeCallback = this.getConsumeCallback(controllerMetadata, subscribeMetadata, method);
+        this.messageConsumer.subscribe(subscribeOption.topic, consumeCallback, subscribeOption.fromBeginning);
+      }
+    }
+
+    private getConsumeCallback(
+      controllerMetadata: SubscribeControllerMetadata,
+      subscribeMetadata: SubscribeTopicMetadata,
+      method: Function,
+    ) {
+      return async (message: KafkaReceivedMessage) => {
+        const childContainer = this.container.createChild();
         childContainer.bind(Container).toConstantValue(childContainer);
         const composedInterceptor = composeRequestInterceptor(childContainer, [
-          ...(option.globalInterceptors ?? []),
+          ...(
+            option.globalInterceptors ?? []
+          ),
           ...controllerMetadata.interceptors,
           ...subscribeMetadata.interceptors,
         ]);
@@ -90,38 +129,10 @@ function createSubscriberTopicModule(
           await invokeMethod(childContainer, target, method);
         });
       };
-      messageConsumer.subscribe(config.topic, consumeCallback, config.fromBeginning);
     }
   }
 
-  return TopicModule;
-}
-
-function scanController(option: KafkaConsumerModuleOption, module: Constructor, injectSymbol: symbol) {
-  const result: Constructor[] = [];
-  for (const component of option.components || []) {
-    const controllerMetadata = getSubscribeControllerMetadata(component);
-    if (!controllerMetadata) {
-      continue;
-    }
-    for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(component.prototype))) {
-      const subscribeMetadata = getSubscribeTopicMetadata(propertyDescriptor.value);
-
-      if (!subscribeMetadata) {
-        continue;
-      }
-      const subscribeTopicModule = createSubscriberTopicModule(
-        module,
-        option,
-        controllerMetadata,
-        subscribeMetadata,
-        propertyDescriptor.value,
-        injectSymbol,
-      );
-      result.push(subscribeTopicModule);
-    }
-  }
-  return result;
+  return SubscriberScanModule;
 }
 
 function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymbol: symbol) {
@@ -166,25 +177,5 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymb
 export function createKafkaConsumerModule(option: KafkaConsumerModuleOption): Constructor {
   const injectMessageConsumerSymbol = Symbol('MessageConsumer');
   const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
-  const subscribeTopicModules = scanController(option, kafkaConnectionModule, injectMessageConsumerSymbol);
-
-  @ModuleClass({
-    requires: subscribeTopicModules,
-  })
-  class KafkaConsumerModule {
-    constructor(@Inject(injectMessageConsumerSymbol) private messageConsumer: MessageConsumer) {
-    }
-
-    @OnModuleCreate()
-    async onCreate(): Promise<void> {
-      await this.messageConsumer.start();
-    }
-
-    @OnModuleDestroy()
-    async onDestroy(): Promise<void> {
-      await this.messageConsumer.stop();
-    }
-  }
-
-  return KafkaConsumerModule;
+  return scanSubscriber(option, kafkaConnectionModule, injectMessageConsumerSymbol);
 }

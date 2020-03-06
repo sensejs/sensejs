@@ -1,5 +1,5 @@
 jest.mock('@sensejs/kafkajs-standalone');
-import {Component, createModule, Inject, ModuleRoot, RequestInterceptor} from '@sensejs/core';
+import {Component, createModule, Inject, ProcessManager, RequestInterceptor} from '@sensejs/core';
 import {MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
   ConsumerContext,
@@ -10,6 +10,7 @@ import {
   SubscribeTopic,
 } from '../src';
 import {Subject} from 'rxjs';
+import {ApplicationRunner} from '@sensejs/core/lib/entry-point';
 
 describe('Subscribe decorators', () => {
   test('Missing param binding', () => {
@@ -41,8 +42,41 @@ describe('Subscribe decorators', () => {
 });
 
 describe('Subscriber', () => {
+
+  const brokers = `host_${Date.now()}`; // for random string
+  const groupId = `group_${Date.now()}`;
+  const topic = `topic_${Date.now()}`;
+  const ConfigModule = createModule({
+    constants: [
+      {
+        provide: 'config.consumer',
+        value: {
+          connectOption: {brokers},
+        },
+      },
+      {
+        provide: 'config.consumer.topic',
+        value: {
+          topic,
+        },
+      },
+    ],
+  });
+
+  const makeInterceptor = (symbol: symbol) => {
+    @Component()
+    class Interceptor extends RequestInterceptor<ConsumerContext> {
+      async intercept(context: ConsumerContext, next: () => Promise<void>): Promise<void> {
+        context.bindContextValue(symbol, Math.random());
+        await next();
+      }
+    }
+
+    return Interceptor;
+  };
+
   test('consume message', async () => {
-    const startSpy = jest.spyOn(MessageConsumer.prototype, 'start');
+    const startSpy = jest.spyOn(MessageConsumer.prototype, 'start').mockResolvedValue();
     const stopSpy = jest.spyOn(MessageConsumer.prototype, 'stop').mockResolvedValue();
 
     function mockSubscribe(this: MessageConsumer, topic: string, callback: Function) {
@@ -59,105 +93,62 @@ describe('Subscriber', () => {
     const symbolA = Symbol(),
       symbolB = Symbol(),
       symbolC = Symbol();
-    const makeInterceptor = (symbol: symbol) => {
-      @Component()
-      class Interceptor extends RequestInterceptor<ConsumerContext> {
-        async intercept(context: ConsumerContext, next: () => Promise<void>): Promise<void> {
-          context.bindContextValue(symbol, Math.random());
-          await next();
-        }
-      }
-
-      return Interceptor;
-    };
     const interceptorA = makeInterceptor(symbolA),
       interceptorB = makeInterceptor(symbolB),
       interceptorC = makeInterceptor(symbolC);
 
-    const consumerReceivedMessage = new Subject();
-
     @SubscribeController({interceptors: [interceptorB]})
     class Controller {
-      @SubscribeTopic({option: {topic: 'foo'}, interceptors: [interceptorC]})
+      @SubscribeTopic({
+        injectOptionFrom: 'config.consumer.topic',
+        option: {fromBeginning: true},
+        interceptors: [interceptorC],
+      })
       foo(
         @InjectSubscribeContext() ctx: ConsumerContext,
         @Inject(symbolA) global: any,
         @Inject(symbolB) controller: any,
         @Inject(symbolC) fromTopic: any,
         @Message() message: string | Buffer,
+        @Inject(ProcessManager) processManager: ProcessManager
       ) {
-        consumerReceivedMessage.complete();
+        processManager.shutdown();
       }
     }
 
     const module = createKafkaConsumerModule({
-      components: [Controller],
+      requires: [ConfigModule, createModule({components: [Controller]})],
       messageConsumerOption: {
         connectOption: {
           brokers: 'any-host',
         },
         fetchOption: {
-          groupId: 'any-group',
-        },
-      },
-      globalInterceptors: [interceptorA],
-    });
-    const moduleRoot = new ModuleRoot(module);
-    await moduleRoot.start();
-    expect(startSpy).toBeCalled();
-    expect(subscribeSpy).toBeCalledTimes(1);
-    expect(subscribeSpy).toBeCalledWith('foo', expect.any(Function), undefined);
-    await consumerReceivedMessage.toPromise();
-    await moduleRoot.stop();
-    expect(stopSpy).toBeCalled();
-  });
-
-  test('injected config', async () => {
-    jest.spyOn(MessageConsumer.prototype, 'start').mockResolvedValue();
-    jest.spyOn(MessageConsumer.prototype, 'stop').mockResolvedValue();
-    const brokers = `host_${Date.now()}`; // for random string
-    const groupId = `group_${Date.now()}`;
-    const topic = `topic_${Date.now()}`;
-
-    @SubscribeController()
-    class Controller {
-      @SubscribeTopic({injectOptionFrom: 'config.consumer.topic'})
-      foo() {}
-    }
-
-    const ConfigModule = createModule({
-      constants: [
-        {
-          provide: 'config.consumer',
-          value: {
-            connectOption: {brokers},
-          },
-        },
-        {
-          provide: 'config.consumer.topic',
-          value: {
-            topic,
-          },
-        },
-      ],
-    });
-
-    const moduleRoot = new ModuleRoot(createKafkaConsumerModule({
-      components: [Controller],
-      requires: [ConfigModule],
-      messageConsumerOption: {
-        fetchOption: {
           groupId,
         },
       },
       injectOptionFrom: 'config.consumer',
-    }));
-    await moduleRoot.start();
+      globalInterceptors: [interceptorA],
+    });
+    const exitSubject = new Subject();
+
+    await ApplicationRunner.runModule(module, {
+      onExit: () => {
+        exitSubject.complete();
+        return undefined as never;
+      }
+    });
+    await exitSubject.toPromise();
 
     expect(MessageConsumer).toHaveBeenCalledWith(expect.objectContaining({
       connectOption: expect.objectContaining({
         brokers,
       }),
     }));
+
+    expect(startSpy).toBeCalled();
+    expect(subscribeSpy).toBeCalledTimes(1);
+    expect(subscribeSpy).toBeCalledWith(topic, expect.any(Function), true);
+    expect(stopSpy).toBeCalled();
   });
+
 });
