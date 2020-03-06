@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/redis",
-  "version": "0.3.0-0",
+  "version": "0.3.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
