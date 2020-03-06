@@ -8,5 +8,6 @@ export * from './decorators';
 export * from './interceptor';
 export {EntryPoint} from './entry-point';
 export * from './module-utility';
+export * from './module-scanner';
 export * from './utils';
 export * from './method-inject';

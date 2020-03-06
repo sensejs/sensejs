@@ -37,9 +37,8 @@ export interface ModuleOption {
   constants?: ConstantProvider<unknown>[];
 }
 
-export interface ModuleMetadata {
+export interface ModuleMetadata extends Required<ModuleOption> {
   requires: Constructor[];
-  containerModule: ContainerModule;
   onModuleCreate: Function[];
   onModuleDestroy: Function[];
 }
@@ -63,61 +62,6 @@ export function setModuleMetadata(module: Constructor, metadata: ModuleMetadata)
     }
   }
   Reflect.defineMetadata(MODULE_REFLECT_SYMBOL, metadata, module);
-}
-
-function scopedBindingHelper<T>(
-  binding: interfaces.BindingInSyntax<T>,
-  scope: ComponentScope = ComponentScope.TRANSIENT,
-): interfaces.BindingWhenOnSyntax<T> {
-  switch (scope) {
-    case ComponentScope.SINGLETON:
-      return binding.inSingletonScope();
-    case ComponentScope.REQUEST:
-      return binding.inRequestScope();
-    default:
-      return binding.inTransientScope();
-  }
-}
-
-function bindingHelper<T>(spec: BindingSpec, from: () => interfaces.BindingInSyntax<T>) {
-  const result = scopedBindingHelper(from(), spec.scope);
-  if (spec.name) {
-    result.whenTargetNamed(spec.name);
-  }
-  if (spec.tags) {
-    for (const {key, value} of spec.tags) {
-      result.whenTargetTagged(key, value);
-    }
-  }
-}
-
-function createContainerModule(option: ModuleOption) {
-  const components = option.components || [];
-  const factories = option.factories || [];
-  const constants = option.constants || [];
-  return new ContainerModule((bind, unbind, isBound, rebind) => {
-    constants.forEach((constantProvider) => {
-      bind(constantProvider.provide).toConstantValue(constantProvider.value);
-    });
-
-    components.map(getComponentMetadata).map(async (metadata: ComponentMetadata<unknown>) => {
-      const {target, id = target} = metadata;
-      bindingHelper(metadata, () => bind(id).to(metadata.target));
-    });
-
-    factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, factory, scope, ...rest} = factoryProvider;
-      if (!isBound(factory)) {
-        bindingHelper({scope}, () => bind(factory).toSelf());
-      }
-      bindingHelper(rest, () =>
-        bind(provide).toDynamicValue((context: interfaces.Context) => {
-          const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
-          return factoryInstance.build(context);
-        }),
-      );
-    });
-  });
 }
 
 function moduleLifecycleFallback() {}
@@ -149,7 +93,9 @@ function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: s
 export function ModuleClass(option: ModuleOption = {}) {
 
   const requires = option.requires || [];
-  const containerModule = createContainerModule(option);
+  const constants = option.constants ?? [];
+  const components = option.components ?? [];
+  const factories = option.factories ?? [];
 
   return <T extends {}>(constructor: Constructor<T>) => {
 
@@ -159,7 +105,9 @@ export function ModuleClass(option: ModuleOption = {}) {
     onModuleDestroy.forEach(ensureMethodInjectMetadata);
     setModuleMetadata(constructor, {
       requires,
-      containerModule,
+      constants,
+      factories,
+      components,
       onModuleCreate,
       onModuleDestroy,
     });

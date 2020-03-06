@@ -87,12 +87,13 @@ export class ApplicationRunner {
     private runOption: RunOption<unknown>,
   ) {}
 
-  static runModule(entryModule: Constructor, runOption: RunOption) {
+  static runModule(entryModule: Constructor, runOption: Partial<RunOption> = {}) {
+    const actualRunOption = Object.assign({}, defaultRunOption, runOption);
     const moduleRoot = new ModuleRoot(provideBuiltin({
       entryModule,
       onShutdown,
     }));
-    const runner = new ApplicationRunner(process, moduleRoot, runOption);
+    const runner = new ApplicationRunner(process, moduleRoot, actualRunOption);
     function onShutdown() {
       runner.shutdown();
     }
@@ -214,13 +215,12 @@ export class ApplicationRunner {
 let entryPointCalled = false;
 
 export function EntryPoint(runOption: Partial<RunOption> = {}) {
-  const actualRunOption = Object.assign({}, defaultRunOption, runOption);
 
   return (moduleConstructor: Constructor) => {
     if (entryPointCalled) {
       throw new Error('only one entry point is allowed');
     }
     entryPointCalled = true;
-    process.nextTick(() => ApplicationRunner.runModule(moduleConstructor, actualRunOption));
+    process.nextTick(() => ApplicationRunner.runModule(moduleConstructor, runOption));
   };
 }

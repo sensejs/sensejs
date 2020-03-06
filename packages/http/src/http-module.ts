@@ -10,6 +10,7 @@ import {
   Inject,
   ModuleClass,
   ModuleOption,
+  ModuleScanner,
   OnModuleCreate,
   OnModuleDestroy,
   provideOptionInjector,
@@ -48,7 +49,6 @@ export function createHttpModule(
   const httpAdaptorFactory = option.httpAdaptorFactory || (
     () => new KoaHttpApplicationBuilder()
   );
-  const componentList = option.components || [];
   const optionProvider = provideOptionInjector<HttpOption>(
     option.httpOption,
     option.injectOptionFrom,
@@ -67,7 +67,6 @@ export function createHttpModule(
   })
   class HttpModule {
     private httpServer?: http.Server;
-    private interceptorModule?: ContainerModule;
 
     constructor(
       @Inject(Container) private container: Container,
@@ -75,25 +74,14 @@ export function createHttpModule(
     ) {}
 
     @OnModuleCreate()
-    async onCreate() {
+    async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
       const httpAdaptor = httpAdaptorFactory();
 
       for (const inspector of option.globalInterceptors || []) {
         httpAdaptor.addGlobalInspector(inspector);
       }
-      componentList.forEach((component) => {
-        const httpControllerMetadata = getHttpControllerMetadata(component);
-        if (httpControllerMetadata) {
-          httpAdaptor.addControllerWithMetadata(httpControllerMetadata);
-        }
-      });
+      this.scanControllers(httpAdaptor, moduleScanner);
       const allInterceptors = httpAdaptor.getAllInterceptors();
-      this.interceptorModule = new ContainerModule((bind) => {
-        allInterceptors.forEach((interceptor) => {
-          bind(interceptor).toSelf();
-        });
-      });
-      this.container.load(this.interceptorModule);
 
       this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);
 
@@ -110,9 +98,17 @@ export function createHttpModule(
         }
         return this.httpServer.close(done);
       })();
-      if (this.interceptorModule) {
-        this.container.unload(this.interceptorModule);
-      }
+    }
+
+    private scanControllers(httpAdaptor: HttpAdaptor, moduleScanner: ModuleScanner) {
+      moduleScanner.scanModule((metadata) => {
+        metadata.components.forEach((component) => {
+          const httpControllerMetadata = getHttpControllerMetadata(component);
+          if (httpControllerMetadata) {
+            httpAdaptor.addControllerWithMetadata(httpControllerMetadata);
+          }
+        });
+      });
     }
 
     private createHttpServer(httpOption: HttpOption, httpAdaptor: HttpAdaptor) {
