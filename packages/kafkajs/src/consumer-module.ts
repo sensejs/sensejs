@@ -18,6 +18,7 @@ import {
 import {Container} from 'inversify';
 import {KafkaReceivedMessage, MessageConsumer, MessageConsumerOption} from '@sensejs/kafkajs-standalone';
 import {ConsumerContext} from './consumer-context';
+import lodash from 'lodash';
 import {
   getSubscribeControllerMetadata,
   getSubscribeTopicMetadata,
@@ -30,6 +31,7 @@ export interface KafkaConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Class<RequestInterceptor>[];
   messageConsumerOption?: Partial<MessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier;
+  matchLabels?: (string | symbol)[] | Set<string | symbol>;
 }
 
 function mergeConnectOption(
@@ -72,7 +74,11 @@ function scanSubscriber(
           if (!controllerMetadata) {
             return;
           }
-          this.scanPrototypeMethod(component, controllerMetadata);
+          const matchLabels = new Set(option.matchLabels);
+          const intersectedLabels = lodash.intersection([...matchLabels], [...controllerMetadata.labels]);
+          if (intersectedLabels.length === matchLabels.size) {
+            this.scanPrototypeMethod(component, controllerMetadata);
+          }
         });
       });
 

@@ -21,10 +21,12 @@ export interface SubscribeTopicOption {
 export interface SubscribeControllerMetadata {
   interceptors: Constructor<RequestInterceptor>[];
   target: Class<{}>;
+  labels: Set<string | symbol>;
 }
 
 export interface SubscribeControllerOption {
   interceptors?: Constructor<RequestInterceptor>[];
+  labels?: (string | symbol)[] | Set<string | symbol>;
 }
 
 const SUBSCRIBE_TOPIC_METADATA_KEY = Symbol();
@@ -77,7 +79,12 @@ export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
 
 export function SubscribeController(option: SubscribeControllerOption = {}) {
   return (constructor: Constructor<{}>) => {
-    const metadata: SubscribeControllerMetadata = Object.assign({target: constructor, interceptors: []}, option);
+    const {interceptors = [], labels} = option;
+    const metadata: SubscribeControllerMetadata = {
+      target: constructor,
+      interceptors,
+      labels: new Set(labels),
+    };
     setSubscribeControllerMetadata(constructor, metadata);
     Component()(constructor);
   };
