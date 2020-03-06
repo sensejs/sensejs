@@ -57,10 +57,18 @@ export const defaultRunOption: RunOption = {
   onExit: (exitCode) => process.exit(exitCode),
 };
 
-function provideBuiltin(module: Constructor, option: {
+function provideBuiltin(option: {
+  entryModule: Constructor;
   onShutdown: () => void;
 }) {
-  @ModuleClass({requires: [createBuiltinModule(option), module]})
+  @ModuleClass({
+    requires: [
+      createBuiltinModule({
+        entryModule: EntryPointModule,
+        onShutdown: option.onShutdown,
+      }), option.entryModule,
+    ],
+  })
   class EntryPointModule {}
 
   return EntryPointModule;
@@ -79,8 +87,9 @@ export class ApplicationRunner {
     private runOption: RunOption<unknown>,
   ) {}
 
-  static runModule(moduleConstructor: Constructor, runOption: RunOption) {
-    const moduleRoot = new ModuleRoot(provideBuiltin(moduleConstructor, {
+  static runModule(entryModule: Constructor, runOption: RunOption) {
+    const moduleRoot = new ModuleRoot(provideBuiltin({
+      entryModule,
       onShutdown,
     }));
     const runner = new ApplicationRunner(process, moduleRoot, runOption);

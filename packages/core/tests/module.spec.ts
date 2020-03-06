@@ -344,10 +344,12 @@ describe('Module Root', () => {
     }
 
     const moduleRoot = new ModuleRoot(Z);
+
     await moduleRoot.start();
     expect(zOnCreateSpy).toHaveBeenCalled();
     await moduleRoot.stop();
     expect(xOnDestroySpy).toHaveBeenCalled();
   });
+
 
 });

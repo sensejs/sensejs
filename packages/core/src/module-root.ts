@@ -2,6 +2,9 @@ import {Container} from 'inversify';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 
+/**
+ * @private
+ */
 export class ModuleRoot {
   readonly container: Container = new Container({skipBaseClassChecks: true});
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
@@ -13,7 +16,6 @@ export class ModuleRoot {
   }
 
   public async start() {
-
     await this.startModule(this.entryModuleInstance);
   }
 

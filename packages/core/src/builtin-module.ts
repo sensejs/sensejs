@@ -1,8 +1,9 @@
-import {ModuleClass, OnModuleCreate, OnModuleDestroy} from './module';
+import {createModule, ModuleClass, OnModuleCreate, OnModuleDestroy} from './module';
 import {LoggerModule} from './logger';
 import {Inject} from './decorators';
 import {Component} from './component';
 import {ComponentFactory, ComponentScope, Constructor} from './interfaces';
+import {ModuleScanner} from './module-scanner';
 
 @Component({scope: ComponentScope.SINGLETON})
 export class BackgroundTaskQueue {
@@ -41,20 +42,32 @@ class ProcessManagerFactory extends ComponentFactory<ProcessManager> {
 
   build() {
     if (!this.processManager) {
-      throw new Error('Process not setu correctly');
+      throw new Error('Process not setup correctly');
     }
     return this.processManager;
   }
 }
 
+function createModuleScannerFactory(entryModule: Constructor) {
+  const moduleScanner = new ModuleScanner(entryModule);
+
+  class ModuleScannerFactory extends ComponentFactory<ModuleScanner> {
+    build() {
+      return moduleScanner;
+    }
+  }
+
+  return {
+    provide: ModuleScanner,
+    scope: ComponentScope.SINGLETON,
+    factory: ModuleScannerFactory,
+  };
+}
+
 export function createBuiltinModule(option: {
+  entryModule: Constructor;
   onShutdown: () => void;
 }): Constructor {
-  @ModuleClass({
-    requires: [LoggerModule],
-    components: [BackgroundTaskQueue],
-    factories: [{provide: ProcessManager, scope: ComponentScope.SINGLETON, factory: ProcessManagerFactory}],
-  })
   class BuiltinModule {
 
     @OnModuleCreate()
@@ -67,6 +80,24 @@ export function createBuiltinModule(option: {
       return queuedTask.waitAllTaskFinished();
     }
   }
+
+  ModuleClass({
+    requires: [
+      LoggerModule,
+      createModule({
+        components: [BackgroundTaskQueue],
+        factories: [
+          {
+            provide: ProcessManager,
+            scope: ComponentScope.SINGLETON,
+            factory: ProcessManagerFactory,
+          },
+          createModuleScannerFactory(option.entryModule),
+        ],
+      }),
+    ],
+  })(BuiltinModule);
+
   return BuiltinModule;
 
 }

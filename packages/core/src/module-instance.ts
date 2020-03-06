@@ -9,7 +9,7 @@ import {Constructor} from './interfaces';
 export class ModuleInstance {
   public readonly dependencies: ModuleInstance[] = [];
   public referencedCounter = 0;
-  private readonly moduleMetadata: ModuleMetadata;
+  public readonly moduleMetadata: ModuleMetadata;
   private setupPromise?: Promise<void>;
   private destroyPromise?: Promise<void>;
   private moduleInstance?: any;

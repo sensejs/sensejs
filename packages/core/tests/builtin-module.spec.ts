@@ -1,5 +1,6 @@
 import {Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '../src';
 import {BackgroundTaskQueue, createBuiltinModule} from '../src/builtin-module';
+import {ModuleScanner} from '../src/module-scanner';
 
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {
@@ -22,12 +23,16 @@ describe('BuiltinModule', () => {
       .spyOn(BackgroundTaskQueue.prototype, 'waitAllTaskFinished')
       .mockImplementation(mockedWaitAllTaskFinished);
 
-    @ModuleClass({requires: [createBuiltinModule({onShutdown: () => null})]})
+    const moduleScannerStub = jest.fn();
+
+    @ModuleClass({requires: [createBuiltinModule({entryModule: MyModule, onShutdown: () => null})]})
     class MyModule {
       @OnModuleCreate()
-      onCreate(@Inject(BackgroundTaskQueue) queuedTask: BackgroundTaskQueue) {
+      onCreate(@Inject(BackgroundTaskQueue) queuedTask: BackgroundTaskQueue,
+        @Inject(ModuleScanner) moduleScanner: ModuleScanner) {
         queuedTask.dispatch(longRunningTask);
         queuedTask.dispatch(() => longRunningTask);
+        moduleScanner.scanModule(moduleScannerStub);
       }
     }
 
@@ -36,6 +41,7 @@ describe('BuiltinModule', () => {
     await moduleRoot.stop().then(() => {
       expect(spy).toHaveBeenCalled();
       stoppedStub();
+      expect(moduleScannerStub).toHaveBeenCalled();
     });
   });
 });
