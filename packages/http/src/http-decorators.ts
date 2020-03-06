@@ -24,14 +24,21 @@ export interface ControllerMetadata {
   target: Constructor;
   prototype: object;
   interceptors: Constructor<HttpInterceptor>[];
+  label: Set<string | symbol>;
 }
 
 export interface ControllerOption {
+  /**
+   *
+   */
   interceptors?: Constructor<HttpInterceptor>[];
-  tags?: {
-    [tag: string]: unknown;
-    [tag: number]: unknown;
-  };
+
+  /**
+   * Label of controller
+   *
+   * @see HttpModuleOption
+   */
+  label?: (string | symbol)[] | Set<symbol | string>;
 }
 
 const noop: Transformer = (x) => x;
@@ -183,7 +190,8 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
       target,
       path,
       prototype: target.prototype,
-      interceptors: controllerOption.interceptors || [],
+      interceptors: controllerOption.interceptors ?? [],
+      label: controllerOption.label instanceof Set ? controllerOption.label : new Set(controllerOption.label)
     });
   };
 }

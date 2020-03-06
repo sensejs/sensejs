@@ -116,7 +116,7 @@ importers:
       inversify: 5.0.1
       koa: 2.11.0
       koa-bodyparser: 4.2.1
-      lodash.uniq: 4.5.0
+      lodash: 4.17.15
       reflect-metadata: 0.1.13
       tslib: 1.11.1
     devDependencies:
@@ -124,7 +124,7 @@ importers:
       '@types/koa-bodyparser': 4.3.0
       '@types/koa__cors': 3.0.1
       '@types/koa__router': 8.0.2
-      '@types/lodash.uniq': 4.5.6
+      '@types/lodash': 4.14.149
       '@types/node': 12.12.29
       '@types/supertest': 2.0.8
       supertest: 4.0.2
@@ -137,13 +137,13 @@ importers:
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa__cors': ^3.0.1
       '@types/koa__router': ^8.0.2
-      '@types/lodash.uniq': ^4.5.6
+      '@types/lodash': ^4.14.149
       '@types/node': ^12.12.29
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       koa: ^2.11.0
       koa-bodyparser: ^4.2.1
-      lodash.uniq: ^4.5.0
+      lodash: ^4.17.15
       reflect-metadata: ^0.1.13
       supertest: ^4.0.2
       ts-jest: ^25.2.1
@@ -959,12 +959,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-3ZWfVAEcErHrZA31fWUC2YyZyAgoG4eKtQPy2XwBzdSpQealxjL7GcEEtGY925qPPs1wurW59qDl0KuRB39rrw==
-  /@types/lodash.uniq/4.5.6:
-    dependencies:
-      '@types/lodash': 4.14.149
-    dev: true
-    resolution:
-      integrity: sha512-XHNMXBtiwsWZstZMyxOYjr0e8YYWv0RgPlzIHblTuwBBiWo2MzWVaTBihtBpslb5BglgAWIeBv69qt1+RTRW1A==
   /@types/lodash/4.14.149:
     dev: true
     resolution:
@@ -4209,12 +4203,7 @@ packages:
     dev: true
     resolution:
       integrity: sha512-stgLz+i3Aa9mZgnjr/O+v9ruKZsPsndy7qPZOchbqk2cnTU1ZaldKK+v7m54WoKIyxiuMZTKT2H81F8BeAc3ZQ==
-  /lodash.uniq/4.5.0:
-    dev: false
-    resolution:
-      integrity: sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
   /lodash/4.17.15:
-    dev: true
     resolution:
       integrity: sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
   /log-symbols/1.0.2:

@@ -1,9 +1,10 @@
-import {Container, ContainerModule} from 'inversify';
+import {Container} from 'inversify';
 import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {HttpAdaptor, HttpApplicationOption, HttpInterceptor} from './http-abstract';
+import lodash from 'lodash';
 import {
   Constructor,
   createModule,
@@ -29,11 +30,36 @@ const defaultHttpConfig = {
 };
 
 export interface HttpModuleOption extends ModuleOption {
+
+  /**
+   *
+   */
   httpAdaptorFactory?: () => HttpAdaptor;
+
+  /**
+   * Interceptors applied by this http server
+   */
   globalInterceptors?: Constructor<HttpInterceptor>[];
+
+  /**
+   * If specified, http server instance will be bound to container with this as service identifier
+   */
   serverIdentifier?: ServiceIdentifier;
+
+  /**
+   * Http application options
+   */
   httpOption?: Partial<HttpOption>;
+
+  /**
+   * If specified, httpOption will be overridden by value resolved by this service identifier
+   */
   injectOptionFrom?: ServiceIdentifier<Partial<HttpOption>>;
+
+  /**
+   * If specified, only match the controllers which contains all required label
+   */
+  matchLabel?: (string | symbol)[] | Set<string | symbol>;
 }
 
 /**
@@ -41,11 +67,7 @@ export interface HttpModuleOption extends ModuleOption {
  * @param option
  * @constructor
  */
-export function createHttpModule(
-  option: HttpModuleOption = {
-    httpOption: defaultHttpConfig,
-  },
-): Constructor {
+export function createHttpModule(option: HttpModuleOption = {httpOption: defaultHttpConfig}): Constructor {
   const httpAdaptorFactory = option.httpAdaptorFactory || (
     () => new KoaHttpApplicationBuilder()
   );
@@ -81,7 +103,6 @@ export function createHttpModule(
         httpAdaptor.addGlobalInspector(inspector);
       }
       this.scanControllers(httpAdaptor, moduleScanner);
-      const allInterceptors = httpAdaptor.getAllInterceptors();
 
       this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);
 
@@ -100,11 +121,19 @@ export function createHttpModule(
       })();
     }
 
-    private scanControllers(httpAdaptor: HttpAdaptor, moduleScanner: ModuleScanner) {
+    private scanControllers(
+      httpAdaptor: HttpAdaptor,
+      moduleScanner: ModuleScanner
+    ) {
+      const matchLabel = new Set<string | symbol>(option.matchLabel);
       moduleScanner.scanModule((metadata) => {
         metadata.components.forEach((component) => {
           const httpControllerMetadata = getHttpControllerMetadata(component);
-          if (httpControllerMetadata) {
+          if (!httpControllerMetadata) {
+            return;
+          }
+          const intersectedLabel = lodash.intersection([...matchLabel], [...httpControllerMetadata.label]);
+          if (intersectedLabel.length === matchLabel.size) {
             httpAdaptor.addControllerWithMetadata(httpControllerMetadata);
           }
         });

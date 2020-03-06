@@ -13,7 +13,7 @@ import {
   HttpRequest,
   HttpResponse,
 } from './http-abstract';
-import uniq from 'lodash.uniq';
+import {uniq} from 'lodash';
 import {ControllerMetadata, getRequestMappingMetadata, HttpMethod} from './http-decorators';
 
 interface MethodRouteSpec {

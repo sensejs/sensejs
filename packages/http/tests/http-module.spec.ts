@@ -29,7 +29,13 @@ test('HttpModule', async () => {
     }
   }
 
-  @Controller('/foo', {interceptors: [MockInterceptor]})
+  @Controller('/bar')
+  class BarController {
+    @GET('/')
+    bar() {}
+  }
+
+  @Controller('/foo', {interceptors: [MockInterceptor], label: ['foo']})
   class FooController {
     constructor(@inject(MyComponent) private myComponent: MyComponent) {}
 
@@ -42,6 +48,7 @@ test('HttpModule', async () => {
   const runPromise = ApplicationRunner.runModule(createHttpModule({
     requires: [createModule({components: [MyComponent, FooController]})],
     serverIdentifier,
+    matchLabel: ['foo'],
     httpOption: {
       listenPort: 3000,
       listenAddress: '0.0.0.0',
@@ -51,9 +58,7 @@ test('HttpModule', async () => {
       return undefined as never;
     },
   });
-
-  return Promise.all([
-    supertest('http://localhost:3000').get('/foo'),
-    runPromise,
-  ]);
+  await runPromise;
+  await supertest('http://localhost:3000').get('/bar').expect(404);
+  await supertest('http://localhost:3000').get('/foo').expect(200);
 });
