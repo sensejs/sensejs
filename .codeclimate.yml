@@ -13,6 +13,9 @@ checks:
   return-statements:
     config:
       threshold: 5
+  method-complexity:
+    config:
+      threshold: 10
 
 exclude_patterns:
   - "**/.idea/*"
@@ -20,7 +23,7 @@ exclude_patterns:
   - "jest.config.js"
   - "pnpmfile.js"
 
-engines:
+plugins:
   duplication:
     enabled: true
     config:
