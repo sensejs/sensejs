@@ -1,10 +1,11 @@
 import {Class, ComponentFactory, ComponentFactoryContext, ComponentScope} from './interfaces';
-import {targetName} from 'inversify';
+import {targetName, interfaces} from 'inversify';
 import {Component} from './component';
 import {Inject, Optional} from './decorators';
-import {DecoratorBuilder, Logger, consoleLogger} from '@sensejs/utility';
+import {consoleLogger, DecoratorBuilder, Logger} from '@sensejs/utility';
 import {ensureMethodInjectMetadata} from './method-inject';
 import {createModule} from './module';
+
 export {consoleLogger, Logger} from '@sensejs/utility';
 
 const LOGGER_SYMBOL = Symbol('LOGGER_SYMBOL');
@@ -38,6 +39,19 @@ export class ConsoleLoggerBuilder implements LoggerBuilder {
   }
 }
 
+function getLoggerNameFromRequest(parentRequest: interfaces.Request | null) {
+  const parent = parentRequest ? parentRequest.serviceIdentifier : null;
+  return parent === null
+    ? ''
+    : typeof parent === 'symbol'
+      ? parent.toString()
+      : typeof parent === 'string'
+        ? parent
+        : typeof parent === 'function'
+          ? parent.name
+          : '';
+}
+
 export class LoggerFactory extends ComponentFactory<Logger> {
   constructor(
     @Inject(LOGGER_BUILDER_SYMBOL)
@@ -49,21 +63,7 @@ export class LoggerFactory extends ComponentFactory<Logger> {
 
   build(context: ComponentFactoryContext): Logger {
     const parentRequest = context.currentRequest.parentRequest;
-    let moduleName = context.currentRequest.target.name.value();
-
-    const parent = parentRequest ? parentRequest.serviceIdentifier : null;
-    if (!moduleName) {
-      moduleName = parent === null
-        ? ''
-        : typeof parent === 'symbol'
-          ? parent.toString()
-          : typeof parent === 'string'
-            ? parent
-            : typeof parent === 'function'
-              ? parent.name
-              : '';
-    }
-
+    const moduleName = context.currentRequest.target.name.value() ?? getLoggerNameFromRequest(parentRequest);
     return this.loggerBuilder.build(moduleName);
   }
 }
