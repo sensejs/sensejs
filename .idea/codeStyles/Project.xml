@@ -69,12 +69,6 @@
         <option name="TAB_SIZE" value="2" />
       </indentOptions>
       <arrangement>
-        <groups>
-          <group>
-            <type>GROUP_PROPERTY_FIELD_WITH_GETTER_SETTER</type>
-            <order>KEEP</order>
-          </group>
-        </groups>
         <rules>
           <section>
             <rule>
@@ -146,39 +140,6 @@
             <rule>
               <match>
                 <AND>
-                  <METHOD>true</METHOD>
-                  <PUBLIC>true</PUBLIC>
-                  <STATIC>true</STATIC>
-                </AND>
-              </match>
-            </rule>
-          </section>
-          <section>
-            <rule>
-              <match>
-                <AND>
-                  <METHOD>true</METHOD>
-                  <PROTECTED>true</PROTECTED>
-                  <STATIC>true</STATIC>
-                </AND>
-              </match>
-            </rule>
-          </section>
-          <section>
-            <rule>
-              <match>
-                <AND>
-                  <METHOD>true</METHOD>
-                  <PRIVATE>true</PRIVATE>
-                  <STATIC>true</STATIC>
-                </AND>
-              </match>
-            </rule>
-          </section>
-          <section>
-            <rule>
-              <match>
-                <AND>
                   <FIELD>true</FIELD>
                   <PUBLIC>true</PUBLIC>
                 </AND>
@@ -239,6 +200,39 @@
             <rule>
               <match>
                 <CONSTRUCTOR>true</CONSTRUCTOR>
+              </match>
+            </rule>
+          </section>
+          <section>
+            <rule>
+              <match>
+                <AND>
+                  <METHOD>true</METHOD>
+                  <PUBLIC>true</PUBLIC>
+                  <STATIC>true</STATIC>
+                </AND>
+              </match>
+            </rule>
+          </section>
+          <section>
+            <rule>
+              <match>
+                <AND>
+                  <METHOD>true</METHOD>
+                  <PROTECTED>true</PROTECTED>
+                  <STATIC>true</STATIC>
+                </AND>
+              </match>
+            </rule>
+          </section>
+          <section>
+            <rule>
+              <match>
+                <AND>
+                  <METHOD>true</METHOD>
+                  <PRIVATE>true</PRIVATE>
+                  <STATIC>true</STATIC>
+                </AND>
               </match>
             </rule>
           </section>
