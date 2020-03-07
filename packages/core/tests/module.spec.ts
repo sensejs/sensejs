@@ -2,15 +2,16 @@ import {Container} from 'inversify';
 import {
   Component,
   ComponentFactory,
+  createModule,
   getModuleMetadata,
   Inject,
   ModuleClass,
+  ModuleOption,
   ModuleRoot,
   Named,
   OnModuleCreate,
   OnModuleDestroy,
   Tagged,
-  createModule,
 } from '../src';
 import {ModuleInstance} from '../src/module-instance';
 
@@ -21,7 +22,7 @@ describe('@ModuleClass', () => {
     expect(getModuleMetadata(createModule({requires: [dependency]}))).toEqual(expect.objectContaining({
       requires: [dependency],
       onModuleCreate: [],
-      onModuleDestroy: []
+      onModuleDestroy: [],
     }));
   });
 
@@ -49,7 +50,7 @@ describe('@ModuleClass', () => {
     expect(getModuleMetadata(X)).toEqual(expect.objectContaining({
       requires: [Y],
       onModuleCreate: [X.prototype.foo, X.prototype.onModuleCreate],
-      onModuleDestroy: [X.prototype.bar, X.prototype.onModuleDestroy]
+      onModuleDestroy: [X.prototype.bar, X.prototype.onModuleDestroy],
     }));
   });
 
@@ -119,61 +120,67 @@ describe('ModuleInstance', () => {
 
   });
 
-  test('Component resolve', async () => {
-    const name = 'name' + Math.random();
-    const key = Symbol();
-    const value = Symbol();
-    const id = Symbol();
+});
 
-    @Component()
-    class UnnamedComponent {}
+describe('Module resolve', () => {
 
-    @Component({id, name})
-    class NamedComponent {}
+  const name = 'name' + Math.random();
+  const key = Symbol();
+  const value = Symbol();
+  const id = Symbol();
 
-    @Component({id, tags: [{key, value}]})
-    class TaggedComponent {}
+  const unnamedId = Symbol();
+  const namedId = Symbol();
+  const taggedId = Symbol();
 
-    @ModuleClass({
-      components: [UnnamedComponent, NamedComponent, TaggedComponent],
-    })
-    class Dependency {
+  function createStubModule(option: ModuleOption) {
+    @ModuleClass(option)
+    class StubModule {
       constructor(
-        @Inject(UnnamedComponent) unnamed: UnnamedComponent,
-        @Inject(id) @Named(name) named: NamedComponent,
-        @Inject(id) @Tagged(key, value) tagged: TaggedComponent,
+        @Inject(unnamedId) unnamed: unknown,
+        @Inject(namedId) @Named(name) named: unknown,
+        @Inject(taggedId) @Tagged(key, value) tagged: unknown,
       ) {}
 
       @OnModuleCreate()
       onCreate(
-        @Inject(UnnamedComponent) unnamed: UnnamedComponent,
-        @Inject(id) @Named(name) named: NamedComponent,
-        @Inject(id) @Tagged(key, value) tagged: TaggedComponent,
+        @Inject(unnamedId) unnamed: unknown,
+        @Inject(namedId) @Named(name) named: unknown,
+        @Inject(taggedId) @Tagged(key, value) tagged: unknown,
       ) {
       }
 
       @OnModuleDestroy()
       onDestroy(
-        @Inject(UnnamedComponent) unnamed: UnnamedComponent,
-        @Inject(id) @Named(name) named: NamedComponent,
-        @Inject(id) @Tagged(key, value) tagged: TaggedComponent,
+        @Inject(unnamedId) unnamed: unknown,
+        @Inject(namedId) @Named(name) named: unknown,
+        @Inject(taggedId) @Tagged(key, value) tagged: unknown,
       ) {
       }
     }
 
-    const instance = new ModuleInstance(Dependency, new Container());
+    return StubModule;
+  }
+
+  test('Component resolve', async () => {
+
+    @Component({id: unnamedId})
+    class UnnamedComponent {}
+
+    @Component({id: namedId, name})
+    class NamedComponent {}
+
+    @Component({id: taggedId, tags: [{key, value}]})
+    class TaggedComponent {}
+
+    const instance = new ModuleInstance(createStubModule({
+      components: [UnnamedComponent, NamedComponent, TaggedComponent],
+    }), new Container());
     await instance.onSetup();
     await instance.onDestroy();
   });
 
   test('Factory resolve', async () => {
-    const name = 'name' + Math.random();
-    const key = Symbol();
-    const value = Symbol();
-    const unnamedId = Symbol();
-    const namedId = Symbol();
-    const taggedId = Symbol();
-
     @Component()
     class UnnamedComponent extends ComponentFactory<void> {
       build() {}
@@ -189,83 +196,26 @@ describe('ModuleInstance', () => {
       build() {}
     }
 
-    @ModuleClass({
+    const instance = new ModuleInstance(createStubModule({
       factories: [
         {provide: unnamedId, factory: UnnamedComponent},
         {provide: namedId, factory: NamedComponent},
         {provide: taggedId, factory: TaggedComponent},
       ],
-    })
-    class Dependency {
-      constructor(
-        @Inject(unnamedId) unnamed: undefined,
-        @Inject(namedId) @Named(name) named: undefined,
-        @Inject(taggedId) @Tagged(key, value) tagged: undefined,
-      ) {}
-
-      @OnModuleCreate()
-      onCreate(
-        @Inject(unnamedId) unnamed: undefined,
-        @Inject(namedId) @Named(name) named: undefined,
-        @Inject(taggedId) @Tagged(key, value) tagged: undefined,
-      ) {
-      }
-
-      @OnModuleDestroy()
-      onDestroy(
-        @Inject(unnamedId) unnamed: undefined,
-        @Inject(namedId) @Named(name) named: undefined,
-        @Inject(taggedId) @Tagged(key, value) tagged: undefined,
-      ) {
-      }
-    }
-
-    const instance = new ModuleInstance(Dependency, new Container());
+    }), new Container());
     await instance.onSetup();
     await instance.onDestroy();
   });
 
   test('Constants resolve', async () => {
 
-    const name = 'name' + Math.random();
-    const key = Symbol();
-    const value = Symbol();
-    const unnamedId = Symbol();
-    const namedId = Symbol();
-    const taggedId = Symbol();
-
-    @ModuleClass({
+    const instance = new ModuleInstance(createStubModule({
       constants: [
         {provide: unnamedId, value: Symbol()},
         {provide: namedId, value: Symbol()},
         {provide: taggedId, value: Symbol()},
       ],
-    })
-    class Dependency {
-      constructor(
-        @Inject(unnamedId) unnamed: symbol,
-        @Inject(namedId) @Named(name) named: symbol,
-        @Inject(taggedId) @Tagged(key, value) tagged: symbol,
-      ) {}
-
-      @OnModuleCreate()
-      onCreate(
-        @Inject(unnamedId) unnamed: symbol,
-        @Inject(namedId) @Named(name) named: symbol,
-        @Inject(taggedId) @Tagged(key, value) tagged: symbol,
-      ) {
-      }
-
-      @OnModuleDestroy()
-      onDestroy(
-        @Inject(unnamedId) unnamed: symbol,
-        @Inject(namedId) @Named(name) named: symbol,
-        @Inject(taggedId) @Tagged(key, value) tagged: symbol,
-      ) {
-      }
-    }
-
-    const instance = new ModuleInstance(Dependency, new Container());
+    }), new Container());
     await instance.onSetup();
     await instance.onDestroy();
   });
@@ -273,7 +223,7 @@ describe('ModuleInstance', () => {
 
 describe('Module Root', () => {
 
-  test('component resolve', async () => {
+  test('lifecycle', async () => {
     const xOnCreateSpy = jest.fn(), xOnDestroySpy = jest.fn();
     const yOnCreateSpy = jest.fn(), yOnDestroySpy = jest.fn();
     const zOnCreateSpy = jest.fn(), zOnDestroySpy = jest.fn();
@@ -300,7 +250,6 @@ describe('Module Root', () => {
       }
     }
 
-
     @ModuleClass({
       requires: [X],
     })
@@ -320,7 +269,6 @@ describe('Module Root', () => {
         yOnDestroySpy();
       }
     }
-
 
     @ModuleClass({
       requires: [X, Y],
@@ -350,6 +298,5 @@ describe('Module Root', () => {
     await moduleRoot.stop();
     expect(xOnDestroySpy).toHaveBeenCalled();
   });
-
 
 });
