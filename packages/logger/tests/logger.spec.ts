@@ -146,7 +146,7 @@ describe('Logger', () => {
     test('log level filter', async () => {
       const levels = [LogLevel.FATAL, LogLevel.ERROR, LogLevel.WARN];
       const mockWriter = jest.fn((chunk, encoding, callback) => {
-        return callback();
+        setImmediate(callback);
       });
       const mockOutput = new Writable({
         write: mockWriter,
@@ -173,9 +173,8 @@ describe('Logger', () => {
 
     test('streaming', async () => {
       const levels = [LogLevel.ERROR];
-      const bufferedCallback: ((e?: Error) => void)[] = [];
       const mockWriter = jest.fn((chunk, encoding, callback) => {
-        bufferedCallback.push(callback);
+        setImmediate(callback);
       });
       const mockOutput = new Writable({
         highWaterMark: 1,
@@ -199,9 +198,8 @@ describe('Logger', () => {
         messages: ['message'],
       });
       expect(mockWriter).toHaveBeenCalledTimes(1);
-      bufferedCallback.shift()!();
       await p1;
-      bufferedCallback.shift()!();
+      await transport.flush();
       await p2;
     });
   });
