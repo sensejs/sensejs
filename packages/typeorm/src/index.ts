@@ -103,35 +103,22 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
   return TransactionInterceptor;
 }
 
-export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
-  const optionProvider = provideOptionInjector<ConnectionOptions>(
-    option.typeOrmOption,
-    option.injectOptionFrom,
-    (defaultValue, injectedValue) => {
-      const result = Object.assign({}, defaultValue, injectedValue);
-      if (typeof result.type !== 'string') {
-        throw new Error('invalid TypeORM config, type is missing');
-      }
-      // TODO: too complex to check connection type is valid, pass it to TypeORM directly
-      return result as ConnectionOptions;
-    },
-  );
+function mergeTypeOrmConfig(defaultValue?: Partial<ConnectionOptions>, injectedValue?: Partial<ConnectionOptions>) {
+  const result = Object.assign({}, defaultValue, injectedValue);
+  if (typeof result.type !== 'string') {
+    throw new Error('invalid TypeORM config, type is missing');
+  }
+  // TODO: too complex to check connection type is valid, pass it to TypeORM directly
+  return result as ConnectionOptions;
+}
 
-  const factoryProvider = provideConnectionFactory(
-    (option: ConnectionOptions) => createConnection(option),
-    (connection: Connection) => connection.close(),
-    Connection,
-  );
+function createConnectionModule(option: TypeOrmModuleOption) {
+  const optionProvider = provideOptionInjector(option.typeOrmOption, option.injectOptionFrom, mergeTypeOrmConfig);
+  const factoryProvider = provideConnectionFactory(createConnection, (conn) => conn.close(), Connection);
 
-  @ModuleClass({
-    requires: [LoggerModule, createModule(option)],
-    factories: [factoryProvider, optionProvider],
-  })
+  @ModuleClass({requires: [LoggerModule, createModule(option)], factories: [factoryProvider, optionProvider]})
   class TypeOrmConnectionModule {
-    constructor(
-      @Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>,
-      @Inject(optionProvider.provide) private config: ConnectionOptions,
-    ) {}
+    constructor(@Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {}
 
     @OnModuleCreate()
     async onCreate(
@@ -154,10 +141,15 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     }
   }
 
+  return TypeOrmConnectionModule;
+}
+
+export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
+
   @ModuleClass({
-    requires: [TypeOrmConnectionModule],
+    requires: [createConnectionModule(option)],
   })
-  class EntityManagerModule {
+  class TypeOrmModule {
     private readonly module: ContainerModule;
     private readonly entityManager = this.connection.createEntityManager();
 
@@ -186,5 +178,5 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     }
   }
 
-  return createModule({requires: [EntityManagerModule]});
+  return TypeOrmModule;
 }
