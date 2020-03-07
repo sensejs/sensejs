@@ -76,35 +76,6 @@ export class DecoratorBuilder {
     }
   }
 
-  private applyToClass: ClassDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to class`);
-  };
-  private applyToInstanceProperty: InstancePropertyDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to property`);
-  };
-  private applyToStaticProperty: StaticPropertyDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to static property`);
-  };
-  private applyToInstanceMethod: InstanceMethodDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to method`);
-  };
-  private applyToStaticMethod: StaticMethodDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to static method`);
-  };
-  private applyToConstructorParam: <T>(ctr: Class<T>, name: any, index: number) => void | Class<T> = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
-  };
-  private applyToStaticMethodParam: StaticMethodParamDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class static method`);
-  };
-  private applyToInstanceMethodParam: InstanceMethodParamDecorator = () => {
-    throw new Error(`@${this.decoratorName} cannot apply to param of class instance method`);
-  };
-  private applyToWrongPlace: () => void = () => {
-    throw new Error(`@${this.decoratorName} cannot be applied here`);
-  };
-
-
   whenApplyToConstructor(fn: ClassDecorator) {
     this.applyToClass = fn;
     return this;
@@ -146,57 +117,116 @@ export class DecoratorBuilder {
   }
 
   build<T = Decorator>(): NarrowTo<T> {
-    const {
-      applyToConstructorParam,
-      applyToStaticMethodParam,
-      applyToInstanceMethodParam,
-      applyToInstanceMethod,
-      applyToStaticMethod,
-      applyToInstanceProperty,
-      applyToStaticProperty,
-      applyToClass,
-      applyToWrongPlace,
-    } = this;
 
     const result = <T extends Function, R>(
       target: object | Class<R>,
-      method?: undefined | symbol | string,
+      name?: undefined | symbol | string,
       descriptor?: number | TypedPropertyDescriptor<T>,
     ): void | TypedPropertyDescriptor<T> | Class<R> => {
-      if (typeof descriptor === 'number') {
-        // parameter decoration
-        if (typeof target === 'function') {
-          if (typeof method === 'undefined') {
-            return applyToConstructorParam(target as Class<R>, method, descriptor);
-          } else {
-            return applyToStaticMethodParam(target, method, descriptor);
-          }
+      if (typeof target === 'function') {
+        if (typeof name === 'undefined') {
+          return this.applyConstructorDecorator(target, descriptor);
         }
-        if (typeof target === 'object' && typeof method !== 'undefined') {
-          return applyToInstanceMethodParam(target, method, descriptor);
-        }
+        return this.applyStaticDecorator(target, name, descriptor);
+      } else if (typeof name !== 'undefined') {
+        return this.applyInstanceDecorator(target, name, descriptor);
       }
-      if (typeof descriptor === 'object' && typeof method !== 'undefined') {
-        // method decoration
-        if (typeof target === 'object') {
-          return applyToInstanceMethod(target, method, descriptor);
-        } else {
-          return applyToStaticMethod(target, method, descriptor);
-        }
-      }
-      if (typeof descriptor === 'undefined') {
-        if (typeof target === 'function') {
-          if (typeof method === 'undefined') {
-            return applyToClass(target as Class<R>);
-          } else {
-            return applyToStaticProperty(target, method);
-          }
-        } else if (typeof target === 'object' && typeof method !== 'undefined') {
-          return applyToInstanceProperty(target, method);
-        }
-      }
-      return applyToWrongPlace();
+      return this.applyToWrongPlace();
     };
     return result as NarrowTo<T>;
   }
+
+  private applyToClass: ClassDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to class`);
+  };
+
+  private applyToInstanceProperty: InstancePropertyDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to property`);
+  };
+
+  private applyToStaticProperty: StaticPropertyDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to static property`);
+  };
+
+  private applyToInstanceMethod: InstanceMethodDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to method`);
+  };
+
+  private applyToStaticMethod: StaticMethodDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to static method`);
+  };
+
+  private applyToConstructorParam: <T>(ctr: Class<T>, name: any, index: number) => void | Class<T> = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
+  };
+
+  private applyToStaticMethodParam: StaticMethodParamDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class static method`);
+  };
+
+  private applyToInstanceMethodParam: InstanceMethodParamDecorator = () => {
+    throw new Error(`@${this.decoratorName} cannot apply to param of class instance method`);
+  };
+
+  private applyToWrongPlace: () => void = () => {
+    throw new Error(`@${this.decoratorName} cannot be applied here`);
+  };
+
+  private applyConstructorDecorator<T extends Function, R extends {}>(
+    target: object | Class<R>,
+    descriptor?: number | TypedPropertyDescriptor<T>,
+  ) {
+    const {
+      applyToClass,
+      applyToConstructorParam,
+    } = this;
+    if (typeof target === 'function') {
+      if (typeof descriptor === 'number') {
+        return applyToConstructorParam(target, undefined, descriptor);
+      } else if (typeof descriptor === 'undefined') {
+        return applyToClass(target);
+      }
+    }
+    return this.applyToWrongPlace();
+  }
+
+  private applyInstanceDecorator<T extends Function, R extends {}>(
+    target: R,
+    name: symbol | string,
+    descriptor?: number | TypedPropertyDescriptor<T>,
+  ) {
+    const {
+      applyToInstanceMethodParam,
+      applyToInstanceProperty,
+      applyToInstanceMethod,
+    } = this;
+
+    if (typeof descriptor === 'number') {
+      return applyToInstanceMethodParam(target, name, descriptor);
+    } else if (typeof descriptor === 'object') {
+      return applyToInstanceMethod(target, name, descriptor);
+    } else {
+      return applyToInstanceProperty(target, name);
+    }
+  }
+
+  private applyStaticDecorator<T extends Function, R extends {}>(
+    target: Class<R>,
+    name: symbol | string,
+    descriptor?: number | TypedPropertyDescriptor<T>,
+  ) {
+    const {
+      applyToStaticMethodParam,
+      applyToStaticProperty,
+      applyToStaticMethod,
+    } = this;
+    if (typeof descriptor === 'number') {
+      return applyToStaticMethodParam(target, name, descriptor);
+    } else if (typeof descriptor === 'object') {
+      return applyToStaticMethod(target, name, descriptor);
+    } else {
+      return applyToStaticProperty(target, name);
+    }
+  }
+
 }
