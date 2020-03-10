@@ -1,13 +1,9 @@
 import {ServiceIdentifier} from './interfaces';
 import {decorate, inject, named, optional, tagged} from 'inversify';
-import {
-  ConstructorParamDecorator,
-  DecoratorBuilder,
-  MethodParamDecorator,
-  ParamDecorator,
-} from '@sensejs/utility';
+import {ConstructorParamDecorator, DecoratorBuilder, MethodParamDecorator, ParamDecorator} from '@sensejs/utility';
 import {makeDeprecateMessageEmitter} from './utils';
 import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
+import {decorateInjectedConstructorParam} from './constructor-inject';
 
 function applyToParamBindingInvoker<Parameter>(
   decorator: ParameterDecorator,
@@ -22,19 +18,16 @@ function applyToParamBindingInvoker<Parameter>(
   }
 }
 
-export function Inject<T, R = T>(target: ServiceIdentifier<T>, option?: MethodParameterInjectOption<T, R>) {
+export function Inject<T>(target: ServiceIdentifier<T>, option?: MethodParameterInjectOption<T, any>) {
   const name = typeof target === 'function' ? target.name : target.toString();
-  const discriminator = new DecoratorBuilder(`Inject(${name})`).whenApplyToInstanceMethodParam(
+  return new DecoratorBuilder(`Inject(${name})`).whenApplyToInstanceMethodParam(
     (prototype, name, index) => {
       return MethodInject(target, option)(prototype, name, index);
     },
-  );
-  if (typeof option === 'undefined') {
-    discriminator.whenApplyToConstructorParam((constructor, index) => {
-      return decorate(inject(target) as ParameterDecorator, constructor, index);
-    });
-  }
-  return discriminator.build<ParamDecorator>();
+  ).whenApplyToConstructorParam((constructor, index) => {
+    decorateInjectedConstructorParam(constructor, index, option?.transform);
+    return decorate(inject(target) as ParameterDecorator, constructor, index);
+  }).build<ParamDecorator>();
 }
 
 export function Optional() {
