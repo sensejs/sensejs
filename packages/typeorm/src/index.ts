@@ -26,22 +26,8 @@ export interface TypeOrmModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<Partial<ConnectionOptions>>;
 }
 
-const EntityRepositoryMetadataKey = Symbol();
-
-function ensureInjectRepositoryToken(entityConstructor: string | Function): symbol {
-  let symbol = Reflect.getOwnMetadata(EntityRepositoryMetadataKey, entityConstructor);
-  if (symbol) {
-    return symbol;
-  }
-  const entityName = typeof entityConstructor === 'string' ? entityConstructor : entityConstructor.name;
-  symbol = Symbol(`Repository<${entityName}>`);
-  Reflect.defineMetadata(EntityRepositoryMetadataKey, symbol, entityConstructor);
-  return symbol;
-}
-
 export function InjectRepository(entityConstructor: string | Function) {
-  const symbol = ensureInjectRepositoryToken(entityConstructor);
-  return Inject(symbol);
+  return Inject(EntityManager, {transform: (entityManager) => entityManager.getRepository(entityConstructor)});
 }
 
 function enumerateEntityAndRepository(
@@ -88,9 +74,6 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
     async intercept(context: RequestContext, next: () => Promise<void>) {
       const runInTransaction = async (entityManager: EntityManager) => {
         context.bindContextValue(EntityManager, entityManager);
-        enumerateEntityAndRepository(entityManager, (constructor, repository) => {
-          context.bindContextValue(ensureInjectRepositoryToken(constructor), repository);
-        });
         return next();
       };
       if (level) {
@@ -160,10 +143,6 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
       this.entityManager = connection.createEntityManager();
       this.module = new ContainerModule(async (bind) => {
         bind(EntityManager).toConstantValue(this.entityManager);
-        enumerateEntityAndRepository(this.entityManager, (constructor, repository) => {
-          const symbol = ensureInjectRepositoryToken(constructor);
-          bind(symbol).toConstantValue(repository);
-        });
       });
     }
 
