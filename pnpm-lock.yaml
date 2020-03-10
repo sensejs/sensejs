@@ -113,6 +113,7 @@ importers:
       '@koa/cors': 3.0.0
       '@koa/router': 8.0.8
       '@sensejs/core': 'link:../core'
+      '@sensejs/utility': 'link:../utility'
       inversify: 5.0.1
       koa: 2.11.0
       koa-bodyparser: 4.2.1
@@ -133,6 +134,7 @@ importers:
       '@koa/cors': ^3.0.0
       '@koa/router': ^8.0.8
       '@sensejs/core': 'workspace:*'
+      '@sensejs/utility': 'workspace:*'
       '@types/koa': ^2.11.2
       '@types/koa-bodyparser': ^4.3.0
       '@types/koa__cors': ^3.0.1
@@ -152,6 +154,7 @@ importers:
     dependencies:
       '@sensejs/core': 'link:../core'
       '@sensejs/kafkajs-standalone': 'link:../kafkajs-standalone'
+      '@sensejs/utility': 'link:../utility'
       inversify: 5.0.1
       lodash: 4.17.15
       reflect-metadata: 0.1.13
@@ -166,6 +169,7 @@ importers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/kafkajs-standalone': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
+      '@sensejs/utility': 'workspace:*'
       '@types/lodash': ^4.14.149
       inversify: ^5.0.1
       kafkajs: ^1.12.0

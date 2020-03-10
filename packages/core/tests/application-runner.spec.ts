@@ -1,6 +1,6 @@
 import {ApplicationRunner, RunOption} from '../src/entry-point';
 import {
-  ConsoleLoggerBuilder,
+  consoleLogger,
   Constructor,
   createModule,
   ModuleClass,
@@ -45,9 +45,8 @@ const runOptionFixture: Omit<RunOption<number>, 'logger'> = {
 
 function createAppRunner(module: Constructor, onExit: (exitCode: number) => unknown) {
 
-  const logger = new ConsoleLoggerBuilder().build();
   const runOption = Object.assign({}, runOptionFixture, {
-    logger, onExit,
+    logger: consoleLogger, onExit,
   });
   return new ApplicationRunner(process, new ModuleRoot(module), runOption);
 }

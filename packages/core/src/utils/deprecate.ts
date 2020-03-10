@@ -1,22 +1,11 @@
 import {ClassDecorator, Decorator, DecoratorBuilder} from '@sensejs/utility';
 import {Class} from '../interfaces';
+import {copyMetadata} from './copy-metadata';
 
 function getName(func: Function | string | symbol) {
   return typeof func === 'function' ? func.name : typeof func === 'symbol' ? func.toString() : func;
 }
 
-/**
- * Due to the reason that the polyfill 'reflect-metadata' does not support proxy reflect metadata,
- * or it's actually ECMA standard issue. We have to copy reflect metadata from origin to proxy
- *
- * @param result To where the metadata will be copied
- * @param target From where the metadata will be copied
- */
-function copyMetadata(result: object, target: object) {
-  for (const key of Reflect.getOwnMetadataKeys(target)) {
-    Reflect.defineMetadata(key, Reflect.getOwnMetadata(key, target), result);
-  }
-}
 
 export function makeOneTimeWarningEmitter(message: string) {
   let emitted = false;

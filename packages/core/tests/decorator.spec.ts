@@ -123,6 +123,33 @@ describe('Named', () => {
 
 describe('Decorators', () => {
 
+  test('Inject transformation', async () => {
+
+    const injectToken = Symbol();
+
+    const stub = jest.fn();
+
+    @Component()
+    class X {
+      constructor() {
+      }
+
+      getParam() {
+        return undefined;
+      }
+    }
+
+    @ModuleClass({components: [X]})
+    class MyModule {
+      constructor(@Inject(X, {transform: (x: X) => x.getParam()}) x: any) {
+        stub(x);
+      }
+    }
+
+    await new ModuleRoot(MyModule).start();
+    expect(stub).toHaveBeenCalledWith(undefined);
+  });
+
   test('Method inject', async () => {
     const result = Math.random();
     const key = Symbol();

@@ -1,7 +1,5 @@
 import {
-  Class,
   composeRequestInterceptor,
-  Constructor,
   createModule,
   Inject,
   invokeMethod,
@@ -15,6 +13,7 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
+import {Constructor} from '@sensejs/utility';
 import {Container} from 'inversify';
 import {KafkaReceivedMessage, MessageConsumer, MessageConsumerOption} from '@sensejs/kafkajs-standalone';
 import {ConsumerContext} from './consumer-context';
@@ -28,7 +27,7 @@ import {
 } from './consumer-decorators';
 
 export interface KafkaConsumerModuleOption extends ModuleOption {
-  globalInterceptors?: Class<RequestInterceptor>[];
+  globalInterceptors?: Constructor<RequestInterceptor>[];
   messageConsumerOption?: Partial<MessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier;
   matchLabels?: (string | symbol)[] | Set<string | symbol>;

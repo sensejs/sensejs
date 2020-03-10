@@ -10,6 +10,7 @@ import {
   FactoryProvider,
 } from './interfaces';
 import {getComponentMetadata} from './component';
+import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
 
 function scopedBindingHelper<T>(
   binding: interfaces.BindingInSyntax<T>,
@@ -44,16 +45,18 @@ function createContainerModule(option: ModuleMetadata) {
       bind(constantProvider.provide).toConstantValue(constantProvider.value);
     });
 
-    components.map(getComponentMetadata).map(async (metadata: ComponentMetadata<unknown>) => {
+    components.map(getComponentMetadata).map(async (metadata: ComponentMetadata) => {
       const {target, id = target} = metadata;
-      bindingHelper(metadata, () => bind(id).to(metadata.target));
+      const constructMetadata = getConstructorInjectMetadata(target);
+      const proxy = createConstructorArgumentTransformerProxy(target, constructMetadata);
+      bindingHelper(metadata, () => bind(id).to(proxy));
     });
 
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
       const {provide, factory, scope, ...rest} = factoryProvider;
-      if (!isBound(factory)) {
-        bindingHelper({scope}, () => bind(factory).toSelf());
-      }
+      const constructMetadata = getConstructorInjectMetadata(factory);
+      const proxy = createConstructorArgumentTransformerProxy(factory, constructMetadata);
+      bindingHelper({scope}, () => bind(factory).to(proxy));
       bindingHelper(rest, () =>
         bind(provide).toDynamicValue((context: interfaces.Context) => {
           const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
@@ -114,9 +117,11 @@ export class ModuleInstance {
   }
 
   private async performSetup() {
+    const injectMetadata = getConstructorInjectMetadata(this.moduleClass);
+    const proxy = createConstructorArgumentTransformerProxy(this.moduleClass, injectMetadata);
     this.container
       .bind(this.moduleClass)
-      .toSelf()
+      .to(proxy)
       .inSingletonScope();
     this.container.load(this.containerModule);
     this.moduleInstance = this.container.get<object>(this.moduleClass);
