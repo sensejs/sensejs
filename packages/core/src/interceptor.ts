@@ -33,20 +33,15 @@ export function composeRequestInterceptor<Context extends RequestContext>(
     async intercept(context: Context, next: () => Promise<void>) {
       let index = -1;
 
-      const dispatch = async (i: number) => {
+      const dispatch = async (i: number): Promise<void> => {
         if (i <= index) {
           throw new Error('next() called multiple times');
         }
         index = i;
-        const fn =
-          i === interceptors.length
-            ? next
-            : async (next: () => Promise<void>) => {
-              const interceptor = this.container.get(interceptors[i]);
-              await interceptor.intercept(context, next);
-            };
-
-        await fn(async () => dispatch(i + 1));
+        if (i < interceptors.length) {
+          return this.container.get(interceptors[i]).intercept(context, () => dispatch(i + 1));
+        }
+        return next();
       };
 
       return dispatch(0);
