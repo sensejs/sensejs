@@ -1,15 +1,5 @@
-import {
-  BindingSpec,
-  Class,
-  ComponentFactory,
-  ComponentMetadata,
-  ComponentScope,
-  ConstantProvider,
-  Constructor,
-  FactoryProvider,
-} from './interfaces';
-import {ContainerModule, decorate, injectable, interfaces} from 'inversify';
-import {getComponentMetadata} from './component';
+import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
+import {decorate, injectable} from 'inversify';
 import {ensureMethodInjectMetadata} from './method-inject';
 
 /**
