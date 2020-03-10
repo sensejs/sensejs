@@ -1,4 +1,5 @@
-import {Inject, RequestContext, ServiceIdentifier, Transformer} from '@sensejs/core';
+import {Transformer} from '@sensejs/utility';
+import {Inject, RequestContext, ServiceIdentifier} from '@sensejs/core';
 import {Container} from 'inversify';
 import {KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
 

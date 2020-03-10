@@ -22,6 +22,7 @@
   "dependencies": {
     "@sensejs/core": "workspace:*",
     "@sensejs/kafkajs-standalone": "workspace:*",
+    "@sensejs/utility": "workspace:*",
     "inversify": "^5.0.1",
     "lodash": "^4.17.2",
     "reflect-metadata": "^0.1.13",

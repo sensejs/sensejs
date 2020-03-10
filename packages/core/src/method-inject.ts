@@ -1,9 +1,11 @@
 import {Container, decorate, inject, injectable} from 'inversify';
 import {Constructor, ServiceIdentifier} from './interfaces';
+import * as utility from '@sensejs/utility';
 
-export interface Transformer<Input = any, Output = Input> {
-  (input: Input): Output;
-}
+/**
+ * @deprecated Use Transformer from '@sensejs/utility' instead
+ */
+export type Transformer = utility.Transformer;
 
 export class MethodParamDecorateError extends Error {}
 
@@ -13,12 +15,12 @@ export interface MethodParameterInjectOption<T, R> {
   /**
    * Transform the injected target
    */
-  transform?: Transformer<T, R>;
+  transform?: utility.Transformer<T, R>;
 }
 
 interface MethodParameterInjectMetadata {
   target: ServiceIdentifier;
-  transform: Transformer;
+  transform: utility.Transformer;
 }
 
 interface MethodInjectMetadata {

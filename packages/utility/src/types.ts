@@ -6,3 +6,7 @@ export interface Class<T extends {} = {}> extends Function {
 export interface Constructor<T extends {} = {}> extends Class<T> {
   new(...args: any[]): T;
 }
+
+export interface Transformer<Input = any, Output = Input> {
+  (input: Input): Output;
+}

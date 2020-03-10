@@ -20,6 +20,7 @@
   "dependencies": {
     "@koa/cors": "^3.0.0",
     "@koa/router": "^8.0.8",
+    "@sensejs/utility": "workspace:*",
     "@sensejs/core": "workspace:*",
     "inversify": "^5.0.1",
     "koa": "^2.11.0",
