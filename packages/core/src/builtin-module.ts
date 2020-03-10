@@ -1,5 +1,4 @@
 import {createModule, ModuleClass, OnModuleCreate, OnModuleDestroy} from './module';
-import {LoggerModule} from './logger';
 import {Inject} from './decorators';
 import {Component} from './component';
 import {ComponentFactory, ComponentScope, Constructor} from './interfaces';
@@ -83,7 +82,6 @@ export function createBuiltinModule(option: {
 
   ModuleClass({
     requires: [
-      LoggerModule,
       createModule({
         components: [BackgroundTaskQueue],
         factories: [

@@ -6,7 +6,6 @@ import {
   Inject,
   InjectLogger,
   Logger,
-  LoggerModule,
   ModuleClass,
   ModuleOption,
   OnModuleCreate,
@@ -99,7 +98,7 @@ function createConnectionModule(option: TypeOrmModuleOption) {
   const optionProvider = provideOptionInjector(option.typeOrmOption, option.injectOptionFrom, mergeTypeOrmConfig);
   const factoryProvider = provideConnectionFactory(createConnection, (conn) => conn.close(), Connection);
 
-  @ModuleClass({requires: [LoggerModule, createModule(option)], factories: [factoryProvider, optionProvider]})
+  @ModuleClass({requires: [createModule(option)], factories: [factoryProvider, optionProvider]})
   class TypeOrmConnectionModule {
     constructor(@Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {}
 

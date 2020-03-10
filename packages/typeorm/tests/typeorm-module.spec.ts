@@ -1,7 +1,6 @@
 import {
   Component,
   Inject,
-  LoggerModule,
   ModuleClass,
   ModuleRoot,
   OnModuleCreate,
@@ -99,7 +98,7 @@ describe('TypeOrmModule', () => {
 
     @ModuleClass({
       components: [ExampleHttpController, TypeOrmSupportInterceptor, transactionalSupportInterceptor],
-      requires: [LoggerModule, typeOrmModule],
+      requires: [typeOrmModule],
     })
     class FooModule {
       constructor(

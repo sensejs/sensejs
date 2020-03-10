@@ -1,12 +1,12 @@
 import {inject} from 'inversify';
 import {
   Component,
-  ConsoleLoggerBuilder,
+  consoleLogger,
   createModule,
   InjectLogger,
   Logger,
   LOGGER_BUILDER_SYMBOL,
-  LoggerModule,
+  LoggerBuilder,
   ModuleClass,
   ModuleRoot,
 } from '../src';
@@ -25,11 +25,12 @@ describe('InjectLogger', () => {
     }
   });
 });
+
 describe('Logger', () => {
   test('Logger', async () => {
-    class MockLoggerBuilder extends ConsoleLoggerBuilder {
+    class MockLoggerBuilder implements LoggerBuilder {
       build(): Logger {
-        return super.build();
+        return consoleLogger;
       }
     }
 
@@ -64,7 +65,6 @@ describe('Logger', () => {
     @ModuleClass({
       requires: [
         createModule({
-          requires: [LoggerModule],
           constants: [{provide: LOGGER_BUILDER_SYMBOL, value: new MockLoggerBuilder()}],
         }),
       ],
