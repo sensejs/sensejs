@@ -1,7 +1,8 @@
 import {Container, injectable} from 'inversify';
-import {Class, Constructor, ServiceIdentifier} from './interfaces';
+import {Constructor, ServiceIdentifier} from './interfaces';
 import {Inject} from './decorators';
 import {Component} from './component';
+import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
 
 export abstract class RequestContext {
   abstract bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void;
@@ -14,8 +15,15 @@ export abstract class RequestInterceptor<Context extends RequestContext = Reques
 
 export function composeRequestInterceptor<Context extends RequestContext>(
   container: Container,
-  interceptors: Class<RequestInterceptor<Context>>[],
+  interceptors: Constructor<RequestInterceptor<Context>>[],
 ): Constructor<RequestInterceptor<Context>> {
+  interceptors.forEach((interceptor) => {
+    container.bind(interceptor).to(createConstructorArgumentTransformerProxy(
+      interceptor,
+      getConstructorInjectMetadata(interceptor),
+    ));
+  });
+
   @Component()
   class ComposedRequestInterceptor extends RequestInterceptor<Context> {
     constructor(@Inject(Container) private container: Container) {
@@ -45,7 +53,6 @@ export function composeRequestInterceptor<Context extends RequestContext>(
     }
   }
 
-  interceptors.forEach((interceptor) => container.bind(interceptor).toSelf());
   container.bind(ComposedRequestInterceptor).toSelf();
   return ComposedRequestInterceptor;
 }

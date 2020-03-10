@@ -1,5 +1,5 @@
 import {Container, inject, injectable} from 'inversify';
-import {composeRequestInterceptor, RequestContext, RequestInterceptor, ServiceIdentifier} from '../src';
+import {composeRequestInterceptor, Inject, RequestContext, RequestInterceptor, ServiceIdentifier} from '../src';
 
 const FOO_SYMBOL = Symbol('FOO_SYMBOL'),
   BAR_SYMBOL = Symbol('BAR_SYMBOL');
@@ -95,9 +95,8 @@ describe('Interceptor', () => {
     const {childContainer, context} = prepareRequestContext();
     const spy = jest.fn();
 
-    @injectable()
     class InjectArgsInterceptor extends RequestInterceptor {
-      constructor(@inject(FOO_SYMBOL) private value: any) {
+      constructor(@Inject(FOO_SYMBOL, {transform: () => 0}) private value: any) {
         super();
       }
 
@@ -109,7 +108,7 @@ describe('Interceptor', () => {
 
     const result = composeRequestInterceptor(childContainer, [FooInterceptor, BarInterceptor, InjectArgsInterceptor]);
     await childContainer.get(result).intercept(context, () => Promise.resolve());
-    expect(spy).toHaveBeenCalledWith(expect.any(Number));
+    expect(spy).toHaveBeenCalledWith(0);
   });
 
   test('Interceptor should fail to call to next multiple times', async () => {

@@ -14,8 +14,8 @@ export default createHttpModule({
   requires: [PublishingModule],
   components: [ExampleController],
   globalInterceptors: [
-    ErrorHandlerInterceptor,
     TracingInterceptor,
+    ErrorHandlerInterceptor,
     RequestTimingInterceptor,
     TypeOrmSupportInterceptor,
   ],

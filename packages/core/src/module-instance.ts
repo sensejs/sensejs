@@ -10,8 +10,7 @@ import {
   FactoryProvider,
 } from './interfaces';
 import {getComponentMetadata} from './component';
-import {ConstructorInjectMetadata, getConstructorInjectMetadata} from './constructor-inject';
-import {copyMetadata} from './utils/copy-metadata';
+import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
 
 function scopedBindingHelper<T>(
   binding: interfaces.BindingInSyntax<T>,
@@ -37,28 +36,6 @@ function bindingHelper<T>(spec: BindingSpec, from: () => interfaces.BindingInSyn
       result.whenTargetTagged(key, value);
     }
   }
-}
-
-function createConstructorArgumentTransformerProxy<T>(
-  target: Constructor<T>,
-  metadata?: ConstructorInjectMetadata,
-): Constructor<T> {
-  if (!metadata) {
-    return target;
-  }
-  const untransformed = (x: unknown) => x;
-  const argumentMapper = (arg: unknown, index: number) => {
-    const transformer = metadata.transformers[index] ?? untransformed;
-    return transformer(arg);
-  };
-
-  const proxy = new Proxy<Constructor<T>>(target, {
-    construct: (target: Constructor, args: unknown[], self: object) => {
-      return Reflect.construct(target, args.map(argumentMapper), self);
-    },
-  });
-  copyMetadata(proxy, target);
-  return proxy;
 }
 
 function createContainerModule(option: ModuleMetadata) {

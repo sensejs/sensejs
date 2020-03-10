@@ -1,11 +1,11 @@
-import {Component, InjectLogger, LoggerBuilder} from '@sensejs/core';
+import {Component, Inject, LoggerBuilder} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from '@sensejs/http';
 import {SenseLoggerBuilder} from '@sensejs/logger';
 import {uuidV1} from '@sensejs/utility';
 
 @Component()
 export class TracingInterceptor extends HttpInterceptor {
-  constructor(@InjectLogger(SenseLoggerBuilder) private loggerBuilder: SenseLoggerBuilder) {
+  constructor(@Inject(SenseLoggerBuilder) private loggerBuilder: SenseLoggerBuilder) {
     super();
   }
 
