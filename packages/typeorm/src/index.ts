@@ -20,6 +20,8 @@ import {Container, ContainerModule} from 'inversify';
 import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
 import {createTypeOrmLogger} from './logger';
 
+export {attachLoggerToEntityManager} from './logger';
+
 export interface TypeOrmModuleOption extends ModuleOption {
   typeOrmOption?: Partial<ConnectionOptions>;
   injectOptionFrom?: ServiceIdentifier<Partial<ConnectionOptions>>;
@@ -101,13 +103,13 @@ function createConnectionModule(option: TypeOrmModuleOption) {
     @OnModuleCreate()
     async onCreate(
       @Inject(optionProvider.provide) config: ConnectionOptions,
-      @InjectLogger('TypeOrm') logger: Logger,
       @InjectLogger('TypeOrmMigration') migrationLogger: Logger,
-      @InjectLogger('TypeOrmQuery') queryLogger: Logger,
+      @InjectLogger('TypeOrm') logger: Logger,
     ): Promise<void> {
       if (config.logging === true && !config.logger) {
         config = Object.assign({}, config, {
-          logger: createTypeOrmLogger(logger, migrationLogger, queryLogger),
+          logger: createTypeOrmLogger(logger, migrationLogger),
+          loggerLevel: 'info'
         });
       }
       await this.factory.connect(config);
@@ -154,3 +156,4 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
 
   return TypeOrmModule;
 }
+

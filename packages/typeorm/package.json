@@ -21,6 +21,7 @@
   "license": "ISC",
   "dependencies": {
     "@sensejs/core": "workspace:*",
+    "@sensejs/utility": "workspace:*",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13",
     "tslib": "^1.11.1"

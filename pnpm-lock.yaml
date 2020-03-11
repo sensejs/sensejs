@@ -239,6 +239,7 @@ importers:
   packages/typeorm:
     dependencies:
       '@sensejs/core': 'link:../core'
+      '@sensejs/utility': 'link:../utility'
       inversify: 5.0.1
       reflect-metadata: 0.1.13
       tslib: 1.11.1
@@ -252,6 +253,7 @@ importers:
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
+      '@sensejs/utility': 'workspace:*'
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13

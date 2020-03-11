@@ -1,5 +1,6 @@
-import {createTypeOrmLogger} from '../src/logger';
+import {attachLoggerToEntityManager, createTypeOrmLogger} from '../src/logger';
 import {Logger} from '@sensejs/core';
+import {EntityManager, QueryRunner} from 'typeorm';
 import '@sensejs/testing-utility/lib/mock-console';
 
 function mockLogger(): Logger {
@@ -20,7 +21,7 @@ function randomString() {
 
 describe('createTypeOrmLogger', () => {
   const logger = mockLogger(), migrationLogger = mockLogger(), queryLogger = mockLogger();
-  const ormLogger = createTypeOrmLogger(logger, migrationLogger, queryLogger);
+  const ormLogger = createTypeOrmLogger(logger, migrationLogger);
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -51,14 +52,18 @@ describe('createTypeOrmLogger', () => {
     const param = [randomString()];
     const query = randomString();
     const errorInfo = randomString();
-    ormLogger.logQuery(query, param);
+    const mockEntityManager = {} as EntityManager;
+    const mockQueryRunner = {manager: mockEntityManager} as QueryRunner;
+
+    attachLoggerToEntityManager(mockEntityManager, queryLogger);
+    ormLogger.logQuery(query, param, mockQueryRunner);
     expect(queryLogger.debug).toHaveBeenCalledWith(expect.stringContaining(query), param);
 
-    ormLogger.logQueryError(errorInfo, query, param);
+    ormLogger.logQueryError(errorInfo, query, param, mockQueryRunner);
     expect(queryLogger.error).toHaveBeenCalledWith(expect.stringContaining(errorInfo));
     expect(queryLogger.error).toHaveBeenCalledWith(expect.stringContaining(query));
 
-    ormLogger.logQuerySlow(Math.random(), query);
+    ormLogger.logQuerySlow(Math.random(), query, undefined, mockQueryRunner);
     expect(queryLogger.warn).toHaveBeenCalled();
   });
 

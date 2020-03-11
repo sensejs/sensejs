@@ -1,7 +1,8 @@
 import {Logger} from '@sensejs/core';
-import {Logger as TypeOrmLogger} from 'typeorm';
+import {SilentLogger, consoleLogger} from '@sensejs/utility';
+import {EntityManager, Logger as TypeOrmLogger, QueryRunner} from 'typeorm';
 
-export function createTypeOrmLogger(logger: Logger, migrationLogger: Logger, queryLogger: Logger): TypeOrmLogger {
+export function createTypeOrmLogger(logger: Logger, migrationLogger: Logger): TypeOrmLogger {
   return {
     log(level: 'log' | 'info' | 'warn', message: any) {
       logger[level](message);
@@ -9,16 +10,16 @@ export function createTypeOrmLogger(logger: Logger, migrationLogger: Logger, que
     logMigration(message: string): any {
       migrationLogger.info(message);
     },
-    logQuery(query: string, parameters: any[] = []) {
-      queryLogger.debug('Query: ' + query + '\nParameters: ', parameters);
+    logQuery(query: string, parameters?: any, queryRunner?: QueryRunner) {
+      getLoggerFromQueryRunner(queryRunner).debug('Query: ' + query + '\nParameters: ', parameters);
     },
-    logQueryError(error: string, query: string, parameters: any[] = []) {
-      queryLogger.error(
+    logQueryError(error: string, query: string, parameters?: any, queryRunner?: QueryRunner) {
+      getLoggerFromQueryRunner(queryRunner).error(
         'Error occurred when running query: \n' + query + '\nParameter: ' + parameters + '\nError detail: ' + error,
       );
     },
-    logQuerySlow(time: number, query: string, parameters?: any[]) {
-      queryLogger.warn(
+    logQuerySlow(time: number, query: string, parameters?: any, queryRunner?: QueryRunner) {
+      getLoggerFromQueryRunner(queryRunner).warn(
         'The following query is too slow: \n' + query + '\nParameter: ' + parameters + 'Finished within %d ms',
         time,
       );
@@ -27,4 +28,24 @@ export function createTypeOrmLogger(logger: Logger, migrationLogger: Logger, que
       logger.info(message);
     },
   };
+}
+
+export const loggerWeakMap = new WeakMap<EntityManager, Logger>();
+
+const silentLogger = new SilentLogger();
+
+function getLoggerFromQueryRunner(queryRunner?: QueryRunner): Logger {
+  if (!queryRunner) {
+    return silentLogger;
+  }
+  const loggerConfig = loggerWeakMap.get(queryRunner.manager);
+  if (!loggerConfig) {
+    return silentLogger;
+
+  }
+  return loggerConfig;
+}
+
+export function attachLoggerToEntityManager(entityManager: EntityManager, queryLogger: Logger) {
+  loggerWeakMap.set(entityManager, queryLogger);
 }
