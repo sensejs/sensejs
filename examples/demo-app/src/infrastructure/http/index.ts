@@ -2,11 +2,13 @@ import {createHttpModule} from '@sensejs/http';
 import {RequestTimingInterceptor} from './request-timing.interceptor';
 import {TracingInterceptor} from './tracing-interceptor';
 import {ErrorHandlerInterceptor} from './error-handler.interceptor';
-import {TransactionalEventAnnounceInterceptor} from '../../application/common/transactional-event-announce.interceptor';
+import {AnnounceCommittedEventsInterceptor} from '../../application/common/announce-committed-events.interceptor';
 import {RegistrationController} from './registration.controller';
 import {ApplicationLayerModule} from '../../application';
 import DatabaseModule from '../database';
 import {EventModule} from '../event';
+import {EntityManagerAttachContextInterceptor} from '../../application/common/entity-manager-attach-context.interceptor';
+import {Transactional} from '@sensejs/typeorm';
 
 export default createHttpModule({
   httpOption: {
@@ -19,7 +21,9 @@ export default createHttpModule({
     TracingInterceptor,
     ErrorHandlerInterceptor,
     RequestTimingInterceptor,
-    TransactionalEventAnnounceInterceptor,
+    AnnounceCommittedEventsInterceptor,
+    Transactional(),
+    EntityManagerAttachContextInterceptor,
   ],
   injectOptionFrom: 'config.http',
 });

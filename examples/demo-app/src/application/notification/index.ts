@@ -5,10 +5,10 @@ import {
 } from '../../domains/common/event-subscription';
 import {UserEvent} from '../../domains/user/user-event.entity';
 import {Inject, InjectLogger, Logger, OnModuleCreate} from '@sensejs/core';
-import {TransactionalEventAnnounceInterceptor} from '../common/transactional-event-announce.interceptor';
+import {AnnounceCommittedEventsInterceptor} from '../common/announce-committed-events.interceptor';
 
 @EventSubscriptionModule({
-  interceptors: [TransactionalEventAnnounceInterceptor]
+  interceptors: [AnnounceCommittedEventsInterceptor]
 })
 export class NotificationModule {
 
