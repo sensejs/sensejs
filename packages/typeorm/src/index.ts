@@ -17,7 +17,7 @@ import {
   ServiceIdentifier,
 } from '@sensejs/core';
 import {Container, ContainerModule} from 'inversify';
-import {Connection, ConnectionOptions, createConnection, EntityManager, Repository} from 'typeorm';
+import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
 import {createTypeOrmLogger} from './logger';
 
 export interface TypeOrmModuleOption extends ModuleOption {
@@ -29,20 +29,16 @@ export function InjectRepository(entityConstructor: string | Function) {
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getRepository(entityConstructor)});
 }
 
-function enumerateEntityAndRepository(
-  entityManager: EntityManager,
-  callback: <T>(entityConstructor: Constructor<T>, repository: Repository<T>) => void,
-) {
+export function InjectTreeRepository(entityConstructor: string | Function) {
+  return Inject(EntityManager, {transform: (entityManager) => entityManager.getTreeRepository(entityConstructor)});
+}
 
-  for (const entityMetadata of entityManager.connection.entityMetadatas) {
-    const inheritanceTree = entityMetadata.inheritanceTree;
-    const constructor = inheritanceTree[0] as Constructor;
-    if (entityMetadata.treeType) {
-      callback(constructor, entityManager.getTreeRepository(constructor));
-    } else {
-      callback(constructor, entityManager.getRepository(constructor));
-    }
-  }
+export function InjectMongoRepository(entityConstructor: string | Function) {
+  return Inject(EntityManager, {transform: (entityManager) => entityManager.getMongoRepository(entityConstructor)});
+}
+
+export function InjectCustomRepository(entityConstructor: Function) {
+  return Inject(EntityManager, {transform: (entityManager) => entityManager.getCustomRepository(entityConstructor)});
 }
 
 @Component()
