@@ -1,4 +1,3 @@
-
 /* tslint:disable no-console */
 
 export interface Logger {
@@ -43,6 +42,22 @@ export interface Logger {
    * @param content messages
    */
   fatal(...content: [unknown, ...unknown[]]): void;
+}
+
+export class SilentLogger implements Logger {
+  debug() {}
+
+  error() {}
+
+  fatal() {}
+
+  info() {}
+
+  log() {}
+
+  trace() {}
+
+  warn() {}
 }
 
 class ConsoleLogger implements Logger {
