@@ -70,16 +70,17 @@ export class MessageConsumer {
     const topics = Array.from(this.consumeOptions.keys());
     const admin = this.client.admin();
     try {
-      await admin.connect();
-      const metadata = await admin.fetchTopicMetadata({topics});
-
-      const totalPartitions = metadata.topics
-        .reduce((result, topicMetadata) => result + topicMetadata.partitions.length, 0);
 
       await this.consumer.connect();
       for (const [topic, option] of this.consumeOptions) {
         await this.consumer.subscribe({topic, fromBeginning: option.fromBeginning});
       }
+
+      await admin.connect();
+      const metadata = await admin.fetchTopicMetadata({topics});
+
+      const totalPartitions = metadata.topics
+        .reduce((result, topicMetadata) => result + topicMetadata.partitions.length, 0);
 
       this.runPromise = this.consumer.run({
         autoCommit: true,
