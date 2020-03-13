@@ -39,11 +39,11 @@ function mergeConnectOption(
 ): MessageConsumerOption {
   const {connectOption, fetchOption, ...rest} = Object.assign({}, fallback, injected);
   if (typeof connectOption?.brokers === 'undefined') {
-    throw new TypeError('kafkaHost not provided');
+    throw new TypeError('connectOption.brokers not provided');
   }
 
   if (typeof fetchOption?.groupId === 'undefined') {
-    throw new TypeError('groupId not provided');
+    throw new TypeError('fetchOption.groupId not provided');
   }
   return {connectOption, fetchOption, ...rest};
 }
