@@ -74,13 +74,13 @@ describe('@Inject', () => {
     const container = new Container();
 
     container.bind(String).toConstantValue('deadbeef');
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
+    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow();
 
     MethodInject(String)(Foo.prototype, 'bar', 1);
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
+    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow();
 
     MethodInject(String)(Foo.prototype, 'bar', 2);
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
+    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow();
   });
 
   test('Performance test', () => {
