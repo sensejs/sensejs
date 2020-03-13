@@ -185,6 +185,10 @@ function KafkaConsumerHelperModule(option: MessageConsumerModuleOption, exportSy
   return createModule({requires: [KafkaConsumerGroupModule]});
 }
 
+/**
+ * Create kafka consumer module for sense.js framework
+ * @param option
+ */
 export function createMessageConsumerModule(option: MessageConsumerModuleOption): Constructor {
   const injectMessageConsumerSymbol = Symbol('MessageConsumer');
   const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
@@ -193,6 +197,12 @@ export function createMessageConsumerModule(option: MessageConsumerModuleOption)
 
 const deprecatedMessageEmitter = makeDeprecateMessageEmitter(createKafkaConsumerModule);
 
+/**
+ * Create kafka consumer module for sense.js framework
+ * @param option
+ * @deprecated
+ * @see createMessageConsumerModule
+ */
 export function createKafkaConsumerModule(option: MessageConsumerModuleOption): Constructor {
   deprecatedMessageEmitter();
   return createMessageConsumerModule(option);
