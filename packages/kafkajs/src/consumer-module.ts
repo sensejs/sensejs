@@ -3,6 +3,7 @@ import {
   createModule,
   Inject,
   invokeMethod,
+  makeDeprecateMessageEmitter,
   ModuleClass,
   ModuleOption,
   ModuleScanner,
@@ -26,12 +27,17 @@ import {
   SubscribeTopicOption,
 } from './consumer-decorators';
 
-export interface KafkaConsumerModuleOption extends ModuleOption {
+export interface MessageConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Constructor<RequestInterceptor>[];
   messageConsumerOption?: Partial<MessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier;
   matchLabels?: (string | symbol)[] | Set<string | symbol>;
 }
+
+/**
+ * @deprecated
+ */
+export type KafkaConsumerModuleOption = MessageConsumerModuleOption;
 
 function mergeConnectOption(
   fallback?: Partial<MessageConsumerOption>,
@@ -49,7 +55,7 @@ function mergeConnectOption(
 }
 
 function scanSubscriber(
-  option: KafkaConsumerModuleOption,
+  option: MessageConsumerModuleOption,
   connectionModule: Constructor,
   messageConsumerSymbol: symbol,
 ) {
@@ -140,7 +146,7 @@ function scanSubscriber(
   return SubscriberScanModule;
 }
 
-function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymbol: symbol) {
+function KafkaConsumerHelperModule(option: MessageConsumerModuleOption, exportSymbol: symbol) {
   const optionProvider = provideOptionInjector(
     option.messageConsumerOption,
     option.injectOptionFrom,
@@ -179,8 +185,15 @@ function KafkaConsumerHelperModule(option: KafkaConsumerModuleOption, exportSymb
   return createModule({requires: [KafkaConsumerGroupModule]});
 }
 
-export function createKafkaConsumerModule(option: KafkaConsumerModuleOption): Constructor {
+export function createMessageConsumerModule(option: MessageConsumerModuleOption): Constructor {
   const injectMessageConsumerSymbol = Symbol('MessageConsumer');
   const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
   return scanSubscriber(option, kafkaConnectionModule, injectMessageConsumerSymbol);
+}
+
+const deprecatedMessageEmitter = makeDeprecateMessageEmitter(createKafkaConsumerModule);
+
+export function createKafkaConsumerModule(option: MessageConsumerModuleOption): Constructor {
+  deprecatedMessageEmitter();
+  return createMessageConsumerModule(option);
 }
