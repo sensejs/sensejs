@@ -1,5 +1,5 @@
 import {Component} from './component';
-import {ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
+import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
 import {Subject} from 'rxjs';
 import {composeRequestInterceptor, RequestContext, RequestInterceptor} from './interceptor';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
@@ -8,26 +8,23 @@ import {Inject} from './decorators';
 import {invokeMethod} from './method-inject';
 import {ModuleScanner} from './module-scanner';
 
-export interface EventSubscription {
+export interface EventChannelSubscription {
   unsubscribe(): void;
 }
 
-export interface EventAnnouncer<T> {
+export interface EventChannelAnnouncer<T> {
   (payload: T): Promise<void>;
 }
 
-/**
- * Internally receiver will receive
- */
-interface EventBroadcast<T> {
+interface EventMessenger<T> {
   payload: T;
   acknowledge: (processPromise: Promise<void>) => void;
 }
 
 @Component({scope: ComponentScope.SINGLETON})
-class EventBus {
+export class EventBusImplement {
 
-  private channels: Map<ServiceIdentifier, Subject<EventBroadcast<unknown>>> = new Map();
+  private channels: Map<ServiceIdentifier, Subject<EventMessenger<unknown>>> = new Map();
 
   async announceEvent<T>(target: ServiceIdentifier<T>, payload: T) {
     const subject = this.ensureEventChannel(target);
@@ -39,7 +36,7 @@ class EventBus {
     return Promise.all(consumePromises);
   }
 
-  subscribe<T>(target: ServiceIdentifier<T>, callback: (payload: T) => Promise<void>): EventSubscription {
+  subscribe<T>(target: ServiceIdentifier<T>, callback: (payload: T) => Promise<void>): EventChannelSubscription {
     return this.ensureEventChannel(target).subscribe({
       next: (broadcast) => {
         broadcast.acknowledge(callback(broadcast.payload as T));
@@ -57,8 +54,6 @@ class EventBus {
     return channel;
   }
 }
-
-const eventBusModule = createModule({components: [EventBus]});
 
 const SUBSCRIBE_EVENT_KEY = Symbol();
 
@@ -142,23 +137,54 @@ export class EventSubscriptionContext<Payload> extends RequestContext {
   }
 }
 
-export function InjectEventAnnouncer<T>(identifier: ServiceIdentifier<T>) {
-  return Inject(EventBus, {
-    transform: (eventBus) => (payload: T) => eventBus.announceEvent(identifier, payload),
-  });
+export abstract class EventAnnouncer {
+  abstract announceEvent<T>(channel: ServiceIdentifier<T>, payload: T): Promise<void>;
 }
+
+@Component({scope: ComponentScope.SINGLETON})
+class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
+
+  private eventAnnouncer: EventAnnouncer;
+
+  constructor(@Inject(EventBusImplement) implement: EventBusImplement) {
+    super();
+    this.eventAnnouncer = new class extends EventAnnouncer {
+      async announceEvent<T>(channel: ServiceIdentifier, payload: T): Promise<void> {
+        await implement.announceEvent(channel, payload);
+      }
+    };
+  }
+
+  build() {
+    return this.eventAnnouncer;
+  }
+}
+
+export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>) {
+  if (identifier) {
+    return Inject(EventAnnouncer, {
+      transform: (eventBus) => (payload: T) => eventBus.announceEvent(identifier, payload),
+    });
+  }
+  return Inject(EventAnnouncer);
+}
+
+const eventBusModule = createModule({
+  components: [EventBusImplement],
+  factories: [{provide: EventAnnouncer, factory: EventAnnouncerFactory, scope: ComponentScope.SINGLETON}],
+});
 
 export function createEventSubscriptionModule(option: EventSubscriptionModuleOption): Constructor {
 
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
 
-    private subscriptions: EventSubscription[] = [];
+    private subscriptions: EventChannelSubscription[] = [];
 
     constructor(
       @Inject(Container) private container: Container,
       @Inject(ModuleScanner) private scanner: ModuleScanner,
-      @Inject(EventBus) private eventBus: EventBus,
+      @Inject(EventBusImplement) private eventBus: EventBusImplement,
     ) {}
 
     @OnModuleCreate()
