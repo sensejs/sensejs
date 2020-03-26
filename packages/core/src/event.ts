@@ -174,7 +174,7 @@ const eventBusModule = createModule({
   factories: [{provide: EventAnnouncer, factory: EventAnnouncerFactory, scope: ComponentScope.SINGLETON}],
 });
 
-export function createEventSubscriptionModule(option: EventSubscriptionModuleOption): Constructor {
+export function createEventSubscriptionModule(option: EventSubscriptionModuleOption = {}): Constructor {
 
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
