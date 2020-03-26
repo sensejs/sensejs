@@ -108,8 +108,8 @@ export class ApplicationRunner {
     }
   };
   private onProcessError = (e: any) => {
-    this.logger.info('Uncaught exception: ', e);
-    this.logger.info('Going to quit');
+    this.logger.fatal('Uncaught exception: ', e);
+    this.logger.fatal('Going to quit');
     this.stop(this.runOption.errorExitOption);
   };
 
