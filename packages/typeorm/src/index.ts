@@ -109,7 +109,6 @@ function createConnectionModule(option: TypeOrmModuleOption) {
       if (config.logging === true && !config.logger) {
         config = Object.assign({}, config, {
           logger: createTypeOrmLogger(logger, migrationLogger),
-          loggerLevel: 'info'
         });
       }
       await this.factory.connect(config);
