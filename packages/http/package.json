@@ -24,7 +24,7 @@
     "@sensejs/utility": "workspace:*",
     "inversify": "^5.0.1",
     "koa": "^2.11.0",
-    "koa-bodyparser": "^4.2.1",
+    "koa-bodyparser": "^4.3.0",
     "lodash": "^4.17.15",
     "reflect-metadata": "^0.1.13",
     "tslib": "^1.11.1"
@@ -36,7 +36,7 @@
     "@types/koa__cors": "^3.0.1",
     "@types/koa__router": "^8.0.2",
     "@types/lodash": "^4.14.149",
-    "@types/node": "^12.12.29",
+    "@types/node": "^12.12.31",
     "@types/supertest": "^2.0.8",
     "supertest": "^4.0.2",
     "ts-jest": "^25.2.1"
