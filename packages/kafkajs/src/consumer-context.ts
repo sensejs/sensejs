@@ -17,6 +17,6 @@ export function InjectSubscribeContext(transform: Transformer = (x) => x) {
   return Inject(ConsumerContext, {transform});
 }
 
-export function Message() {
-  return InjectSubscribeContext((x: ConsumerContext) => x.message);
+export function Message(transform: Transformer = (x) => x) {
+  return InjectSubscribeContext((x: ConsumerContext) => transform(x.message));
 }
