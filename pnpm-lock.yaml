@@ -72,34 +72,36 @@ importers:
       typeorm: ^0.2.24
   packages/config:
     dependencies:
-      '@sensejs/core': 'link:../core'
-      inversify: 5.0.1
       traverse: 0.6.6
       tslib: 1.11.1
     devDependencies:
+      '@sensejs/core': 'link:../core'
       '@types/traverse': 0.6.32
+      inversify: 5.0.1
+      reflect-metadata: 0.1.13
       ts-jest: 25.3.0
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@types/traverse': ^0.6.32
       inversify: ^5.0.1
+      reflect-metadata: ^0.1.13
       traverse: ^0.6.6
       ts-jest: ^25.3.0
       tslib: ^1.11.1
   packages/core:
     dependencies:
       '@sensejs/utility': 'link:../utility'
-      inversify: 5.0.1
       rxjs: 6.5.4
       tslib: 1.11.1
     devDependencies:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/superagent': 4.1.7
       '@types/supertest': 2.0.8
+      inversify: 5.0.1
       reflect-metadata: 0.1.13
       ts-jest: 25.3.0
     specifiers:
-      '@sensejs/testing-utility': 'workspace:0.0.8'
+      '@sensejs/testing-utility': 'workspace:*'
       '@sensejs/utility': 'workspace:*'
       '@types/superagent': ^4.1.7
       '@types/supertest': ^2.0.8
@@ -112,15 +114,13 @@ importers:
     dependencies:
       '@koa/cors': 3.0.0
       '@koa/router': 8.0.8
-      '@sensejs/core': 'link:../core'
       '@sensejs/utility': 'link:../utility'
-      inversify: 5.0.1
       koa: 2.11.0
       koa-bodyparser: 4.3.0
       lodash: 4.17.15
-      reflect-metadata: 0.1.13
       tslib: 1.11.1
     devDependencies:
+      '@sensejs/core': 'link:../core'
       '@types/koa': 2.11.3
       '@types/koa-bodyparser': 4.3.0
       '@types/koa__cors': 3.0.1
@@ -128,6 +128,8 @@ importers:
       '@types/lodash': 4.14.149
       '@types/node': 12.12.34
       '@types/supertest': 2.0.8
+      inversify: 5.0.1
+      reflect-metadata: 0.1.13
       supertest: 4.0.2
       ts-jest: 25.3.0
     specifiers:
@@ -152,17 +154,17 @@ importers:
       tslib: ^1.11.1
   packages/kafkajs:
     dependencies:
-      '@sensejs/core': 'link:../core'
       '@sensejs/kafkajs-standalone': 'link:../kafkajs-standalone'
       '@sensejs/utility': 'link:../utility'
-      inversify: 5.0.1
-      lodash: 4.17.15
-      reflect-metadata: 0.1.13
       tslib: 1.11.1
     devDependencies:
+      '@sensejs/core': 'link:../core'
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/lodash': 4.14.149
+      inversify: 5.0.1
       kafkajs: 1.12.0
+      lodash: 4.17.15
+      reflect-metadata: 0.1.13
       rxjs: 6.5.4
       ts-jest: 25.3.0
     specifiers:
@@ -202,11 +204,11 @@ importers:
       tslib: ^1.11.1
   packages/logger:
     dependencies:
-      '@sensejs/core': 'link:../core'
       colors: 1.4.0
       moment: 2.24.0
       tslib: 1.11.1
     devDependencies:
+      '@sensejs/core': 'link:../core'
       ts-jest: 25.3.0
     specifiers:
       '@sensejs/core': 'workspace:*'
@@ -216,14 +218,14 @@ importers:
       tslib: ^1.11.1
   packages/redis:
     dependencies:
-      '@sensejs/core': 'link:../core'
       '@types/ioredis': 4.14.9
-      inversify: 5.0.1
       ioredis: 4.16.1
       tslib: 1.11.1
     devDependencies:
+      '@sensejs/core': 'link:../core'
       '@sensejs/http': 'link:../http'
       '@types/supertest': 2.0.8
+      inversify: 5.0.1
       supertest: 4.0.2
       ts-jest: 25.3.0
     specifiers:
@@ -238,18 +240,18 @@ importers:
       tslib: ^1.11.1
   packages/typeorm:
     dependencies:
-      '@sensejs/core': 'link:../core'
       '@sensejs/utility': 'link:../utility'
-      inversify: 5.0.1
-      reflect-metadata: 0.1.13
       tslib: 1.11.1
     devDependencies:
+      '@sensejs/core': 'link:../core'
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
       '@types/supertest': 2.0.8
-      sqlite3: 4.1.0
+      inversify: 5.0.1
+      reflect-metadata: 0.1.13
+      sqlite3: 4.1.1
       supertest: 4.0.2
       ts-jest: 25.3.0
-      typeorm: 0.2.24_sqlite3@4.1.0
+      typeorm: 0.2.24_sqlite3@4.1.1
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
@@ -257,11 +259,11 @@ importers:
       '@types/supertest': ^2.0.8
       inversify: ^5.0.1
       reflect-metadata: ^0.1.13
-      sqlite3: 4.1.0
+      sqlite3: ^4.1.1
       supertest: ^4.0.2
       ts-jest: ^25.3.0
       tslib: ^1.11.1
-      typeorm: ^0.2.24
+      typeorm: ^0.2.24 || ^0.3.0-rc.19
   packages/utility:
     dependencies:
       tslib: 1.11.1
@@ -3112,7 +3114,6 @@ packages:
     resolution:
       integrity: sha512-5fJMWEmikSYu0nv/flMc475MhGbB7TSPd/2IpFV4I4rMklboCH2rQjYY5kKiYGHqUF9gvaambupcJFFG9dvReg==
   /inversify/5.0.1:
-    dev: false
     resolution:
       integrity: sha512-Ieh06s48WnEYGcqHepdsJUIJUXpwH5o5vodAX+DK2JA/gjy4EbEcQZxw+uFfzysmKjiLXGYwNG3qDZsKVMcINQ==
   /io-ts/2.1.2_fp-ts@2.5.3:
@@ -5612,21 +5613,11 @@ packages:
   /sprintf-js/1.0.3:
     resolution:
       integrity: sha1-BOaSb2YolTVPPdAVIDYzuFcpfiw=
-  /sqlite3/4.1.0:
-    dependencies:
-      nan: 2.14.0
-      node-pre-gyp: 0.11.0
-      request: 2.88.2
-    dev: true
-    requiresBuild: true
-    resolution:
-      integrity: sha512-RvqoKxq+8pDHsJo7aXxsFR18i+dU2Wp5o12qAJOV5LNcDt+fgJsc2QKKg3sIRfXrN9ZjzY1T7SNe/DFVqAXjaw==
   /sqlite3/4.1.1:
     dependencies:
       nan: 2.14.0
       node-pre-gyp: 0.11.0
       request: 2.88.2
-    dev: false
     requiresBuild: true
     resolution:
       integrity: sha512-CvT5XY+MWnn0HkbwVKJAyWEMfzpAPwnTiB3TobA5Mri44SrTovmmh499NPQP+gatkeOipqPlBLel7rn4E/PCQg==
@@ -6194,30 +6185,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==
-  /typeorm/0.2.24_sqlite3@4.1.0:
-    dependencies:
-      app-root-path: 3.0.0
-      buffer: 5.5.0
-      chalk: 2.4.2
-      cli-highlight: 2.1.4
-      debug: 4.1.1
-      dotenv: 6.2.0
-      glob: 7.1.6
-      js-yaml: 3.13.1
-      mkdirp: 0.5.4
-      reflect-metadata: 0.1.13
-      sha.js: 2.4.11
-      sqlite3: 4.1.0
-      tslib: 1.11.1
-      xml2js: 0.4.23
-      yargonaut: 1.1.4
-      yargs: 13.3.2
-    dev: true
-    hasBin: true
-    peerDependencies:
-      sqlite3: ^4.1.1
-    resolution:
-      integrity: sha512-L9tQv6nNLRyh+gex/qc8/CyLs8u0kXKqk1OjYGF13k/KOg6N2oibwkuGgv0FuoTGYx2ta2NmqvuMUAMrHIY5ew==
   /typeorm/0.2.24_sqlite3@4.1.1:
     dependencies:
       app-root-path: 3.0.0
@@ -6236,7 +6203,6 @@ packages:
       xml2js: 0.4.23
       yargonaut: 1.1.4
       yargs: 13.3.2
-    dev: false
     hasBin: true
     peerDependencies:
       sqlite3: ^4.1.1

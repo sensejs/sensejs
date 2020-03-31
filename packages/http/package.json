@@ -20,13 +20,10 @@
   "dependencies": {
     "@koa/cors": "^3.0.0",
     "@koa/router": "^8.0.8",
-    "@sensejs/core": "workspace:*",
     "@sensejs/utility": "workspace:*",
-    "inversify": "^5.0.1",
     "koa": "^2.11.0",
     "koa-bodyparser": "^4.3.0",
     "lodash": "^4.17.15",
-    "reflect-metadata": "^0.1.13",
     "tslib": "^1.11.1"
   },
   "devDependencies": {
@@ -38,8 +35,15 @@
     "@types/lodash": "^4.14.149",
     "@types/node": "^12.12.34",
     "@types/supertest": "^2.0.8",
+    "inversify": "^5.0.1",
+    "reflect-metadata": "^0.1.13",
     "supertest": "^4.0.2",
     "ts-jest": "^25.3.0"
+  },
+  "peerDependencies": {
+    "@sensejs/core": "workspace:*",
+    "inversify": "^5.0.1",
+    "reflect-metadata": "^0.1.13"
   },
   "author": "LAN Xingcan",
   "license": "ISC"

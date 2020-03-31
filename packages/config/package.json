@@ -20,13 +20,17 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:*",
-    "inversify": "^5.0.1",
     "traverse": "^0.6.6",
     "tslib": "^1.11.1"
   },
   "devDependencies": {
+    "@sensejs/core": "workspace:*",
     "@types/traverse": "^0.6.32",
+    "inversify": "^5.0.1",
+    "reflect-metadata": "^0.1.13",
     "ts-jest": "^25.3.0"
+  },
+  "peerDependencies": {
+    "@sensejs/core": "workspace:*"
   }
 }

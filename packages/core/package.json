@@ -21,18 +21,19 @@
   "license": "ISC",
   "dependencies": {
     "@sensejs/utility": "workspace:*",
-    "inversify": "^5.0.1",
     "rxjs": "^6.5.4",
     "tslib": "^1.11.1"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:0.0.8",
+    "@sensejs/testing-utility": "workspace:*",
     "@types/superagent": "^4.1.7",
     "@types/supertest": "^2.0.8",
+    "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13",
     "ts-jest": "^25.3.0"
   },
   "peerDependencies": {
+    "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13"
   }
 }
