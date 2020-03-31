@@ -82,7 +82,7 @@ export interface SubscribeEventControllerOption {
 
 function setSubscribeEventControllerMetadata(target: Constructor, metadata: SubscribeEventControllerMetadata) {
   if (Reflect.hasMetadata(SUBSCRIBE_EVENT_CONTROLLER_KEY, target)) {
-    throw new Error('@SubscribeEventController() cannot applied multiple times');
+    throw new Error(`@SubscribeEventController() cannot applied multiple times on "${target.name}"`);
   }
   Reflect.defineMetadata(SUBSCRIBE_EVENT_CONTROLLER_KEY, metadata, target);
 }
@@ -127,7 +127,11 @@ export interface EventSubscriptionModuleOption extends ModuleOption {
 }
 
 export class EventSubscriptionContext<Payload> extends RequestContext {
-  constructor(private container: Container, public readonly payload: Payload) {
+  constructor(
+    private container: Container,
+    public readonly identifier: ServiceIdentifier,
+    public readonly payload: Payload,
+  ) {
     super();
     container.bind(EventSubscriptionContext).toConstantValue(this);
   }
@@ -144,7 +148,7 @@ export abstract class EventAnnouncer {
 @Component({scope: ComponentScope.SINGLETON})
 class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
 
-  private eventAnnouncer: EventAnnouncer;
+  private readonly eventAnnouncer: EventAnnouncer;
 
   constructor(@Inject(EventBusImplement) implement: EventBusImplement) {
     super();
@@ -218,9 +222,9 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
     }
 
     private setupEventSubscription(
-      constructor: Constructor<{}>,
+      constructor: Constructor,
       metadata: SubscribeEventControllerMetadata,
-      subscribeEventMetadata: SubscribeEventMetadata<{}>,
+      subscribeEventMetadata: SubscribeEventMetadata,
     ) {
       const interceptors = [
         ...(
@@ -230,9 +234,10 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         ...subscribeEventMetadata.interceptors,
       ];
       const composedInterceptorConstructor = composeRequestInterceptor(this.container, interceptors);
-      this.subscriptions.push(this.eventBus.subscribe(subscribeEventMetadata.identifier, async (payload) => {
+      const identifier = subscribeEventMetadata.identifier;
+      this.subscriptions.push(this.eventBus.subscribe(identifier, async (payload) => {
         const childContainer = this.container.createChild();
-        const context = new EventSubscriptionContext(childContainer, payload);
+        const context = new EventSubscriptionContext(childContainer, identifier, payload);
         const composedInterceptor = childContainer.get(composedInterceptorConstructor);
         childContainer.bind<unknown>(subscribeEventMetadata.identifier).toConstantValue(payload);
 

@@ -23,7 +23,7 @@ export function getComponentMetadata<T extends {}>(target: Class<T>): ComponentM
 
 export function setComponentMetadata<T extends {}>(target: Constructor<T>, option: ComponentOption<T>) {
   if (Reflect.hasOwnMetadata(COMPONENT_METADATA_KEY, target)) {
-    throw new Error('Component metadata already defined for target');
+    throw new Error(`Decorator @${Component.name} cannot applied multiple times to "${target.name}`);
   }
   const {
     tags = [],

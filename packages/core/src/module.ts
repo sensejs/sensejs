@@ -38,7 +38,7 @@ const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
 export function getModuleMetadata(target: Constructor): ModuleMetadata {
   const result = Reflect.getMetadata(MODULE_REFLECT_SYMBOL, target);
   if (!result) {
-    throw new Error('target is not decorated with @Module annotation');
+    throw new Error(`"${target.name}"is not decorated with @Module annotation`);
   }
   return result;
 }
@@ -46,9 +46,9 @@ export function getModuleMetadata(target: Constructor): ModuleMetadata {
 export function setModuleMetadata(module: Constructor, metadata: ModuleMetadata) {
   decorate(injectable(), module);
 
-  for (const module of metadata.requires) {
-    if (!Reflect.getMetadata(MODULE_REFLECT_SYMBOL, module)) {
-      throw new Error('This module are requiring an invalid module');
+  for (const dependency of metadata.requires) {
+    if (!Reflect.getMetadata(MODULE_REFLECT_SYMBOL, dependency)) {
+      throw new Error(`Module "${module.name}" are depends on an invalid module "${dependency.name}"`);
     }
   }
   Reflect.defineMetadata(MODULE_REFLECT_SYMBOL, metadata, module);

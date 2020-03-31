@@ -72,12 +72,12 @@ function createContainerModule(option: ModuleMetadata) {
  */
 export class ModuleInstance {
   public readonly dependencies: ModuleInstance[] = [];
-  public referencedCounter = 0;
   public readonly moduleMetadata: ModuleMetadata;
+  public referencedCounter = 0;
+  private readonly containerModule: ContainerModule;
   private setupPromise?: Promise<void>;
   private destroyPromise?: Promise<void>;
   private moduleInstance?: any;
-  private containerModule: ContainerModule;
 
   constructor(
     readonly moduleClass: Constructor,
@@ -86,9 +86,6 @@ export class ModuleInstance {
   ) {
     this.moduleMetadata = getModuleMetadata(this.moduleClass);
     this.containerModule = createContainerModule(this.moduleMetadata);
-    if (typeof this.moduleMetadata === 'undefined') {
-      throw new Error('Target is not a module');
-    }
     instanceMap.set(moduleClass, this);
     this.moduleMetadata.requires.forEach((moduleClass) => {
       let dependency = instanceMap.get(moduleClass);
