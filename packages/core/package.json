@@ -29,9 +29,8 @@
     "@sensejs/testing-utility": "workspace:0.0.8",
     "@types/superagent": "^4.1.7",
     "@types/supertest": "^2.0.8",
-    "@types/uuid": "^3.4.8",
     "reflect-metadata": "^0.1.13",
-    "ts-jest": "^25.2.1"
+    "ts-jest": "^25.3.0"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.1.13"

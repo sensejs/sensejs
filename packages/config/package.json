@@ -27,6 +27,6 @@
   },
   "devDependencies": {
     "@types/traverse": "^0.6.32",
-    "ts-jest": "^25.2.1"
+    "ts-jest": "^25.3.0"
   }
 }

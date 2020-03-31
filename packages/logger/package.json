@@ -26,6 +26,6 @@
     "tslib": "^1.11.1"
   },
   "devDependencies": {
-    "ts-jest": "^25.2.1"
+    "ts-jest": "^25.3.0"
   }
 }

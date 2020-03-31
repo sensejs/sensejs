@@ -23,13 +23,13 @@
     "@sensejs/core": "workspace:*",
     "@types/ioredis": "^4.14.9",
     "inversify": "^5.0.1",
-    "ioredis": "^4.16.0",
+    "ioredis": "^4.16.1",
     "tslib": "^1.11.1"
   },
   "devDependencies": {
     "@sensejs/http": "workspace:*",
     "@types/supertest": "^2.0.8",
     "supertest": "^4.0.2",
-    "ts-jest": "^25.2.1"
+    "ts-jest": "^25.3.0"
   }
 }

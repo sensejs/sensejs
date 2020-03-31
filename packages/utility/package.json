@@ -26,6 +26,6 @@
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
     "@types/uuid": "^7.0.2",
-    "ts-jest": "^25.2.1"
+    "ts-jest": "^25.3.0"
   }
 }
