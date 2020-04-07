@@ -24,6 +24,16 @@ describe('KoaHttpApplicationBuilder', () => {
     return class extends HttpInterceptor {
       async intercept(context: HttpContext, next: () => Promise<void>) {
         stub('before');
+        expect(context.nativeRequest).toBeDefined();
+        expect(context.nativeResponse).toBeDefined();
+
+        const statusCode = context.response.statusCode;
+        const data = context.response.data;
+
+        // Setter
+        context.response.statusCode = statusCode;
+        context.response.data = data;
+
         context.bindContextValue(symbol, Math.random());
         await next();
         stub('after');
@@ -112,7 +122,7 @@ describe('KoaHttpApplicationBuilder', () => {
 
   test('builtin param binding', async () => {
     const timestamp = Date.now().toString();
-    const stub = jest.fn();
+    const controllerSpy = jest.fn();
 
     @Controller('/foo')
     class FooController {
@@ -128,13 +138,19 @@ describe('KoaHttpApplicationBuilder', () => {
         expect(urlPath).toStrictEqual(timestamp);
         expect(customHeader).toStrictEqual(timestamp);
 
-        stub();
+        controllerSpy();
       }
     }
 
     const container = new Container();
     container.bind(FooController).toSelf();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
+    const middlewareSpy = jest.fn();
+    koaHttpApplicationBuilder.clearMiddleware();
+    koaHttpApplicationBuilder.addMiddleware((ctx, next) => {
+      middlewareSpy();
+      return next();
+    });
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
@@ -143,6 +159,7 @@ describe('KoaHttpApplicationBuilder', () => {
       .post('/foo/' + timestamp + '?timestamp=' + timestamp)
       .set('x-timestamp', timestamp.toString())
       .send({timestamp});
-    expect(stub).toHaveBeenCalled();
+    expect(controllerSpy).toHaveBeenCalled();
+    expect(middlewareSpy).toHaveBeenCalled();
   });
 });

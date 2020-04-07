@@ -1,4 +1,4 @@
-import {composeRequestInterceptor, Constructor, invokeMethod, ServiceIdentifier} from '@sensejs/core';
+import {composeRequestInterceptor, Constructor, invokeMethod, ServiceIdentifier, Deprecated} from '@sensejs/core';
 import {RequestListener} from 'http';
 import {Container} from 'inversify';
 import Koa from 'koa';
@@ -83,15 +83,21 @@ export class KoaHttpContext extends HttpContext {
     this.container.bind(key).toConstantValue(value);
   }
 
+  /**
+   * @deprecated
+   * @param key
+   */
+  @Deprecated()
   get<T>(key: ServiceIdentifier<T>) {
     return this.container.get<T>(key);
   }
 }
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
-  private globalInterceptors: Constructor<HttpInterceptor>[] = [];
+  private readonly globalInterceptors: Constructor<HttpInterceptor>[] = [];
+  private readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
+  private middlewareList: Koa.Middleware[] = [];
   private interceptors: Constructor<HttpInterceptor>[] = [];
-  private controllerRouteSpecs: ControllerRouteSpec[] = [];
 
   addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
     this.interceptors = this.interceptors.concat(controllerMetadata.interceptors);
@@ -102,14 +108,28 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     this.controllerRouteSpecs.push(controllerRouteSpec);
 
     for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMetadata.prototype))) {
-      if (typeof propertyDescriptor.value !== 'function') {
-        continue;
+      if (typeof propertyDescriptor.value === 'function') {
+        this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, propertyDescriptor.value);
       }
-      this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, propertyDescriptor.value);
     }
     return this;
   }
 
+  clearMiddleware() {
+    this.middlewareList = [];
+    return this;
+  }
+
+  addMiddleware(middleware: Koa.Middleware) {
+    this.middlewareList.push(middleware);
+    return this;
+  }
+
+  /**
+   *
+   * @deprecated
+   */
+  @Deprecated()
   getAllInterceptors(): Constructor<HttpInterceptor>[] {
     const allInterceptors = this.globalInterceptors.concat(this.interceptors);
     return uniq(allInterceptors);

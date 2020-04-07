@@ -55,6 +55,9 @@ test('HttpModule', async () => {
       bodyParserOption: {
         jsonSizeLimit: 65536,
         formSizeLimit: 65536
+      },
+      corsOption: {
+
       }
     },
   }), {
