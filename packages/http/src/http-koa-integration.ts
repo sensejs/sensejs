@@ -1,12 +1,11 @@
-import {composeRequestInterceptor, Constructor, invokeMethod, ServiceIdentifier, Deprecated} from '@sensejs/core';
+import {composeRequestInterceptor, Constructor, Deprecated, invokeMethod, ServiceIdentifier} from '@sensejs/core';
 import {RequestListener} from 'http';
 import {Container} from 'inversify';
 import Koa from 'koa';
-import koaBodyParser from 'koa-bodyparser';
+import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
 import KoaCors from '@koa/cors';
 import {
-  BodyParserOption,
   HttpAdaptor,
   HttpApplicationOption,
   HttpContext,
@@ -15,6 +14,7 @@ import {
   HttpResponse,
 } from './http-abstract';
 import {uniq} from 'lodash';
+import koaQs from 'koa-qs';
 import {ControllerMetadata, getRequestMappingMetadata, HttpMethod} from './http-decorators';
 
 interface MethodRouteSpec {
@@ -29,6 +29,8 @@ interface ControllerRouteSpec {
   path: string;
   methodRouteSpecs: MethodRouteSpec[];
 }
+
+export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
 
 export class KoaHttpContext extends HttpContext {
   get request(): HttpRequest {
@@ -98,6 +100,8 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
   private readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   private middlewareList: Koa.Middleware[] = [];
   private interceptors: Constructor<HttpInterceptor>[] = [];
+  private bodyParserOption?: KoaBodyParserOption;
+  private queryStringParsingMode: QueryStringParsingMode = 'simple';
 
   addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
     this.interceptors = this.interceptors.concat(controllerMetadata.interceptors);
@@ -125,6 +129,16 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return this;
   }
 
+  setQueryStringParsingMode(mode: QueryStringParsingMode) {
+    this.queryStringParsingMode = mode;
+    return this;
+  }
+
+  setKoaBodyParserOption(option: KoaBodyParserOption) {
+    this.bodyParserOption = option;
+    return this;
+  }
+
   /**
    *
    * @deprecated
@@ -141,13 +155,13 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
   }
 
   build(httpAppOption: HttpApplicationOption, container: Container): RequestListener {
-    const koa = new Koa();
-    const {corsOption, trustProxy = false, bodyParserOption} = httpAppOption;
+    const koa = this.createKoaInstance();
+    const {corsOption, trustProxy = false} = httpAppOption;
     koa.proxy = trustProxy;
     if (corsOption) {
       koa.use(KoaCors(corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
     }
-    koa.use(this.getKoaBodyParser(bodyParserOption));
+    koa.use(koaBodyParser(this.bodyParserOption));
     for (const middleware of this.middlewareList) {
       koa.use(middleware);
     }
@@ -155,17 +169,13 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return koa.callback();
   }
 
-  private getKoaBodyParser(option: BodyParserOption = {}) {
-    const args: koaBodyParser.Options = {};
-    if (typeof option.formSizeLimit !== 'undefined') {
-      args.formLimit = option.formSizeLimit as any; // XXX: Typing error of koa-bodyparser
+  private createKoaInstance() {
+    const koa = new Koa();
+    if (this.queryStringParsingMode === 'simple') {
+      return koa;
     }
 
-    if (typeof option.jsonSizeLimit !== 'undefined') {
-      args.jsonLimit = option.jsonSizeLimit as any; // XXX Typing error of koa-bodyparser
-    }
-
-    return koaBodyParser(args);
+    return koaQs(koa, this.queryStringParsingMode);
   }
 
   private addRouterSpec(methodRoutSpecs: MethodRouteSpec[], controllerMetadata: ControllerMetadata, method: Function) {

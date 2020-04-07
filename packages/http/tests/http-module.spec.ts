@@ -1,7 +1,15 @@
-import {Component, Inject, createModule} from '@sensejs/core';
+import {Component, createModule, Inject} from '@sensejs/core';
 import {inject} from 'inversify';
 import supertest from 'supertest';
-import {Controller, createHttpModule, GET, HttpContext, HttpInterceptor} from '../src';
+import {
+  Controller,
+  createHttpModule,
+  GET,
+  HttpContext,
+  HttpInterceptor,
+  KoaHttpApplicationBuilder,
+  Query,
+} from '../src';
 import {Server} from 'http';
 import {ApplicationRunner} from '@sensejs/core/lib/entry-point';
 import {ProcessManager} from '@sensejs/core/lib/builtin-module';
@@ -32,7 +40,8 @@ test('HttpModule', async () => {
   @Controller('/bar')
   class BarController {
     @GET('/')
-    bar() {}
+    bar() {
+    }
   }
 
   @Controller('/foo', {interceptors: [MockInterceptor], label: ['foo']})
@@ -43,22 +52,27 @@ test('HttpModule', async () => {
     handleRequest() {
       return this.myComponent.foo();
     }
+
+    @GET('/bar')
+    queryTest(@Query() query: unknown) {
+      return query;
+    }
+
   }
 
   const runPromise = ApplicationRunner.runModule(createHttpModule({
+    httpAdaptorFactory: () => {
+      return new KoaHttpApplicationBuilder()
+        .setKoaBodyParserOption({})
+        .setQueryStringParsingMode('extended');
+    },
     requires: [createModule({components: [MyComponent, FooController]})],
     serverIdentifier,
     matchLabel: ['foo'],
     httpOption: {
       listenPort: 3000,
       listenAddress: '0.0.0.0',
-      bodyParserOption: {
-        jsonSizeLimit: 65536,
-        formSizeLimit: 65536
-      },
-      corsOption: {
-
-      }
+      corsOption: {},
     },
   }), {
     onExit: () => {
@@ -67,5 +81,13 @@ test('HttpModule', async () => {
   });
   await runPromise;
   await supertest('http://localhost:3000').get('/bar').expect(404);
+  const {body} = await supertest('http://localhost:3000')
+    .get('/foo/bar?object%5bproperty%5d=value&array%5b%5d=1&array%5b%5d=2');
+  expect(body).toEqual(expect.objectContaining({
+    object: expect.objectContaining({
+      property: 'value'
+    }),
+    array: ['1', '2']
+  }));
   await supertest('http://localhost:3000').get('/foo').expect(200);
 });
