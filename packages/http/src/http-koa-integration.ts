@@ -6,6 +6,7 @@ import koaBodyParser from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
 import KoaCors from '@koa/cors';
 import {
+  BodyParserOption,
   HttpAdaptor,
   HttpApplicationOption,
   HttpContext,
@@ -121,14 +122,30 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
 
   build(httpAppOption: HttpApplicationOption, container: Container): RequestListener {
     const koa = new Koa();
-    const {corsOption, trustProxy = false} = httpAppOption;
+    const {corsOption, trustProxy = false, bodyParserOption} = httpAppOption;
     koa.proxy = trustProxy;
-    koa.use(koaBodyParser());
     if (corsOption) {
       koa.use(KoaCors(corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
     }
+    koa.use(this.getKoaBodyParser(bodyParserOption));
+    for (const middleware of this.middlewareList) {
+      koa.use(middleware);
+    }
     koa.use(this.createGlobalRouter(container));
     return koa.callback();
+  }
+
+  private getKoaBodyParser(option: BodyParserOption = {}) {
+    const args: koaBodyParser.Options = {};
+    if (typeof option.formSizeLimit !== 'undefined') {
+      args.formLimit = option.formSizeLimit as any; // XXX: Typing error of koa-bodyparser
+    }
+
+    if (typeof option.jsonSizeLimit !== 'undefined') {
+      args.jsonLimit = option.jsonSizeLimit as any; // XXX Typing error of koa-bodyparser
+    }
+
+    return koaBodyParser(args);
   }
 
   private addRouterSpec(methodRoutSpecs: MethodRouteSpec[], controllerMetadata: ControllerMetadata, method: Function) {

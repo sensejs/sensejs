@@ -52,6 +52,10 @@ test('HttpModule', async () => {
     httpOption: {
       listenPort: 3000,
       listenAddress: '0.0.0.0',
+      bodyParserOption: {
+        jsonSizeLimit: 65536,
+        formSizeLimit: 65536
+      }
     },
   }), {
     onExit: () => {

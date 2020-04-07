@@ -14,9 +14,15 @@ interface CrossOriginResourceShareOption {
   keepHeadersOnError?: boolean;
 }
 
+export interface BodyParserOption {
+  jsonSizeLimit?: number;
+  formSizeLimit?: number;
+}
+
 export interface HttpApplicationOption {
   trustProxy?: boolean;
   corsOption?: CrossOriginResourceShareOption;
+  bodyParserOption?: BodyParserOption;
 }
 
 export interface HttpRequest {
