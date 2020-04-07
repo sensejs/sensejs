@@ -165,7 +165,7 @@ class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
 }
 
 export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>) {
-  if (identifier) {
+  if (typeof identifier !== 'undefined') {
     return Inject(EventAnnouncer, {
       transform: (eventBus) => (payload: T) => eventBus.announceEvent(identifier, payload),
     });
@@ -233,10 +233,10 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         ...metadata.interceptors,
         ...subscribeEventMetadata.interceptors,
       ];
-      const composedInterceptorConstructor = composeRequestInterceptor(this.container, interceptors);
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(this.eventBus.subscribe(identifier, async (payload) => {
         const childContainer = this.container.createChild();
+        const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
         const context = new EventSubscriptionContext(childContainer, identifier, payload);
         const composedInterceptor = childContainer.get(composedInterceptorConstructor);
         childContainer.bind<unknown>(subscribeEventMetadata.identifier).toConstantValue(payload);
