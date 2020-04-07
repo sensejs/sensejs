@@ -20,21 +20,24 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:*",
     "@sensejs/utility": "workspace:*",
-    "inversify": "^5.0.1",
-    "reflect-metadata": "^0.1.13",
     "tslib": "^1.11.1"
   },
   "devDependencies": {
+    "@sensejs/core": "workspace:*",
     "@sensejs/testing-utility": "workspace:*",
     "@types/supertest": "^2.0.8",
-    "sqlite3": "4.1.0",
+    "sqlite3": "^4.1.1",
     "supertest": "^4.0.2",
     "ts-jest": "^25.3.0",
-    "typeorm": "^0.2.24"
+    "typeorm": "^0.2.24 || ^0.3.0-rc.19",
+    "inversify": "^5.0.1",
+    "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
-    "typeorm": "^0.2.22"
+    "@sensejs/core": "workspace:*",
+    "inversify": "^5.0.1",
+    "typeorm": "^0.2.24 || ^0.3.0-rc.19",
+    "reflect-metadata": "^0.1.13"
   }
 }

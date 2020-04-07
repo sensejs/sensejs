@@ -20,16 +20,20 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/core": "workspace:*",
     "@types/ioredis": "^4.14.9",
-    "inversify": "^5.0.1",
     "ioredis": "^4.16.1",
     "tslib": "^1.11.1"
   },
   "devDependencies": {
     "@sensejs/http": "workspace:*",
+    "@sensejs/core": "workspace:*",
     "@types/supertest": "^2.0.8",
+    "inversify": "^5.0.1",
     "supertest": "^4.0.2",
     "ts-jest": "^25.3.0"
+  },
+  "peerDependencies": {
+    "@sensejs/core": "workspace:*",
+    "inversify": "^5.0.1"
   }
 }
