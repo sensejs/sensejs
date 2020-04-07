@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/core",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -12,7 +12,8 @@
   "main": "lib/index.js",
   "scripts": {
     "test": "jest",
-    "prepare": "tsc"
+    "prepare": "tsc",
+    "clean": "rm -rf ./lib"
   },
   "publishConfig": {
     "access": "public"
@@ -20,7 +21,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:*",
+    "@sensejs/utility": "^0.5.0",
     "rxjs": "^6.5.4",
     "tslib": "^1.11.1"
   },
