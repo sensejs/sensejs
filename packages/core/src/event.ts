@@ -236,6 +236,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(this.eventBus.subscribe(identifier, async (payload) => {
         const childContainer = this.container.createChild();
+        childContainer.bind(Container).toConstantValue(childContainer);
         const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
         const context = new EventSubscriptionContext(childContainer, identifier, payload);
         const composedInterceptor = childContainer.get(composedInterceptorConstructor);

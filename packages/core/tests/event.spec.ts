@@ -6,7 +6,7 @@ import {
   InjectEventAnnouncer,
   ModuleClass,
   OnModuleCreate,
-  ProcessManager,
+  ProcessManager, RequestContext, RequestInterceptor,
   SubscribeEvent,
   SubscribeEventController,
 } from '../src';
@@ -18,6 +18,12 @@ describe('Event subscribe and announce', () => {
   test('Subscribe', async () => {
 
     const spy = jest.fn();
+
+    class MockInterceptor extends RequestInterceptor {
+      intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
+        return next();
+      }
+    }
 
     @SubscribeEventController()
     class SubscribeController {
@@ -36,6 +42,7 @@ describe('Event subscribe and announce', () => {
     @ModuleClass({
       requires: [
         createEventSubscriptionModule({
+          interceptors: [MockInterceptor],
           components: [SubscribeController],
         }),
       ],

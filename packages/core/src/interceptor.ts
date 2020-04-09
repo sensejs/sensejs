@@ -26,9 +26,6 @@ export function composeRequestInterceptor<Context extends RequestContext>(
 
   @Component()
   class ComposedRequestInterceptor extends RequestInterceptor<Context> {
-    constructor(@Inject(Container) private container: Container) {
-      super();
-    }
 
     async intercept(context: Context, next: () => Promise<void>) {
       let index = -1;
@@ -39,7 +36,7 @@ export function composeRequestInterceptor<Context extends RequestContext>(
         }
         index = i;
         if (i < interceptors.length) {
-          return this.container.get(interceptors[i]).intercept(context, () => dispatch(i + 1));
+          return container.get(interceptors[i]).intercept(context, () => dispatch(i + 1));
         }
         return next();
       };
