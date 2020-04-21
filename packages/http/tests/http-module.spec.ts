@@ -1,4 +1,4 @@
-import {Component, createModule, Inject} from '@sensejs/core';
+import {ApplicationRunner, Component, createModule, Inject, ModuleClass, OnModuleCreate, ProcessManager} from '@sensejs/core';
 import {inject} from 'inversify';
 import supertest from 'supertest';
 import {
@@ -11,8 +11,7 @@ import {
   Query,
 } from '../src';
 import {Server} from 'http';
-import {ApplicationRunner} from '@sensejs/core/lib/entry-point';
-import {ProcessManager} from '@sensejs/core/lib/builtin-module';
+import {AddressInfo} from 'net';
 
 test('HttpModule', async () => {
   const serverIdentifier = Symbol();
@@ -60,34 +59,52 @@ test('HttpModule', async () => {
 
   }
 
-  const runPromise = ApplicationRunner.runModule(createHttpModule({
-    httpAdaptorFactory: () => {
-      return new KoaHttpApplicationBuilder()
-        .setKoaBodyParserOption({})
-        .setQueryStringParsingMode('extended');
-    },
-    requires: [createModule({components: [MyComponent, FooController]})],
-    serverIdentifier,
-    matchLabel: ['foo'],
-    httpOption: {
-      listenPort: 3000,
-      listenAddress: '0.0.0.0',
-      corsOption: {},
-    },
-  }), {
+  @ModuleClass({
+    requires: [
+      createHttpModule({
+        httpAdaptorFactory: () => {
+          return new KoaHttpApplicationBuilder()
+            .setKoaBodyParserOption({})
+            .setQueryStringParsingMode('extended');
+        },
+        requires: [createModule({components: [MyComponent, FooController]})],
+        serverIdentifier,
+        matchLabel: ['foo'],
+        httpOption: {
+          listenPort: 0,
+          listenAddress: '0.0.0.0',
+          corsOption: {},
+        },
+      }),
+    ],
+
+  })
+  class Module {
+
+    @OnModuleCreate()
+    async onModuleCreate(@Inject(serverIdentifier) server: Server) {
+      const port = (
+        server.address() as AddressInfo
+      ).port;
+      const baseUrl = `http://localhost:${port}`;
+      await supertest(baseUrl).get('/bar').expect(404);
+      const {body} = await supertest('http://localhost:3000')
+        .get('/foo/bar?object%5bproperty%5d=value&array%5b%5d=1&array%5b%5d=2');
+      expect(body).toEqual(expect.objectContaining({
+        object: expect.objectContaining({
+          property: 'value',
+        }),
+        array: ['1', '2'],
+      }));
+      await supertest(baseUrl).get('/foo').expect(200);
+    }
+
+  }
+
+  const runPromise = ApplicationRunner.runModule(Module, {
     onExit: () => {
       return undefined as never;
     },
   });
   await runPromise;
-  await supertest('http://localhost:3000').get('/bar').expect(404);
-  const {body} = await supertest('http://localhost:3000')
-    .get('/foo/bar?object%5bproperty%5d=value&array%5b%5d=1&array%5b%5d=2');
-  expect(body).toEqual(expect.objectContaining({
-    object: expect.objectContaining({
-      property: 'value'
-    }),
-    array: ['1', '2']
-  }));
-  await supertest('http://localhost:3000').get('/foo').expect(200);
 });

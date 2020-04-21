@@ -7,7 +7,7 @@ export * from './component';
 export * from './logger';
 export * from './decorators';
 export * from './interceptor';
-export {EntryPoint} from './entry-point';
+export * from './entry-point';
 export * from './module-utility';
 export * from './module-scanner';
 export * from './utils';
