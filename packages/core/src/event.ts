@@ -63,11 +63,13 @@ export interface SubscribeEventMetadata<P extends {} = {}> {
   prototype: P;
   name: keyof P & (string | symbol);
   identifier: ServiceIdentifier;
+  filter: (message: unknown) => boolean;
   interceptors: Constructor<RequestInterceptor>[];
 }
 
 export interface EventSubscriptionOption {
   interceptors?: Constructor<RequestInterceptor>[];
+  filter?: (message: unknown) => boolean;
 }
 
 export interface SubscribeEventControllerMetadata {
@@ -112,6 +114,7 @@ export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubsc
       name,
       identifier,
       interceptors: option.interceptors ?? [],
+      filter: option.filter ?? (() => true),
     };
     Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, prototype[name]);
   };
@@ -235,6 +238,9 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       ];
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(this.eventBus.subscribe(identifier, async (payload) => {
+        if (!subscribeEventMetadata.filter(payload)) {
+          return;
+        }
         const childContainer = this.container.createChild();
         childContainer.bind(Container).toConstantValue(childContainer);
         const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);

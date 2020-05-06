@@ -6,7 +6,9 @@ import {
   InjectEventAnnouncer,
   ModuleClass,
   OnModuleCreate,
-  ProcessManager, RequestContext, RequestInterceptor,
+  ProcessManager,
+  RequestContext,
+  RequestInterceptor,
   SubscribeEvent,
   SubscribeEventController,
 } from '../src';
@@ -33,7 +35,7 @@ describe('Event subscribe and announce', () => {
         pm.shutdown();
       }
 
-      @SubscribeEvent('event2')
+      @SubscribeEvent('event2', {filter: (payload) => payload === 'bar'})
       bar(@Inject('event2') param: string) {
         spy(param);
       }
@@ -54,6 +56,8 @@ describe('Event subscribe and announce', () => {
         @InjectEventAnnouncer('event') announcer: EventChannelAnnouncer<string>,
         @InjectEventAnnouncer() announcer2: EventAnnouncer,
       ) {
+        await announcer2.announceEvent('event2', 'foo');
+        expect(spy).not.toHaveBeenCalled();
         await announcer2.announceEvent('event2', 'bar');
         expect(spy).toHaveBeenCalledWith('bar');
         await announcer('foo');
