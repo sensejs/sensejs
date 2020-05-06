@@ -63,13 +63,13 @@ export interface SubscribeEventMetadata<P extends {} = {}> {
   prototype: P;
   name: keyof P & (string | symbol);
   identifier: ServiceIdentifier;
-  filter: (message: unknown) => boolean;
+  filter: (message: any) => boolean;
   interceptors: Constructor<RequestInterceptor>[];
 }
 
 export interface EventSubscriptionOption {
   interceptors?: Constructor<RequestInterceptor>[];
-  filter?: (message: unknown) => boolean;
+  filter?: (message: any) => boolean;
 }
 
 export interface SubscribeEventControllerMetadata {

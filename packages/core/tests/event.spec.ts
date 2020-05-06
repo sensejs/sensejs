@@ -35,7 +35,7 @@ describe('Event subscribe and announce', () => {
         pm.shutdown();
       }
 
-      @SubscribeEvent('event2', {filter: (payload) => payload === 'bar'})
+      @SubscribeEvent('event2', {filter: (payload: string) => payload === 'bar'})
       bar(@Inject('event2') param: string) {
         spy(param);
       }
