@@ -130,7 +130,7 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
   })
   class TypeOrmModule {
     private readonly module: ContainerModule;
-    private readonly entityManager = this.connection.createEntityManager();
+    private readonly entityManager: EntityManager;
 
     constructor(
       @Inject(Container) private container: Container,
