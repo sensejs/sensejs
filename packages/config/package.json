@@ -22,14 +22,10 @@
   "license": "ISC",
   "dependencies": {
     "traverse": "^0.6.6",
-    "tslib": "^1.11.1"
+    "tslib": "^1.11.2"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:*",
-    "@types/traverse": "^0.6.32",
-    "inversify": "^5.0.1",
-    "reflect-metadata": "^0.1.13",
-    "ts-jest": "^25.3.0"
+    "@sensejs/core": "workspace:*"
   },
   "peerDependencies": {
     "@sensejs/core": "^0.5.0"

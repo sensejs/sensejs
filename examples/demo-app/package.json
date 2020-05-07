@@ -22,12 +22,12 @@
     "@sensejs/typeorm": "workspace:*",
     "@sensejs/utility": "workspace:*",
     "config": "^3.3.1",
-    "fp-ts": "^2.5.3",
+    "fp-ts": "^2.5.4",
     "inversify": "^5.0.1",
-    "io-ts": "^2.1.2",
+    "io-ts": "^2.2.2",
     "js-yaml": "^3.13.1",
     "reflect-metadata": "^0.1.13",
-    "sqlite3": "^4.1.1",
+    "sqlite3": "^4.2.0",
     "typeorm": "^0.2.24"
   },
   "devDependencies": {

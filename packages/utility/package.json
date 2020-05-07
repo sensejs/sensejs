@@ -21,12 +21,10 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "tslib": "^1.11.1",
-    "uuid": "^7.0.2"
+    "tslib": "^1.11.2",
+    "uuid": "^7.0.3"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:*",
-    "@types/uuid": "^7.0.2",
-    "ts-jest": "^25.3.0"
+    "@sensejs/testing-utility": "workspace:*"
   }
 }
