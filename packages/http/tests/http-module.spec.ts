@@ -88,7 +88,7 @@ test('HttpModule', async () => {
       ).port;
       const baseUrl = `http://localhost:${port}`;
       await supertest(baseUrl).get('/bar').expect(404);
-      const {body} = await supertest('http://localhost:3000')
+      const {body} = await supertest(baseUrl)
         .get('/foo/bar?object%5bproperty%5d=value&array%5b%5d=1&array%5b%5d=2');
       expect(body).toEqual(expect.objectContaining({
         object: expect.objectContaining({
