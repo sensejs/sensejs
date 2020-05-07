@@ -3,7 +3,7 @@ import {Component, createModule, Inject, ProcessManager, RequestInterceptor} fro
 import {MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
   ConsumerContext,
-  createKafkaConsumerModule,
+  createKafkaConsumerModule, createMessageConsumerModule,
   InjectSubscribeContext,
   Message,
   SubscribeController,
@@ -116,7 +116,7 @@ describe('Subscriber', () => {
       }
     }
 
-    const module = createKafkaConsumerModule({
+    const module = createMessageConsumerModule({
       requires: [ConfigModule, createModule({components: [Controller]})],
       messageConsumerOption: {
         connectOption: {
