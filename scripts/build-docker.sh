@@ -20,9 +20,9 @@ function baseImage() {
 
 function buildRoot() {
     echo "FROM base AS dev"
-    echo "RUN pnpm recursive install --frozen-lockfile "
+    echo "RUN pnpm recursive install --use-running-store-server --store-dir ./.pnpm-store --frozen-lockfile "
     echo "COPY . ./"
     echo "RUN pnpm run build"
 }
 
-(baseImage; buildRoot) | docker build -f - -t sensejs . $@
+(baseImage; buildRoot) | docker build --network=host -f - -t sensejs . $@

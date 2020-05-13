@@ -19,7 +19,8 @@ before_install:
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
   - docker-compose up -d zookeeper kafka-1 kafka-2 kafka-3
-  - npm i -g coveralls
+  - npm i -g coveralls pnpm
+  - pnpm server start --dir ./.pnpm-store --background --protocol=tcp
 
 after_success:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
@@ -27,3 +28,4 @@ after_success:
 
 after_script:
   - docker-compose down -v
+  - pnpm server stop
