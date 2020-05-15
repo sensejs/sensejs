@@ -6,6 +6,7 @@
     "lib/**/*.d.ts",
     "lib/**/*.js",
     "lib/**/*.js.map",
+    "src/**/*.ts",
     "README.md"
   ],
   "types": "lib/index.d.ts",
