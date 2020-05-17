@@ -1,5 +1,4 @@
 import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage as KafkaJsMessage} from 'kafkajs';
-import Long from 'long';
 import {WorkerController} from './worker-synchronizer';
 import {convertConnectOption, KafkaLogOption} from './utils';
 import {KafkaConnectOption, KafkaReceivedMessage} from './types';
@@ -70,7 +69,6 @@ export class MessageConsumer {
     const topics = Array.from(this.consumeOptions.keys());
     const admin = this.client.admin();
     try {
-
       await this.consumer.connect();
       for (const [topic, option] of this.consumeOptions) {
         await this.consumer.subscribe({topic, fromBeginning: option.fromBeginning});
@@ -100,12 +98,15 @@ export class MessageConsumer {
     if (!consumeOption) {
       throw new Error('Message received from unsubscribed topic');
     }
-    const forceCommitOffset = (offset: string) => {
-      offset = Long.fromValue(offset).add(1).toString();
-      return payload.commitOffsetsIfNecessary({
-        topics: [{topic, partitions: [{partition, offset}]}],
-      });
+    const commitOffsets = async (forced: boolean = false) => {
+      if (forced) {
+        // @ts-ignore
+        return this.consumer.commitOffsets();
+      } else {
+        return payload.commitOffsetsIfNecessary();
+      }
     };
+
     const heartbeat = async () => {
       try {
         await payload.heartbeat();
@@ -118,14 +119,15 @@ export class MessageConsumer {
 
     await this.processBatch(
       async (message: KafkaJsMessage) => {
-        // const {value, ...metadata} = message;
         await consumeOption.consumer(
           {topic, partition, ...message},
         );
-        await payload.resolveOffset(message.offset);
+        payload.resolveOffset(message.offset);
+        await payload.commitOffsetsIfNecessary();
       },
       heartbeat,
-      forceCommitOffset,
+      (offset: string) => payload.resolveOffset(offset),
+      commitOffsets,
       payload.batch.messages,
     );
   }
@@ -133,7 +135,8 @@ export class MessageConsumer {
   private async processBatch(
     consumer: (message: KafkaJsMessage) => Promise<void>,
     heartbeat: () => Promise<void>,
-    commitOffset: (offset: string) => Promise<void>,
+    resolveOffset: (offset: string) => void,
+    commitOffset: (forced?: boolean) => Promise<void>,
     messages: KafkaJsMessage[],
   ) {
     const synchronizer = this.workerController.createSynchronizer(false);
@@ -141,9 +144,11 @@ export class MessageConsumer {
       for (const message of messages) {
         await consumer(message);
         await heartbeat();
-        if (await synchronizer.checkSynchronized(() => commitOffset(message.offset))) {
+        resolveOffset(message.offset);
+        if (await synchronizer.checkSynchronized(() => commitOffset(true))) {
           return;
         }
+        await commitOffset();
       }
     } finally {
       synchronizer.detach();

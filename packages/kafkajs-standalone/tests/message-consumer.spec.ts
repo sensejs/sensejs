@@ -8,7 +8,8 @@ const mockedConsumer = {
   subscribe: jest.fn(), run: jest.fn(),
   stop: jest.fn(),
   connect: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
+  commitOffsets: jest.fn()
 };
 
 const mockedAdmin = {fetchTopicMetadata: jest.fn(), connect: jest.fn(), disconnect: jest.fn()};
@@ -57,6 +58,7 @@ test('MessageConsumer', async () => {
       }),
     };
   });
+  mockedConsumer.commitOffsets.mockResolvedValue(void 0);
   MockKafka.prototype.admin.mockReturnValue(mockedAdmin);
   MockKafka.prototype.consumer.mockReturnValue(mockedConsumer);
   const connectOption: KafkaConnectOption = {
