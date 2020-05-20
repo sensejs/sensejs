@@ -100,8 +100,10 @@ export class MessageConsumer {
     }
     const commitOffsets = async (forced: boolean = false) => {
       if (forced) {
-        // @ts-ignore
-        return this.consumer.commitOffsets();
+        // payload.uncommittedOffsets does not return a promise actually, which is an error of kafkajs' typing file
+        // however it's actually safe to await a non-promise value anyway.
+        // bso keep "await" keyword until kafkajs fix their typing bug
+        return payload.commitOffsetsIfNecessary(await payload.uncommittedOffsets());
       } else {
         return payload.commitOffsetsIfNecessary();
       }
