@@ -10,7 +10,7 @@ const allMacAddresses = Object.values(networkInterfaces)
 
 const uuidV1Suffixes = allMacAddresses.length === 0
   ? [Buffer.allocUnsafe(6)]
-  : allMacAddresses.map((mac) => mac.replace(/:/g, '')).map((hex) => Buffer.from(hex));
+  : allMacAddresses.map((mac) => mac.replace(/:/g, '')).map((hex) => Buffer.from(hex, 'hex'));
 const processStartupTime = Date.now();
 const processStartupClock = process.hrtime();
 
