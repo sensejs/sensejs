@@ -58,7 +58,11 @@ describe('Event subscribe and announce', () => {
       ) {
         await announcer2.announceEvent('event2', 'foo');
         expect(spy).not.toHaveBeenCalled();
-        await announcer2.announceEvent('event2', 'bar');
+        await announcer2.announceEvent({
+          channel: 'event2',
+          symbol: 'event2',
+          payload: 'bar'
+        });
         expect(spy).toHaveBeenCalledWith('bar');
         await announcer('foo');
       }

@@ -17,40 +17,68 @@ export interface EventChannelAnnouncer<T> {
 }
 
 interface EventMessenger<T> {
+  symbol: ServiceIdentifier<T>;
   payload: T;
+}
+
+interface AcknowledgeAwareEventMessenger<T> extends EventMessenger<T> {
   acknowledge: (processPromise: Promise<void>) => void;
+}
+
+/**
+ * Describe how an event announcement will be performed
+ */
+export interface AnnounceEventOption<T> {
+
+  /**
+   * To which channel the event is announced
+   */
+  channel: ServiceIdentifier;
+
+  /**
+   * The payload of this event
+   */
+  payload: T;
+
+  /**
+   * Using which symbol the payload can be injected, if not specified, default to `channel`
+   */
+  symbol?: ServiceIdentifier;
 }
 
 @Component({scope: ComponentScope.SINGLETON})
 export class EventBusImplement {
 
-  private channels: Map<ServiceIdentifier, Subject<EventMessenger<unknown>>> = new Map();
+  private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger<any>>> = new Map();
 
-  async announceEvent<T>(target: ServiceIdentifier<T>, payload: T) {
-    const subject = this.ensureEventChannel(target);
+  // eslint-disable-next-line no-dupe-class-members
+  async announceEvent<T extends {}>(channel: ServiceIdentifier, symbol: ServiceIdentifier, payload: T) {
+    const subject = this.ensureEventChannel(channel);
     const consumePromises: Promise<void>[] = [];
     subject.next({
+      symbol,
       payload,
       acknowledge: (p: Promise<void>) => consumePromises.push(p),
     });
-    return Promise.all(consumePromises);
+    await Promise.all(consumePromises);
   }
 
-  subscribe<T>(target: ServiceIdentifier<T>, callback: (payload: T) => Promise<void>): EventChannelSubscription {
+  subscribe<T>(
+    target: ServiceIdentifier<T>,
+    callback: (payload: AcknowledgeAwareEventMessenger<T>) => void,
+  ): EventChannelSubscription {
     return this.ensureEventChannel(target).subscribe({
-      next: (broadcast) => {
-        broadcast.acknowledge(callback(broadcast.payload as T));
-      },
+      next: callback,
     });
   }
 
-  private ensureEventChannel<T = unknown>(target: ServiceIdentifier<T>) {
-
+  private ensureEventChannel<T>(target: ServiceIdentifier<T>): Subject<AcknowledgeAwareEventMessenger<T>> {
     let channel = this.channels.get(target);
-    if (typeof channel === 'undefined') {
-      channel = new Subject();
-      this.channels.set(target, channel);
+    if (typeof channel !== 'undefined') {
+      return channel;
     }
+    channel = new Subject<AcknowledgeAwareEventMessenger<T>>();
+    this.channels.set(target, channel);
     return channel;
   }
 }
@@ -145,7 +173,19 @@ export class EventSubscriptionContext<Payload> extends RequestContext {
 }
 
 export abstract class EventAnnouncer {
-  abstract announceEvent<T>(channel: ServiceIdentifier<T>, payload: T): Promise<void>;
+
+  /**
+   * Announce event, payload can be injected using target as symbol
+   * @param target
+   * @param payload
+   */
+  abstract announceEvent<T>(target: ServiceIdentifier<T>, payload: T): Promise<void>;
+
+  /**
+   * Announce event in a way that described by {AnnounceEventOption}
+   * @param option
+   */
+  abstract announceEvent<T>(option: AnnounceEventOption<T>): Promise<void>;
 }
 
 @Component({scope: ComponentScope.SINGLETON})
@@ -156,8 +196,20 @@ class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
   constructor(@Inject(EventBusImplement) implement: EventBusImplement) {
     super();
     this.eventAnnouncer = new class extends EventAnnouncer {
-      async announceEvent<T>(channel: ServiceIdentifier, payload: T): Promise<void> {
-        await implement.announceEvent(channel, payload);
+      async announceEvent<T>(option: ServiceIdentifier<T> | AnnounceEventOption<T>, ...rest: T[]): Promise<void> {
+        let channel: ServiceIdentifier;
+        let symbol: ServiceIdentifier;
+        let payload: T;
+        if (typeof option === 'object') {
+          channel = option.channel;
+          payload = option.payload;
+          symbol = option.symbol ?? channel;
+
+        } else {
+          channel = symbol = option;
+          payload = rest[0];
+        }
+        await implement.announceEvent(channel, symbol, payload);
       }
     };
   }
@@ -237,22 +289,26 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         ...subscribeEventMetadata.interceptors,
       ];
       const identifier = subscribeEventMetadata.identifier;
-      this.subscriptions.push(this.eventBus.subscribe(identifier, async (payload) => {
-        if (!subscribeEventMetadata.filter(payload)) {
+      this.subscriptions.push(this.eventBus.subscribe(identifier, (messenger) => {
+        if (!subscribeEventMetadata.filter(messenger.payload)) {
           return;
         }
+
         const childContainer = this.container.createChild();
         childContainer.bind(Container).toConstantValue(childContainer);
-        const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
-        const context = new EventSubscriptionContext(childContainer, identifier, payload);
-        const composedInterceptor = childContainer.get(composedInterceptorConstructor);
-        childContainer.bind<unknown>(subscribeEventMetadata.identifier).toConstantValue(payload);
 
-        return composedInterceptor.intercept(context, () => {
+        const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
+        const composedInterceptor = childContainer.get(composedInterceptorConstructor);
+
+        const {acknowledge, payload, symbol} = messenger;
+        const context = new EventSubscriptionContext(childContainer, identifier, payload);
+        childContainer.bind<unknown>(symbol).toConstantValue(payload);
+
+        acknowledge(composedInterceptor.intercept(context, () => {
           const target = childContainer.get<object>(constructor);
           const targetMethod = subscribeEventMetadata.prototype[subscribeEventMetadata.name];
           return Promise.resolve(invokeMethod(childContainer, target, targetMethod));
-        });
+        }));
       }));
     }
   }
