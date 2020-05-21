@@ -20,6 +20,7 @@ describe('Event subscribe and announce', () => {
   test('Subscribe', async () => {
 
     const spy = jest.fn();
+    const spy2 = jest.fn();
 
     class MockInterceptor extends RequestInterceptor {
       intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
@@ -38,6 +39,10 @@ describe('Event subscribe and announce', () => {
       @SubscribeEvent('event2', {filter: (payload: string) => payload === 'bar'})
       bar(@Inject('event2') param: string) {
         spy(param);
+      }
+      @SubscribeEvent('event2')
+      bar2(@Inject('event2') param: string) {
+        spy2(param);
       }
     }
 
@@ -58,12 +63,14 @@ describe('Event subscribe and announce', () => {
       ) {
         await announcer2.announceEvent('event2', 'foo');
         expect(spy).not.toHaveBeenCalled();
+        expect(spy2).toHaveBeenCalledWith('foo');
         await announcer2.announceEvent({
           channel: 'event2',
           symbol: 'event2',
           payload: 'bar'
         });
         expect(spy).toHaveBeenCalledWith('bar');
+        expect(spy2).toHaveBeenLastCalledWith('bar');
         await announcer('foo');
       }
     }
