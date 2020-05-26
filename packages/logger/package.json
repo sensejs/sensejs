@@ -21,8 +21,8 @@
   "license": "ISC",
   "dependencies": {
     "colors": "^1.4.0",
-    "moment": "^2.25.3",
-    "tslib": "^1.13.0"
+    "moment": "^2.26.0",
+    "tslib": "2.0.0"
   },
   "devDependencies": {
     "@sensejs/core": "workspace:*"

@@ -22,7 +22,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "tslib": "^1.13.0",
+    "tslib": "2.0.0",
     "uuid": "^8.1.0"
   },
   "devDependencies": {

@@ -22,9 +22,9 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@types/ioredis": "^4.16.2",
-    "ioredis": "^4.16.3",
-    "tslib": "^1.13.0"
+    "@types/ioredis": "^4.16.3",
+    "ioredis": "^4.17.3",
+    "tslib": "2.0.0"
   },
   "devDependencies": {
     "@sensejs/core": "workspace:*",
