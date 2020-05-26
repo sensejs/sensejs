@@ -23,7 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "tslib": "^1.13.0",
-    "uuid": "^7.0.3"
+    "uuid": "^8.1.0"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*"

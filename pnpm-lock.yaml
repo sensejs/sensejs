@@ -15,7 +15,7 @@ importers:
       '@types/superagent': 4.1.7
       '@types/supertest': 2.0.9
       '@types/traverse': 0.6.32
-      '@types/uuid': 7.0.3
+      '@types/uuid': 8.0.0
       '@typescript-eslint/eslint-plugin': 2.33.0_c3dd21737469c47eb2fd5891602ea537
       '@typescript-eslint/parser': 2.33.0_eslint@6.8.0+typescript@3.9.2
       eslint: 6.8.0
@@ -51,7 +51,7 @@ importers:
       '@types/superagent': ^4.1.7
       '@types/supertest': ^2.0.9
       '@types/traverse': ^0.6.32
-      '@types/uuid': ^7.0.3
+      '@types/uuid': ^8.0.0
       '@typescript-eslint/eslint-plugin': ^2.33.0
       '@typescript-eslint/parser': ^2.33.0
       eslint: ^6.8.0
@@ -154,6 +154,7 @@ importers:
     dependencies:
       '@sensejs/kafkajs-standalone': 'link:../kafkajs-standalone'
       '@sensejs/utility': 'link:../utility'
+      lodash: 4.17.15
       tslib: 1.13.0
     devDependencies:
       '@sensejs/core': 'link:../core'
@@ -163,6 +164,7 @@ importers:
       '@sensejs/kafkajs-standalone': 'workspace:^0.5.0'
       '@sensejs/testing-utility': 'workspace:*'
       '@sensejs/utility': 'workspace:^0.5.0'
+      lodash: ^4.17.15
       tslib: ^1.13.0
   packages/kafkajs-standalone:
     dependencies:
@@ -221,13 +223,13 @@ importers:
   packages/utility:
     dependencies:
       tslib: 1.13.0
-      uuid: 7.0.3
+      uuid: 8.1.0
     devDependencies:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
     specifiers:
       '@sensejs/testing-utility': 'workspace:*'
       tslib: ^1.13.0
-      uuid: ^7.0.3
+      uuid: ^8.1.0
   tools/testing-utility:
     specifiers: {}
 lockfileVersion: 5.1
@@ -1171,10 +1173,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-RBz2uRZVCXuMg93WD//aTS5B120QlT4lR/gL+935QtGsKHLS6sCtZBaKfWjIfk7ZXv/r8mtGbwjVIee6/3XTow==
-  /@types/uuid/7.0.3:
+  /@types/uuid/8.0.0:
     dev: true
     resolution:
-      integrity: sha512-PUdqTZVrNYTNcIhLHkiaYzoOIaUi5LFg/XLerAdgvwQrUCx+oSbtoBze1AMyvYbcwzUSNC+Isl58SM4Sm/6COw==
+      integrity: sha512-xSQfNcvOiE5f9dyd4Kzxbof1aTrLobL278pGLKOZI6esGfZ7ts9Ka16CzIN6Y8hFHE1C7jIBZokULhK1bOgjRw==
   /@types/yargs-parser/15.0.0:
     dev: true
     resolution:
@@ -6542,9 +6544,15 @@ packages:
     resolution:
       integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
   /uuid/7.0.3:
+    dev: true
     hasBin: true
     resolution:
       integrity: sha512-DPSke0pXhTZgoF/d+WSt2QaKMCFSfx7QegxEWT+JOuHF5aWrKEn0G+ztjuJg/gG8/ItK+rbPCD/yNv8yyih6Cg==
+  /uuid/8.1.0:
+    dev: false
+    hasBin: true
+    resolution:
+      integrity: sha512-CI18flHDznR0lq54xBycOVmphdCYnQLKn8abKn7PXUiKUGdEd+/l9LWNJmugXel4hXq7S+RMNl34ecyC9TntWg==
   /v8-compile-cache/2.1.0:
     dev: true
     resolution:
