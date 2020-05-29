@@ -7,26 +7,22 @@
       <excludeFolder url="file://$MODULE_DIR$/examples/demo-app/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/account-module/coverage" />
       <excludeFolder url="file://$MODULE_DIR$/packages/account-module/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/config/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/core/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/example/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/http/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/infrastructure/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/kafkajs-standalone/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/kafkajs/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/logger/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/redis/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/typeorm/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/utility/lib" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/testing-utility/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="logger" />
-    <orderEntry type="module" module-name="core" />
-    <orderEntry type="module" module-name="http" />
-    <orderEntry type="module" module-name="typeorm" />
-    <orderEntry type="module" module-name="core" />
-    <orderEntry type="module" module-name="config" />
-    <orderEntry type="module" module-name="redis" />
-    <orderEntry type="module" module-name="testing-utility" />
-    <orderEntry type="module" module-name="demo-app" />
-    <orderEntry type="module" module-name="utility" />
-    <orderEntry type="module" module-name="kafkajs-standalone" />
-    <orderEntry type="module" module-name="kafkajs" />
   </component>
 </module>

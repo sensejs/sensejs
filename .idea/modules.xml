@@ -2,17 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/packages/config/.idea/config.iml" filepath="$PROJECT_DIR$/packages/config/.idea/config.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/core/.idea/core.iml" filepath="$PROJECT_DIR$/packages/core/.idea/core.iml" />
-      <module fileurl="file://$PROJECT_DIR$/examples/demo-app/.idea/demo-app.iml" filepath="$PROJECT_DIR$/examples/demo-app/.idea/demo-app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/http/.idea/http.iml" filepath="$PROJECT_DIR$/packages/http/.idea/http.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/kafkajs/.idea/kafkajs.iml" filepath="$PROJECT_DIR$/packages/kafkajs/.idea/kafkajs.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/kafkajs-standalone/.idea/kafkajs-standalone.iml" filepath="$PROJECT_DIR$/packages/kafkajs-standalone/.idea/kafkajs-standalone.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/logger/.idea/logger.iml" filepath="$PROJECT_DIR$/packages/logger/.idea/logger.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/redis/.idea/redis.iml" filepath="$PROJECT_DIR$/packages/redis/.idea/redis.iml" />
-      <module fileurl="file://$PROJECT_DIR$/tools/testing-utility/.idea/testing-utility.iml" filepath="$PROJECT_DIR$/tools/testing-utility/.idea/testing-utility.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/typeorm/.idea/typeorm.iml" filepath="$PROJECT_DIR$/packages/typeorm/.idea/typeorm.iml" />
-      <module fileurl="file://$PROJECT_DIR$/packages/utility/.idea/utility.iml" filepath="$PROJECT_DIR$/packages/utility/.idea/utility.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/sensejs.iml" filepath="$PROJECT_DIR$/.idea/sensejs.iml" />
     </modules>
   </component>
