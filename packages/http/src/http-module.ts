@@ -58,11 +58,6 @@ export interface HttpModuleOption extends ModuleOption {
 
   /**
    * If specified, only match the controllers which contains all required label
-   * @deprecated
-   */
-  matchLabel?: (string | symbol)[] | Set<string | symbol>;
-  /**
-   * If specified, only match the controllers which contains all required label
    */
   matchLabels?: (string | symbol)[] | Set<string | symbol>;
 }
@@ -130,7 +125,7 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
       httpAdaptor: HttpAdaptor,
       moduleScanner: ModuleScanner
     ) {
-      const matchLabels = new Set<string | symbol>(option.matchLabels ?? option.matchLabel);
+      const matchLabels = new Set<string | symbol>(option.matchLabels);
       moduleScanner.scanModule((metadata) => {
         metadata.components.forEach((component) => {
           const httpControllerMetadata = getHttpControllerMetadata(component);

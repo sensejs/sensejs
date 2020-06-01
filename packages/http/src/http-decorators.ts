@@ -38,13 +38,6 @@ export interface ControllerOption {
    * Label of controller
    *
    * @see HttpModuleOption
-   * @deprecated
-   */
-  label?: (string | symbol)[] | Set<symbol | string>;
-  /**
-   * Label of controller
-   *
-   * @see HttpModuleOption
    */
   labels?: (string | symbol)[] | Set<symbol | string>;
 }
@@ -194,7 +187,7 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
   return (target: Constructor) => {
     // Decorate target as a component
     Component()(target);
-    const labels = controllerOption.labels ?? controllerOption.label;
+    const labels = controllerOption.labels;
     setHttpControllerMetadata(target, {
       target,
       path,
