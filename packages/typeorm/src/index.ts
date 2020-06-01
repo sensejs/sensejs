@@ -2,7 +2,6 @@ import {
   Component,
   Constructor,
   createModule,
-  Deprecated,
   Inject,
   InjectLogger,
   Logger,
@@ -55,19 +54,29 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
   @Component()
   class TransactionInterceptor extends RequestInterceptor {
 
-    constructor(@Inject(EntityManager) private entityManager: EntityManager) {
+    private queryRunner = this.connection.createQueryRunner();
+
+    constructor(@Inject(Connection) private connection: Connection) {
       super();
     }
 
     async intercept(context: RequestContext, next: () => Promise<void>) {
-      const runInTransaction = async (entityManager: EntityManager) => {
-        context.bindContextValue(EntityManager, entityManager);
-        return next();
-      };
-      if (level) {
-        return this.entityManager.transaction(level, runInTransaction);
+
+      try {
+        await this.queryRunner.connect();
+        const runInTransaction = async (entityManager: EntityManager) => {
+          context.bindContextValue(EntityManager, entityManager);
+          return next();
+        };
+
+        if (level) {
+          return await this.connection.transaction(level, runInTransaction);
+        }
+        return await this.connection.transaction(runInTransaction);
+      } finally {
+        await this.queryRunner.release();
       }
-      return this.entityManager.transaction(runInTransaction);
+
     }
   }
 
