@@ -1,4 +1,4 @@
-export {BackgroundTaskQueue, ProcessManager} from './builtin-module';
+export * from './builtin-module';
 export * from './event';
 export * from './module';
 export * from './module-root';
