@@ -55,7 +55,8 @@
           "String": "use 'string' instead",
           "Number": "use 'number' instead",
           "Object": "use 'object' or '{}' instead"
-        }
+        },
+        "extendDefaults": false
       }
     ],
     "@typescript-eslint/no-inferrable-types": "off",
