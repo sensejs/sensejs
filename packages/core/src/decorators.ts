@@ -1,6 +1,12 @@
 import {ServiceIdentifier} from './interfaces';
 import {decorate, inject, named, optional, tagged} from 'inversify';
-import {ConstructorParamDecorator, DecoratorBuilder, MethodParamDecorator, ParamDecorator} from '@sensejs/utility';
+import {
+  ConstructorParamDecorator,
+  DecoratorBuilder,
+  InstanceMethodParamDecorator,
+  MethodParamDecorator,
+  ParamDecorator,
+} from '@sensejs/utility';
 import {makeDeprecateMessageEmitter} from './utils';
 import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
 import {decorateInjectedConstructorParam} from './constructor-inject';
@@ -18,7 +24,12 @@ function applyToParamBindingInvoker<Parameter>(
   }
 }
 
-export function Inject<T>(target: ServiceIdentifier<T>, option?: MethodParameterInjectOption<T, any>) {
+export interface InjectionDecorator extends ConstructorParamDecorator, InstanceMethodParamDecorator {}
+
+export function Inject<T>(
+  target: ServiceIdentifier<T>,
+  option?: MethodParameterInjectOption<T, any>,
+): InjectionDecorator {
   const name = typeof target === 'function' ? target.name : target.toString();
   return new DecoratorBuilder(`Inject(${name})`).whenApplyToInstanceMethodParam(
     (prototype, name, index) => {
@@ -30,7 +41,7 @@ export function Inject<T>(target: ServiceIdentifier<T>, option?: MethodParameter
   }).build<ParamDecorator>();
 }
 
-export function Optional() {
+export function Optional(): InjectionDecorator {
   // XXX: Inversify Typing Error?
   // Need to use @optional() instead of @optional
   const decorator = optional() as ParameterDecorator;
@@ -48,7 +59,7 @@ export interface InjectionConstraintDecorator
   extends ConstructorParamDecorator, MethodParamDecorator {
 }
 
-export function Tagged(key: string | number | symbol, value: any) {
+export function Tagged(key: string | number | symbol, value: any): InjectionDecorator {
   const decorator = tagged(key, value) as ParameterDecorator;
   return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
@@ -60,7 +71,7 @@ export function Tagged(key: string | number | symbol, value: any) {
     .build<InjectionConstraintDecorator>();
 }
 
-export function Named(name: string | symbol) {
+export function Named(name: string | symbol): InjectionDecorator {
   const decorator = named(name) as ParameterDecorator;
   return new DecoratorBuilder(`Named(name="${name.toString()}")`)
     .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
@@ -70,18 +81,4 @@ export function Named(name: string | symbol) {
       return decorate(decorator, constructor, index);
     })
     .build<InjectionConstraintDecorator>();
-}
-
-const deprecatedMessageEmitter = makeDeprecateMessageEmitter(ParamBinding, Inject);
-
-/**
- * @param target Identifier of target wanted to be injected
- * @param option
- * @decorator
- * @deprecated
- * @see Inject
- */
-export function ParamBinding<T, R = T>(target: ServiceIdentifier<T>, option: MethodParameterInjectOption<T, R> = {}) {
-  deprecatedMessageEmitter();
-  return MethodInject(target, option);
 }

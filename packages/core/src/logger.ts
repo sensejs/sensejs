@@ -1,13 +1,6 @@
 import {Class, Constructor} from './interfaces';
-import {Inject, Optional} from './decorators';
-import {
-  consoleLogger,
-  ConstructorParamDecorator,
-  DecoratorBuilder,
-  InstanceMethodParamDecorator,
-  Logger,
-  Transformer,
-} from '@sensejs/utility';
+import {Inject, InjectionDecorator, Optional} from './decorators';
+import {consoleLogger, DecoratorBuilder, Logger, Transformer} from '@sensejs/utility';
 
 export {consoleLogger, Logger} from '@sensejs/utility';
 
@@ -23,9 +16,8 @@ function loggerTransformer(label: string): Transformer<LoggerBuilder | undefined
   };
 }
 
-interface InjectLoggerDecorator extends ConstructorParamDecorator, InstanceMethodParamDecorator {}
 
-export function InjectLogger(name?: string | Function) {
+export function InjectLogger(name?: string | Constructor): InjectionDecorator {
   const labelName = typeof name === 'function' ? name.name : typeof name === 'string' ? name : undefined;
   return new DecoratorBuilder('InjectLogger')
     .whenApplyToConstructorParam(<T extends Class>(target: T, index: number) => {

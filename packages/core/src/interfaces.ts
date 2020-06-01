@@ -1,4 +1,6 @@
 import {injectable, interfaces} from 'inversify';
+import {Class, Constructor} from '@sensejs/utility';
+export {Class, Constructor} from '@sensejs/utility';
 
 export enum ComponentScope {
   SINGLETON,
@@ -15,13 +17,6 @@ export abstract class ComponentFactory<T> {
 
 export type ServiceIdentifier<T extends {} = {}> = string | symbol | Class<T>;
 
-export interface Class<T extends {} = {}> extends Function {
-  prototype: T;
-}
-
-export interface Constructor<T extends {} = {}> extends Class<T> {
-  new(...args: any[]): T;
-}
 
 export interface BindingSpec {
   scope?: ComponentScope;
