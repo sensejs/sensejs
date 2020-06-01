@@ -9,6 +9,7 @@
     "strict": true,
     "alwaysStrict": true,
     "module": "commonjs",
+    "incremental": true,
     "outDir": "lib/",
     "noEmitHelpers": true,
     "importHelpers": true,
