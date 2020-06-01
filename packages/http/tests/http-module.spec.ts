@@ -43,7 +43,7 @@ test('HttpModule', async () => {
     }
   }
 
-  @Controller('/foo', {interceptors: [MockInterceptor], label: ['foo']})
+  @Controller('/foo', {interceptors: [MockInterceptor], labels: ['foo']})
   class FooController {
     constructor(@inject(MyComponent) private myComponent: MyComponent) {}
 
@@ -69,7 +69,7 @@ test('HttpModule', async () => {
         },
         requires: [createModule({components: [MyComponent, FooController]})],
         serverIdentifier,
-        matchLabel: ['foo'],
+        matchLabels: ['foo'],
         httpOption: {
           listenPort: 0,
           listenAddress: '0.0.0.0',
