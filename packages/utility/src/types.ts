@@ -1,3 +1,4 @@
+export type PrototypeKey = string | symbol;
 
 export interface Class<T extends {} = {}> extends Function {
   prototype: T;

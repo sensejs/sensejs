@@ -1,23 +1,21 @@
-import {Class} from './types';
+import {Class, PrototypeKey} from './types';
 
 export interface ClassDecorator<Constraint = Class> {
   <T extends Constraint>(target: T): T | void;
 }
 
-type PropertyName = string | symbol;
-
 export interface InstancePropertyDecorator {
-  (target: object, name: PropertyName): void;
+  (target: object, name: PrototypeKey): void;
 }
 
 export interface StaticPropertyDecorator {
-  <T extends Class>(target: T, name: PropertyName): void;
+  <T extends Class>(target: T, name: PrototypeKey): void;
 }
 
 export interface StaticMethodDecorator {
   <T extends Function, R extends Class>(
     target: R,
-    name: PropertyName,
+    name: PrototypeKey,
     pd: TypedPropertyDescriptor<T>,
   ): TypedPropertyDescriptor<T> | void;
 }
@@ -25,17 +23,17 @@ export interface StaticMethodDecorator {
 export interface InstanceMethodDecorator {
   <T extends Function>(
     target: object,
-    name: PropertyName,
+    name: PrototypeKey,
     pd: TypedPropertyDescriptor<T>,
   ): TypedPropertyDescriptor<T> | void;
 }
 
 export interface InstanceMethodParamDecorator {
-  (target: object, name: PropertyName, pd: number): void;
+  (target: object, name: PrototypeKey, pd: number): void;
 }
 
 export interface StaticMethodParamDecorator {
-  (target: Function, name: PropertyName, pd: number): void;
+  (target: Function, name: PrototypeKey, pd: number): void;
 }
 
 export interface ConstructorParamDecorator {
@@ -118,9 +116,9 @@ export class DecoratorBuilder {
 
   build<T = Decorator>(): NarrowTo<T> {
 
-    const result = <T extends Function, R>(
-      target: object | Class<R>,
-      name?: undefined | symbol | string,
+    const result = <T extends Function, R extends PrototypeKey>(
+      target: R | Class<R>,
+      name?: PrototypeKey,
       descriptor?: number | TypedPropertyDescriptor<T>,
     ): void | TypedPropertyDescriptor<T> | Class<R> => {
       if (typeof target === 'function') {
@@ -156,7 +154,7 @@ export class DecoratorBuilder {
     throw new Error(`@${this.decoratorName} cannot apply to static method`);
   };
 
-  private applyToConstructorParam: <T>(ctr: Class<T>, name: any, index: number) => void | Class<T> = () => {
+  private applyToConstructorParam: (ctr: Class, name: any, index: number) => void | Class = () => {
     throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
   };
 
@@ -212,7 +210,7 @@ export class DecoratorBuilder {
 
   private applyStaticDecorator<T extends Function, R extends {}>(
     target: Class<R>,
-    name: symbol | string,
+    name: PrototypeKey,
     descriptor?: number | TypedPropertyDescriptor<T>,
   ) {
     const {
