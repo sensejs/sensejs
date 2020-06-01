@@ -3,7 +3,6 @@ import {
   createModule,
   Inject,
   invokeMethod,
-  makeDeprecateMessageEmitter,
   ModuleClass,
   ModuleOption,
   ModuleScanner,
@@ -33,11 +32,6 @@ export interface MessageConsumerModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier;
   matchLabels?: (string | symbol)[] | Set<string | symbol>;
 }
-
-/**
- * @deprecated
- */
-export type KafkaConsumerModuleOption = MessageConsumerModuleOption;
 
 function mergeConnectOption(
   fallback?: Partial<MessageConsumerOption>,
@@ -193,17 +187,4 @@ export function createMessageConsumerModule(option: MessageConsumerModuleOption)
   const injectMessageConsumerSymbol = Symbol('MessageConsumer');
   const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
   return scanSubscriber(option, kafkaConnectionModule, injectMessageConsumerSymbol);
-}
-
-const deprecatedMessageEmitter = makeDeprecateMessageEmitter(createKafkaConsumerModule);
-
-/**
- * Create kafka consumer module for sense.js framework
- * @param option
- * @deprecated
- * @see createMessageConsumerModule
- */
-export function createKafkaConsumerModule(option: MessageConsumerModuleOption): Constructor {
-  deprecatedMessageEmitter();
-  return createMessageConsumerModule(option);
 }
