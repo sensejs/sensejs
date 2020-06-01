@@ -3,7 +3,6 @@ import {ExampleController} from './example.controller';
 import {RequestTimingInterceptor} from './request-timing.interceptor';
 import PublishingModule from '../example';
 import {TracingInterceptor} from './tracing-interceptor';
-import {TypeOrmSupportInterceptor} from '@sensejs/typeorm';
 import {ErrorHandlerInterceptor} from './error-handler.interceptor';
 
 export default createHttpModule({
@@ -17,7 +16,6 @@ export default createHttpModule({
     TracingInterceptor,
     ErrorHandlerInterceptor,
     RequestTimingInterceptor,
-    TypeOrmSupportInterceptor,
   ],
   injectOptionFrom: 'config.http',
 });

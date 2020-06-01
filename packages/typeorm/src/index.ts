@@ -43,15 +43,6 @@ export function InjectCustomRepository(entityConstructor: Function) {
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getCustomRepository(entityConstructor)});
 }
 
-@Component()
-@Deprecated()
-export class TypeOrmSupportInterceptor extends RequestInterceptor {
-
-  async intercept(context: RequestContext, next: () => Promise<void>) {
-    return next();
-  }
-}
-
 export enum TransactionLevel {
   READ_UNCOMMITTED = 'READ UNCOMMITTED',
   READ_COMMITTED = 'READ COMMITTED',
