@@ -1,6 +1,13 @@
-import {Class} from './interfaces';
+import {Class, Constructor} from './interfaces';
 import {Inject, Optional} from './decorators';
-import {consoleLogger, DecoratorBuilder, Logger, Transformer} from '@sensejs/utility';
+import {
+  consoleLogger,
+  ConstructorParamDecorator,
+  DecoratorBuilder,
+  InstanceMethodParamDecorator,
+  Logger,
+  Transformer,
+} from '@sensejs/utility';
 
 export {consoleLogger, Logger} from '@sensejs/utility';
 
@@ -8,9 +15,6 @@ export abstract class LoggerBuilder {
   abstract build(loggerLabel: string): Logger;
 }
 
-/**
- * @deprecated
- */
 export const LOGGER_BUILDER_SYMBOL = LoggerBuilder;
 
 function loggerTransformer(label: string): Transformer<LoggerBuilder | undefined, Logger> {
@@ -18,6 +22,8 @@ function loggerTransformer(label: string): Transformer<LoggerBuilder | undefined
     return builder?.build(label) ?? consoleLogger;
   };
 }
+
+interface InjectLoggerDecorator extends ConstructorParamDecorator, InstanceMethodParamDecorator {}
 
 export function InjectLogger(name?: string | Function) {
   const labelName = typeof name === 'function' ? name.name : typeof name === 'string' ? name : undefined;
