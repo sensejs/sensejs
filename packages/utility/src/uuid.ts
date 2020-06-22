@@ -22,7 +22,7 @@ export function uuidV1() {
 
   return uuid({
     node: uuidV1Suffixes[nano % uuidV1Suffixes.length],
-    msecs: processStartupTime + second + milliseconds,
+    msecs: processStartupTime + milliseconds,
     nsecs: Math.trunc(nanoRemains / 100),
   });
 }
