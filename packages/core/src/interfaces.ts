@@ -17,7 +17,6 @@ export abstract class ComponentFactory<T> {
 
 export type ServiceIdentifier<T extends {} = {}> = string | symbol | Class<T>;
 
-
 export interface BindingSpec {
   scope?: ComponentScope;
   name?: string | symbol;
@@ -51,4 +50,5 @@ export interface ConstantProvider<T> {
 export interface ComponentMetadata<T extends {} = {}> extends BindingSpec {
   target: Constructor<T>;
   id?: ServiceIdentifier<T>;
+  cache: WeakMap<interfaces.Context, T>;
 }

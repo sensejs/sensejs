@@ -32,6 +32,7 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
     scope,
     name,
     tags,
+    cache: new WeakMap(),
   };
 
   Reflect.defineMetadata(COMPONENT_METADATA_KEY, metadata, target);
