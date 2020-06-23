@@ -11,6 +11,7 @@ import {
   Named,
   OnModuleCreate,
   OnModuleDestroy,
+  ServiceIdentifier,
   Tagged,
 } from '../src';
 import {ModuleInstance} from '../src/module-instance';
@@ -133,28 +134,33 @@ describe('Module resolve', () => {
   const namedId = Symbol();
   const taggedId = Symbol();
 
-  function createStubModule(option: ModuleOption) {
+  function createStubModule(
+    option: ModuleOption,
+    unnamedTarget: ServiceIdentifier = unnamedId,
+    namedTarget: ServiceIdentifier = namedId,
+    taggedTarget: ServiceIdentifier = taggedId,
+  ) {
     @ModuleClass(option)
     class StubModule {
       constructor(
-        @Inject(unnamedId) unnamed: unknown,
-        @Inject(namedId) @Named(name) named: unknown,
-        @Inject(taggedId) @Tagged(key, value) tagged: unknown,
+        @Inject(unnamedTarget) unnamed: unknown,
+        @Inject(namedTarget) @Named(name) named: unknown,
+        @Inject(taggedTarget) @Tagged(key, value) tagged: unknown,
       ) {}
 
       @OnModuleCreate()
       onCreate(
-        @Inject(unnamedId) unnamed: unknown,
-        @Inject(namedId) @Named(name) named: unknown,
-        @Inject(taggedId) @Tagged(key, value) tagged: unknown,
+        @Inject(unnamedTarget) unnamed: unknown,
+        @Inject(namedTarget) @Named(name) named: unknown,
+        @Inject(taggedTarget) @Tagged(key, value) tagged: unknown,
       ) {
       }
 
       @OnModuleDestroy()
       onDestroy(
-        @Inject(unnamedId) unnamed: unknown,
-        @Inject(namedId) @Named(name) named: unknown,
-        @Inject(taggedId) @Tagged(key, value) tagged: unknown,
+        @Inject(unnamedTarget) unnamed: unknown,
+        @Inject(namedTarget) @Named(name) named: unknown,
+        @Inject(taggedTarget) @Tagged(key, value) tagged: unknown,
       ) {
       }
     }
@@ -173,11 +179,42 @@ describe('Module resolve', () => {
     @Component({id: taggedId, tags: [{key, value}]})
     class TaggedComponent {}
 
-    const instance = new ModuleInstance(createStubModule({
+    abstract class GrantParent {
+      bar() {return 'bar';}
+    }
+
+    abstract class Parent extends GrantParent {
+      foo() {return 'foo';}
+    }
+
+    @Component()
+    class Child extends Parent {
+
+    }
+
+    @ModuleClass({
+      components: [Child]
+    })
+    class MyModule {
+      @OnModuleCreate()
+      onCreate(
+        @Inject(Parent) parent: Parent,
+        @Inject(GrantParent) grantParent: GrantParent,
+        @Inject(Child) child: Child,
+      ) {
+        expect(child).toStrictEqual(parent);
+        expect(parent).toStrictEqual(grantParent);
+        expect(child.foo()).toEqual('foo');
+        expect(child.bar()).toEqual('bar');
+      }
+    }
+
+    const instance = new ModuleRoot(createStubModule({
+      requires: [MyModule],
       components: [UnnamedComponent, NamedComponent, TaggedComponent],
-    }), new Container());
-    await instance.onSetup();
-    await instance.onDestroy();
+    }, UnnamedComponent, NamedComponent, TaggedComponent));
+    await instance.start();
+    await instance.stop();
   });
 
   test('Factory resolve', async () => {

@@ -25,18 +25,14 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
   if (Reflect.hasOwnMetadata(COMPONENT_METADATA_KEY, target)) {
     throw new Error(`Decorator @${Component.name} cannot applied multiple times to "${target.name}`);
   }
-  const {
-    tags = [],
-    name,
-    id = target,
-    scope = ComponentScope.TRANSIENT,
-  } = option;
+  const {tags = [], name, id = target, scope = ComponentScope.TRANSIENT} = option;
   const metadata: ComponentMetadata<T> = {
     target,
     id,
     scope,
     name,
     tags,
+    cache: new WeakMap(),
   };
 
   Reflect.defineMetadata(COMPONENT_METADATA_KEY, metadata, target);

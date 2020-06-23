@@ -8,6 +8,7 @@ import {
   ComponentScope,
   Constructor,
   FactoryProvider,
+  ServiceIdentifier,
 } from './interfaces';
 import {getComponentMetadata} from './component';
 import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
@@ -26,43 +27,76 @@ function scopedBindingHelper<T>(
   }
 }
 
-function bindingHelper<T>(spec: BindingSpec, from: () => interfaces.BindingInSyntax<T>) {
-  const result = scopedBindingHelper(from(), spec.scope);
+function constraintBindingHelper<T>(spec: BindingSpec, binding: interfaces.BindingWhenOnSyntax<T>) {
   if (spec.name) {
-    result.whenTargetNamed(spec.name);
+    binding.whenTargetNamed(spec.name);
   }
   if (spec.tags) {
     for (const {key, value} of spec.tags) {
-      result.whenTargetTagged(key, value);
+      binding.whenTargetTagged(key, value);
     }
+  }
+  return binding;
+}
+
+function aliasBindingHelper<T>(
+  bind: interfaces.Bind,
+  metadata: ComponentMetadata<T>,
+  target: ServiceIdentifier<T>,
+  symbol: symbol,
+) {
+  const binding = bind(target).toDynamicValue((context) => {
+    let result = metadata.cache.get(context);
+    if (!result) {
+      result = context.container.get<T>(symbol);
+      metadata.cache.set(context, result);
+    }
+    return result;
+  });
+  constraintBindingHelper(metadata, binding);
+}
+
+function bindComponent(bind: interfaces.Bind, constructor: Constructor, metadata: ComponentMetadata) {
+  const {target, id, scope} = metadata;
+  const symbol = Symbol();
+  const binding = bind(symbol).to(constructor);
+  scopedBindingHelper(binding, scope);
+  aliasBindingHelper(bind, metadata, target, symbol);
+
+  if (id && target !== id) {
+    aliasBindingHelper(bind, metadata, id, symbol);
+  }
+
+  let parentConstructor = Object.getPrototypeOf(target);
+  while (parentConstructor.prototype) {
+    aliasBindingHelper(bind, metadata, parentConstructor, symbol);
+    parentConstructor = Object.getPrototypeOf(parentConstructor);
   }
 }
 
 function createContainerModule(option: ModuleMetadata) {
   const {components, factories, constants} = option;
-  return new ContainerModule((bind, unbind, isBound, rebind) => {
+  return new ContainerModule((bind) => {
     constants.forEach((constantProvider) => {
       bind(constantProvider.provide).toConstantValue(constantProvider.value);
     });
 
-    components.map(getComponentMetadata).map(async (metadata: ComponentMetadata) => {
-      const {target, id = target} = metadata;
-      const constructMetadata = getConstructorInjectMetadata(target);
-      const proxy = createConstructorArgumentTransformerProxy(target, constructMetadata);
-      bindingHelper(metadata, () => bind(id).to(proxy));
+    components.forEach((component) => {
+      const constructor = createConstructorArgumentTransformerProxy(component, getConstructorInjectMetadata(component));
+      bindComponent(bind, constructor, getComponentMetadata(component));
     });
 
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
       const {provide, factory, scope, ...rest} = factoryProvider;
       const constructMetadata = getConstructorInjectMetadata(factory);
       const proxy = createConstructorArgumentTransformerProxy(factory, constructMetadata);
-      bindingHelper({scope}, () => bind(factory).to(proxy));
-      bindingHelper(rest, () =>
-        bind(provide).toDynamicValue((context: interfaces.Context) => {
-          const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
-          return factoryInstance.build(context);
-        }),
-      );
+      const factoryBinding = bind(factory).to(proxy);
+      scopedBindingHelper(factoryBinding, scope);
+      const targetBinding = bind(provide).toDynamicValue((context: interfaces.Context) => {
+        const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
+        return factoryInstance.build(context);
+      });
+      constraintBindingHelper(rest, targetBinding);
     });
   });
 }
@@ -97,7 +131,7 @@ export class ModuleInstance {
     });
   }
 
-  async onSetup() {
+  async onSetup(): Promise<void> {
     if (this.setupPromise) {
       return this.setupPromise;
     }
@@ -105,7 +139,7 @@ export class ModuleInstance {
     return this.setupPromise;
   }
 
-  async onDestroy() {
+  async onDestroy(): Promise<void> {
     if (this.destroyPromise) {
       return this.destroyPromise;
     }
@@ -116,10 +150,7 @@ export class ModuleInstance {
   private async performSetup() {
     const injectMetadata = getConstructorInjectMetadata(this.moduleClass);
     const proxy = createConstructorArgumentTransformerProxy(this.moduleClass, injectMetadata);
-    this.container
-      .bind(this.moduleClass)
-      .to(proxy)
-      .inSingletonScope();
+    this.container.bind(this.moduleClass).to(proxy).inSingletonScope();
     this.container.load(this.containerModule);
     this.moduleInstance = this.container.get<object>(this.moduleClass);
     for (const method of this.moduleMetadata.onModuleCreate) {
