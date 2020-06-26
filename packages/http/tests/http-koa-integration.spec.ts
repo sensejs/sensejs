@@ -42,6 +42,7 @@ describe('KoaHttpApplicationBuilder', () => {
   };
   test('custom param binding', async () => {
     const stubForGet = jest.fn(),
+      stubForGetStar = jest.fn(),
       stubForPost = jest.fn(),
       stubForDelete = jest.fn(),
       stubForPatch = jest.fn(),
@@ -73,6 +74,12 @@ describe('KoaHttpApplicationBuilder', () => {
         stubForGet(ctx);
       }
 
+      @GET('*')
+      getStart(@Inject(HttpContext) ctx: HttpContext, @Query() query: object) {
+        stubForGetStar(ctx.request);
+        Object.entries(query).forEach(([key, value]) => ctx.response.set(key, value));
+      }
+
       @POST('/')
       post() {
         stubForPost();
@@ -102,11 +109,22 @@ describe('KoaHttpApplicationBuilder', () => {
     const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
     await testClient.get('/');
+    await testClient.get('/any?key=value').then((result) => {
+      expect(result.header['key']).toBe('value');
+    });
     await testClient.post('/');
     await testClient.delete('/');
     await testClient.put('/');
     await testClient.patch('/');
     expect(stubForGet).toBeCalledWith(expect.any(KoaHttpContext));
+    expect(stubForGetStar).toBeCalledWith(expect.objectContaining({
+      path: '/any',
+      url: '/any?key=value',
+      search: '?key=value',
+      query: expect.objectContaining({key: 'value'}),
+      protocol: 'http',
+      hostname: expect.any(String)
+    }));
     expect(stubForPost).toBeCalled();
     expect(stubForDelete).toBeCalled();
     expect(stubForPut).toBeCalled();
