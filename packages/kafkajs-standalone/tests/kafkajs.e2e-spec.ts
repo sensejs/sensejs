@@ -63,7 +63,10 @@ test('KafkaJS', async () => {
   });
 
   messageConsumerB.subscribe(TOPIC, async (message) => {
-    consumerStubB(message.value?.toString());
+    if (stopped) {
+      return;
+    }
+    stopped = true;
     const {topic, partition, offset} = message;
     await producerA.sendBatch(
       [
@@ -80,6 +83,7 @@ test('KafkaJS', async () => {
         },
       },
     );
+    consumerStubB(message.value?.toString());
   }, true);
 
   const p = Promise.all([
@@ -90,7 +94,6 @@ test('KafkaJS', async () => {
   await messageConsumerA.start(); // safe to call start multiple times
   await messageConsumerB.start();
   await p;
-  stopped = true;
   await producingPromise;
   await messageConsumerA.stop();
   await messageConsumerA.stop(); // safe to call stop multiple times
