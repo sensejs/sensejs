@@ -10,7 +10,7 @@ import {
 } from '@sensejs/core';
 import {Container} from 'inversify';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
-import {createTypeOrmModule, InjectRepository, Transactional, TypeOrmSupportInterceptor} from '../src';
+import {createTypeOrmModule, InjectRepository, Transactional} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
@@ -97,7 +97,7 @@ describe('TypeOrmModule', () => {
     const transactionalSupportInterceptor = Transactional();
 
     @ModuleClass({
-      components: [ExampleHttpController, TypeOrmSupportInterceptor, transactionalSupportInterceptor],
+      components: [ExampleHttpController, transactionalSupportInterceptor],
       requires: [typeOrmModule],
     })
     class FooModule {
