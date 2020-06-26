@@ -20,10 +20,27 @@ export interface HttpApplicationOption {
 }
 
 export interface HttpRequest {
+
+  /**
+   * Full url contains query
+   */
   readonly url: string;
 
+  readonly search: string;
+
+  /**
+   * Path or the url
+   */
+  readonly path: string;
+
+  /**
+   * Requesting Method
+   */
   readonly method: string;
 
+  /**
+   * Requesting protocol, typically http and https
+   */
   readonly protocol: string;
 
   readonly hostname: string;
@@ -42,6 +59,8 @@ export interface HttpRequest {
 
 export interface HttpResponse {
   statusCode?: number;
+
+  set(key: string, value: string): void;
 
   data?: object | Buffer | Readable;
 }

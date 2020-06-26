@@ -41,6 +41,8 @@ export class KoaHttpContext extends HttpContext {
       body: request.body,
       protocol: context.protocol,
       url: context.originalUrl,
+      path: context.path,
+      search: context.search,
       method: context.method,
       params: context.params,
       headers: context.headers,
@@ -53,6 +55,10 @@ export class KoaHttpContext extends HttpContext {
     return {
       set statusCode(statusCode) {
         context.response.status = statusCode;
+      },
+
+      set(key, value) {
+        context.response.set(key, value);
       },
 
       get statusCode() {
