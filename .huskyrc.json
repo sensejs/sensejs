@@ -1,0 +1,9 @@
+{
+  "hooks": {
+    "pre-commit": "pnpm recursive install && lint-staged",
+    "post-checkout": "pnpm recursive install",
+    "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+    "post-merge": "pnpm recursive install",
+    "post-applypatch": "pnpm recursive install"
+  }
+}

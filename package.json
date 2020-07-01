@@ -31,6 +31,7 @@
     "kafkajs": "^1.12.0",
     "lint-staged": "^10.2.7",
     "lodash": "^4.17.15",
+    "prettier": "^2.0.5",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^6.5.5",
     "source-map-support": "^0.5.19",
@@ -40,23 +41,7 @@
     "ts-node": "^8.10.2",
     "tslib": "2.0.0",
     "typeorm": "^0.2.25",
-    "typescript": "^3.9.3",
-    "typescript-formatter": "^7.2.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pnpm recursive run prepare && lint-staged",
-      "pre-push": "pnpm t",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "post-checkout": "sh scripts/post-checkout.sh",
-      "post-merge": "pnpm m i"
-    }
-  },
-  "lint-staged": {
-    "*.ts?(x)": [
-      "pnpm run format --",
-      "pnpm run lint --"
-    ]
+    "typescript": "^3.9.3"
   },
   "scripts": {
     "test": "jest",
@@ -65,7 +50,6 @@
     "build": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",
     "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx release-it -c `pwd`/.release-it.yaml --non-interactive",
-    "prettier": "prettier --write --parser typescript \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\"",
-    "format": "tsfmt -r"
+    "format ": "prettier --write  \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\""
   }
 }

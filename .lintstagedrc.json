@@ -1,0 +1,6 @@
+{
+  "*.ts(x)?": [
+    "prettier --write",
+    "eslint"
+  ]
+}
