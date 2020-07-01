@@ -74,7 +74,7 @@ describe('KoaHttpApplicationBuilder', () => {
         stubForGet(ctx);
       }
 
-      @GET('*')
+      @GET('(.*)')
       getStart(@Inject(HttpContext) ctx: HttpContext, @Query() query: object) {
         stubForGetStar(ctx.request);
         Object.entries(query).forEach(([key, value]) => ctx.response.set(key, value));
@@ -117,14 +117,16 @@ describe('KoaHttpApplicationBuilder', () => {
     await testClient.put('/');
     await testClient.patch('/');
     expect(stubForGet).toBeCalledWith(expect.any(KoaHttpContext));
-    expect(stubForGetStar).toBeCalledWith(expect.objectContaining({
-      path: '/any',
-      url: '/any?key=value',
-      search: '?key=value',
-      query: expect.objectContaining({key: 'value'}),
-      protocol: 'http',
-      hostname: expect.any(String)
-    }));
+    expect(stubForGetStar).toBeCalledWith(
+      expect.objectContaining({
+        path: '/any',
+        url: '/any?key=value',
+        search: '?key=value',
+        query: expect.objectContaining({key: 'value'}),
+        protocol: 'http',
+        hostname: expect.any(String),
+      }),
+    );
     expect(stubForPost).toBeCalled();
     expect(stubForDelete).toBeCalled();
     expect(stubForPut).toBeCalled();
