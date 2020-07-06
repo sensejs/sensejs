@@ -27,19 +27,31 @@ export interface TypeOrmModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<Partial<ConnectionOptions>>;
 }
 
+function checkEntity(entityConstructor: string | Function, decorator: Function) {
+  if (typeof entityConstructor === 'undefined') {
+    throw new TypeError(
+      `Invalid entity "undefined" for decorator "${decorator.name}. Such error may be caused by cyclic dependencies.`,
+    );
+  }
+}
+
 export function InjectRepository(entityConstructor: string | Function) {
+  checkEntity(entityConstructor, InjectRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getRepository(entityConstructor)});
 }
 
 export function InjectTreeRepository(entityConstructor: string | Function) {
+  checkEntity(entityConstructor, InjectTreeRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getTreeRepository(entityConstructor)});
 }
 
 export function InjectMongoRepository(entityConstructor: string | Function) {
+  checkEntity(entityConstructor, InjectMongoRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getMongoRepository(entityConstructor)});
 }
 
 export function InjectCustomRepository(entityConstructor: Function) {
+  checkEntity(entityConstructor, InjectCustomRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getCustomRepository(entityConstructor)});
 }
 

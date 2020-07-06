@@ -10,7 +10,15 @@ import {
 } from '@sensejs/core';
 import {Container} from 'inversify';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
-import {createTypeOrmModule, InjectRepository, Transactional, TypeOrmSupportInterceptor} from '../src';
+import {
+  createTypeOrmModule,
+  InjectCustomRepository,
+  InjectMongoRepository,
+  InjectRepository,
+  InjectTreeRepository,
+  Transactional,
+  TypeOrmSupportInterceptor,
+} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
@@ -22,6 +30,15 @@ class MockRequestContext extends RequestContext {
     this.container.bind(key).toConstantValue(value);
   }
 }
+
+describe('InjectRepository', () => {
+  test('should throw error for invalid entity', () => {
+    expect(() => InjectRepository(undefined as any)).toThrow(TypeError);
+    expect(() => InjectMongoRepository(undefined as any)).toThrow(TypeError);
+    expect(() => InjectTreeRepository(undefined as any)).toThrow(TypeError);
+    expect(() => InjectCustomRepository(undefined as any)).toThrow(TypeError);
+  });
+});
 
 describe('TypeOrmModule', () => {
   test('entity metadata and repositories shall be injectable on both global and child container', async () => {
