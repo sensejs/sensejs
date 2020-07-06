@@ -1,6 +1,6 @@
 import {Class} from './interfaces';
 import {Inject, Optional} from './decorators';
-import {consoleLogger, DecoratorBuilder, Logger, Transformer} from '@sensejs/utility';
+import {consoleLogger, DecoratorBuilder, Logger, Transformer, Decorator} from '@sensejs/utility';
 
 export {consoleLogger, Logger} from '@sensejs/utility';
 
@@ -19,8 +19,15 @@ function loggerTransformer(label: string): Transformer<LoggerBuilder | undefined
   };
 }
 
-export function InjectLogger(name?: string | Function) {
+export function InjectLogger(name?: string | Function): Decorator;
+
+export function InjectLogger(...args: any[]): Decorator {
+  const name = args[0];
   const labelName = typeof name === 'function' ? name.name : typeof name === 'string' ? name : undefined;
+  if (typeof labelName === 'undefined' && args.length > 0) {
+    throw new TypeError(`Invalid param of type "${typeof name}" for ${InjectLogger.name}`);
+  }
+
   return new DecoratorBuilder('InjectLogger')
     .whenApplyToConstructorParam(<T extends Class>(target: T, index: number) => {
       Optional()(target, undefined, index);

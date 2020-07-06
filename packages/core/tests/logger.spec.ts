@@ -13,6 +13,11 @@ import {
 import '@sensejs/testing-utility/lib/mock-console';
 
 describe('InjectLogger', () => {
+
+  test('Throw error when explicitly pass undefined', () => {
+    expect(() => InjectLogger(undefined as any)).toThrow(TypeError);
+  });
+
   test('Inject constructor param', () => {
     class X {
       constructor(@InjectLogger() param: Logger) {}
