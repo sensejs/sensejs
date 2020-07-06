@@ -1,6 +1,12 @@
 import {Component, Inject, invokeMethod, ModuleClass, ModuleRoot, Named, Optional, Tagged} from '../src';
 import {Container} from 'inversify';
 
+describe('Inject', () => {
+  test('should throw TypeError for invalid service identifier', () => {
+    expect(() => Inject(undefined as any)).toThrow(TypeError);
+  });
+});
+
 describe('Optional', () => {
   const injectToken = Symbol();
   test('Decorate constructor param', async () => {

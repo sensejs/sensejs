@@ -19,6 +19,9 @@ function applyToParamBindingInvoker<Parameter>(
 }
 
 export function Inject<T>(target: ServiceIdentifier<T>, option?: MethodParameterInjectOption<T, any>) {
+  if (typeof target == 'undefined') {
+    throw new TypeError('Invalid service identifier "undefined". This may be caused by cyclic dependencies!');
+  }
   const name = typeof target === 'function' ? target.name : target.toString();
   return new DecoratorBuilder(`Inject(${name})`).whenApplyToInstanceMethodParam(
     (prototype, name, index) => {
