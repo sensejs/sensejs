@@ -26,19 +26,31 @@ export interface TypeOrmModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<Partial<ConnectionOptions>>;
 }
 
+function checkEntity(entityConstructor: string | Function, decorator: Function) {
+  if (typeof entityConstructor === 'undefined') {
+    throw new TypeError(
+      `Invalid entity "undefined" for decorator "${decorator.name}. Such error may be caused by cyclic dependencies.`,
+    );
+  }
+}
+
 export function InjectRepository(entityConstructor: string | Function) {
+  checkEntity(entityConstructor, InjectRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getRepository(entityConstructor)});
 }
 
 export function InjectTreeRepository(entityConstructor: string | Function) {
+  checkEntity(entityConstructor, InjectTreeRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getTreeRepository(entityConstructor)});
 }
 
 export function InjectMongoRepository(entityConstructor: string | Function) {
+  checkEntity(entityConstructor, InjectMongoRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getMongoRepository(entityConstructor)});
 }
 
 export function InjectCustomRepository(entityConstructor: Function) {
+  checkEntity(entityConstructor, InjectCustomRepository);
   return Inject(EntityManager, {transform: (entityManager) => entityManager.getCustomRepository(entityConstructor)});
 }
 
@@ -46,14 +58,12 @@ export enum TransactionLevel {
   READ_UNCOMMITTED = 'READ UNCOMMITTED',
   READ_COMMITTED = 'READ COMMITTED',
   REPEATABLE_READ = 'REPEATABLE READ',
-  SERIALIZABLE = 'SERIALIZABLE'
+  SERIALIZABLE = 'SERIALIZABLE',
 }
 
 export function Transactional(level?: TransactionLevel): Constructor<RequestInterceptor> {
-
   @Component()
   class TransactionInterceptor extends RequestInterceptor {
-
     private queryRunner = this.connection.createQueryRunner();
 
     constructor(@Inject(Connection) private connection: Connection) {
@@ -61,7 +71,6 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
     }
 
     async intercept(context: RequestContext, next: () => Promise<void>) {
-
       try {
         await this.queryRunner.connect();
         const runInTransaction = async (entityManager: EntityManager) => {
@@ -76,7 +85,6 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
       } finally {
         await this.queryRunner.release();
       }
-
     }
   }
 
@@ -124,7 +132,6 @@ function createConnectionModule(option: TypeOrmModuleOption) {
 }
 
 export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
-
   @ModuleClass({
     requires: [createConnectionModule(option)],
   })
@@ -132,10 +139,7 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     private readonly module: ContainerModule;
     private readonly entityManager: EntityManager;
 
-    constructor(
-      @Inject(Container) private container: Container,
-      @Inject(Connection) private connection: Connection,
-    ) {
+    constructor(@Inject(Container) private container: Container, @Inject(Connection) private connection: Connection) {
       this.entityManager = connection.createEntityManager();
       this.module = new ContainerModule(async (bind) => {
         bind(EntityManager).toConstantValue(this.entityManager);
@@ -155,4 +159,3 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
 
   return TypeOrmModule;
 }
-

@@ -7,7 +7,6 @@ import {
   MethodParamDecorator,
   ParamDecorator,
 } from '@sensejs/utility';
-import {makeDeprecateMessageEmitter} from './utils';
 import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
 import {decorateInjectedConstructorParam} from './constructor-inject';
 
@@ -30,15 +29,19 @@ export function Inject<T>(
   target: ServiceIdentifier<T>,
   option?: MethodParameterInjectOption<T, any>,
 ): InjectionDecorator {
+  if (typeof target == 'undefined') {
+    throw new TypeError('Invalid service identifier "undefined". This may be caused by cyclic dependencies!');
+  }
   const name = typeof target === 'function' ? target.name : target.toString();
-  return new DecoratorBuilder(`Inject(${name})`).whenApplyToInstanceMethodParam(
-    (prototype, name, index) => {
+  return new DecoratorBuilder(`Inject(${name})`)
+    .whenApplyToInstanceMethodParam((prototype, name, index) => {
       return MethodInject(target, option)(prototype, name, index);
-    },
-  ).whenApplyToConstructorParam((constructor, index) => {
-    decorateInjectedConstructorParam(constructor, index, option?.transform);
-    return decorate(inject(target) as ParameterDecorator, constructor, index);
-  }).build<ParamDecorator>();
+    })
+    .whenApplyToConstructorParam((constructor, index) => {
+      decorateInjectedConstructorParam(constructor, index, option?.transform);
+      return decorate(inject(target) as ParameterDecorator, constructor, index);
+    })
+    .build<ParamDecorator>();
 }
 
 export function Optional(): InjectionDecorator {
@@ -55,9 +58,7 @@ export function Optional(): InjectionDecorator {
     .build<ParamDecorator>();
 }
 
-export interface InjectionConstraintDecorator
-  extends ConstructorParamDecorator, MethodParamDecorator {
-}
+export interface InjectionConstraintDecorator extends ConstructorParamDecorator, MethodParamDecorator {}
 
 export function Tagged(key: string | number | symbol, value: any): InjectionDecorator {
   const decorator = tagged(key, value) as ParameterDecorator;

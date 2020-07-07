@@ -13,6 +13,10 @@ import {
 import '@sensejs/testing-utility/lib/mock-console';
 
 describe('InjectLogger', () => {
+  test('Throw error when explicitly pass undefined', () => {
+    expect(() => InjectLogger(undefined as any)).toThrow(TypeError);
+  });
+
   test('Inject constructor param', () => {
     class X {
       constructor(@InjectLogger() param: Logger) {}
@@ -71,8 +75,7 @@ describe('Logger', () => {
       components: [FooComponent, BarComponent],
     })
     class MainModule {
-      constructor(@inject(FooComponent) fooComponent: FooComponent, @inject(BarComponent) barComponent: BarComponent) {
-      }
+      constructor(@inject(FooComponent) fooComponent: FooComponent, @inject(BarComponent) barComponent: BarComponent) {}
     }
 
     await new ModuleRoot(createModule({requires: [MainModule]})).start();

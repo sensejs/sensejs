@@ -1,10 +1,15 @@
 import {Component, Inject, invokeMethod, ModuleClass, ModuleRoot, Named, Optional, Tagged} from '../src';
 import {Container} from 'inversify';
 
+describe('Inject', () => {
+  test('should throw TypeError for invalid service identifier', () => {
+    expect(() => Inject(undefined as any)).toThrow(TypeError);
+  });
+});
+
 describe('Optional', () => {
   const injectToken = Symbol();
   test('Decorate constructor param', async () => {
-
     const stub = jest.fn();
 
     @Component()
@@ -28,8 +33,7 @@ describe('Optional', () => {
 
     @Component()
     class X {
-      constructor(@Inject(injectToken) @Optional() param: any) {
-      }
+      constructor(@Inject(injectToken) @Optional() param: any) {}
 
       method(@Inject(injectToken) @Optional() param: any) {
         stub(param);
@@ -49,18 +53,15 @@ describe('Optional', () => {
 });
 
 describe('Named', () => {
-
   const name1 = `name1-${Date.now()}`;
   const name2 = `name2-${Date.now()}`;
   const id = Symbol();
 
   @Component({id, name: name1})
-  class MyComponent1 {
-  }
+  class MyComponent1 {}
 
   @Component({id, name: name2})
-  class MyComponent2 {
-  }
+  class MyComponent2 {}
 
   test('Method inject', () => {
     const result = Math.random();
@@ -71,8 +72,7 @@ describe('Named', () => {
         return result;
       }
 
-      nonCallable(@Inject(id) @Named(name1) foo1: MyComponent1, @Inject(id) @Named(name2) foo2: MyComponent2) {
-      }
+      nonCallable(@Inject(id) @Named(name1) foo1: MyComponent1, @Inject(id) @Named(name2) foo2: MyComponent2) {}
     }
 
     @ModuleClass({components: [MyComponent1, MyComponent2, X]})
@@ -85,28 +85,21 @@ describe('Named', () => {
   });
 
   test('Named constraint', async () => {
-
     @Component()
     class Resolvable {
       constructor(
         @Inject(id) @Named(name1) public foo1: MyComponent1,
         @Inject(id) @Named(name2) public foo2: MyComponent2,
-      ) {
-      }
+      ) {}
     }
 
     @Component()
     class NonResolvable {
-      constructor(
-        @Inject(id) public foo1: MyComponent1,
-        @Inject(id) public foo2: MyComponent2,
-      ) {
-      }
+      constructor(@Inject(id) public foo1: MyComponent1, @Inject(id) public foo2: MyComponent2) {}
     }
 
     @ModuleClass({components: [MyComponent1, MyComponent2, Resolvable]})
     class MyModule {
-
       constructor(@Inject(Container) container: Container) {
         const injectable = container.get(Resolvable);
         expect(injectable).toBeInstanceOf(Resolvable);
@@ -117,22 +110,18 @@ describe('Named', () => {
     }
 
     await new ModuleRoot(MyModule).start();
-
   });
 });
 
 describe('Decorators', () => {
-
   test('Inject transformation', async () => {
-
     const injectToken = Symbol();
 
     const stub = jest.fn();
 
     @Component()
     class X {
-      constructor() {
-      }
+      constructor() {}
 
       getParam() {
         return undefined;
@@ -158,8 +147,7 @@ describe('Decorators', () => {
     @Component({
       tags: [{key, value}],
     })
-    class Y {
-    }
+    class Y {}
 
     @Component()
     class X {
@@ -167,8 +155,7 @@ describe('Decorators', () => {
         return result;
       }
 
-      nonCallable(@Inject(Y) foo2: Y) {
-      }
+      nonCallable(@Inject(Y) foo2: Y) {}
     }
 
     @ModuleClass({components: [X, Y]})
@@ -183,7 +170,6 @@ describe('Decorators', () => {
   });
 
   test('Tagged constraint', async () => {
-
     const key1 = Symbol();
     const key2 = Symbol();
     const name1 = `name1-${Date.now()}`;
@@ -191,29 +177,22 @@ describe('Decorators', () => {
     const id = Symbol();
 
     @Component({id, tags: [{key: key1, value: name1}]})
-    class MyComponent1 {
-    }
+    class MyComponent1 {}
 
     @Component({id, tags: [{key: key1, value: name2}]})
-    class MyComponent2 {
-    }
+    class MyComponent2 {}
 
     @Component()
     class Resolvable1 {
       constructor(
         @Inject(id) @Tagged(key1, name1) public foo1: MyComponent1,
         @Inject(id) @Tagged(key1, name2) public foo2: MyComponent2,
-      ) {
-      }
+      ) {}
     }
 
     @Component()
     class NonResolvable1 {
-      constructor(
-        @Inject(id) public foo1: MyComponent1,
-        @Inject(id) public foo2: MyComponent2,
-      ) {
-      }
+      constructor(@Inject(id) public foo1: MyComponent1, @Inject(id) public foo2: MyComponent2) {}
     }
 
     @Component()
@@ -221,17 +200,13 @@ describe('Decorators', () => {
       constructor(
         @Inject(id) @Tagged(key2, '') public foo1: MyComponent1,
         @Inject(id) @Tagged(key2, '') public foo2: MyComponent2,
-      ) {
-      }
+      ) {}
     }
 
     @ModuleClass({
-      components: [
-        MyComponent1, MyComponent2, Resolvable1, NonResolvable1, NonResolvable2,
-      ],
+      components: [MyComponent1, MyComponent2, Resolvable1, NonResolvable1, NonResolvable2],
     })
     class MyModule {
-
       constructor(@Inject(Container) container: Container) {
         const resolvable1 = container.get(Resolvable1);
         expect(resolvable1).toBeInstanceOf(Resolvable1);

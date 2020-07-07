@@ -1,4 +1,4 @@
-import {Class, Constructor} from './interfaces';
+import {Class} from './interfaces';
 import {Inject, InjectionDecorator, Optional} from './decorators';
 import {consoleLogger, DecoratorBuilder, Logger, Transformer} from '@sensejs/utility';
 
@@ -16,9 +16,15 @@ function loggerTransformer(label: string): Transformer<LoggerBuilder | undefined
   };
 }
 
+export function InjectLogger(name?: string | Function): InjectionDecorator;
 
-export function InjectLogger(name?: string | Constructor): InjectionDecorator {
+export function InjectLogger(...args: any[]): InjectionDecorator {
+  const name = args[0];
   const labelName = typeof name === 'function' ? name.name : typeof name === 'string' ? name : undefined;
+  if (typeof labelName === 'undefined' && args.length > 0) {
+    throw new TypeError(`Invalid param of type "${typeof name}" for ${InjectLogger.name}`);
+  }
+
   return new DecoratorBuilder('InjectLogger')
     .whenApplyToConstructorParam(<T extends Class>(target: T, index: number) => {
       Optional()(target, undefined, index);
@@ -26,7 +32,7 @@ export function InjectLogger(name?: string | Constructor): InjectionDecorator {
         transform: loggerTransformer(labelName ?? target.name ?? ''),
       })(target, undefined, index);
     })
-    .whenApplyToInstanceMethodParam(<T extends {}>(target: T, name: (string | symbol), index: number) => {
+    .whenApplyToInstanceMethodParam(<T extends {}>(target: T, name: string | symbol, index: number) => {
       Optional()(target, name, index);
       Inject(LoggerBuilder, {
         transform: loggerTransformer(labelName ?? target.constructor.name ?? ''),
