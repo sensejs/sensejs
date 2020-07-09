@@ -17,7 +17,7 @@ import {
 } from '@sensejs/core';
 import {Container, ContainerModule} from 'inversify';
 import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
-import {createTypeOrmLogger} from './logger';
+import {attachLoggerToEntityManager, createTypeOrmLogger} from './logger';
 
 export {attachLoggerToEntityManager} from './logger';
 
@@ -139,8 +139,13 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     private readonly module: ContainerModule;
     private readonly entityManager: EntityManager;
 
-    constructor(@Inject(Container) private container: Container, @Inject(Connection) private connection: Connection) {
-      this.entityManager = connection.createEntityManager();
+    constructor(
+      @Inject(Container) private container: Container,
+      @Inject(Connection) private connection: Connection,
+      @InjectLogger('TypeOrm') private logger: Logger,
+    ) {
+      this.entityManager = connection.manager;
+      attachLoggerToEntityManager(this.entityManager, this.logger);
       this.module = new ContainerModule(async (bind) => {
         bind(EntityManager).toConstantValue(this.entityManager);
       });
