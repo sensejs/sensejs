@@ -10,15 +10,15 @@ import {
 import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
 import {decorateInjectedConstructorParam} from './constructor-inject';
 
-function applyToParamBindingInvoker<Parameter>(
+function applyToParamBindingInvoker<P extends {}>(
   decorator: ParameterDecorator,
-  prototype: {},
-  name: string | symbol,
+  prototype: P,
+  name: keyof P,
   index: number,
 ) {
   const targetMethod = Reflect.get(prototype, name);
+  const metadata = ensureMethodInjectMetadata(prototype, name);
   if (typeof targetMethod === 'function') {
-    const metadata = ensureMethodInjectMetadata(targetMethod);
     decorate(decorator, metadata.proxy, index);
   }
 }
@@ -49,7 +49,7 @@ export function Optional(): InjectionDecorator {
   // Need to use @optional() instead of @optional
   const decorator = optional() as ParameterDecorator;
   return new DecoratorBuilder('Optional')
-    .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
+    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
       return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
@@ -63,7 +63,7 @@ export interface InjectionConstraintDecorator extends ConstructorParamDecorator,
 export function Tagged(key: string | number | symbol, value: any): InjectionDecorator {
   const decorator = tagged(key, value) as ParameterDecorator;
   return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
-    .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
+    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
       return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
@@ -75,7 +75,7 @@ export function Tagged(key: string | number | symbol, value: any): InjectionDeco
 export function Named(name: string | symbol): InjectionDecorator {
   const decorator = named(name) as ParameterDecorator;
   return new DecoratorBuilder(`Named(name="${name.toString()}")`)
-    .whenApplyToInstanceMethodParam((prototype: {}, name: string | symbol, index: number) => {
+    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
       return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {

@@ -38,7 +38,7 @@ function bindingHelper<T>(spec: BindingSpec, from: () => interfaces.BindingInSyn
   }
 }
 
-function createContainerModule(option: ModuleMetadata) {
+function createContainerModule<T>(option: ModuleMetadata<T>) {
   const {components, factories, constants} = option;
   return new ContainerModule((bind, unbind, isBound, rebind) => {
     constants.forEach((constantProvider) => {
@@ -116,25 +116,18 @@ export class ModuleInstance {
   private async performSetup() {
     const injectMetadata = getConstructorInjectMetadata(this.moduleClass);
     const proxy = createConstructorArgumentTransformerProxy(this.moduleClass, injectMetadata);
-    this.container
-      .bind(this.moduleClass)
-      .to(proxy)
-      .inSingletonScope();
+    this.container.bind(this.moduleClass).to(proxy).inSingletonScope();
     this.container.load(this.containerModule);
     this.moduleInstance = this.container.get<object>(this.moduleClass);
     for (const method of this.moduleMetadata.onModuleCreate) {
-      if (typeof method === 'function') {
-        await invokeMethod(this.container, this.moduleInstance, method);
-      }
+      await invokeMethod(this.container, this.moduleClass, method, this.moduleInstance);
     }
   }
 
   private async performDestroy() {
     if (this.moduleInstance) {
       for (const method of this.moduleMetadata.onModuleDestroy.reverse()) {
-        if (typeof method === 'function') {
-          await invokeMethod(this.container, this.moduleInstance, method);
-        }
+        await invokeMethod(this.container, this.moduleClass, method, this.moduleInstance);
       }
     }
     this.container.unload(this.containerModule);

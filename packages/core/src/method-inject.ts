@@ -24,20 +24,14 @@ interface MethodInjectMetadata {
 }
 
 interface MethodInjectProxy {
-  call(paramsBindingMetadata: MethodParameterInjectMetadata[], self: any): any;
+  call(paramsBindingMetadata: MethodInjectMetadata, self: any, target: Function): any;
 }
 
-const METHOD_INJECT_KEY = Symbol('METHOD_INJECT_KEY');
+const METHOD_INJECT_PROTOTYPE_METADATA = Symbol('METHOD_INJECT_PROTOTYPE_METADATA');
 
-export function ensureMethodInjectMetadata(target: any): MethodInjectMetadata {
-  if (typeof target !== 'function') {
-    throw new TypeError('Decorated target for @MethodInject is not a function');
-  }
-  let result = Reflect.getMetadata(METHOD_INJECT_KEY, target);
-  if (typeof result !== 'undefined') {
-    return result;
-  }
+export type MethodInjectPrototypeMetadata = Map<keyof any, MethodInjectMetadata>;
 
+function createProxy<T extends {}>(prototype: T, method: keyof T) {
   @injectable()
   class Proxy implements MethodInjectProxy {
     private readonly args: unknown[];
@@ -46,58 +40,122 @@ export function ensureMethodInjectMetadata(target: any): MethodInjectMetadata {
       this.args = args;
     }
 
-    call(paramsBindingMetadata: MethodParameterInjectMetadata[], self: any) {
+    call(methodInjectMetadata: MethodInjectMetadata, self: any, target: Function) {
+      if (target.length > 0 && methodInjectMetadata.paramsMetadata.length < target.length) {
+        throw new MethodParamInjectError(
+          `Target method "${prototype.constructor.name}.${method}" has no enough parameter injection metadata`,
+        );
+      }
       return target.apply(
         self,
-        this.args.map((elem, idx) => paramsBindingMetadata[idx].transform(elem)),
+        this.args.map((elem, idx) => methodInjectMetadata.paramsMetadata[idx].transform(elem)),
       );
     }
   }
 
-  result = {
-    paramsMetadata: [],
-    proxy: Proxy,
-  } as MethodInjectMetadata;
+  return Proxy;
+}
 
-  Reflect.defineMetadata(METHOD_INJECT_KEY, result, target);
+export function ensureMethodInjectPrototypeMetadata<T extends {}>(prototype: T): MethodInjectPrototypeMetadata {
+  let result = Reflect.getOwnMetadata(METHOD_INJECT_PROTOTYPE_METADATA, prototype);
+
+  if (!result) {
+    // Deep copy from parent class
+    result = new Map<keyof T, MethodInjectMetadata>(
+      Array.from(
+        new Map<keyof T, MethodInjectMetadata>(
+          Reflect.getMetadata(METHOD_INJECT_PROTOTYPE_METADATA, prototype),
+        ).entries(),
+      ).map(([key, value]) => {
+        const {paramsMetadata} = value;
+
+        return [key, {proxy: createProxy(prototype, key), paramsMetadata: Array.from(paramsMetadata)}];
+      }),
+    );
+  }
+
+  Reflect.defineMetadata(METHOD_INJECT_PROTOTYPE_METADATA, result, prototype);
+
   return result;
 }
 
-export function getMethodInjectMetadata(method: Function): MethodInjectMetadata {
-  return Reflect.getMetadata(METHOD_INJECT_KEY, method);
+export function ensureMethodInjectMetadata<T extends {}>(prototype: T, method: keyof T): MethodInjectMetadata {
+  const prototypeMetadata = ensureMethodInjectPrototypeMetadata(prototype);
+  let result = prototypeMetadata.get(method);
+  if (typeof result !== 'undefined') {
+    return result;
+  }
+
+  result = {
+    paramsMetadata: [],
+    proxy: createProxy(prototype, method),
+  } as MethodInjectMetadata;
+
+  prototypeMetadata.set(method, result);
+  return result;
 }
 
-export function validateMethodInjectMetadata(method: Function): MethodInjectMetadata {
-  const methodInjectMetadata = ensureMethodInjectMetadata(method);
+export function validateMethodInjectMetadata<T extends {}>(prototype: T, methodKey: keyof T): void {
+  const method = prototype[methodKey];
+  if (typeof method !== 'function') {
+    throw new TypeError('Target method is not a function');
+  }
+  const result = ensureMethodInjectMetadata(prototype, methodKey);
   for (let i = 0; i < method.length; i++) {
-    if (!methodInjectMetadata.paramsMetadata[i]) {
+    if (!result.paramsMetadata[i]) {
       throw new Error(`Parameter at position ${i} is not decorated`);
     }
   }
-  return methodInjectMetadata;
 }
 
-export function invokeMethod<T>(container: Container, target: T, method: Function) {
-  const metadata = getMethodInjectMetadata(method);
+export function getMethodInjectMetadataOrThrow<T extends {}>(
+  constructor: Constructor<T>,
+  method: keyof T,
+): MethodInjectMetadata {
+  const result = ensureMethodInjectPrototypeMetadata(constructor.prototype).get(method);
+  if (!result) {
+    throw new MethodParamInjectError(`${constructor.name}.${method} has no method inject metadata`);
+  }
+  return result;
+}
+
+/**
+ * Invoke method with arguments from container
+ */
+export function invokeMethod<T extends {}>(
+  container: Container,
+  constructor: Constructor<T>,
+  method: keyof T,
+  target?: T,
+) {
+  const metadata = getMethodInjectMetadataOrThrow(constructor, method);
+  if (typeof target === 'undefined') {
+    target = container.get(constructor);
+  }
+  const targetMethod = target[method];
+  if (typeof targetMethod !== 'function') {
+    throw new TypeError(
+      `${
+        constructor.name
+      }.${method} is not a function, typeof targetMethod is ${typeof targetMethod}, typeof method is ${typeof method}`,
+    );
+  }
   if (!metadata) {
-    if (method.length === 0) {
-      return method.apply(target);
+    if (targetMethod.length === 0) {
+      return targetMethod.apply(target);
     }
-    throw new MethodParamInjectError(`All parameters of target method "${method.name}" must be decorated with @Inject`);
+    throw new MethodParamInjectError(`All parameters of target method "${method}" must be decorated with @Inject`);
   }
-
-  if (metadata.paramsMetadata.length !== method.length) {
-    throw new MethodParamInjectError(`Target method "${method.name}" has ${method.length} parameters,`
-      + ` but only ${metadata.paramsMetadata.length} of them was decorated`);
-  }
-
   const invoker = container.resolve<MethodInjectProxy>(metadata.proxy);
-  return invoker.call(metadata.paramsMetadata, target);
+  return invoker.call(metadata, target, targetMethod);
 }
 
-export function MethodInject<T, R = T>(target: ServiceIdentifier<T>, option: MethodParameterInjectOption<T, R> = {}) {
-  return (prototype: {}, methodName: string | symbol, paramIndex: number) => {
-    const metadata = ensureMethodInjectMetadata(Reflect.get(prototype, methodName));
+export function MethodInject<T extends {}, R = T>(
+  target: ServiceIdentifier<T>,
+  option: MethodParameterInjectOption<T, R> = {},
+) {
+  return <P extends {}, K extends keyof P>(prototype: P, methodName: K, paramIndex: number) => {
+    const metadata = ensureMethodInjectMetadata(prototype, methodName);
     if (metadata.paramsMetadata[paramIndex]) {
       throw new MethodParamDecorateError();
     }

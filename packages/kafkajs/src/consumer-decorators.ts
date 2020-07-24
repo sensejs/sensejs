@@ -1,11 +1,4 @@
-import {
-  Class,
-  Component,
-  Constructor,
-  RequestInterceptor,
-  ServiceIdentifier,
-  validateMethodInjectMetadata,
-} from '@sensejs/core';
+import {Component, Constructor, RequestInterceptor, ServiceIdentifier} from '@sensejs/core';
 
 export interface SubscribeTopicMetadata {
   fallbackOption?: SubscribeTopicOption;
@@ -18,9 +11,9 @@ export interface SubscribeTopicOption {
   fromBeginning?: boolean;
 }
 
-export interface SubscribeControllerMetadata {
+export interface SubscribeControllerMetadata<T = any> {
   interceptors: Constructor<RequestInterceptor>[];
-  target: Class<{}>;
+  target: Constructor<T>;
   labels: Set<string | symbol>;
 }
 
@@ -66,7 +59,6 @@ export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    validateMethodInjectMetadata(targetMethod);
     const {option: fallbackOption, injectOptionFrom, interceptors = []} = option;
     const metadata: SubscribeTopicMetadata = {
       fallbackOption,

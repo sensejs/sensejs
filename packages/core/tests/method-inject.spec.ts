@@ -13,6 +13,7 @@ describe('@Inject', () => {
     const x = Symbol(),
       y = Symbol();
 
+    @injectable()
     class Foo {
       bar(@MethodInject(x) param: string, @MethodInject(y, {transform: (x: number) => x + 1}) number: number) {
         return param.repeat(number);
@@ -23,7 +24,8 @@ describe('@Inject', () => {
     const constValue = 'deadbeef';
     container.bind(x).toConstantValue(constValue);
     container.bind(y).toConstantValue(2);
-    expect(invokeMethod(container, new Foo(), Foo.prototype.bar)).toBe(constValue.repeat(3));
+    container.bind(Foo).toSelf();
+    expect(invokeMethod(container, Foo, 'bar')).toBe(constValue.repeat(3));
   });
 
   test('Validate param binding', () => {
@@ -37,9 +39,9 @@ describe('@Inject', () => {
       noParam() {}
     }
 
-    expect(() => validateMethodInjectMetadata(Foo.prototype.shouldOkay)).not.toThrow();
-    expect(() => validateMethodInjectMetadata(Foo.prototype.shouldFail)).toThrow();
-    expect(() => validateMethodInjectMetadata(Foo.prototype.noParam)).not.toThrow();
+    expect(() => validateMethodInjectMetadata(Foo.prototype, 'shouldOkay')).not.toThrow();
+    expect(() => validateMethodInjectMetadata(Foo.prototype, 'shouldFail')).toThrow();
+    expect(() => validateMethodInjectMetadata(Foo.prototype, 'noParam')).not.toThrow();
   });
 
   test('Duplicated param binding', () => {
@@ -53,6 +55,7 @@ describe('@Inject', () => {
   });
 
   test('Missing @Inject', () => {
+    @injectable()
     class Foo {
       bar(param: string) {
         return param;
@@ -61,10 +64,12 @@ describe('@Inject', () => {
 
     const container = new Container();
     container.bind(String).toConstantValue('deadbeef');
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow(MethodParamInjectError);
+    container.bind(Foo).toSelf();
+    expect(() => invokeMethod(container, Foo, 'bar')).toThrow(MethodParamInjectError);
   });
 
   test('Inconsistent param binding', () => {
+    @injectable()
     class Foo {
       bar(undecorated: string, param: string) {
         return param;
@@ -72,15 +77,16 @@ describe('@Inject', () => {
     }
 
     const container = new Container();
+    container.bind(Foo).toSelf();
 
     container.bind(String).toConstantValue('deadbeef');
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow();
+    expect(() => invokeMethod(container, Foo, 'bar')).toThrow();
 
     MethodInject(String)(Foo.prototype, 'bar', 1);
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow();
+    expect(() => invokeMethod(container, Foo, 'bar')).toThrow();
 
     MethodInject(String)(Foo.prototype, 'bar', 2);
-    expect(() => invokeMethod(container, new Foo(), Foo.prototype.bar)).toThrow();
+    expect(() => invokeMethod(container, Foo, 'bar')).toThrow();
   });
 
   test('Performance test', () => {
@@ -132,7 +138,7 @@ describe('@Inject', () => {
 
     container.bind(Foo).toSelf();
 
-    let N = 1000;
+    let N = 10000;
     // 10000 method invoking should be done within 30s
     while (N--) {
       const childContainer = container.createChild();
@@ -140,7 +146,7 @@ describe('@Inject', () => {
         childContainer.bind(Symbol()).toConstantValue(i);
       }
       childContainer.bind(Test).toConstantValue(new Test());
-      invokeMethod(childContainer, childContainer.get(Foo), Foo.prototype.bar);
+      invokeMethod(childContainer, Foo, 'bar');
     }
   }, 10000);
 });

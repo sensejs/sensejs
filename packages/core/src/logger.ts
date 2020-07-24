@@ -32,7 +32,7 @@ export function InjectLogger(...args: any[]): InjectionDecorator {
         transform: loggerTransformer(labelName ?? target.name ?? ''),
       })(target, undefined, index);
     })
-    .whenApplyToInstanceMethodParam(<T extends {}>(target: T, name: string | symbol, index: number) => {
+    .whenApplyToInstanceMethodParam(<T extends {}>(target: T, name: keyof T, index: number) => {
       Optional()(target, name, index);
       Inject(LoggerBuilder, {
         transform: loggerTransformer(labelName ?? target.constructor.name ?? ''),

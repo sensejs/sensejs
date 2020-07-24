@@ -1,5 +1,5 @@
 import {Transformer} from '@sensejs/utility';
-import {Component, Constructor, Inject, validateMethodInjectMetadata} from '@sensejs/core';
+import {Component, Constructor, Inject} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
@@ -81,16 +81,33 @@ export interface HttpRequestBuiltinParam {
 }
 
 const RequestMappingMetadataKey = Symbol('RequestMappingMetadataKey');
+const RequestMappingMetadataStoreKey = Symbol('RequestMappingMetadataStoreKey');
 
-function setRequestMappingMetadata(targetMethod: object, requestMappingMetadata: RequestMappingMetadata) {
-  if (Reflect.getMetadata(RequestMappingMetadataKey, targetMethod)) {
-    throw new Error('target method is already decorated with RequestMapping');
+function ensureRequestMappingStore(prototype: object): Map<keyof any, RequestMappingMetadata> {
+  let result = Reflect.getMetadata(prototype, RequestMappingMetadataKey);
+  if (result) {
+    return result;
   }
-  Reflect.defineMetadata(RequestMappingMetadataKey, requestMappingMetadata, targetMethod);
+  result = new Map<keyof any, RequestMappingMetadata>();
+  Reflect.defineMetadata(RequestMappingMetadataKey, result, result);
+  return result;
 }
 
-export function getRequestMappingMetadata(targetMethod: object): RequestMappingMetadata | undefined {
-  return Reflect.getMetadata(RequestMappingMetadataKey, targetMethod);
+function setRequestMappingMetadata(
+  targetMethod: object,
+  key: keyof any,
+  requestMappingMetadata: RequestMappingMetadata,
+) {
+  const store = ensureRequestMappingStore(targetMethod);
+  if (store.has(key)) {
+    throw new Error('target method is already decorated with RequestMapping');
+  }
+  store.set(key, requestMappingMetadata);
+}
+
+export function getRequestMappingMetadata(targetMethod: object, key: keyof any): RequestMappingMetadata | undefined {
+  const store = ensureRequestMappingStore(targetMethod);
+  return store.get(key);
 }
 
 /**
@@ -103,12 +120,7 @@ export function getRequestMappingMetadata(targetMethod: object): RequestMappingM
  */
 export function RequestMapping(httpMethod: HttpMethod, path: string, option: RequestMappingOption = {}) {
   return <T extends {}>(prototype: T, method: keyof T & string) => {
-    const targetMethod = prototype[method];
-    if (typeof targetMethod !== 'function') {
-      throw new Error('Request mapping decorator must be applied to a function');
-    }
-    validateMethodInjectMetadata(targetMethod);
-    setRequestMappingMetadata(targetMethod, {
+    setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,
       interceptors: option.interceptors || [],
@@ -193,7 +205,7 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
       path,
       prototype: target.prototype,
       interceptors: controllerOption.interceptors ?? [],
-      labels: labels instanceof Set ? labels : new Set(labels)
+      labels: labels instanceof Set ? labels : new Set(labels),
     });
   };
 }

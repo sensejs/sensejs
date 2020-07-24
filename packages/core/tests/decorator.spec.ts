@@ -43,7 +43,7 @@ describe('Optional', () => {
     @ModuleClass({components: [X]})
     class MyModule {
       constructor(@Inject(Container) container: any) {
-        invokeMethod(container, X, X.prototype.method);
+        invokeMethod(container, X, 'method');
       }
     }
 
@@ -78,8 +78,8 @@ describe('Named', () => {
     @ModuleClass({components: [MyComponent1, MyComponent2, X]})
     class MyModule {
       constructor(@Inject(Container) container: Container) {
-        expect(invokeMethod(container, X, X.prototype.callable)).toBe(result);
-        expect(() => invokeMethod(container, X, X.prototype.nonCallable)).toThrow();
+        expect(invokeMethod(container, X, 'callable')).toBe(result);
+        expect(() => invokeMethod(container, X, 'nonCallable')).toThrow();
       }
     }
   });
@@ -161,8 +161,8 @@ describe('Decorators', () => {
     @ModuleClass({components: [X, Y]})
     class MyModule {
       constructor(@Inject(Container) container: Container) {
-        expect(invokeMethod(container, X, X.prototype.callable)).toBe(result);
-        expect(() => invokeMethod(container, X, X.prototype.nonCallable)).toThrow();
+        expect(invokeMethod(container, X, 'callable')).toBe(result);
+        expect(() => invokeMethod(container, X, 'nonCallable')).toThrow();
       }
     }
 

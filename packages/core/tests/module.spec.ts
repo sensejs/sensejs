@@ -16,14 +16,15 @@ import {
 import {ModuleInstance} from '../src/module-instance';
 
 describe('@ModuleClass', () => {
-
   test('created module metadata', () => {
     const dependency = createModule();
-    expect(getModuleMetadata(createModule({requires: [dependency]}))).toEqual(expect.objectContaining({
-      requires: [dependency],
-      onModuleCreate: [],
-      onModuleDestroy: [],
-    }));
+    expect(getModuleMetadata(createModule({requires: [dependency]}))).toEqual(
+      expect.objectContaining({
+        requires: [dependency],
+        onModuleCreate: [],
+        onModuleDestroy: [],
+      }),
+    );
   });
 
   test('decorated module metadata', () => {
@@ -47,13 +48,14 @@ describe('@ModuleClass', () => {
       onModuleDestroy() {}
     }
 
-    expect(getModuleMetadata(X)).toEqual(expect.objectContaining({
-      requires: [Y],
-      onModuleCreate: [X.prototype.foo, X.prototype.onModuleCreate],
-      onModuleDestroy: [X.prototype.bar, X.prototype.onModuleDestroy],
-    }));
+    expect(getModuleMetadata(X)).toEqual(
+      expect.objectContaining({
+        requires: [Y],
+        onModuleCreate: ['foo', 'onModuleCreate'],
+        onModuleDestroy: ['bar', 'onModuleDestroy'],
+      }),
+    );
   });
-
 });
 
 describe('ModuleInstance', () => {
@@ -61,13 +63,12 @@ describe('ModuleInstance', () => {
   const injectToken = Symbol();
   container.bind(injectToken).toConstantValue(Symbol());
   test('Run Module lifecycle', async () => {
-
     // For unknown reason jest.spy does not work here. Use stub pattern instead
-    const onCreateStub = jest.fn(), onDestroyStub = jest.fn();
+    const onCreateStub = jest.fn(),
+      onDestroyStub = jest.fn();
 
     @ModuleClass()
     class TestModule {
-
       @OnModuleCreate()
       onModuleCreate(@Inject(injectToken) param: any) {
         onCreateStub();
@@ -88,19 +89,18 @@ describe('ModuleInstance', () => {
 
   test('Call inherited module lifecycle', async () => {
     // For unknown reason jest.spy does not work here. Use stub pattern instead
-    const onCreateStub = jest.fn(), onDestroyStub = jest.fn();
+    const onCreateStub = jest.fn(),
+      onDestroyStub = jest.fn();
 
     @ModuleClass()
     class Parent {
-
       @OnModuleCreate()
       onModuleCreate(@Inject(injectToken) param: any) {
         onCreateStub();
       }
 
       @OnModuleDestroy()
-      async onModuleDestroy() {
-      }
+      async onModuleDestroy() {}
     }
 
     @ModuleClass()
@@ -109,7 +109,6 @@ describe('ModuleInstance', () => {
       async onChildModuleDestroy() {
         onDestroyStub();
       }
-
     }
 
     const moduleInstance = new ModuleInstance(Child, container);
@@ -117,13 +116,10 @@ describe('ModuleInstance', () => {
     expect(onCreateStub).toHaveBeenCalled();
     await moduleInstance.onDestroy();
     expect(onDestroyStub).toHaveBeenCalled();
-
   });
-
 });
 
 describe('Module resolve', () => {
-
   const name = 'name' + Math.random();
   const key = Symbol();
   const value = Symbol();
@@ -147,23 +143,20 @@ describe('Module resolve', () => {
         @Inject(unnamedId) unnamed: unknown,
         @Inject(namedId) @Named(name) named: unknown,
         @Inject(taggedId) @Tagged(key, value) tagged: unknown,
-      ) {
-      }
+      ) {}
 
       @OnModuleDestroy()
       onDestroy(
         @Inject(unnamedId) unnamed: unknown,
         @Inject(namedId) @Named(name) named: unknown,
         @Inject(taggedId) @Tagged(key, value) tagged: unknown,
-      ) {
-      }
+      ) {}
     }
 
     return StubModule;
   }
 
   test('Component resolve', async () => {
-
     @Component({id: unnamedId})
     class UnnamedComponent {}
 
@@ -173,9 +166,12 @@ describe('Module resolve', () => {
     @Component({id: taggedId, tags: [{key, value}]})
     class TaggedComponent {}
 
-    const instance = new ModuleInstance(createStubModule({
-      components: [UnnamedComponent, NamedComponent, TaggedComponent],
-    }), new Container());
+    const instance = new ModuleInstance(
+      createStubModule({
+        components: [UnnamedComponent, NamedComponent, TaggedComponent],
+      }),
+      new Container(),
+    );
     await instance.onSetup();
     await instance.onDestroy();
   });
@@ -196,37 +192,44 @@ describe('Module resolve', () => {
       build() {}
     }
 
-    const instance = new ModuleInstance(createStubModule({
-      factories: [
-        {provide: unnamedId, factory: UnnamedComponent},
-        {provide: namedId, factory: NamedComponent},
-        {provide: taggedId, factory: TaggedComponent},
-      ],
-    }), new Container());
+    const instance = new ModuleInstance(
+      createStubModule({
+        factories: [
+          {provide: unnamedId, factory: UnnamedComponent},
+          {provide: namedId, factory: NamedComponent},
+          {provide: taggedId, factory: TaggedComponent},
+        ],
+      }),
+      new Container(),
+    );
     await instance.onSetup();
     await instance.onDestroy();
   });
 
   test('Constants resolve', async () => {
-
-    const instance = new ModuleInstance(createStubModule({
-      constants: [
-        {provide: unnamedId, value: Symbol()},
-        {provide: namedId, value: Symbol()},
-        {provide: taggedId, value: Symbol()},
-      ],
-    }), new Container());
+    const instance = new ModuleInstance(
+      createStubModule({
+        constants: [
+          {provide: unnamedId, value: Symbol()},
+          {provide: namedId, value: Symbol()},
+          {provide: taggedId, value: Symbol()},
+        ],
+      }),
+      new Container(),
+    );
     await instance.onSetup();
     await instance.onDestroy();
   });
 });
 
 describe('Module Root', () => {
-
   test('lifecycle', async () => {
-    const xOnCreateSpy = jest.fn(), xOnDestroySpy = jest.fn();
-    const yOnCreateSpy = jest.fn(), yOnDestroySpy = jest.fn();
-    const zOnCreateSpy = jest.fn(), zOnDestroySpy = jest.fn();
+    const xOnCreateSpy = jest.fn(),
+      xOnDestroySpy = jest.fn();
+    const yOnCreateSpy = jest.fn(),
+      yOnDestroySpy = jest.fn();
+    const zOnCreateSpy = jest.fn(),
+      zOnDestroySpy = jest.fn();
 
     @Component()
     class A {}
@@ -254,7 +257,6 @@ describe('Module Root', () => {
       requires: [X],
     })
     class Y {
-
       @OnModuleCreate()
       onCreate(@Inject(A) unnamed: A) {
         expect(xOnCreateSpy).toHaveBeenCalled();
@@ -298,5 +300,4 @@ describe('Module Root', () => {
     await moduleRoot.stop();
     expect(xOnDestroySpy).toHaveBeenCalled();
   });
-
 });

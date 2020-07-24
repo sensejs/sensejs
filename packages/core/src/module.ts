@@ -14,7 +14,7 @@ export interface ModuleOption {
   /**
    * Components provided by this module
    */
-  components?: (Constructor)[];
+  components?: Constructor[];
 
   /**
    * Factories provided by this module
@@ -27,15 +27,15 @@ export interface ModuleOption {
   constants?: ConstantProvider<unknown>[];
 }
 
-export interface ModuleMetadata extends Required<ModuleOption> {
+export interface ModuleMetadata<T = {}> extends Required<ModuleOption> {
   requires: Constructor[];
-  onModuleCreate: Function[];
-  onModuleDestroy: Function[];
+  onModuleCreate: (keyof T)[];
+  onModuleDestroy: (keyof T)[];
 }
 
 const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
 
-export function getModuleMetadata(target: Constructor): ModuleMetadata {
+export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> {
   const result = Reflect.getMetadata(MODULE_REFLECT_SYMBOL, target);
   if (!result) {
     throw new Error(`"${target.name}"is not decorated with @Module annotation`);
@@ -43,7 +43,7 @@ export function getModuleMetadata(target: Constructor): ModuleMetadata {
   return result;
 }
 
-export function setModuleMetadata(module: Constructor, metadata: ModuleMetadata) {
+export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMetadata<T>) {
   decorate(injectable(), module);
 
   for (const dependency of metadata.requires) {
@@ -54,9 +54,9 @@ export function setModuleMetadata(module: Constructor, metadata: ModuleMetadata)
   Reflect.defineMetadata(MODULE_REFLECT_SYMBOL, metadata, module);
 }
 
-function moduleLifecycleFallback() {}
+// function moduleLifecycleFallback() {}
 
-ensureMethodInjectMetadata(moduleLifecycleFallback);
+// ensureMethodInjectMetadata(moduleLifecycleFallback);
 
 const ON_MODULE_CREATE = Symbol();
 const ON_MODULE_DESTROY = Symbol();
@@ -66,12 +66,9 @@ const ON_MODULE_DESTROY = Symbol();
  * @param constructor Constructor of a module
  * @param metadataKey Metadata key of lifecycle function, must be ON_MODULE_CREATE or ON_MODULE_CREATE
  */
-function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: symbol): Function[] {
-
+function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: symbol): (keyof T)[] {
   const lifecycleMethods = Reflect.getMetadata(metadataKey, constructor.prototype);
-  return Array.isArray(lifecycleMethods)
-    ? lifecycleMethods
-    : [];
+  return Array.isArray(lifecycleMethods) ? lifecycleMethods : [];
 }
 
 /**
@@ -81,18 +78,16 @@ function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: s
  * @decorator
  */
 export function ModuleClass(option: ModuleOption = {}) {
-
   const requires = option.requires || [];
   const constants = option.constants ?? [];
   const components = option.components ?? [];
   const factories = option.factories ?? [];
 
   return <T extends {}>(constructor: Constructor<T>) => {
-
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
-    onModuleCreate.forEach(ensureMethodInjectMetadata);
-    onModuleDestroy.forEach(ensureMethodInjectMetadata);
+    onModuleCreate.forEach((key) => ensureMethodInjectMetadata(constructor.prototype, key));
+    onModuleDestroy.forEach((key) => ensureMethodInjectMetadata(constructor.prototype, key));
     setModuleMetadata(constructor, {
       requires,
       constants,
@@ -105,11 +100,7 @@ export function ModuleClass(option: ModuleOption = {}) {
 }
 
 function defineModuleLifecycleMetadata(metadataKey: symbol) {
-  return <T extends {}>(
-    prototype: T,
-    name: keyof T,
-    propertyDescriptor: PropertyDescriptor,
-  ): void => {
+  return <T extends {}>(prototype: T, name: keyof T, propertyDescriptor: PropertyDescriptor): void => {
     const value = propertyDescriptor.value;
     if (typeof value === 'function') {
       let lifecycleMethods = Reflect.getMetadata(metadataKey, prototype);
@@ -117,7 +108,7 @@ function defineModuleLifecycleMetadata(metadataKey: symbol) {
         lifecycleMethods = [];
         Reflect.defineMetadata(metadataKey, lifecycleMethods, prototype);
       }
-      lifecycleMethods.push(value);
+      lifecycleMethods.push(name);
     }
   };
 }

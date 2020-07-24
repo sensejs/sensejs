@@ -21,15 +21,13 @@ export interface StaticMethodDecorator {
 }
 
 export interface InstanceMethodDecorator {
-  <T extends Function>(
-    target: object,
-    name: PrototypeKey,
-    pd: TypedPropertyDescriptor<T>,
-  ): TypedPropertyDescriptor<T> | void;
+  <T extends Function>(target: object, name: PrototypeKey, pd: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<
+    T
+  > | void;
 }
 
 export interface InstanceMethodParamDecorator {
-  (target: object, name: PrototypeKey, pd: number): void;
+  <K extends keyof P, P extends object = any>(target: P, name: K, pd: number): void;
 }
 
 export interface StaticMethodParamDecorator {
@@ -40,23 +38,17 @@ export interface ConstructorParamDecorator {
   (target: Function, name: any, pd: number): void;
 }
 
-export interface PropertyDecorator extends StaticPropertyDecorator, InstancePropertyDecorator {
-}
+export interface PropertyDecorator extends StaticPropertyDecorator, InstancePropertyDecorator {}
 
-export interface MethodDecorator extends StaticMethodDecorator, InstanceMethodDecorator {
-}
+export interface MethodDecorator extends StaticMethodDecorator, InstanceMethodDecorator {}
 
-export interface MethodParamDecorator extends InstanceMethodParamDecorator, StaticMethodParamDecorator {
-}
+export interface MethodParamDecorator extends InstanceMethodParamDecorator, StaticMethodParamDecorator {}
 
-export interface ParamDecorator extends MethodParamDecorator, ConstructorParamDecorator {
-}
+export interface ParamDecorator extends MethodParamDecorator, ConstructorParamDecorator {}
 
-export interface Decorator extends ClassDecorator, MethodDecorator, PropertyDecorator, ParamDecorator {
-}
+export interface Decorator extends ClassDecorator, MethodDecorator, PropertyDecorator, ParamDecorator {}
 
-function noop() {
-}
+function noop() {}
 
 type NarrowTo<T> = Decorator extends T ? T : unknown;
 
@@ -115,7 +107,6 @@ export class DecoratorBuilder {
   }
 
   build<T = Decorator>(): NarrowTo<T> {
-
     const result = <T extends Function, R extends PrototypeKey>(
       target: R | Class<R>,
       name?: PrototypeKey,
@@ -174,10 +165,7 @@ export class DecoratorBuilder {
     target: object | Class<R>,
     descriptor?: number | TypedPropertyDescriptor<T>,
   ) {
-    const {
-      applyToClass,
-      applyToConstructorParam,
-    } = this;
+    const {applyToClass, applyToConstructorParam} = this;
     if (typeof target === 'function') {
       if (typeof descriptor === 'number') {
         return applyToConstructorParam(target, undefined, descriptor);
@@ -193,14 +181,10 @@ export class DecoratorBuilder {
     name: symbol | string,
     descriptor?: number | TypedPropertyDescriptor<T>,
   ) {
-    const {
-      applyToInstanceMethodParam,
-      applyToInstanceProperty,
-      applyToInstanceMethod,
-    } = this;
+    const {applyToInstanceMethodParam, applyToInstanceProperty, applyToInstanceMethod} = this;
 
     if (typeof descriptor === 'number') {
-      return applyToInstanceMethodParam(target, name, descriptor);
+      return applyToInstanceMethodParam(target, name as keyof R, descriptor);
     } else if (typeof descriptor === 'object') {
       return applyToInstanceMethod(target, name, descriptor);
     } else {
@@ -213,11 +197,7 @@ export class DecoratorBuilder {
     name: PrototypeKey,
     descriptor?: number | TypedPropertyDescriptor<T>,
   ) {
-    const {
-      applyToStaticMethodParam,
-      applyToStaticProperty,
-      applyToStaticMethod,
-    } = this;
+    const {applyToStaticMethodParam, applyToStaticProperty, applyToStaticMethod} = this;
     if (typeof descriptor === 'number') {
       return applyToStaticMethodParam(target, name, descriptor);
     } else if (typeof descriptor === 'object') {
@@ -226,5 +206,4 @@ export class DecoratorBuilder {
       return applyToStaticProperty(target, name);
     }
   }
-
 }

@@ -16,13 +16,14 @@ import {
 import {uniq} from 'lodash';
 import koaQs from 'koa-qs';
 import {ControllerMetadata, getRequestMappingMetadata, HttpMethod} from './http-decorators';
+import Router from '@koa/router';
 
-interface MethodRouteSpec {
+interface MethodRouteSpec<T = any> {
   path: string;
   httpMethod: HttpMethod;
   interceptors: Constructor<HttpInterceptor>[];
-  targetConstructor: Constructor;
-  targetMethod: Function;
+  targetConstructor: Constructor<T>;
+  targetMethod: keyof T;
 }
 
 interface ControllerRouteSpec {
@@ -117,9 +118,11 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     };
     this.controllerRouteSpecs.push(controllerRouteSpec);
 
-    for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(controllerMetadata.prototype))) {
+    for (const [key, propertyDescriptor] of Object.entries(
+      Object.getOwnPropertyDescriptors(controllerMetadata.prototype),
+    )) {
       if (typeof propertyDescriptor.value === 'function') {
-        this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, propertyDescriptor.value);
+        this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, controllerMetadata.prototype, key);
       }
     }
     return this;
@@ -184,8 +187,13 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return koaQs(koa, this.queryStringParsingMode);
   }
 
-  private addRouterSpec(methodRoutSpecs: MethodRouteSpec[], controllerMetadata: ControllerMetadata, method: Function) {
-    const requestMappingMetadata = getRequestMappingMetadata(method);
+  private addRouterSpec(
+    methodRoutSpecs: MethodRouteSpec[],
+    controllerMetadata: ControllerMetadata,
+    prototype: object,
+    method: keyof any,
+  ) {
+    const requestMappingMetadata = getRequestMappingMetadata(prototype, method);
     if (!requestMappingMetadata) {
       return;
     }
@@ -207,23 +215,30 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     for (const controllerRouteSpec of this.controllerRouteSpecs) {
       const controllerRouter = new KoaRouter();
       for (const methodRouteSpec of controllerRouteSpec.methodRouteSpecs) {
-        const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
-
-        controllerRouter[httpMethod](path, async (ctx) => {
-          const childContainer = container.createChild();
-          const composedInterceptor = composeRequestInterceptor(childContainer, interceptors);
-          childContainer.bind(Container).toConstantValue(childContainer);
-          const context = new KoaHttpContext(childContainer, ctx);
-          childContainer.bind(HttpContext).toConstantValue(context);
-          const interceptor = childContainer.get(composedInterceptor);
-          await interceptor.intercept(context, async () => {
-            const target = childContainer.get<object>(targetConstructor);
-            context.response.data = await invokeMethod(childContainer, target, targetMethod);
-          });
-        });
+        this.defineRouter(methodRouteSpec, controllerRouter, container);
       }
       globalRouter.use(controllerRouteSpec.path, controllerRouter.routes(), controllerRouter.allowedMethods());
     }
     return globalRouter.routes();
+  }
+
+  private defineRouter<T>(
+    methodRouteSpec: MethodRouteSpec<T>,
+    controllerRouter: Router<any, {}>,
+    container: Container,
+  ) {
+    const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
+
+    controllerRouter[httpMethod](path, async (ctx) => {
+      const childContainer = container.createChild();
+      const composedInterceptor = composeRequestInterceptor(childContainer, interceptors);
+      childContainer.bind(Container).toConstantValue(childContainer);
+      const context = new KoaHttpContext(childContainer, ctx);
+      childContainer.bind(HttpContext).toConstantValue(context);
+      const interceptor = childContainer.get(composedInterceptor);
+      await interceptor.intercept(context, async () => {
+        context.response.data = await invokeMethod(childContainer, targetConstructor, targetMethod);
+      });
+    });
   }
 }

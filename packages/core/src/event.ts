@@ -30,7 +30,6 @@ interface AcknowledgeAwareEventMessenger<T, Context = unknown> extends EventMess
  * Describe how an event announcement will be performed
  */
 export interface AnnounceEventOption<T, Context> {
-
   /**
    * Context object that can be used in interceptor
    */
@@ -54,7 +53,6 @@ export interface AnnounceEventOption<T, Context> {
 
 @Component({scope: ComponentScope.SINGLETON})
 export class EventBusImplement {
-
   private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger<any, any>>> = new Map();
 
   async announceEvent<T extends {}, Context>(
@@ -185,7 +183,6 @@ export class EventSubscriptionContext<Payload, Context = any> extends RequestCon
 }
 
 export abstract class EventAnnouncer {
-
   /**
    * Announce event, payload can be injected using target as symbol
    * @param target
@@ -202,12 +199,11 @@ export abstract class EventAnnouncer {
 
 @Component({scope: ComponentScope.SINGLETON})
 class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
-
   private readonly eventAnnouncer: EventAnnouncer;
 
   constructor(@Inject(EventBusImplement) implement: EventBusImplement) {
     super();
-    this.eventAnnouncer = new class extends EventAnnouncer {
+    this.eventAnnouncer = new (class extends EventAnnouncer {
       async announceEvent<T, Context>(
         option: ServiceIdentifier<T> | AnnounceEventOption<T, Context>,
         ...rest: T[]
@@ -221,14 +217,13 @@ class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
           payload = option.payload;
           symbol = option.symbol ?? channel;
           context = option.context;
-
         } else {
           channel = symbol = option;
           payload = rest[0];
         }
         await implement.announceEvent(channel, symbol, payload, context);
       }
-    };
+    })();
   }
 
   build() {
@@ -251,10 +246,8 @@ const eventBusModule = createModule({
 });
 
 export function createEventSubscriptionModule(option: EventSubscriptionModuleOption = {}): Constructor {
-
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
-
     private subscriptions: EventChannelSubscription[] = [];
 
     constructor(
@@ -299,37 +292,36 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       subscribeEventMetadata: SubscribeEventMetadata,
     ) {
       const interceptors = [
-        ...(
-          option.interceptors ?? []
-        ),
+        ...(option.interceptors ?? []),
         ...metadata.interceptors,
         ...subscribeEventMetadata.interceptors,
       ];
       const identifier = subscribeEventMetadata.identifier;
-      this.subscriptions.push(this.eventBus.subscribe(identifier, (messenger) => {
-        if (!subscribeEventMetadata.filter(messenger.payload)) {
-          return;
-        }
+      this.subscriptions.push(
+        this.eventBus.subscribe(identifier, (messenger) => {
+          if (!subscribeEventMetadata.filter(messenger.payload)) {
+            return;
+          }
 
-        const childContainer = this.container.createChild();
-        childContainer.bind(Container).toConstantValue(childContainer);
+          const childContainer = this.container.createChild();
+          childContainer.bind(Container).toConstantValue(childContainer);
 
-        const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
-        const composedInterceptor = childContainer.get(composedInterceptorConstructor);
+          const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
+          const composedInterceptor = childContainer.get(composedInterceptorConstructor);
 
-        const {acknowledge, payload, symbol, context} = messenger;
-        const subscriptionContext = new EventSubscriptionContext(childContainer, identifier, payload, context);
-        childContainer.bind<unknown>(symbol).toConstantValue(payload);
+          const {acknowledge, payload, symbol, context} = messenger;
+          const subscriptionContext = new EventSubscriptionContext(childContainer, identifier, payload, context);
+          childContainer.bind<unknown>(symbol).toConstantValue(payload);
 
-        acknowledge(composedInterceptor.intercept(subscriptionContext, () => {
-          const target = childContainer.get<object>(constructor);
-          const targetMethod = subscribeEventMetadata.prototype[subscribeEventMetadata.name];
-          return Promise.resolve(invokeMethod(childContainer, target, targetMethod));
-        }));
-      }));
+          acknowledge(
+            composedInterceptor.intercept(subscriptionContext, async () => {
+              await invokeMethod(childContainer, constructor, subscribeEventMetadata.name);
+            }),
+          );
+        }),
+      );
     }
   }
 
   return EventSubscriptionModule;
 }
-

@@ -53,12 +53,10 @@ function scanSubscriber(
   connectionModule: Constructor,
   messageConsumerSymbol: symbol,
 ) {
-
   @ModuleClass({
     requires: [connectionModule],
   })
   class SubscriberScanModule {
-
     constructor(
       @Inject(Container) private container: Container,
       @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
@@ -68,7 +66,6 @@ function scanSubscriber(
     async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
       moduleScanner.scanModule((moduleMetadata) => {
         moduleMetadata.components.forEach((component) => {
-
           const controllerMetadata = getSubscribeControllerMetadata(component);
           if (!controllerMetadata) {
             return;
@@ -111,18 +108,16 @@ function scanSubscriber(
       }
     }
 
-    private getConsumeCallback(
-      controllerMetadata: SubscribeControllerMetadata,
+    private getConsumeCallback<T>(
+      controllerMetadata: SubscribeControllerMetadata<T>,
       subscribeMetadata: SubscribeTopicMetadata,
-      method: Function,
+      method: keyof T,
     ) {
       return async (message: KafkaReceivedMessage) => {
         const childContainer = this.container.createChild();
         childContainer.bind(Container).toConstantValue(childContainer);
         const composedInterceptor = composeRequestInterceptor(childContainer, [
-          ...(
-            option.globalInterceptors ?? []
-          ),
+          ...(option.globalInterceptors ?? []),
           ...controllerMetadata.interceptors,
           ...subscribeMetadata.interceptors,
         ]);
@@ -130,8 +125,7 @@ function scanSubscriber(
         childContainer.bind(ConsumerContext).toConstantValue(context);
         const interceptor = childContainer.get(composedInterceptor);
         await interceptor.intercept(context, async () => {
-          const target = childContainer.get<object>(controllerMetadata.target);
-          await invokeMethod(childContainer, target, method);
+          await invokeMethod(childContainer, controllerMetadata.target, method);
         });
       };
     }

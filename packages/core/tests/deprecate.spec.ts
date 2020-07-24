@@ -2,15 +2,14 @@ import {Deprecated} from '../src/utils';
 import {Container, inject, injectable} from 'inversify';
 import {Inject, invokeMethod} from '../src';
 
-const awaitWarningCalled = (stub: jest.SpyInstance) => new Promise((done) => {
-  stub.mockImplementationOnce(() => {
-    done();
+const awaitWarningCalled = (stub: jest.SpyInstance) =>
+  new Promise((done) => {
+    stub.mockImplementationOnce(() => {
+      done();
+    });
   });
-});
 describe('Deprecate on class', () => {
-
   test('metadata', () => {
-
     const metadataKey = Symbol();
     const metadata = Symbol();
 
@@ -20,16 +19,13 @@ describe('Deprecate on class', () => {
 
     @Deprecated()
     @decorator
-    class X {
-    }
+    class X {}
     expect(Reflect.get(X, metadataKey)).toBe(metadata);
 
     @decorator
     @Deprecated({message: 'Y is deprecated'})
-    class Y {
-    }
+    class Y {}
     expect(Reflect.get(Y, metadataKey)).toBe(metadata);
-
   });
 
   test('warning will be emitted once', async () => {
@@ -37,8 +33,7 @@ describe('Deprecate on class', () => {
 
     @Deprecated()
     class X {
-      constructor() {
-      }
+      constructor() {}
     }
 
     const mockCalled = new Promise((done) => {
@@ -97,8 +92,7 @@ describe('Deprecate on class', () => {
     }
 
     @Deprecated()
-    class W extends U {
-    }
+    class W extends U {}
 
     const container = new Container();
     container.bind('key').toConstantValue('value');
@@ -128,9 +122,7 @@ describe('Deprecate on class', () => {
 });
 
 describe('Deprecate instance method', () => {
-
   test('warning emitted', async () => {
-
     const warningStub = jest.spyOn(process, 'emitWarning');
     const param = [Symbol(), Symbol()];
     const result = Symbol();
@@ -176,6 +168,7 @@ describe('Deprecate instance method', () => {
   test('method inject', () => {
     const result = Date.now().toString();
 
+    @injectable()
     class X {
       foo(@Inject('key') param: string) {
         return param;
@@ -185,7 +178,6 @@ describe('Deprecate instance method', () => {
     const container = new Container();
     container.bind('key').toConstantValue(result);
     container.bind(X).toSelf();
-    expect(invokeMethod(container, X, X.prototype.foo)).toBe(result);
+    expect(invokeMethod(container, X, 'foo')).toBe(result);
   });
-
 });
