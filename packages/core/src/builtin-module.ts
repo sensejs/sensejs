@@ -22,20 +22,17 @@ export class BackgroundTaskQueue {
 }
 
 export class ProcessManager {
+  constructor(private shutdownRoutine: (e?: Error) => void) {}
 
-  constructor(private shutdownRoutine: () => void) {
-
-  }
-
-  shutdown() {
-    this.shutdownRoutine();
+  shutdown(e?: Error) {
+    this.shutdownRoutine(e);
   }
 }
 
 class ProcessManagerFactory extends ComponentFactory<ProcessManager> {
   private processManager?: ProcessManager;
 
-  setShutdownRoutine(fn: () => void) {
+  setShutdownRoutine(fn: (e?: Error) => void) {
     this.processManager = new ProcessManager(fn);
   }
 
@@ -63,12 +60,8 @@ function createModuleScannerFactory(entryModule: Constructor) {
   };
 }
 
-export function createBuiltinModule(option: {
-  entryModule: Constructor;
-  onShutdown: () => void;
-}): Constructor {
+export function createBuiltinModule(option: {entryModule: Constructor; onShutdown: (e?: Error) => void}): Constructor {
   class BuiltinModule {
-
     @OnModuleCreate()
     onCreate(@Inject(ProcessManagerFactory) factory: ProcessManagerFactory) {
       factory.setShutdownRoutine(option.onShutdown);
@@ -97,5 +90,4 @@ export function createBuiltinModule(option: {
   })(BuiltinModule);
 
   return BuiltinModule;
-
 }

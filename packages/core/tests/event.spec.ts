@@ -16,9 +16,7 @@ import {ApplicationRunner} from '../src/entry-point';
 import {Subject} from 'rxjs';
 
 describe('Event subscribe and announce', () => {
-
   test('Subscribe', async () => {
-
     const spy = jest.fn();
     const spy2 = jest.fn();
 
@@ -30,7 +28,6 @@ describe('Event subscribe and announce', () => {
 
     @SubscribeEventController()
     class SubscribeController {
-
       @SubscribeEvent('event')
       foo(@Inject('event') event: string, @Inject(ProcessManager) pm: ProcessManager) {
         pm.shutdown();
@@ -55,7 +52,6 @@ describe('Event subscribe and announce', () => {
       ],
     })
     class EntryModule {
-
       @OnModuleCreate()
       async onModuleCreate(
         @InjectEventAnnouncer('event') announcer: EventChannelAnnouncer<string>,
@@ -67,7 +63,7 @@ describe('Event subscribe and announce', () => {
         await announcer2.announceEvent({
           channel: 'event2',
           symbol: 'event2',
-          payload: 'bar'
+          payload: 'bar',
         });
         expect(spy).toHaveBeenCalledWith('bar');
         expect(spy2).toHaveBeenLastCalledWith('bar');

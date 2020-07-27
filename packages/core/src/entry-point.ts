@@ -14,8 +14,7 @@ interface ForcedExitOption {
   forcedExitWhenRepeated: boolean;
 }
 
-interface ExitOption extends NormalExitOption, Partial<ForcedExitOption> {
-}
+interface ExitOption extends NormalExitOption, Partial<ForcedExitOption> {}
 
 type ExitSignalOption = {
   [signal in NodeJS.Signals]?: Partial<ExitOption>;
@@ -57,16 +56,14 @@ export const defaultRunOption: RunOption = {
   onExit: (exitCode) => process.exit(exitCode),
 };
 
-function provideBuiltin(option: {
-  entryModule: Constructor;
-  onShutdown: () => void;
-}) {
+function provideBuiltin(option: {entryModule: Constructor; onShutdown: (e?: Error) => void}) {
   @ModuleClass({
     requires: [
       createBuiltinModule({
         entryModule: EntryPointModule,
         onShutdown: option.onShutdown,
-      }), option.entryModule,
+      }),
+      option.entryModule,
     ],
   })
   class EntryPointModule {}
@@ -75,27 +72,29 @@ function provideBuiltin(option: {
 }
 
 export class ApplicationRunner {
-
   private runPromise?: Promise<unknown>;
   private isStopped = false;
   private logger: Logger = this.runOption.logger;
   private signalHandler = new Map<NodeJS.Signals, () => void>();
 
-  constructor(
-    private process: NodeJS.Process,
-    private moduleRoot: ModuleRoot,
-    private runOption: RunOption<unknown>,
-  ) {}
+  constructor(private process: NodeJS.Process, private moduleRoot: ModuleRoot, private runOption: RunOption<unknown>) {}
 
   static runModule(entryModule: Constructor, runOption: Partial<RunOption> = {}) {
     const actualRunOption = Object.assign({}, defaultRunOption, runOption);
-    const moduleRoot = new ModuleRoot(provideBuiltin({
-      entryModule,
-      onShutdown,
-    }));
+    const moduleRoot = new ModuleRoot(
+      provideBuiltin({
+        entryModule,
+        onShutdown,
+      }),
+    );
     const runner = new ApplicationRunner(process, moduleRoot, actualRunOption);
-    function onShutdown() {
-      runner.shutdown();
+    function onShutdown(e?: Error) {
+      if (e) {
+        runner.logger.error('Requested to shut down. Reason: ', e);
+        runner.stop(actualRunOption.errorExitOption);
+      } else {
+        runner.stop();
+      }
     }
     return runner.run();
   }
@@ -153,7 +152,8 @@ export class ApplicationRunner {
     let promise = this.stopModuleRoot(option);
     if (option.timeout > 0) {
       promise = Promise.race([
-        promise, new Promise<number>((resolve) => {
+        promise,
+        new Promise<number>((resolve) => {
           setTimeout(() => {
             resolve(this.runOption.errorExitOption.timeout);
           }, option.timeout);
@@ -216,7 +216,6 @@ export class ApplicationRunner {
 let entryPointCalled = false;
 
 export function EntryPoint(runOption: Partial<RunOption> = {}) {
-
   return (moduleConstructor: Constructor) => {
     if (entryPointCalled) {
       throw new Error('only one entry point is allowed');
