@@ -87,7 +87,9 @@ function scanSubscriber(
     }
 
     private scanPrototypeMethod(component: Constructor, controllerMetadata: SubscribeControllerMetadata) {
-      for (const propertyDescriptor of Object.values(Object.getOwnPropertyDescriptors(component.prototype))) {
+      for (const [methodKey, propertyDescriptor] of Object.entries(
+        Object.getOwnPropertyDescriptors(component.prototype),
+      )) {
         const subscribeMetadata = getSubscribeTopicMetadata(propertyDescriptor.value);
         const method = propertyDescriptor.value;
 
@@ -103,7 +105,7 @@ function scanSubscriber(
           throw new TypeError('subscribe topic must be a string');
         }
 
-        const consumeCallback = this.getConsumeCallback(controllerMetadata, subscribeMetadata, method);
+        const consumeCallback = this.getConsumeCallback(controllerMetadata, subscribeMetadata, methodKey);
         this.messageConsumer.subscribe(subscribeOption.topic, consumeCallback, subscribeOption.fromBeginning);
       }
     }
