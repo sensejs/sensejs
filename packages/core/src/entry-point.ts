@@ -1,8 +1,6 @@
 import {ModuleRoot} from './module-root';
-import {ModuleClass} from './module';
 import {consoleLogger, Logger} from './logger';
 import {Constructor} from './interfaces';
-import {createBuiltinModule} from './builtin-module';
 
 interface NormalExitOption {
   exitCode: number;
@@ -56,21 +54,6 @@ export const defaultRunOption: RunOption = {
   onExit: (exitCode) => process.exit(exitCode),
 };
 
-function provideBuiltin(option: {entryModule: Constructor; onShutdown: (e?: Error) => void}) {
-  @ModuleClass({
-    requires: [
-      createBuiltinModule({
-        entryModule: EntryPointModule,
-        onShutdown: option.onShutdown,
-      }),
-      option.entryModule,
-    ],
-  })
-  class EntryPointModule {}
-
-  return EntryPointModule;
-}
-
 export class ApplicationRunner {
   private runPromise?: Promise<unknown>;
   private isStopped = false;
@@ -79,24 +62,21 @@ export class ApplicationRunner {
 
   constructor(private process: NodeJS.Process, private moduleRoot: ModuleRoot, private runOption: RunOption<unknown>) {}
 
-  static runModule(entryModule: Constructor, runOption: Partial<RunOption> = {}) {
+  static async runModule(entryModule: Constructor, runOption: Partial<RunOption> = {}): Promise<void> {
     const actualRunOption = Object.assign({}, defaultRunOption, runOption);
-    const moduleRoot = new ModuleRoot(
-      provideBuiltin({
-        entryModule,
-        onShutdown,
+    const runner = new ApplicationRunner(
+      process,
+      ModuleRoot.create(entryModule, (e?: Error) => {
+        if (e) {
+          runner.logger.error('Requested to shut down. Reason: ', e);
+          runner.stop(actualRunOption.errorExitOption);
+        } else {
+          runner.stop();
+        }
       }),
+      actualRunOption,
     );
-    const runner = new ApplicationRunner(process, moduleRoot, actualRunOption);
-    function onShutdown(e?: Error) {
-      if (e) {
-        runner.logger.error('Requested to shut down. Reason: ', e);
-        runner.stop(actualRunOption.errorExitOption);
-      } else {
-        runner.stop();
-      }
-    }
-    return runner.run();
+    await runner.run();
   }
 
   private onProcessWarning = (e: Error) => {
@@ -112,7 +92,7 @@ export class ApplicationRunner {
     this.stop(this.runOption.errorExitOption);
   };
 
-  shutdown(forced: boolean = false) {
+  shutdown(forced: boolean = false): void {
     if (forced) {
       this.forceStop(this.runOption.forcedExitOption);
     } else {
@@ -120,12 +100,13 @@ export class ApplicationRunner {
     }
   }
 
-  run() {
+  async run(): Promise<void> {
     if (this.runPromise) {
-      return this.runPromise;
+      await this.runPromise;
+      return;
     }
     this.runPromise = this.performRun();
-    return this.runPromise;
+    await this.runPromise;
   }
 
   private async performRun() {

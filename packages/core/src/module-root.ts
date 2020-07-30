@@ -1,6 +1,20 @@
 import {Container} from 'inversify';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
+import {ModuleClass} from './module';
+import {createBuiltinModule} from './builtin-module';
+
+export class ModuleShutdownError extends Error {
+  constructor(readonly shutdownError: unknown, readonly shutdownReason?: unknown) {
+    super();
+    Error.captureStackTrace(this, ModuleShutdownError);
+  }
+}
+
+export interface ModuleRootRunOption {
+  afterStartup?: () => Promise<void>;
+  beforeShutdown?: () => Promise<void>;
+}
 
 /**
  * @private
@@ -15,7 +29,41 @@ export class ModuleRoot {
     this.entryModuleInstance = new ModuleInstance(entryModule, this.container, this.moduleInstanceMap);
   }
 
-  public async start() {
+  static create(entryModule: Constructor, onShutdown?: (e?: Error) => void): ModuleRoot {
+    class EntryPointModule {}
+
+    const moduleRoot: ModuleRoot = new ModuleRoot(
+      ModuleClass({
+        requires: [
+          createBuiltinModule({
+            entryModule: EntryPointModule,
+            onShutdown: onShutdown ?? (() => moduleRoot.stop()),
+          }),
+          entryModule,
+        ],
+      })(EntryPointModule),
+    );
+    return moduleRoot;
+  }
+
+  static async run(entryModule: Constructor, runOption: ModuleRootRunOption = {}): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const moduleRoot = this.create(entryModule, (e?: Error) => {
+        moduleRoot.stop().then(
+          () => {
+            if (e) {
+              return reject(e);
+            }
+            return resolve();
+          },
+          (shutdownError) => reject(new ModuleShutdownError(shutdownError, e)),
+        );
+      });
+      moduleRoot.start().then(() => {});
+    });
+  }
+
+  public async start(): Promise<void> {
     await this.startModule(this.entryModuleInstance);
   }
 
@@ -35,7 +83,7 @@ export class ModuleRoot {
       return;
     }
     await moduleInstance.onDestroy();
-    for (; ;) {
+    for (;;) {
       const dependency = moduleInstance.dependencies.pop();
       if (!dependency) {
         return;

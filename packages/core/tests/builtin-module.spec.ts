@@ -1,12 +1,11 @@
-import {Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '../src';
+import {ApplicationRunner, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '../src';
 import {BackgroundTaskQueue, createBuiltinModule} from '../src/builtin-module';
 import {ModuleScanner} from '../src/module-scanner';
 
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {
-
     let resolvePromise: () => void;
-    const longRunningTask = new Promise((resolve) => resolvePromise = resolve);
+    const longRunningTask = new Promise((resolve) => (resolvePromise = resolve));
     const originWaitAllTaskFinished = BackgroundTaskQueue.prototype.waitAllTaskFinished;
     const stoppedStub = jest.fn();
 
@@ -28,8 +27,10 @@ describe('BuiltinModule', () => {
     @ModuleClass({requires: [createBuiltinModule({entryModule: MyModule, onShutdown: () => null})]})
     class MyModule {
       @OnModuleCreate()
-      onCreate(@Inject(BackgroundTaskQueue) queuedTask: BackgroundTaskQueue,
-        @Inject(ModuleScanner) moduleScanner: ModuleScanner) {
+      onCreate(
+        @Inject(BackgroundTaskQueue) queuedTask: BackgroundTaskQueue,
+        @Inject(ModuleScanner) moduleScanner: ModuleScanner,
+      ) {
         queuedTask.dispatch(longRunningTask);
         queuedTask.dispatch(() => longRunningTask);
         moduleScanner.scanModule(moduleScannerStub);

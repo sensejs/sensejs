@@ -36,17 +36,13 @@ describe('ModuleRoot', () => {
       }
 
       @OnModuleDestroy()
-      async onDestroy(): Promise<void> {
-      }
-
+      async onDestroy(): Promise<void> {}
     }
 
     @ModuleClass({requires: [ModuleA, ModuleB]})
-    class ModuleC {
+    class ModuleC {}
 
-    }
-
-    const app = new ModuleRoot(ModuleC);
+    const app = ModuleRoot.create(ModuleC);
     jest.spyOn(ModuleB.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
 
     const startPromise = app.start();

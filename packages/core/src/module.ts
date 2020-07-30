@@ -83,7 +83,7 @@ export function ModuleClass(option: ModuleOption = {}) {
   const components = option.components ?? [];
   const factories = option.factories ?? [];
 
-  return <T extends {}>(constructor: Constructor<T>) => {
+  return <T extends {}>(constructor: Constructor<T>): Constructor<T> => {
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
     onModuleCreate.forEach((key) => ensureMethodInjectMetadata(constructor.prototype, key));
@@ -96,6 +96,7 @@ export function ModuleClass(option: ModuleOption = {}) {
       onModuleCreate,
       onModuleDestroy,
     });
+    return constructor;
   };
 }
 
