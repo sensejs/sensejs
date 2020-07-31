@@ -3,30 +3,36 @@ import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 import {ModuleClass} from './module';
 import {createBuiltinModule} from './builtin-module';
+import {invokeMethod} from './method-inject';
 
 export class ModuleShutdownError extends Error {
-  constructor(readonly shutdownError: unknown, readonly shutdownReason?: unknown) {
+  constructor(readonly error: unknown, readonly nestedError?: unknown) {
     super();
     Error.captureStackTrace(this, ModuleShutdownError);
   }
 }
 
-export interface ModuleRootRunOption {
-  afterStartup?: () => Promise<void>;
-  beforeShutdown?: () => Promise<void>;
+export class RunModuleError extends Error {
+  constructor(readonly error: unknown, readonly nestedError?: unknown) {
+    super();
+    Error.captureStackTrace(this, RunModuleError);
+  }
 }
 
 /**
  * @private
  */
-export class ModuleRoot {
+export class ModuleRoot<T extends {} = {}> {
   readonly container: Container = new Container({skipBaseClassChecks: true});
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
-  private readonly entryModuleInstance: ModuleInstance;
+  private readonly entryModuleInstance: ModuleInstance<T>;
+  private readonly entryMethod?: keyof T;
+  private runModulePromise?: Promise<void>;
 
-  public constructor(entryModule: Constructor) {
+  public constructor(entryModule: Constructor<T>, method?: keyof T) {
     this.container.bind(Container).toConstantValue(this.container);
-    this.entryModuleInstance = new ModuleInstance(entryModule, this.container, this.moduleInstanceMap);
+    this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, this.moduleInstanceMap);
+    this.entryMethod = method;
   }
 
   static create(entryModule: Constructor, onShutdown?: (e?: Error) => void): ModuleRoot {
@@ -46,39 +52,46 @@ export class ModuleRoot {
     return moduleRoot;
   }
 
-  static async run(entryModule: Constructor, runOption: ModuleRootRunOption = {}): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const moduleRoot = this.create(entryModule, (e?: Error) => {
-        moduleRoot.stop().then(
-          () => {
-            if (e) {
-              return reject(e);
-            }
-            return resolve();
-          },
-          (shutdownError) => reject(new ModuleShutdownError(shutdownError, e)),
-        );
-      });
-      moduleRoot.start().then(() => {});
-    });
+  static async run<T>(entryModule: Constructor<T>, method: keyof T, onShutdown?: (e?: Error) => any): Promise<void> {
+    const moduleRoot = new ModuleRoot(entryModule, method);
+    let error: unknown = undefined;
+    const builtinModule = new ModuleInstance(
+      createBuiltinModule({
+        entryModule,
+        onShutdown: onShutdown ?? ((e) => (error = e)),
+      }),
+      moduleRoot.container,
+      moduleRoot.moduleInstanceMap,
+    );
+
+    await builtinModule.onSetup();
+    try {
+      await moduleRoot.start();
+      try {
+        await moduleRoot.run();
+      } catch (e) {
+        error = new RunModuleError(e, error);
+      } finally {
+        await moduleRoot.stop().catch((e) => {
+          error = new ModuleShutdownError(e, error);
+        });
+      }
+      if (error) {
+        throw error;
+      }
+    } finally {
+      await builtinModule.onDestroy();
+    }
   }
 
-  public async start(): Promise<void> {
-    await this.startModule(this.entryModuleInstance);
-  }
-
-  public async stop(): Promise<void> {
-    await this.stopModule(this.entryModuleInstance);
-  }
-
-  private async startModule(moduleInstance: ModuleInstance) {
+  private static async startModule<T>(moduleInstance: ModuleInstance<T>) {
     for (const dependency of moduleInstance.dependencies) {
       await this.startModule(dependency);
     }
     await moduleInstance.onSetup();
   }
 
-  private async stopModule(moduleInstance: ModuleInstance) {
+  private static async stopModule<T>(moduleInstance: ModuleInstance<T>) {
     if (--moduleInstance.referencedCounter > 0) {
       return;
     }
@@ -90,5 +103,23 @@ export class ModuleRoot {
       }
       await this.stopModule(dependency);
     }
+  }
+
+  public async start(): Promise<void> {
+    await ModuleRoot.startModule(this.entryModuleInstance);
+  }
+
+  public async stop(): Promise<void> {
+    await ModuleRoot.stopModule(this.entryModuleInstance);
+  }
+
+  public async run(): Promise<void> {
+    if (this.runModulePromise) {
+      return this.runModulePromise;
+    }
+    this.runModulePromise = this.entryMethod
+      ? Promise.resolve(invokeMethod(this.container, this.entryModuleInstance.moduleClass, this.entryMethod))
+      : Promise.resolve();
+    await this.runModulePromise;
   }
 }

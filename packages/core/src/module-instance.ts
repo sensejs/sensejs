@@ -40,7 +40,7 @@ function bindingHelper<T>(spec: BindingSpec, from: () => interfaces.BindingInSyn
 
 function createContainerModule<T>(option: ModuleMetadata<T>) {
   const {components, factories, constants} = option;
-  return new ContainerModule((bind, unbind, isBound, rebind) => {
+  return new ContainerModule((bind) => {
     constants.forEach((constantProvider) => {
       bind(constantProvider.provide).toConstantValue(constantProvider.value);
     });
@@ -70,9 +70,9 @@ function createContainerModule<T>(option: ModuleMetadata<T>) {
 /**
  * @private
  */
-export class ModuleInstance {
+export class ModuleInstance<T extends {} = {}> {
   public readonly dependencies: ModuleInstance[] = [];
-  public readonly moduleMetadata: ModuleMetadata;
+  public readonly moduleMetadata: ModuleMetadata<T>;
   public referencedCounter = 0;
   private readonly containerModule: ContainerModule;
   private setupPromise?: Promise<void>;
@@ -80,9 +80,9 @@ export class ModuleInstance {
   private moduleInstance?: any;
 
   constructor(
-    readonly moduleClass: Constructor,
+    readonly moduleClass: Constructor<T>,
     private readonly container: Container,
-    instanceMap: Map<Constructor, ModuleInstance> = new Map(),
+    instanceMap: Map<Constructor, ModuleInstance<any>> = new Map(),
   ) {
     this.moduleMetadata = getModuleMetadata(this.moduleClass);
     this.containerModule = createContainerModule(this.moduleMetadata);
@@ -97,7 +97,7 @@ export class ModuleInstance {
     });
   }
 
-  async onSetup() {
+  async onSetup(): Promise<void> {
     if (this.setupPromise) {
       return this.setupPromise;
     }
@@ -105,7 +105,11 @@ export class ModuleInstance {
     return this.setupPromise;
   }
 
-  async onDestroy() {
+  invokeMethod<K extends keyof T>(container: Container, method: keyof T): T[K] extends () => infer R ? R : never {
+    return invokeMethod(container, this.moduleClass, method, this.moduleInstance);
+  }
+
+  async onDestroy(): Promise<void> {
     if (this.destroyPromise) {
       return this.destroyPromise;
     }
