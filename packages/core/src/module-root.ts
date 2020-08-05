@@ -1,20 +1,20 @@
 import {Container} from 'inversify';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
-import {ModuleClass} from './module';
-import {createBuiltinModule} from './builtin-module';
+import {BackgroundTaskQueue, ProcessManager} from './builtin-module';
 import {invokeMethod} from './method-inject';
+import {ModuleScanner} from './module-scanner';
 
 export class ModuleShutdownError extends Error {
   constructor(readonly error: unknown, readonly nestedError?: unknown) {
-    super();
+    super(`Failed to shutdown module: ${error}`);
     Error.captureStackTrace(this, ModuleShutdownError);
   }
 }
 
 export class RunModuleError extends Error {
   constructor(readonly error: unknown, readonly nestedError?: unknown) {
-    super();
+    super(`Failed to run module, error: ${error}`);
     Error.captureStackTrace(this, RunModuleError);
   }
 }
@@ -23,70 +23,47 @@ export class RunModuleError extends Error {
  * @private
  */
 export class ModuleRoot<T extends {} = {}> {
-  readonly container: Container = new Container({skipBaseClassChecks: true});
+  readonly container: Container;
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
   private readonly entryModuleInstance: ModuleInstance<T>;
-  private readonly entryMethod?: keyof T;
-  private runModulePromise?: Promise<void>;
+  // private readonly processManager = new ProcessManager((e?: Error)=> this.runningError = e);
+  private readonly backgroundTaskQueue = new BackgroundTaskQueue();
+  private readonly moduleScanner: ModuleScanner;
+  // private runningError?: unknown;
 
-  public constructor(entryModule: Constructor<T>, method?: keyof T) {
+  public constructor(entryModule: Constructor<T>, processManager?: ProcessManager) {
+    this.moduleScanner = new ModuleScanner(entryModule);
+    this.container = new Container({skipBaseClassChecks: true});
     this.container.bind(Container).toConstantValue(this.container);
+    if (processManager) {
+      this.container.bind(ProcessManager).toConstantValue(processManager);
+    }
+    this.container.bind(BackgroundTaskQueue).toConstantValue(this.backgroundTaskQueue);
+    this.container.bind(ModuleScanner).toConstantValue(this.moduleScanner);
     this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, this.moduleInstanceMap);
-    this.entryMethod = method;
   }
 
-  static create(entryModule: Constructor, onShutdown?: (e?: Error) => void): ModuleRoot {
-    class EntryPointModule {}
-
-    const moduleRoot: ModuleRoot = new ModuleRoot(
-      ModuleClass({
-        requires: [
-          createBuiltinModule({
-            entryModule: EntryPointModule,
-            onShutdown: onShutdown ?? (() => moduleRoot.stop()),
-          }),
-          entryModule,
-        ],
-      })(EntryPointModule),
-    );
-    return moduleRoot;
-  }
-
-  static async run<T>(entryModule: Constructor<T>, method: keyof T, onShutdown?: (e?: Error) => any): Promise<void> {
-    const moduleRoot = new ModuleRoot(entryModule, method);
+  static async run<T>(entryModule: Constructor<T>, method: keyof T): Promise<void> {
     let error: unknown = undefined;
-    const builtinModule = new ModuleInstance(
-      createBuiltinModule({
-        entryModule,
-        onShutdown: onShutdown ?? ((e) => (error = e)),
-      }),
-      moduleRoot.container,
-      moduleRoot.moduleInstanceMap,
-    );
-
-    await builtinModule.onSetup();
+    const moduleRoot = new ModuleRoot(entryModule);
     try {
       await moduleRoot.start();
-      try {
-        await moduleRoot.run();
-      } catch (e) {
-        error = new RunModuleError(e, error);
-      } finally {
-        await moduleRoot.stop().catch((e) => {
-          error = new ModuleShutdownError(e, error);
-        });
-      }
-      if (error) {
-        throw error;
-      }
+      await moduleRoot.run(method);
+    } catch (e) {
+      error = new RunModuleError(e, error);
     } finally {
-      await builtinModule.onDestroy();
+      await moduleRoot.stop().catch((e) => {
+        error = new ModuleShutdownError(e, error);
+      });
+    }
+    if (error) {
+      throw error;
     }
   }
 
   private static async startModule<T>(moduleInstance: ModuleInstance<T>) {
     for (const dependency of moduleInstance.dependencies) {
-      await this.startModule(dependency);
+      await ModuleRoot.startModule(dependency);
     }
     await moduleInstance.onSetup();
   }
@@ -111,15 +88,10 @@ export class ModuleRoot<T extends {} = {}> {
 
   public async stop(): Promise<void> {
     await ModuleRoot.stopModule(this.entryModuleInstance);
+    await this.backgroundTaskQueue.waitAllTaskFinished();
   }
 
-  public async run(): Promise<void> {
-    if (this.runModulePromise) {
-      return this.runModulePromise;
-    }
-    this.runModulePromise = this.entryMethod
-      ? Promise.resolve(invokeMethod(this.container, this.entryModuleInstance.moduleClass, this.entryMethod))
-      : Promise.resolve();
-    await this.runModulePromise;
+  public run<K extends keyof T>(method: K): T[K] extends (...args: any[]) => infer R ? R : never {
+    return invokeMethod(this.container, this.entryModuleInstance.moduleClass, method);
   }
 }

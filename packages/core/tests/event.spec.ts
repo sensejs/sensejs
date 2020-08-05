@@ -1,19 +1,15 @@
 import {
   createEventSubscriptionModule,
   EventAnnouncer,
-  EventChannelAnnouncer,
   Inject,
   InjectEventAnnouncer,
   ModuleClass,
-  OnModuleCreate,
-  ProcessManager,
+  ModuleRoot,
   RequestContext,
   RequestInterceptor,
   SubscribeEvent,
   SubscribeEventController,
 } from '../src';
-import {ApplicationRunner} from '../src/entry-point';
-import {Subject} from 'rxjs';
 
 describe('Event subscribe and announce', () => {
   test('Subscribe', async () => {
@@ -28,17 +24,13 @@ describe('Event subscribe and announce', () => {
 
     @SubscribeEventController()
     class SubscribeController {
-      @SubscribeEvent('event')
-      foo(@Inject('event') event: string, @Inject(ProcessManager) pm: ProcessManager) {
-        pm.shutdown();
-      }
-
-      @SubscribeEvent('event2', {filter: (payload: string) => payload === 'bar'})
-      bar(@Inject('event2') param: string) {
+      @SubscribeEvent('event', {filter: (payload: string) => payload === 'bar'})
+      bar(@Inject('event') param: string) {
         spy(param);
       }
-      @SubscribeEvent('event2')
-      bar2(@Inject('event2') param: string) {
+
+      @SubscribeEvent('event')
+      bar2(@Inject('event') param: string) {
         spy2(param);
       }
     }
@@ -52,32 +44,20 @@ describe('Event subscribe and announce', () => {
       ],
     })
     class EntryModule {
-      @OnModuleCreate()
-      async onModuleCreate(
-        @InjectEventAnnouncer('event') announcer: EventChannelAnnouncer<string>,
-        @InjectEventAnnouncer() announcer2: EventAnnouncer,
-      ) {
-        await announcer2.announceEvent('event2', 'foo');
+      async onModuleCreate(@InjectEventAnnouncer() announcer: EventAnnouncer) {
+        await announcer.announceEvent('event', 'foo');
         expect(spy).not.toHaveBeenCalled();
         expect(spy2).toHaveBeenCalledWith('foo');
-        await announcer2.announceEvent({
-          channel: 'event2',
-          symbol: 'event2',
+        await announcer.announceEvent({
+          channel: 'event',
+          symbol: 'event',
           payload: 'bar',
         });
         expect(spy).toHaveBeenCalledWith('bar');
         expect(spy2).toHaveBeenLastCalledWith('bar');
-        await announcer('foo');
       }
     }
 
-    const subject = new Subject();
-    await ApplicationRunner.runModule(EntryModule, {
-      onExit: (exitCode) => {
-        expect(exitCode).toBe(0);
-        return subject.complete() as never;
-      },
-    });
-    return subject.toPromise();
+    await ModuleRoot.run(EntryModule, 'onModuleCreate');
   });
 });

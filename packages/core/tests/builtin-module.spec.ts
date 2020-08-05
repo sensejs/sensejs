@@ -1,6 +1,4 @@
-import {ApplicationRunner, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '../src';
-import {BackgroundTaskQueue, createBuiltinModule} from '../src/builtin-module';
-import {ModuleScanner} from '../src/module-scanner';
+import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src';
 
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {
@@ -24,7 +22,7 @@ describe('BuiltinModule', () => {
 
     const moduleScannerStub = jest.fn();
 
-    @ModuleClass({requires: [createBuiltinModule({entryModule: MyModule, onShutdown: () => null})]})
+    @ModuleClass()
     class MyModule {
       @OnModuleCreate()
       onCreate(

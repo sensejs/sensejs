@@ -105,7 +105,10 @@ export class ModuleInstance<T extends {} = {}> {
     return this.setupPromise;
   }
 
-  invokeMethod<K extends keyof T>(container: Container, method: keyof T): T[K] extends () => infer R ? R : never {
+  invokeMethod<K extends keyof T>(
+    container: Container,
+    method: keyof T,
+  ): T[K] extends (...args: any[]) => infer R ? R : never {
     return invokeMethod(container, this.moduleClass, method, this.moduleInstance);
   }
 

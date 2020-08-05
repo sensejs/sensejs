@@ -20,7 +20,6 @@ export interface HttpApplicationOption {
 }
 
 export interface HttpRequest {
-
   /**
    * Full url contains query
    */
@@ -62,7 +61,7 @@ export interface HttpResponse {
 
   set(key: string, value: string): void;
 
-  data?: object | Buffer | Readable;
+  data?: any;
 }
 
 export abstract class HttpContext extends RequestContext {

@@ -1,12 +1,12 @@
-import {ApplicationRunner, RunOption} from '../src/entry-point';
 import {
+  ApplicationRunner,
   consoleLogger,
   Constructor,
   createModule,
   ModuleClass,
-  ModuleRoot,
   OnModuleCreate,
   OnModuleDestroy,
+  RunOption,
 } from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
 
@@ -44,11 +44,11 @@ const runOptionFixture: Omit<RunOption<number>, 'logger'> = {
 };
 
 function createAppRunner(module: Constructor, onExit: (exitCode: number) => unknown) {
-
   const runOption = Object.assign({}, runOptionFixture, {
-    logger: consoleLogger, onExit,
+    logger: consoleLogger,
+    onExit,
   });
-  return new ApplicationRunner(process, new ModuleRoot(module), runOption);
+  return new ApplicationRunner(process, module, runOption);
 }
 
 function runModuleForTest(module: Constructor) {
@@ -78,23 +78,12 @@ describe('Application', () => {
   });
 
   test('shutdown', async () => {
-
     const promise = new Promise((resolve) => {
       const runner = createAppRunner(createModule(), resolve);
       runner.run();
       runner.shutdown();
     });
     expect(await promise).toBe(runOptionFixture.normalExitOption.exitCode);
-    return promise;
-  });
-
-  test('forced shutdown', async () => {
-    const promise = new Promise((resolve) => {
-      const runner = createAppRunner(createModule(), resolve);
-      runner.run();
-      runner.shutdown(true);
-    });
-    expect(await promise).toBe(runOptionFixture.forcedExitOption.forcedExitCode);
     return promise;
   });
 
@@ -125,7 +114,6 @@ describe('Application', () => {
     class BadModule {
       @OnModuleDestroy()
       async onDestroy() {
-        await new Promise((resolve) => setImmediate(resolve));
         throw new Error();
       }
     }
@@ -161,9 +149,9 @@ describe('Application', () => {
     }
 
     const promise = runModuleForTest(BadModule);
-    emitSignalOnNextTick();
+    // emitSignalOnNextTick();
     emitSignalOnNextTick('SIGTERM');
-    expect(await promise).toBe(runOptionFixture.errorExitOption.timeout);
+    expect(await promise).toBe(runOptionFixture.forcedExitOption.forcedExitCode);
   });
 
   test('on repeated', async () => {

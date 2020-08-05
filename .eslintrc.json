@@ -9,7 +9,7 @@
     "quotes": "off",
     "semi": "off",
     "no-undef": "off",
-    "@typescript-eslint/ban-ts-ignore": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/one-variable-per-declaration": "off",
     "@typescript-eslint/object-literal-sort-keys": "off",
     "@typescript-eslint/trailing-comma": "off",
