@@ -1,6 +1,5 @@
 import {Container, injectable} from 'inversify';
 import {Constructor, ServiceIdentifier} from './interfaces';
-import {Inject} from './decorators';
 import {Component} from './component';
 import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
 
@@ -18,15 +17,13 @@ export function composeRequestInterceptor<Context extends RequestContext>(
   interceptors: Constructor<RequestInterceptor<Context>>[],
 ): Constructor<RequestInterceptor<Context>> {
   interceptors.forEach((interceptor) => {
-    container.bind(interceptor).to(createConstructorArgumentTransformerProxy(
-      interceptor,
-      getConstructorInjectMetadata(interceptor),
-    ));
+    container
+      .bind(interceptor)
+      .to(createConstructorArgumentTransformerProxy(interceptor, getConstructorInjectMetadata(interceptor)));
   });
 
   @Component()
   class ComposedRequestInterceptor extends RequestInterceptor<Context> {
-
     async intercept(context: Context, next: () => Promise<void>) {
       let index = -1;
 

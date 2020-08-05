@@ -19,17 +19,12 @@ export class RunModuleError extends Error {
   }
 }
 
-/**
- * @private
- */
 export class ModuleRoot<T extends {} = {}> {
   readonly container: Container;
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
   private readonly entryModuleInstance: ModuleInstance<T>;
-  // private readonly processManager = new ProcessManager((e?: Error)=> this.runningError = e);
   private readonly backgroundTaskQueue = new BackgroundTaskQueue();
   private readonly moduleScanner: ModuleScanner;
-  // private runningError?: unknown;
 
   public constructor(entryModule: Constructor<T>, processManager?: ProcessManager) {
     this.moduleScanner = new ModuleScanner(entryModule);
@@ -45,7 +40,7 @@ export class ModuleRoot<T extends {} = {}> {
 
   static async run<T>(entryModule: Constructor<T>, method: keyof T): Promise<void> {
     let error: unknown = undefined;
-    const moduleRoot = new ModuleRoot(entryModule);
+    const moduleRoot = new ModuleRoot(entryModule, new ProcessManager((e) => (error = e)));
     try {
       await moduleRoot.start();
       await moduleRoot.run(method);

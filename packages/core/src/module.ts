@@ -54,10 +54,6 @@ export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMet
   Reflect.defineMetadata(MODULE_REFLECT_SYMBOL, metadata, module);
 }
 
-// function moduleLifecycleFallback() {}
-
-// ensureMethodInjectMetadata(moduleLifecycleFallback);
-
 const ON_MODULE_CREATE = Symbol();
 const ON_MODULE_DESTROY = Symbol();
 
