@@ -1,15 +1,20 @@
-import {EntryPoint, getModuleMetadata, Inject, ModuleClass, OnModuleCreate, OnModuleDestroy} from '../src';
-import {ProcessManager} from '../src/builtin-module';
-
+import {
+  EntryPoint,
+  getModuleMetadata,
+  Inject,
+  ModuleClass,
+  ModuleScanner,
+  OnModuleCreate,
+  OnModuleDestroy,
+  ProcessManager,
+} from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
-import {ModuleScanner} from '../src/module-scanner';
 
 /**
  * Because EntryPoint decorator is coupled to state of global process object,
  * test cannot be splitted into multiple cases.
  */
 test('EntryPoint decorator', async () => {
-
   const onDestroyStub = jest.fn();
 
   const stub = jest.fn();
@@ -46,8 +51,7 @@ test('EntryPoint decorator', async () => {
   expect(() => {
     @EntryPoint()
     @ModuleClass()
-    class B {
-    }
+    class B {}
   }).toThrow();
 
   await processExitPromise;

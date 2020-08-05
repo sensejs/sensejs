@@ -1,7 +1,7 @@
 import {Container} from 'inversify';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
-import {BackgroundTaskQueue, ProcessManager} from './builtin-module';
+import {BackgroundTaskQueue, ProcessManager} from './builtins';
 import {invokeMethod} from './method-inject';
 import {ModuleScanner} from './module-scanner';
 

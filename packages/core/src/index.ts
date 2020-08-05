@@ -1,4 +1,4 @@
-export * from './builtin-module';
+export * from './builtins';
 export * from './event';
 export * from './module';
 export * from './module-root';
