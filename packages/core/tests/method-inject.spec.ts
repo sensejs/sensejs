@@ -7,6 +7,7 @@ import {
   MethodParamInjectError,
   validateMethodInjectMetadata,
 } from '../src';
+import {exhaust} from 'rxjs/operators';
 
 describe('@Inject', () => {
   test('param binding', () => {
@@ -54,7 +55,7 @@ describe('@Inject', () => {
     }).toThrow(MethodParamDecorateError);
   });
 
-  test('Missing @Inject', () => {
+  test('Fail for method takes arguments lacks @Inject()', () => {
     @injectable()
     class Foo {
       bar(param: string) {
@@ -66,6 +67,19 @@ describe('@Inject', () => {
     container.bind(String).toConstantValue('deadbeef');
     container.bind(Foo).toSelf();
     expect(() => invokeMethod(container, Foo, 'bar')).toThrow(MethodParamInjectError);
+  });
+
+  test('Okay for method takes no argument', () => {
+    @injectable()
+    class Foo {
+      bar() {}
+    }
+    const spy = jest.spyOn(Foo.prototype, 'bar');
+
+    const container = new Container();
+    container.bind(Foo).toSelf();
+    invokeMethod(container, Foo, 'bar');
+    expect(spy).toHaveBeenCalledTimes(1);
   });
 
   test('Inconsistent param binding', () => {
