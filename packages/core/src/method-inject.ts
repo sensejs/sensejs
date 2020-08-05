@@ -108,27 +108,23 @@ export function validateMethodInjectMetadata<T extends {}>(prototype: T, methodK
   }
 }
 
-export function getMethodInjectMetadataOrThrow<T extends {}>(
+export function getMethodInjectMetadata<T extends {}>(
   constructor: Constructor<T>,
   methodKey: keyof T,
-): MethodInjectMetadata {
-  const result = ensureMethodInjectPrototypeMetadata(constructor.prototype).get(methodKey);
-  if (!result) {
-    throw new MethodParamInjectError(`${constructor.name}.${methodKey} has no method inject metadata`);
-  }
-  return result;
+): MethodInjectMetadata | undefined {
+  return ensureMethodInjectPrototypeMetadata(constructor.prototype).get(methodKey);
 }
 
 /**
  * Invoke method with arguments from container
  */
-export function invokeMethod<T extends {}>(
+export function invokeMethod<T extends {}, K extends keyof T>(
   container: Container,
   constructor: Constructor<T>,
   methodKey: keyof T,
   target?: T,
-) {
-  const metadata = getMethodInjectMetadataOrThrow(constructor, methodKey);
+): T[K] extends (...args: any[]) => infer R ? R : never {
+  const metadata = getMethodInjectMetadata(constructor, methodKey);
   if (typeof target === 'undefined') {
     target = container.get(constructor);
   }
