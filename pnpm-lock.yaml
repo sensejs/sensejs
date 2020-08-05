@@ -125,7 +125,7 @@ importers:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
     specifiers:
       '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.5.2'
+      '@sensejs/utility': 'workspace:^0.6.0'
       rxjs: ^6.5.5
       tslib: 2.0.0
   packages/http:
@@ -144,7 +144,7 @@ importers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^9.1.0
       '@sensejs/core': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.5.2'
+      '@sensejs/utility': 'workspace:^0.6.0'
       koa: ^2.13.0
       koa-bodyparser: ^4.3.0
       koa-qs: ^3.0.0
@@ -161,9 +161,9 @@ importers:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
     specifiers:
       '@sensejs/core': 'workspace:*'
-      '@sensejs/kafkajs-standalone': 'workspace:^0.5.2'
+      '@sensejs/kafkajs-standalone': 'workspace:^0.6.0'
       '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.5.2'
+      '@sensejs/utility': 'workspace:^0.6.0'
       lodash: ^4.17.15
       tslib: 2.0.0
   packages/kafkajs-standalone:
@@ -178,7 +178,7 @@ importers:
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.5.2'
+      '@sensejs/utility': 'workspace:^0.6.0'
       long: ^4.0.0
       rxjs: ^6.5.5
       tslib: 2.0.0
@@ -218,7 +218,7 @@ importers:
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.5.2'
+      '@sensejs/utility': 'workspace:^0.6.0'
       tslib: 2.0.0
   packages/utility:
     dependencies:

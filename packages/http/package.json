@@ -21,7 +21,7 @@
   "dependencies": {
     "@koa/cors": "^3.1.0",
     "@koa/router": "^9.1.0",
-    "@sensejs/utility": "workspace:^0.5.2",
+    "@sensejs/utility": "workspace:^0.6.0",
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0",
     "koa-qs": "^3.0.0",
@@ -32,7 +32,7 @@
     "@sensejs/core": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "^0.5.0",
+    "@sensejs/core": "workspace:^0.6.0",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13"
   },
