@@ -5,7 +5,7 @@ import {ComponentScope} from './interfaces';
 export class BackgroundTaskQueue {
   private taskFinished = Promise.resolve<unknown>(undefined);
 
-  dispatch(task: Promise<unknown> | (() => Promise<unknown>)) {
+  dispatch(task: Promise<unknown> | (() => Promise<unknown>)): void {
     if (typeof task === 'function') {
       this.taskFinished = this.taskFinished.then(() => task().catch(() => void 0));
     } else {
@@ -13,15 +13,15 @@ export class BackgroundTaskQueue {
     }
   }
 
-  waitAllTaskFinished() {
-    return this.taskFinished;
+  async waitAllTaskFinished(): Promise<void> {
+    await this.taskFinished;
   }
 }
 
 export class ProcessManager {
   constructor(private shutdownRoutine: (e?: Error) => void) {}
 
-  shutdown(e?: Error) {
+  shutdown(e?: Error): void {
     this.shutdownRoutine(e);
   }
 }

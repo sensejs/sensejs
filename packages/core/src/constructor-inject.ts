@@ -16,15 +16,14 @@ export function ensureConstructorInjectMetadata(target: Class): ConstructorInjec
   let metadata = getConstructorInjectMetadata(target);
   if (!metadata) {
     metadata = {
-      transformers: []
+      transformers: [],
     };
     Reflect.defineMetadata(CONSTRUCTOR_INJECT_KEY, metadata, target);
   }
   return metadata;
 }
 
-
-export function decorateInjectedConstructorParam(target: Class, index: number, transformer?: Transformer) {
+export function decorateInjectedConstructorParam(target: Class, index: number, transformer?: Transformer): void {
   const metadata = ensureConstructorInjectMetadata(target);
   metadata.transformers[index] = transformer;
 }
@@ -50,4 +49,3 @@ export function createConstructorArgumentTransformerProxy<T>(
   copyMetadata(proxy, target);
   return proxy;
 }
-

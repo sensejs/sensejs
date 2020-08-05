@@ -4,16 +4,12 @@ import {Subject} from 'rxjs';
 import {composeRequestInterceptor, RequestContext, RequestInterceptor} from './interceptor';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
 import {Container} from 'inversify';
-import {Inject} from './decorators';
+import {Inject, InjectionDecorator} from './decorators';
 import {invokeMethod} from './method-inject';
 import {ModuleScanner} from './module-scanner';
 
 export interface EventChannelSubscription {
   unsubscribe(): void;
-}
-
-export interface EventChannelAnnouncer<T> {
-  (payload: T): Promise<void>;
 }
 
 interface EventMessenger<T, Context> {
@@ -60,7 +56,7 @@ export class EventBusImplement {
     symbol: ServiceIdentifier,
     payload: T,
     context?: Context,
-  ) {
+  ): Promise<void> {
     const subject = this.ensureEventChannel(channel);
     const consumePromises: Promise<void>[] = [];
     subject.next({
@@ -131,7 +127,7 @@ function getSubscribeEventControllerMetadata(target: Constructor): SubscribeEven
 }
 
 export function SubscribeEventController(option: SubscribeEventControllerOption = {}) {
-  return (constructor: Constructor) => {
+  return (constructor: Constructor): void => {
     Component()(constructor);
     setSubscribeEventControllerMetadata(constructor, {
       interceptors: option.interceptors ?? [],
@@ -141,11 +137,11 @@ export function SubscribeEventController(option: SubscribeEventControllerOption 
 }
 
 /**
- *
+ * Mark an method as event subscriber
  * @decorator
  */
 export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubscriptionOption = {}) {
-  return <P extends {}>(prototype: P, name: keyof P & (string | symbol)) => {
+  return <P extends {}>(prototype: P, name: keyof P & (string | symbol)): void => {
     const metadata: SubscribeEventMetadata<P> = {
       prototype,
       name,
@@ -231,7 +227,7 @@ class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
   }
 }
 
-export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>) {
+export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>): InjectionDecorator {
   if (typeof identifier !== 'undefined') {
     return Inject(EventAnnouncer, {
       transform: (eventBus) => (payload: T) => eventBus.announceEvent(identifier, payload),

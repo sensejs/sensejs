@@ -150,7 +150,7 @@ export function MethodInject<T extends {}, R = T>(
   target: ServiceIdentifier<T>,
   option: MethodParameterInjectOption<T, R> = {},
 ) {
-  return <P extends {}, K extends keyof P>(prototype: P, methodKey: K, paramIndex: number) => {
+  return <P extends {}, K extends keyof P>(prototype: P, methodKey: K, paramIndex: number): void => {
     const metadata = ensureMethodInjectMetadata(prototype, methodKey);
     if (metadata.paramsMetadata[paramIndex]) {
       throw new MethodParamDecorateError();

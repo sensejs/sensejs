@@ -35,6 +35,9 @@ export interface ModuleMetadata<T = {}> extends Required<ModuleOption> {
 
 const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
 
+/**
+ * @private
+ */
 export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> {
   const result = Reflect.getMetadata(MODULE_REFLECT_SYMBOL, target);
   if (!result) {
@@ -43,7 +46,10 @@ export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> 
   return result;
 }
 
-export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMetadata<T>) {
+/**
+ * @private
+ */
+export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMetadata<T>): void {
   decorate(injectable(), module);
 
   for (const dependency of metadata.requires) {
@@ -67,13 +73,17 @@ function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: s
   return Array.isArray(lifecycleMethods) ? lifecycleMethods : [];
 }
 
+export interface ModuleClassDecorator {
+  <T extends {}>(constructor: Constructor<T>): Constructor<T>;
+}
+
 /**
  * Decorator for marking a constructor as a module
  *
  * @param option
  * @decorator
  */
-export function ModuleClass(option: ModuleOption = {}) {
+export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
   const requires = option.requires || [];
   const constants = option.constants ?? [];
   const components = option.components ?? [];
@@ -96,7 +106,11 @@ export function ModuleClass(option: ModuleOption = {}) {
   };
 }
 
-function defineModuleLifecycleMetadata(metadataKey: symbol) {
+export interface ModuleLifecycleMethodDecorator {
+  <T extends {}>(prototype: T, name: keyof T, propertyDescriptor: PropertyDescriptor): void;
+}
+
+function defineModuleLifecycleMetadata(metadataKey: symbol): ModuleLifecycleMethodDecorator {
   return <T extends {}>(prototype: T, name: keyof T, propertyDescriptor: PropertyDescriptor): void => {
     const value = propertyDescriptor.value;
     if (typeof value === 'function') {
@@ -113,14 +127,14 @@ function defineModuleLifecycleMetadata(metadataKey: symbol) {
 /**
  * Decorator for marking a method function to be called when module is created
  */
-export function OnModuleCreate() {
+export function OnModuleCreate(): ModuleLifecycleMethodDecorator {
   return defineModuleLifecycleMetadata(ON_MODULE_CREATE);
 }
 
 /**
  * Decorator for marking a method function to be called when module is destroyed
  */
-export function OnModuleDestroy() {
+export function OnModuleDestroy(): ModuleLifecycleMethodDecorator {
   return defineModuleLifecycleMetadata(ON_MODULE_DESTROY);
 }
 

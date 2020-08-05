@@ -4,10 +4,10 @@ import {Constructor} from './interfaces';
 export class ModuleScanner {
   public constructor(private entryModule: Constructor) {}
 
-  scanModule(callback: (metadata: ModuleMetadata) => void) {
+  scanModule(callback: (metadata: ModuleMetadata) => void): void {
     const visitedModules = new Set<Constructor>();
     const queue: Constructor[] = [this.entryModule];
-    for (; ;) {
+    for (;;) {
       const moduleToVisit = queue.pop();
       if (typeof moduleToVisit === 'undefined') {
         return;

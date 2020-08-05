@@ -60,7 +60,7 @@ export function Optional(): InjectionDecorator {
 
 export interface InjectionConstraintDecorator extends ConstructorParamDecorator, MethodParamDecorator {}
 
-export function Tagged(key: string | number | symbol, value: any): InjectionDecorator {
+export function Tagged(key: string | number | symbol, value: unknown): InjectionDecorator {
   const decorator = tagged(key, value) as ParameterDecorator;
   return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {

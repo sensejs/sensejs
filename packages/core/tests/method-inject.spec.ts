@@ -7,7 +7,6 @@ import {
   MethodParamInjectError,
   validateMethodInjectMetadata,
 } from '../src';
-import {exhaust} from 'rxjs/operators';
 
 describe('@Inject', () => {
   test('param binding', () => {
