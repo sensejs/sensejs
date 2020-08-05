@@ -92,7 +92,10 @@ export class ApplicationRunner {
     return merge(
       from(moduleRoot.start()).pipe(
         mergeMap(() => of<ExitOption>()),
-        catchError(() => of(this.runOption.errorExitOption)),
+        catchError((e) => {
+          this.logger.error('Error occurred while starting up:', e);
+          return of(this.runOption.errorExitOption);
+        }),
       ),
     );
   }
@@ -101,7 +104,10 @@ export class ApplicationRunner {
     return merge(
       from(moduleRoot.stop()).pipe(
         mapTo(exitOption.exitCode),
-        catchError(() => of(this.runOption.errorExitOption.exitCode)),
+        catchError((e) => {
+          this.logger.error('Error occurred while shutting down:', e);
+          return of(this.runOption.errorExitOption.exitCode);
+        }),
         timeout(exitOption.timeout),
         catchError(() => of(this.runOption.forcedExitOption.forcedExitCode)),
       ),
@@ -125,7 +131,7 @@ export class ApplicationRunner {
 
     const subscription = uncaughtErrorObserver.subscribe({
       next: (e) => {
-        this.logger.error('Going to quit due to uncaught error: ', e);
+        this.logger.error('Going to quit due to uncaught error:', e);
         this.stoppedSubject.next(this.runOption.errorExitOption);
         this.stoppedSubject.complete();
       },
@@ -143,6 +149,9 @@ export class ApplicationRunner {
     const moduleRoot = new ModuleRoot(
       ApplicationRunnerModule,
       new ProcessManager((e?: Error) => {
+        if (e) {
+          this.logger.info('Requested to shutdown due to error occurred: ', e);
+        }
         this.stoppedSubject.next(e ? this.runOption.errorExitOption : this.runOption.normalExitOption);
         this.stoppedSubject.complete();
       }),
@@ -160,7 +169,9 @@ export class ApplicationRunner {
       new Observable<ExitOption>((subscriber) =>
         merge(
           from(moduleRoot.run('entry')).pipe(
-            catchError(() => {
+            catchError((e) => {
+              this.logger.error('Error occurred while running:', e);
+              this.logger.error('Going to quit.');
               return of(this.runOption.errorExitOption);
             }),
           ),
@@ -216,7 +227,7 @@ export class ApplicationRunner {
 let entryPointCalled = false;
 
 export function EntryPoint(runOption: Partial<RunOption> = {}) {
-  return (moduleConstructor: Constructor) => {
+  return (moduleConstructor: Constructor): void => {
     if (entryPointCalled) {
       throw new Error('only one entry point is allowed');
     }
