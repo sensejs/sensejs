@@ -58,10 +58,41 @@ export const defaultRunOption: RunOption = {
   onExit: (exitCode) => process.exit(exitCode),
 };
 
+interface EntryPointModule {
+  main(): Promise<ExitOption>;
+}
+
 export class ApplicationRunner {
   private runPromise?: Promise<void>;
   private logger: Logger = this.runOption.logger;
+
   private stoppedSubject = new Subject<ExitOption>();
+  private processManager = new ProcessManager((e?: Error) => {
+    if (e) {
+      this.logger.info('Requested to shutdown due to error occurred: ', e);
+    }
+    this.stoppedSubject.next(e ? this.runOption.errorExitOption : this.runOption.normalExitOption);
+    this.stoppedSubject.complete();
+  });
+
+  private exitSignalObservables = Object.entries(this.runOption.exitSignals).map(([signal, partialExitOption]) => {
+    const exitOption: ExitOption = Object.assign({}, this.runOption.normalExitOption, partialExitOption);
+    return fromEvent(this.process, signal, {once: true}).pipe(
+      mergeMap(() => this.createForcedExitObservable(signal, exitOption)),
+    );
+  });
+
+  private exitSignalObservable = merge(...this.exitSignalObservables.map((o) => o.pipe(first()))).pipe(first());
+
+  private forcedExitSignalObservable = merge(...this.exitSignalObservables.map((o) => o.pipe(skip(1)))).pipe(
+    first(),
+    mapTo(this.runOption.forcedExitOption.forcedExitCode),
+  );
+
+  private uncaughtErrorObservable = merge(
+    fromEvent(this.process, 'uncaughtException'),
+    fromEvent(this.process, 'unhandledRejection'),
+  ).pipe(mapTo(this.runOption.errorExitOption.exitCode));
 
   constructor(
     private process: NodeJS.EventEmitter,
@@ -88,7 +119,7 @@ export class ApplicationRunner {
     return this.runPromise;
   }
 
-  private performStart<T>(moduleRoot: ModuleRoot<T>): Observable<ExitOption> {
+  private getStartupObservable(moduleRoot: ModuleRoot<EntryPointModule>): Observable<ExitOption> {
     return merge(
       from(moduleRoot.start()).pipe(
         mergeMap(() => of<ExitOption>()),
@@ -115,60 +146,64 @@ export class ApplicationRunner {
     ).pipe(first());
   }
 
-  private async performRun() {
+  private createApplicationRunnerModule(): Constructor<EntryPointModule> {
     const stoppedPromise = this.stoppedSubject.toPromise();
-    const uncaughtErrorObserver = merge(
-      fromEvent(this.process, 'uncaughtException'),
-      fromEvent(this.process, 'unhandledRejection'),
-    ).pipe(mapTo(this.runOption.errorExitOption.exitCode));
-    const warningSubscriber = fromEvent(this.process, 'warning').subscribe({
-      next: (e) => {
-        if (this.runOption.printWarning) {
-          this.logger.warn('Warning: ', e);
-        }
-      },
-    });
-
-    const subscription = uncaughtErrorObserver.subscribe({
-      next: (e) => {
-        this.logger.error('Going to quit due to uncaught error:', e);
-        this.stoppedSubject.next(this.runOption.errorExitOption);
-        this.stoppedSubject.complete();
-      },
-    });
 
     @ModuleClass({
       requires: [this.module],
     })
-    class ApplicationRunnerModule {
-      entry() {
+    class ApplicationRunnerModule implements EntryPointModule {
+      main() {
         return stoppedPromise;
       }
     }
 
-    const moduleRoot = new ModuleRoot(
-      ApplicationRunnerModule,
-      new ProcessManager((e?: Error) => {
-        if (e) {
-          this.logger.info('Requested to shutdown due to error occurred: ', e);
-        }
-        this.stoppedSubject.next(e ? this.runOption.errorExitOption : this.runOption.normalExitOption);
-        this.stoppedSubject.complete();
+    return ApplicationRunnerModule;
+  }
+
+  private async performRun() {
+    const moduleRoot = new ModuleRoot(this.createApplicationRunnerModule(), this.processManager);
+
+    const warningSubscriber = this.getWarningSubscriber();
+    const uncaughtErrorSubscriber = this.getUncaughtErrorSubscriber(this.uncaughtErrorObservable);
+    const shutdownSignalSubscriber = this.getShutdownSignalSubscriber(this.exitSignalObservable);
+
+    const startupObservable = this.getStartupObservable(moduleRoot);
+    const runningObservable = this.getRunningObservable(startupObservable, moduleRoot);
+    const shutdownObservable = this.getShutdownSubscriber(runningObservable, moduleRoot, this.uncaughtErrorObservable);
+
+    try {
+      const exitCode = await merge(shutdownObservable, this.forcedExitSignalObservable).pipe(first()).toPromise();
+      this.runOption.onExit(exitCode);
+    } finally {
+      uncaughtErrorSubscriber.unsubscribe();
+      shutdownSignalSubscriber.unsubscribe();
+      warningSubscriber.unsubscribe();
+    }
+  }
+
+  private getShutdownSubscriber(
+    runningProcessObservable: Observable<ExitOption>,
+    moduleRoot: ModuleRoot<EntryPointModule>,
+    uncaughtErrorObserver: Observable<number>,
+  ) {
+    return runningProcessObservable.pipe(
+      first(),
+      mergeMap((exitOption) => {
+        return this.performStop(moduleRoot, exitOption, uncaughtErrorObserver);
       }),
     );
-    const [exitSignalObservable, forcedExitSignalObservable] = this.createExitSignalObservable();
-    const signalSubscription = exitSignalObservable.subscribe({
-      next: (exitOption) => {
-        this.stoppedSubject.next(exitOption);
-        this.stoppedSubject.complete();
-      },
-    });
-    const startupProcessSubscriber = this.performStart(moduleRoot);
-    const subscriber = concat(
-      startupProcessSubscriber,
+  }
+
+  private getRunningObservable(
+    startupProcessObservable: Observable<ExitOption>,
+    moduleRoot: ModuleRoot<EntryPointModule>,
+  ) {
+    return concat(
+      startupProcessObservable,
       new Observable<ExitOption>((subscriber) =>
         merge(
-          from(moduleRoot.run('entry')).pipe(
+          from(moduleRoot.run('main')).pipe(
             catchError((e) => {
               this.logger.error('Error occurred while running:', e);
               this.logger.error('Going to quit.');
@@ -178,49 +213,44 @@ export class ApplicationRunner {
         ).subscribe(subscriber),
       ),
     );
-    const runningProcessSubscriber = subscriber.pipe(
-      first(),
-      mergeMap((exitOption) => {
-        return this.performStop(moduleRoot, exitOption, uncaughtErrorObserver);
-      }),
-      first(),
-    );
-    try {
-      const exitCode = await Promise.race([
-        runningProcessSubscriber.toPromise(),
-        forcedExitSignalObservable.pipe(mapTo(this.runOption.forcedExitOption.forcedExitCode)).toPromise(),
-      ]);
-      this.runOption.onExit(exitCode);
-    } finally {
-      subscription.unsubscribe();
-      signalSubscription.unsubscribe();
-      warningSubscriber.unsubscribe();
-    }
   }
 
-  private createExitSignalObservable(): [Observable<ExitOption>, Observable<ExitOption>] {
-    const observers = Object.entries(this.runOption.exitSignals).map(([signal, partialExitOption]) => {
-      const exitOption: ExitOption = Object.assign({}, this.runOption.normalExitOption, partialExitOption);
-      return fromEvent(this.process as NodeJS.EventEmitter, signal, {once: true}).pipe(
-        mergeMap(
-          (): Observable<ExitOption> => {
-            this.logger.info('Receive signal %s, going to quit', signal);
-            const result = of(exitOption);
-            if (!exitOption.forcedExitWhenRepeated) {
-              return result;
-            }
-            return concat(
-              result,
-              fromEvent(this.process as NodeJS.EventEmitter, signal, {once: true}).pipe(mapTo(exitOption)),
-            );
-          },
-        ),
-      );
+  private getShutdownSignalSubscriber(exitSignalObservable: Observable<ExitOption>) {
+    return exitSignalObservable.subscribe({
+      next: (exitOption) => {
+        this.stoppedSubject.next(exitOption);
+        this.stoppedSubject.complete();
+      },
     });
-    return [
-      merge(...observers.map((o) => o.pipe(first()))).pipe(first()),
-      merge(...observers.map((o) => o.pipe(skip(1)))).pipe(first()),
-    ];
+  }
+
+  private getUncaughtErrorSubscriber(uncaughtErrorObserver: Observable<number>) {
+    return uncaughtErrorObserver.subscribe({
+      next: (e) => {
+        this.logger.error('Going to quit due to uncaught error:', e);
+        this.stoppedSubject.next(this.runOption.errorExitOption);
+        this.stoppedSubject.complete();
+      },
+    });
+  }
+
+  private getWarningSubscriber() {
+    return fromEvent(this.process, 'warning').subscribe({
+      next: (e) => {
+        if (this.runOption.printWarning) {
+          this.logger.warn('Warning: ', e);
+        }
+      },
+    });
+  }
+
+  private createForcedExitObservable(signal: string, exitOption: ExitOption): Observable<ExitOption> {
+    this.logger.info('Receive signal %s, going to quit', signal);
+    const result = of(exitOption);
+    if (!exitOption.forcedExitWhenRepeated) {
+      return result;
+    }
+    return concat(result, fromEvent(this.process as NodeJS.EventEmitter, signal, {once: true}).pipe(mapTo(exitOption)));
   }
 }
 
