@@ -1,4 +1,4 @@
-import {Container, inject, injectable} from 'inversify';
+import {Container} from 'inversify';
 import {composeRequestInterceptor, Inject, RequestContext, RequestInterceptor, ServiceIdentifier} from '../src';
 
 const FOO_SYMBOL = Symbol('FOO_SYMBOL'),

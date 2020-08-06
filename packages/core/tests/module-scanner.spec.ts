@@ -1,8 +1,6 @@
-import {createModule, getModuleMetadata, ModuleRoot} from '../src';
-import {ModuleScanner} from '../src/module-scanner';
+import {createModule, getModuleMetadata, ModuleScanner} from '../src';
 
 test('ModuleScanner', () => {
-
   const X = createModule();
   const Y = createModule({requires: [X]});
   const Z = createModule({requires: [X, Y]});
