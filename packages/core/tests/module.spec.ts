@@ -8,6 +8,7 @@ import {
   ModuleClass,
   ModuleOption,
   ModuleRoot,
+  ModuleShutdownError,
   Named,
   OnModuleCreate,
   OnModuleDestroy,
@@ -223,6 +224,55 @@ describe('Module resolve', () => {
 });
 
 describe('Module Root', () => {
+  class MyError extends Error {}
+
+  test('startup error', async () => {
+    @ModuleClass()
+    class A {
+      @OnModuleCreate()
+      onModuleCreate() {
+        throw new MyError();
+      }
+
+      main() {}
+    }
+
+    await expect(() => ModuleRoot.run(A, 'main')).rejects.toBeInstanceOf(MyError);
+  });
+
+  test('run error', async () => {
+    @ModuleClass()
+    class A {
+      main() {
+        throw new MyError();
+      }
+    }
+
+    await expect(() => ModuleRoot.run(A, 'main')).rejects.toBeInstanceOf(MyError);
+  });
+
+  test('shutdown error', async () => {
+    class ShutdownError extends Error {}
+
+    @ModuleClass()
+    class A {
+      main() {
+        throw new MyError();
+      }
+
+      @OnModuleDestroy()
+      onModuleCreate() {
+        throw new ShutdownError();
+      }
+    }
+
+    await expect(() => ModuleRoot.run(A, 'main')).rejects.toBeInstanceOf(ModuleShutdownError);
+    await expect(() => ModuleRoot.run(A, 'main')).rejects.toMatchObject({
+      error: expect.any(ShutdownError),
+      nestedError: expect.any(MyError),
+    });
+  });
+
   test('lifecycle', async () => {
     const xOnCreateSpy = jest.fn(),
       xOnDestroySpy = jest.fn();

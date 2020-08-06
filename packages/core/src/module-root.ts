@@ -12,13 +12,6 @@ export class ModuleShutdownError extends Error {
   }
 }
 
-export class RunModuleError extends Error {
-  constructor(readonly error: unknown, readonly nestedError?: unknown) {
-    super(`Failed to run module, error: ${error}`);
-    Error.captureStackTrace(this, RunModuleError);
-  }
-}
-
 export class ModuleRoot<T extends {} = {}> {
   readonly container: Container;
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
@@ -45,7 +38,7 @@ export class ModuleRoot<T extends {} = {}> {
       await moduleRoot.start();
       await moduleRoot.run(method);
     } catch (e) {
-      error = new RunModuleError(e, error);
+      error = e;
     } finally {
       await moduleRoot.stop().catch((e) => {
         error = new ModuleShutdownError(e, error);
