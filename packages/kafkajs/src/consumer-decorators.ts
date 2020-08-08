@@ -60,7 +60,7 @@ interface InjectedSubscribeTopicDecoratorOption {
 }
 
 export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
-  return <T extends {}>(prototype: T, method: keyof T) => {
+  return <T extends {}>(prototype: T, method: keyof T): void => {
     const targetMethod = prototype[method];
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
@@ -77,7 +77,7 @@ export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
 }
 
 export function SubscribeController(option: SubscribeControllerOption = {}) {
-  return (constructor: Constructor<{}>) => {
+  return (constructor: Constructor<{}>): void => {
     const {interceptors = [], labels} = option;
     const metadata: SubscribeControllerMetadata = {
       target: constructor,

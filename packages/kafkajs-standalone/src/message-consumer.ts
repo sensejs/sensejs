@@ -44,7 +44,7 @@ export class MessageConsumer {
     return this;
   }
 
-  async start() {
+  async start(): Promise<void> {
     if (this.startedPromise) {
       return this.startedPromise;
     }
@@ -52,7 +52,7 @@ export class MessageConsumer {
     return this.startedPromise;
   }
 
-  async stop() {
+  async stop(): Promise<void> {
     if (this.stoppedPromise) {
       return this.stoppedPromise;
     }
@@ -77,8 +77,10 @@ export class MessageConsumer {
       await admin.connect();
       const metadata = await admin.fetchTopicMetadata({topics});
 
-      const totalPartitions = metadata.topics
-        .reduce((result, topicMetadata) => result + topicMetadata.partitions.length, 0);
+      const totalPartitions = metadata.topics.reduce(
+        (result, topicMetadata) => result + topicMetadata.partitions.length,
+        0,
+      );
 
       this.runPromise = this.consumer.run({
         autoCommit: true,
@@ -121,9 +123,7 @@ export class MessageConsumer {
 
     await this.processBatch(
       async (message: KafkaJsMessage) => {
-        await consumeOption.consumer(
-          {topic, partition, ...message},
-        );
+        await consumeOption.consumer({topic, partition, ...message});
         payload.resolveOffset(message.offset);
         await payload.commitOffsetsIfNecessary();
       },

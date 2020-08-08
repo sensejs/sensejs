@@ -1,6 +1,5 @@
 import {from, Observable, Subject, Subscriber, Subscription, zip} from 'rxjs';
 
-
 export class WorkerSynchronizer<T = void> {
   private subscription: Subscription;
   private cancellationSubscriber?: Subscriber<void>;
@@ -13,9 +12,11 @@ export class WorkerSynchronizer<T = void> {
     this.subscription = cancellationSubject.subscribe({
       next: (acknowledgeCallback: (cancellationObservable: Observable<void>) => Observable<T>) => {
         this.subscription.unsubscribe();
-        this.synchronizer = acknowledgeCallback(new Observable<void>((subscriber) => {
-          this.cancellationSubscriber = subscriber;
-        })).toPromise();
+        this.synchronizer = acknowledgeCallback(
+          new Observable<void>((subscriber) => {
+            this.cancellationSubscriber = subscriber;
+          }),
+        ).toPromise();
       },
     });
     this.synchronizer = Promise.resolve(defaultValue);
@@ -29,22 +30,21 @@ export class WorkerSynchronizer<T = void> {
     return this.synchronizer;
   }
 
-  detach() {
+  detach(): void {
     this.subscription.unsubscribe();
   }
 }
 
 export class WorkerController<T = void> {
-
   private subject = new Subject<(observable: Observable<void>) => Observable<T>>();
 
   private inFlightSynchronization?: Function;
 
-  createSynchronizer(defaultValue: T) {
+  createSynchronizer(defaultValue: T): WorkerSynchronizer<T> {
     return new WorkerSynchronizer(this.subject, defaultValue);
   }
 
-  synchronize(onSynchronize: () => Promise<T>) {
+  synchronize(onSynchronize: () => Promise<T>): boolean {
     if (this.inFlightSynchronization) {
       return false;
     }

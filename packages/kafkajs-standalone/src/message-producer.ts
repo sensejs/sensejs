@@ -1,4 +1,4 @@
-import {Kafka, Offsets, Partitioners, Producer, ProducerConfig, TopicMessages} from 'kafkajs';
+import {Kafka, Offsets, Partitioners, Producer, ProducerConfig, RecordMetadata, TopicMessages} from 'kafkajs';
 import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, MessageKeyProvider} from './types';
 import {convertConnectOption, KafkaLogOption} from './utils';
 import {uuidV1} from '@sensejs/utility';
@@ -41,16 +41,14 @@ export class MessageProducer {
     const {
       connectOption,
       logOption,
-      producerOption: {
-        messageKeyProvider = defaultKeyPolicy, ...producerConfig
-      } = {},
+      producerOption: {messageKeyProvider = defaultKeyPolicy, ...producerConfig} = {},
     } = option;
     this.client = new Kafka(convertConnectOption(connectOption, logOption));
     this.messageKeyProvider = messageKeyProvider;
     this.producerConfig = producerConfig;
   }
 
-  async connect() {
+  async connect(): Promise<void> {
     if (this.connectPromise) {
       return this.connectPromise;
     }
@@ -77,7 +75,7 @@ export class MessageProducer {
    * @param topic
    * @param messages
    */
-  async send(topic: string, messages: KafkaMessage[] | KafkaMessage) {
+  async send(topic: string, messages: KafkaMessage[] | KafkaMessage): Promise<RecordMetadata[]> {
     if (!this.producer) {
       throw new Error('producer is not connected');
     }
@@ -99,19 +97,23 @@ export class MessageProducer {
    *
    * @beta
    */
-  async sendBatch(topicMessages: TopicMessages[], option: BatchSendOption = {}) {
+  async sendBatch(topicMessages: TopicMessages[], option: BatchSendOption = {}): Promise<RecordMetadata[]> {
     if (!this.producer) {
       throw new Error('producer is not connected');
     }
-    const promise = this.performSendBatch(this.producer, topicMessages.map((topicMessage) => {
-      const {topic, messages} = topicMessage;
-      return {topic, messages: this.provideKeyForMessage(topic, messages)};
-    }), option);
+    const promise = this.performSendBatch(
+      this.producer,
+      topicMessages.map((topicMessage) => {
+        const {topic, messages} = topicMessage;
+        return {topic, messages: this.provideKeyForMessage(topic, messages)};
+      }),
+      option,
+    );
     this.allMessageSend = this.allMessageSend.then(() => promise.catch(() => void 0));
     return promise;
   }
 
-  async disconnect() {
+  async disconnect(): Promise<void> {
     const producer = this.producer;
     if (!producer) {
       return this.disconnectPromise;
@@ -125,10 +127,12 @@ export class MessageProducer {
   }
 
   private provideKeyForMessage(topic: string, messages: KafkaMessage[]): KafkaMessage[] {
-    return messages.map((message): KafkaMessage => {
-      const {key, value, ...rest} = message;
-      return {key: key ?? this.messageKeyProvider(value, topic), value, ...rest};
-    });
+    return messages.map(
+      (message): KafkaMessage => {
+        const {key, value, ...rest} = message;
+        return {key: key ?? this.messageKeyProvider(value, topic), value, ...rest};
+      },
+    );
   }
 
   private async performSendBatch(producer: Producer, topicMessages: TopicMessages[], option: BatchSendOption) {
@@ -137,7 +141,7 @@ export class MessageProducer {
     }
     const sender = await producer.transaction();
     try {
-      await sender.sendBatch({...this.option.sendOption, topicMessages});
+      const result = await sender.sendBatch({...this.option.sendOption, topicMessages});
       if (option.transactionalCommit) {
         await sender.sendOffsets({
           consumerGroupId: option.transactionalCommit.consumerGroupId,
@@ -145,6 +149,7 @@ export class MessageProducer {
         });
       }
       await sender.commit();
+      return result;
     } catch (e) {
       await sender.abort();
       throw e;
