@@ -1,4 +1,11 @@
-import {composeRequestInterceptor, Constructor, Deprecated, invokeMethod, ServiceIdentifier} from '@sensejs/core';
+import {
+  composeRequestInterceptor,
+  Constructor,
+  Deprecated,
+  invokeMethod,
+  RequestInterceptor,
+  ServiceIdentifier,
+} from '@sensejs/core';
 import {RequestListener} from 'http';
 import {Container} from 'inversify';
 import Koa from 'koa';
@@ -88,7 +95,7 @@ export class KoaHttpContext extends HttpContext {
     super();
   }
 
-  bindContextValue(key: any, value: any) {
+  bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
     this.container.bind(key).toConstantValue(value);
   }
 
@@ -97,7 +104,7 @@ export class KoaHttpContext extends HttpContext {
    * @param key
    */
   @Deprecated()
-  get<T>(key: ServiceIdentifier<T>) {
+  get<T>(key: ServiceIdentifier<T>): T {
     return this.container.get<T>(key);
   }
 }
@@ -128,22 +135,22 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return this;
   }
 
-  clearMiddleware() {
+  clearMiddleware(): this {
     this.middlewareList = [];
     return this;
   }
 
-  addMiddleware(middleware: Koa.Middleware) {
+  addMiddleware(middleware: Koa.Middleware): this {
     this.middlewareList.push(middleware);
     return this;
   }
 
-  setQueryStringParsingMode(mode: QueryStringParsingMode) {
+  setQueryStringParsingMode(mode: QueryStringParsingMode): this {
     this.queryStringParsingMode = mode;
     return this;
   }
 
-  setKoaBodyParserOption(option: KoaBodyParserOption) {
+  setKoaBodyParserOption(option: KoaBodyParserOption): this {
     this.bodyParserOption = option;
     return this;
   }
@@ -235,7 +242,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       childContainer.bind(Container).toConstantValue(childContainer);
       const context = new KoaHttpContext(childContainer, ctx);
       childContainer.bind(HttpContext).toConstantValue(context);
-      const interceptor = childContainer.get(composedInterceptor);
+      const interceptor: RequestInterceptor = childContainer.get(composedInterceptor);
       await interceptor.intercept(context, async () => {
         context.response.data = await invokeMethod(childContainer, targetConstructor, targetMethod);
       });

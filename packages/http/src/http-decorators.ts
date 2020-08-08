@@ -94,6 +94,10 @@ export function getRequestMappingMetadata(targetMethod: object, key: keyof any):
   return store.get(key);
 }
 
+export interface RequestMappingDecorator {
+  <T extends {}>(prototype: T, method: keyof T & string): void;
+}
+
 /**
  * RequestMapping decorator, mapping HTTP request into target method
  *
@@ -102,8 +106,12 @@ export function getRequestMappingMetadata(targetMethod: object, key: keyof any):
  * @param option
  * @decorator
  */
-export function RequestMapping(httpMethod: HttpMethod, path: string, option: RequestMappingOption = {}) {
-  return <T extends {}>(prototype: T, method: keyof T & string) => {
+export function RequestMapping(
+  httpMethod: HttpMethod,
+  path: string,
+  option: RequestMappingOption = {},
+): RequestMappingDecorator {
+  return <T extends {}>(prototype: T, method: keyof T & string): void => {
     validateMethodInjectMetadata(prototype, method);
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
@@ -119,7 +127,7 @@ export function RequestMapping(httpMethod: HttpMethod, path: string, option: Req
  * @param option
  * @decorator
  */
-export function GET(path: string, option?: RequestMappingOption) {
+export function GET(path: string, option?: RequestMappingOption): RequestMappingDecorator {
   return RequestMapping(HttpMethod.GET, path, option);
 }
 
@@ -129,7 +137,7 @@ export function GET(path: string, option?: RequestMappingOption) {
  * @param option
  * @decorator
  */
-export function POST(path: string, option?: RequestMappingOption) {
+export function POST(path: string, option?: RequestMappingOption): RequestMappingDecorator {
   return RequestMapping(HttpMethod.POST, path, option);
 }
 
@@ -139,7 +147,7 @@ export function POST(path: string, option?: RequestMappingOption) {
  * @param option
  * @decorator
  */
-export function PATCH(path: string, option?: RequestMappingOption) {
+export function PATCH(path: string, option?: RequestMappingOption): RequestMappingDecorator {
   return RequestMapping(HttpMethod.PATCH, path, option);
 }
 
@@ -149,7 +157,7 @@ export function PATCH(path: string, option?: RequestMappingOption) {
  * @param option
  * @decorator
  */
-export function DELETE(path: string, option?: RequestMappingOption) {
+export function DELETE(path: string, option?: RequestMappingOption): RequestMappingDecorator {
   return RequestMapping(HttpMethod.DELETE, path, option);
 }
 
@@ -159,7 +167,7 @@ export function DELETE(path: string, option?: RequestMappingOption) {
  * @param option
  * @decorator
  */
-export function PUT(path: string, option?: RequestMappingOption) {
+export function PUT(path: string, option?: RequestMappingOption): RequestMappingDecorator {
   return RequestMapping(HttpMethod.PUT, path, option);
 }
 
@@ -181,7 +189,7 @@ export function getHttpControllerMetadata(target: object): ControllerMetadata | 
  * @decorator
  */
 export function Controller(path: string, controllerOption: ControllerOption = {}) {
-  return (target: Constructor) => {
+  return (target: Constructor): void => {
     // Decorate target as a component
     Component()(target);
     const labels = controllerOption.labels;
