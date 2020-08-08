@@ -48,19 +48,19 @@ export class SenseLoggerBuilder extends LoggerBuilder {
     super();
   }
 
-  setLabel(label: string) {
+  setLabel(label: string): SenseLoggerBuilder {
     return new SenseLoggerBuilder(this.logTransports, label, this.traceId);
   }
 
-  setTraceId(traceId: string) {
+  setTraceId(traceId: string): SenseLoggerBuilder {
     return new SenseLoggerBuilder(this.logTransports, this.label, traceId);
   }
 
-  resetLogTransports() {
+  resetLogTransports(): SenseLoggerBuilder {
     return new SenseLoggerBuilder([], this.label, this.traceId);
   }
 
-  addLogTransports(transport: LogTransport) {
+  addLogTransports(transport: LogTransport): SenseLoggerBuilder {
     return new SenseLoggerBuilder(this.logTransports.concat([transport]), this.label, this.traceId);
   }
 

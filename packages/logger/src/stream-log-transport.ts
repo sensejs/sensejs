@@ -26,7 +26,7 @@ export class StreamLogTransport implements LogTransport {
     private readonly _transformer = defaultLogFormatter(_writeStream),
   ) {}
 
-  async write(content: RawLogData) {
+  async write(content: RawLogData): Promise<void> {
     if (this._levels.indexOf(content.level) < 0) {
       return Promise.resolve();
     }
@@ -61,9 +61,11 @@ export class StreamLogTransport implements LogTransport {
   }
 
   private checkStreamWritable() {
-    this._whenStreamDrained = new Promise((resolve) => this._writeStream.once('drain', () => {
-      this._streamWritable = true;
-      resolve();
-    }));
+    this._whenStreamDrained = new Promise((resolve) =>
+      this._writeStream.once('drain', () => {
+        this._streamWritable = true;
+        resolve();
+      }),
+    );
   }
 }

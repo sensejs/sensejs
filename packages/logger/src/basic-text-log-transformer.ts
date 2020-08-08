@@ -7,19 +7,19 @@ export abstract class BasicTextLogTransformer implements LogTransformer {
 
   abstract getMetadataView(): MetadataView[];
 
-  getEventMark(rawData: RawLogData) {
+  getEventMark(rawData: RawLogData): string {
     return '+';
   }
 
-  getContentSeparator(rawData: RawLogData) {
+  getContentSeparator(rawData: RawLogData): string {
     return '|';
   }
 
-  getMetadataSeparator(rawData: RawLogData) {
+  getMetadataSeparator(rawData: RawLogData): string {
     return ' ';
   }
 
-  format(rawData: RawLogData) {
+  format(rawData: RawLogData): Buffer {
     const metadataInfo = this.getMetadataView()
       .map((fn) => fn(rawData))
       .reduce(

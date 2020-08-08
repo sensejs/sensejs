@@ -1,4 +1,4 @@
-import {BasicTextLogTransformer} from './basic-text-log-transformer';
+import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer';
 import {LogLevel, RawLogData} from './definition';
 import {format} from 'util';
 
@@ -31,11 +31,11 @@ function plainTraceId(metadata: RawLogData) {
 }
 
 export class PlainTextLogTransformer extends BasicTextLogTransformer {
-  getMetadataView() {
+  getMetadataView(): MetadataView[] {
     return [plainIsoTimestamp, plainLevel, plainLogLabel, plainTraceId];
   }
 
-  contentFormatter(...messages: [unknown, ...unknown[]]) {
+  contentFormatter(...messages: [unknown, ...unknown[]]): string {
     return format(...messages);
   }
 }

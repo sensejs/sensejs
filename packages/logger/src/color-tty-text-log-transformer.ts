@@ -1,6 +1,6 @@
 import colors from 'colors/safe';
 import moment from 'moment';
-import {BasicTextLogTransformer} from './basic-text-log-transformer';
+import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer';
 import {LogLevel, RawLogData} from './definition';
 import {formatWithOptions} from 'util';
 
@@ -41,7 +41,7 @@ function underlinedTraceId(metadata: RawLogData) {
 }
 
 export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
-  getMetadataView() {
+  getMetadataView(): MetadataView[] {
     return [timestampColoredBySeverity, boldLogLabel, underlinedTraceId];
   }
 
@@ -53,7 +53,7 @@ export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
     return colors.grey(super.getContentSeparator(rawData));
   }
 
-  contentFormatter(...messages: [unknown, ...unknown[]]) {
+  contentFormatter(...messages: [unknown, ...unknown[]]): string {
     // @ts-ignore
     return formatWithOptions({colors: true}, ...messages);
   }
