@@ -113,12 +113,10 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
   private readonly globalInterceptors: Constructor<HttpInterceptor>[] = [];
   private readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   private middlewareList: Koa.Middleware[] = [];
-  private interceptors: Constructor<HttpInterceptor>[] = [];
   private bodyParserOption?: KoaBodyParserOption;
   private queryStringParsingMode: QueryStringParsingMode = 'simple';
 
   addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
-    this.interceptors = this.interceptors.concat(controllerMetadata.interceptors);
     const controllerRouteSpec: ControllerRouteSpec = {
       path: controllerMetadata.path,
       methodRouteSpecs: [],
@@ -153,16 +151,6 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
   setKoaBodyParserOption(option: KoaBodyParserOption): this {
     this.bodyParserOption = option;
     return this;
-  }
-
-  /**
-   *
-   * @deprecated
-   */
-  @Deprecated()
-  getAllInterceptors(): Constructor<HttpInterceptor>[] {
-    const allInterceptors = this.globalInterceptors.concat(this.interceptors);
-    return uniq(allInterceptors);
   }
 
   addGlobalInspector(inspector: Constructor<HttpInterceptor>): this {
@@ -206,7 +194,6 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     }
 
     const {httpMethod, path, interceptors} = requestMappingMetadata;
-    this.interceptors = this.interceptors.concat(interceptors);
 
     methodRoutSpecs.push({
       path,

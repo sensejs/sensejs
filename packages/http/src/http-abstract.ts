@@ -81,6 +81,4 @@ export abstract class HttpAdaptor {
   abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
 
   abstract build(appOption: HttpApplicationOption, container: Container): RequestListener;
-
-  abstract getAllInterceptors(): Constructor<HttpInterceptor>[];
 }
