@@ -1,6 +1,7 @@
 import {Container, decorate, inject, injectable} from 'inversify';
 import {Constructor, ServiceIdentifier} from './interfaces';
 import * as utility from '@sensejs/utility';
+import {composeRequestInterceptor, RequestContext, RequestInterceptor} from './interceptor';
 
 export class MethodParamDecorateError extends Error {}
 
@@ -163,4 +164,58 @@ export function MethodInject<T extends {}, R = T>(
       {transform: option.transform ? option.transform : (x: unknown) => x},
     );
   };
+}
+
+export interface MethodInvoker<X extends RequestContext> {
+  bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U): this;
+
+  invoke(context: X): Promise<void>;
+}
+
+export class MethodInvokerBuilder<X extends RequestContext> {
+  private constructor(private readonly interceptors: Constructor<RequestInterceptor<X>>[]) {}
+
+  static create<X extends RequestContext>(): MethodInvokerBuilder<X> {
+    return new MethodInvokerBuilder<X>([]);
+  }
+
+  addInterceptor(...interceptors: Constructor<RequestInterceptor<X>>[]): this {
+    this.interceptors.push(...interceptors);
+    return this;
+  }
+
+  clone(): MethodInvokerBuilder<X> {
+    return new MethodInvokerBuilder(Array.from(this.interceptors));
+  }
+
+  build<T extends {}, K extends keyof T>(
+    targetConstructor: Constructor<T>,
+    methodKey: K,
+  ): Constructor<MethodInvoker<X>> {
+    const interceptors = this.interceptors;
+
+    const MethodInvoker = class {
+      private readonly container: Container;
+
+      constructor(container: Container) {
+        this.container = container.createChild();
+      }
+
+      bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U) {
+        this.container.bind(serviceIdentifier).toConstantValue(x);
+        return this;
+      }
+
+      async invoke(context: X) {
+        this.container.bind(Container).toConstantValue(this.container);
+        const composedInterceptorConstructor = composeRequestInterceptor(this.container, interceptors);
+        const composedInterceptor = this.container.get(composedInterceptorConstructor);
+        composedInterceptor.intercept(context, async () => {
+          await invokeMethod(this.container, targetConstructor, methodKey);
+        });
+      }
+    };
+
+    return MethodInvoker;
+  }
 }
