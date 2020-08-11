@@ -292,19 +292,20 @@ const eventBusModule = createModule({
 });
 
 export function createEventSubscriptionModule(option: EventSubscriptionModuleOption = {}): Constructor {
-  const methodInvokerBuilder = MethodInvokerBuilder.create<EventSubscriptionContext>();
-  if (option.interceptors) {
-    methodInvokerBuilder.addInterceptor(...option.interceptors);
-  }
-
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
     private subscriptions: EventChannelSubscription[] = [];
+    private methodInvokerBuilder = MethodInvokerBuilder.create<EventSubscriptionContext>(this.container);
 
     constructor(
+      @Inject(Container) private container: Container,
       @Inject(ModuleScanner) private scanner: ModuleScanner,
       @Inject(EventBusImplement) private eventBus: EventBusImplement,
-    ) {}
+    ) {
+      if (option.interceptors) {
+        this.methodInvokerBuilder.addInterceptor(...option.interceptors);
+      }
+    }
 
     @OnModuleCreate()
     onModuleCreate() {
@@ -325,8 +326,6 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
     }
 
     private scanPrototype(constructor: Constructor, metadata: SubscribeEventControllerMetadata) {
-      const componentInvokerBuilder = methodInvokerBuilder.clone();
-      componentInvokerBuilder.addInterceptor(...metadata.interceptors);
       const subscribeEventMetadataList = Object.values(Object.getOwnPropertyDescriptors(constructor.prototype))
         .map((pd) => pd.value)
         .filter((value): value is Function => typeof value === 'function')
@@ -334,7 +333,11 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         .filter((value): value is SubscribeEventMetadata => typeof value !== 'undefined');
 
       subscribeEventMetadataList.forEach((subscribeEventMetadata) => {
-        this.setupEventSubscription(constructor, methodInvokerBuilder, subscribeEventMetadata);
+        this.setupEventSubscription(
+          constructor,
+          this.methodInvokerBuilder.clone().addInterceptor(...metadata.interceptors),
+          subscribeEventMetadata,
+        );
       });
     }
 
@@ -343,10 +346,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       methodInvokerBuilder: MethodInvokerBuilder<EventSubscriptionContext>,
       subscribeEventMetadata: SubscribeEventMetadata,
     ) {
-      const MethodInvoker = methodInvokerBuilder
-        .clone()
-        .addInterceptor(...subscribeEventMetadata.interceptors)
-        .build(constructor, subscribeEventMetadata.name);
+      methodInvokerBuilder = methodInvokerBuilder.clone().addInterceptor(...subscribeEventMetadata.interceptors);
 
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(
@@ -354,13 +354,14 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
           if (!subscribeEventMetadata.filter(messenger.payload)) {
             return;
           }
-
           const {acknowledge, container, payload, context} = messenger;
-          const childContainer = container.createChild();
           acknowledge(
-            new MethodInvoker(childContainer).invoke(
-              new EventSubscriptionContext(childContainer, identifier, payload, context),
-            ),
+            methodInvokerBuilder
+              .setContainer(container)
+              .build(constructor, subscribeEventMetadata.name)
+              .invoke({
+                contextFactory: (container) => new EventSubscriptionContext(container, identifier, payload, context),
+              }),
           );
         }),
       );

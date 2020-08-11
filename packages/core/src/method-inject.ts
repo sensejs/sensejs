@@ -169,14 +169,53 @@ export function MethodInject<T extends {}, R = T>(
 export interface MethodInvoker<X extends RequestContext> {
   bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U): this;
 
-  invoke(context: X): Promise<void>;
+  invoke(option: {
+    contextFactory: (container: Container) => X;
+    contextIdentifier?: ServiceIdentifier<X>;
+  }): Promise<void>;
 }
 
-export class MethodInvokerBuilder<X extends RequestContext> {
-  private constructor(private readonly interceptors: Constructor<RequestInterceptor<X>>[]) {}
+const MethodInvoker = class<X extends RequestContext, T extends {}, K extends keyof T> {
+  constructor(
+    private readonly container: Container,
+    private readonly interceptors: Constructor<RequestInterceptor<X>>[],
+    private readonly targetConstructor: Constructor<T>,
+    private readonly methodKey: K,
+  ) {
+    this.container.bind(Container).toConstantValue(this.container);
+  }
 
-  static create<X extends RequestContext>(): MethodInvokerBuilder<X> {
-    return new MethodInvokerBuilder<X>([]);
+  bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U) {
+    this.container.bind(serviceIdentifier).toConstantValue(x);
+    return this;
+  }
+
+  async invoke(option: {contextFactory: (container: Container) => X; contextIdentifier?: ServiceIdentifier<X>}) {
+    const context = option.contextFactory(this.container);
+    if (option.contextIdentifier) {
+      this.container.bind(option.contextIdentifier).toConstantValue(context);
+    }
+    const composedInterceptorConstructor = composeRequestInterceptor(this.container, this.interceptors);
+    const composedInterceptor = this.container.get(composedInterceptorConstructor);
+    await composedInterceptor.intercept(context, async () => {
+      await invokeMethod(this.container, this.targetConstructor, this.methodKey);
+    });
+  }
+};
+
+export class MethodInvokerBuilder<X extends RequestContext> {
+  private constructor(
+    private container: Container,
+    private readonly interceptors: Constructor<RequestInterceptor<X>>[],
+  ) {}
+
+  static create<X extends RequestContext>(container: Container): MethodInvokerBuilder<X> {
+    return new MethodInvokerBuilder<X>(container, []);
+  }
+
+  setContainer(container: Container) {
+    this.container = container;
+    return this;
   }
 
   addInterceptor(...interceptors: Constructor<RequestInterceptor<X>>[]): this {
@@ -185,37 +224,10 @@ export class MethodInvokerBuilder<X extends RequestContext> {
   }
 
   clone(): MethodInvokerBuilder<X> {
-    return new MethodInvokerBuilder(Array.from(this.interceptors));
+    return new MethodInvokerBuilder(this.container, Array.from(this.interceptors));
   }
 
-  build<T extends {}, K extends keyof T>(
-    targetConstructor: Constructor<T>,
-    methodKey: K,
-  ): {new (container: Container): MethodInvoker<X>} {
-    const interceptors = this.interceptors;
-
-    const MethodInvoker = class {
-      private readonly container: Container;
-
-      constructor(container: Container) {
-        this.container = container.createChild();
-      }
-
-      bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U) {
-        this.container.bind(serviceIdentifier).toConstantValue(x);
-        return this;
-      }
-
-      async invoke(context: X) {
-        this.container.bind(Container).toConstantValue(this.container);
-        const composedInterceptorConstructor = composeRequestInterceptor(this.container, interceptors);
-        const composedInterceptor = this.container.get(composedInterceptorConstructor);
-        composedInterceptor.intercept(context, async () => {
-          await invokeMethod(this.container, targetConstructor, methodKey);
-        });
-      }
-    };
-
-    return MethodInvoker;
+  build<T extends {}, K extends keyof T>(targetConstructor: Constructor<T>, methodKey: K): MethodInvoker<X> {
+    return new MethodInvoker(this.container, this.interceptors, targetConstructor, methodKey);
   }
 }
