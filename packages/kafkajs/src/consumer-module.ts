@@ -1,8 +1,7 @@
 import {
-  composeRequestInterceptor,
   createModule,
   Inject,
-  invokeMethod,
+  MethodInvokerBuilder,
   ModuleClass,
   ModuleOption,
   ModuleScanner,
@@ -22,7 +21,6 @@ import {
   getSubscribeControllerMetadata,
   getSubscribeTopicMetadata,
   SubscribeControllerMetadata,
-  SubscribeTopicMetadata,
   SubscribeTopicOption,
 } from './consumer-decorators';
 
@@ -57,6 +55,7 @@ function scanSubscriber(
     requires: [connectionModule],
   })
   class SubscriberScanModule {
+    private methodInvokerBuilder = MethodInvokerBuilder.create<ConsumerContext>(this.container);
     constructor(
       @Inject(Container) private container: Container,
       @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
@@ -87,6 +86,7 @@ function scanSubscriber(
     }
 
     private scanPrototypeMethod(component: Constructor, controllerMetadata: SubscribeControllerMetadata) {
+      const methodInvokerBuilder = this.methodInvokerBuilder.clone().addInterceptor(...controllerMetadata.interceptors);
       for (const [methodKey, propertyDescriptor] of Object.entries(
         Object.getOwnPropertyDescriptors(component.prototype),
       )) {
@@ -105,29 +105,24 @@ function scanSubscriber(
           throw new TypeError('subscribe topic must be a string');
         }
 
-        const consumeCallback = this.getConsumeCallback(controllerMetadata, subscribeMetadata, methodKey);
+        const consumeCallback = this.getConsumeCallback(
+          methodInvokerBuilder.clone().addInterceptor(...subscribeMetadata.interceptors),
+          controllerMetadata.target,
+          methodKey,
+        );
         this.messageConsumer.subscribe(subscribeOption.topic, consumeCallback, subscribeOption.fromBeginning);
       }
     }
 
     private getConsumeCallback<T>(
-      controllerMetadata: SubscribeControllerMetadata<T>,
-      subscribeMetadata: SubscribeTopicMetadata,
+      methodInvokerBuilder: MethodInvokerBuilder<ConsumerContext>,
+      target: Constructor<T>,
       method: keyof T,
     ) {
       return async (message: KafkaReceivedMessage) => {
-        const childContainer = this.container.createChild();
-        childContainer.bind(Container).toConstantValue(childContainer);
-        const composedInterceptor = composeRequestInterceptor(childContainer, [
-          ...(option.globalInterceptors ?? []),
-          ...controllerMetadata.interceptors,
-          ...subscribeMetadata.interceptors,
-        ]);
-        const context = new ConsumerContext(childContainer, message);
-        childContainer.bind(ConsumerContext).toConstantValue(context);
-        const interceptor = childContainer.get(composedInterceptor);
-        await interceptor.intercept(context, async () => {
-          await invokeMethod(childContainer, controllerMetadata.target, method);
+        await methodInvokerBuilder.build(target, method).invoke({
+          contextFactory: (container) => new ConsumerContext(container, message),
+          contextIdentifier: ConsumerContext,
         });
       };
     }
