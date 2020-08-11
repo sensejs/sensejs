@@ -59,7 +59,11 @@ function scanSubscriber(
     constructor(
       @Inject(Container) private container: Container,
       @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
-    ) {}
+    ) {
+      if (option.globalInterceptors) {
+        this.methodInvokerBuilder.addInterceptor(...option.globalInterceptors);
+      }
+    }
 
     @OnModuleCreate()
     async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
