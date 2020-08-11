@@ -228,6 +228,6 @@ export class MethodInvokerBuilder<X extends RequestContext> {
   }
 
   build<T extends {}, K extends keyof T>(targetConstructor: Constructor<T>, methodKey: K): MethodInvoker<X> {
-    return new MethodInvoker(this.container, this.interceptors, targetConstructor, methodKey);
+    return new MethodInvoker(this.container.createChild(), this.interceptors, targetConstructor, methodKey);
   }
 }
