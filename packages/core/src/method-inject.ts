@@ -191,7 +191,7 @@ export class MethodInvokerBuilder<X extends RequestContext> {
   build<T extends {}, K extends keyof T>(
     targetConstructor: Constructor<T>,
     methodKey: K,
-  ): Constructor<MethodInvoker<X>> {
+  ): {new (container: Container): MethodInvoker<X>} {
     const interceptors = this.interceptors;
 
     const MethodInvoker = class {

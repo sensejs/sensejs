@@ -1,11 +1,11 @@
 import {Component} from './component';
 import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
 import {Subject} from 'rxjs';
-import {composeRequestInterceptor, RequestContext, RequestInterceptor} from './interceptor';
+import {RequestContext, RequestInterceptor} from './interceptor';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
 import {Container} from 'inversify';
 import {Inject, InjectionDecorator} from './decorators';
-import {invokeMethod} from './method-inject';
+import {MethodInvokerBuilder} from './method-inject';
 import {ModuleScanner} from './module-scanner';
 
 export interface EventChannelSubscription {
@@ -292,6 +292,11 @@ const eventBusModule = createModule({
 });
 
 export function createEventSubscriptionModule(option: EventSubscriptionModuleOption = {}): Constructor {
+  const methodInvokerBuilder = MethodInvokerBuilder.create<EventSubscriptionContext>();
+  if (option.interceptors) {
+    methodInvokerBuilder.addInterceptor(...option.interceptors);
+  }
+
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
     private subscriptions: EventChannelSubscription[] = [];
@@ -320,6 +325,8 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
     }
 
     private scanPrototype(constructor: Constructor, metadata: SubscribeEventControllerMetadata) {
+      const componentInvokerBuilder = methodInvokerBuilder.clone();
+      componentInvokerBuilder.addInterceptor(...metadata.interceptors);
       const subscribeEventMetadataList = Object.values(Object.getOwnPropertyDescriptors(constructor.prototype))
         .map((pd) => pd.value)
         .filter((value): value is Function => typeof value === 'function')
@@ -327,20 +334,20 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         .filter((value): value is SubscribeEventMetadata => typeof value !== 'undefined');
 
       subscribeEventMetadataList.forEach((subscribeEventMetadata) => {
-        this.setupEventSubscription(constructor, metadata, subscribeEventMetadata);
+        this.setupEventSubscription(constructor, methodInvokerBuilder, subscribeEventMetadata);
       });
     }
 
     private setupEventSubscription(
       constructor: Constructor,
-      metadata: SubscribeEventControllerMetadata,
+      methodInvokerBuilder: MethodInvokerBuilder<EventSubscriptionContext>,
       subscribeEventMetadata: SubscribeEventMetadata,
     ) {
-      const interceptors = [
-        ...(option.interceptors ?? []),
-        ...metadata.interceptors,
-        ...subscribeEventMetadata.interceptors,
-      ];
+      const MethodInvoker = methodInvokerBuilder
+        .clone()
+        .addInterceptor(...subscribeEventMetadata.interceptors)
+        .build(constructor, subscribeEventMetadata.name);
+
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(
         this.eventBus.subscribe(identifier, (messenger) => {
@@ -350,16 +357,10 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
 
           const {acknowledge, container, payload, context} = messenger;
           const childContainer = container.createChild();
-          childContainer.bind(Container).toConstantValue(childContainer);
-
-          const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
-          const composedInterceptor = childContainer.get(composedInterceptorConstructor);
-
-          const subscriptionContext = new EventSubscriptionContext(childContainer, identifier, payload, context);
           acknowledge(
-            composedInterceptor.intercept(subscriptionContext, async () => {
-              await invokeMethod(childContainer, constructor, subscribeEventMetadata.name);
-            }),
+            new MethodInvoker(childContainer).invoke(
+              new EventSubscriptionContext(childContainer, identifier, payload, context),
+            ),
           );
         }),
       );
