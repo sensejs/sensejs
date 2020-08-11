@@ -12,13 +12,20 @@ export interface EventChannelSubscription {
   unsubscribe(): void;
 }
 
-interface EventMessenger<T, Context> {
-  symbol: ServiceIdentifier<T>;
-  payload: T;
-  context?: Context;
+interface EventMessenger {
+  /**
+   * @deprecated
+   */
+  payload?: unknown;
+  /**
+   * @deprecated
+   */
+  context: unknown;
+
+  container: Container;
 }
 
-interface AcknowledgeAwareEventMessenger<T, Context = unknown> extends EventMessenger<T, Context> {
+interface AcknowledgeAwareEventMessenger extends EventMessenger {
   acknowledge: (processPromise: Promise<void>) => void;
 }
 
@@ -48,19 +55,19 @@ export interface AnnounceEventOption<T, Context> {
 }
 
 @Component({scope: ComponentScope.SINGLETON})
-export class EventBusImplement {
-  private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger<any, any>>> = new Map();
+class EventBusImplement {
+  private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger>> = new Map();
 
   async announceEvent<T extends {}, Context>(
     channel: ServiceIdentifier,
-    symbol: ServiceIdentifier,
-    payload: T,
-    context?: Context,
+    container: Container,
+    payload?: unknown,
+    context?: unknown,
   ): Promise<void> {
     const subject = this.ensureEventChannel(channel);
     const consumePromises: Promise<void>[] = [];
     subject.next({
-      symbol,
+      container,
       payload,
       context,
       acknowledge: (p: Promise<void>) => consumePromises.push(p),
@@ -70,19 +77,19 @@ export class EventBusImplement {
 
   subscribe<T>(
     target: ServiceIdentifier<T>,
-    callback: (payload: AcknowledgeAwareEventMessenger<T>) => void,
+    callback: (payload: AcknowledgeAwareEventMessenger) => void,
   ): EventChannelSubscription {
     return this.ensureEventChannel(target).subscribe({
       next: callback,
     });
   }
 
-  private ensureEventChannel<T>(target: ServiceIdentifier<T>): Subject<AcknowledgeAwareEventMessenger<T>> {
+  private ensureEventChannel<T>(target: ServiceIdentifier<T>): Subject<AcknowledgeAwareEventMessenger> {
     let channel = this.channels.get(target);
     if (typeof channel !== 'undefined') {
       return channel;
     }
-    channel = new Subject<AcknowledgeAwareEventMessenger<T>>();
+    channel = new Subject<AcknowledgeAwareEventMessenger>();
     this.channels.set(target, channel);
     return channel;
   }
@@ -162,12 +169,12 @@ export interface EventSubscriptionModuleOption extends ModuleOption {
   matchLabels?: Set<string | symbol> | (string | symbol)[];
 }
 
-export class EventSubscriptionContext<Payload, Context = any> extends RequestContext {
+export class EventSubscriptionContext extends RequestContext {
   constructor(
     private container: Container,
     public readonly identifier: ServiceIdentifier,
-    public readonly payload: Payload,
-    public readonly context: Context,
+    public readonly payload: unknown,
+    public readonly context: unknown,
   ) {
     super();
     container.bind(EventSubscriptionContext).toConstantValue(this);
@@ -178,54 +185,97 @@ export class EventSubscriptionContext<Payload, Context = any> extends RequestCon
   }
 }
 
-export abstract class EventAnnouncer {
+export interface EventAnnouncer {
   /**
    * Announce event, payload can be injected using target as symbol
-   * @param target
+   * @param channel
    * @param payload
+   * @deprecated
    */
-  abstract announceEvent<T>(target: ServiceIdentifier<T>, payload: T): Promise<void>;
+  announceEvent<T>(channel: ServiceIdentifier<T>, payload: T): Promise<void>;
 
   /**
    * Announce event in a way that described by {AnnounceEventOption}
    * @param option
+   * @deprecated
    */
-  abstract announceEvent<T, Context>(option: AnnounceEventOption<T, Context>): Promise<void>;
+  announceEvent<T, Context>(option: AnnounceEventOption<T, Context>): Promise<void>;
+
+  bind<T>(target: ServiceIdentifier<T>, value: T): this;
+
+  announce(channel: ServiceIdentifier): Promise<void>;
+}
+
+export class EventAnnouncer {
+  private childContainer: Container;
+
+  constructor(private readonly container: Container, private readonly eventBus: EventBusImplement) {
+    this.childContainer = container.createChild();
+  }
+
+  private recreateContainer() {
+    const origin = this.childContainer;
+    this.childContainer = this.container.createChild();
+    return origin;
+  }
+
+  async announceEvent<T, Context>(
+    option: ServiceIdentifier<T> | AnnounceEventOption<T, Context>,
+    ...rest: T[]
+  ): Promise<void> {
+    let channel: ServiceIdentifier;
+    let symbol: ServiceIdentifier;
+    let payload: any;
+    let context: any;
+    if (typeof option === 'object') {
+      channel = option.channel;
+      payload = option.payload;
+      symbol = option.symbol ?? channel;
+      context = option.context;
+    } else {
+      channel = symbol = option;
+      payload = rest[0];
+    }
+    this.bind(symbol, payload);
+    const origin = this.recreateContainer();
+    await this.eventBus.announceEvent(channel, origin, payload, context);
+  }
+
+  bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this {
+    this.childContainer.bind(serviceIdentifier).toConstantValue(value);
+    return this;
+  }
+
+  async announce(channel: ServiceIdentifier): Promise<void> {
+    const origin = this.recreateContainer();
+    await this.eventBus.announceEvent(channel, origin);
+  }
 }
 
 @Component({scope: ComponentScope.SINGLETON})
 class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
-  private readonly eventAnnouncer: EventAnnouncer;
-
-  constructor(@Inject(EventBusImplement) implement: EventBusImplement) {
+  constructor(
+    @Inject(EventBusImplement) private eventBus: EventBusImplement,
+    @Inject(Container) private container: Container,
+  ) {
     super();
-    this.eventAnnouncer = new (class extends EventAnnouncer {
-      async announceEvent<T, Context>(
-        option: ServiceIdentifier<T> | AnnounceEventOption<T, Context>,
-        ...rest: T[]
-      ): Promise<void> {
-        let channel: ServiceIdentifier;
-        let symbol: ServiceIdentifier;
-        let payload: T;
-        let context = undefined;
-        if (typeof option === 'object') {
-          channel = option.channel;
-          payload = option.payload;
-          symbol = option.symbol ?? channel;
-          context = option.context;
-        } else {
-          channel = symbol = option;
-          payload = rest[0];
-        }
-        await implement.announceEvent(channel, symbol, payload, context);
-      }
-    })();
   }
 
   build() {
-    return this.eventAnnouncer;
+    return new EventAnnouncer(this.container, this.eventBus);
   }
 }
+
+/**
+ * Short for `Inject(EventAnnouncer)`
+ */
+export function InjectEventAnnouncer<T>(): InjectionDecorator;
+
+/**
+ * @param channel Channel to be announced
+ * @deprecated
+ */
+export function InjectEventAnnouncer<T>(channel: ServiceIdentifier): InjectionDecorator;
 
 export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>): InjectionDecorator {
   if (typeof identifier !== 'undefined') {
@@ -247,7 +297,6 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
     private subscriptions: EventChannelSubscription[] = [];
 
     constructor(
-      @Inject(Container) private container: Container,
       @Inject(ModuleScanner) private scanner: ModuleScanner,
       @Inject(EventBusImplement) private eventBus: EventBusImplement,
     ) {}
@@ -299,16 +348,14 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
             return;
           }
 
-          const childContainer = this.container.createChild();
+          const {acknowledge, container, payload, context} = messenger;
+          const childContainer = container.createChild();
           childContainer.bind(Container).toConstantValue(childContainer);
 
           const composedInterceptorConstructor = composeRequestInterceptor(childContainer, interceptors);
           const composedInterceptor = childContainer.get(composedInterceptorConstructor);
 
-          const {acknowledge, payload, symbol, context} = messenger;
           const subscriptionContext = new EventSubscriptionContext(childContainer, identifier, payload, context);
-          childContainer.bind<unknown>(symbol).toConstantValue(payload);
-
           acknowledge(
             composedInterceptor.intercept(subscriptionContext, async () => {
               await invokeMethod(childContainer, constructor, subscribeEventMetadata.name);

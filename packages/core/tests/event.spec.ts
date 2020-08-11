@@ -15,6 +15,7 @@ describe('Event subscribe and announce', () => {
   test('Subscribe', async () => {
     const spy = jest.fn();
     const spy2 = jest.fn();
+    const spy3 = jest.fn();
 
     class MockInterceptor extends RequestInterceptor {
       intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
@@ -33,6 +34,11 @@ describe('Event subscribe and announce', () => {
       bar2(@Inject('event') param: string) {
         spy2(param);
       }
+
+      @SubscribeEvent('channel')
+      channel(@Inject('a') a: any, @Inject('b') b: any) {
+        spy3(a, b);
+      }
     }
 
     @ModuleClass({
@@ -44,7 +50,10 @@ describe('Event subscribe and announce', () => {
       ],
     })
     class EntryModule {
-      async onModuleCreate(@InjectEventAnnouncer() announcer: EventAnnouncer) {
+      async onModuleCreate(
+        @InjectEventAnnouncer() announcer: EventAnnouncer,
+        @InjectEventAnnouncer('event') eventAnnouncer: (value: any) => void,
+      ) {
         await announcer.announceEvent('event', 'foo');
         expect(spy).not.toHaveBeenCalled();
         expect(spy2).toHaveBeenCalledWith('foo');
@@ -53,8 +62,10 @@ describe('Event subscribe and announce', () => {
           symbol: 'event',
           payload: 'bar',
         });
+        await announcer.bind('a', 1).bind('b', 2).announce('channel');
         expect(spy).toHaveBeenCalledWith('bar');
         expect(spy2).toHaveBeenLastCalledWith('bar');
+        expect(spy3).toHaveBeenCalledWith(1, 2);
       }
     }
 
