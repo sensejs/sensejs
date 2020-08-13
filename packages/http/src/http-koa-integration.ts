@@ -99,15 +99,6 @@ export class KoaHttpContext extends HttpContext {
   bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
     this.container.bind(key).toConstantValue(value);
   }
-
-  /**
-   * @deprecated
-   * @param key
-   */
-  @Deprecated()
-  get<T>(key: ServiceIdentifier<T>): T {
-    return this.container.get<T>(key);
-  }
 }
 
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
