@@ -45,6 +45,10 @@ export interface HttpRequest {
 
   readonly body?: unknown;
 
+  readonly rawBody: string | Buffer;
+
+  readonly address: string;
+
   readonly query?: unknown;
 
   readonly params: {

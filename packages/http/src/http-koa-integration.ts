@@ -20,7 +20,6 @@ import {
   HttpRequest,
   HttpResponse,
 } from './http-abstract';
-import {uniq} from 'lodash';
 import koaQs from 'koa-qs';
 import {ControllerMetadata, getRequestMappingMetadata, HttpMethod} from './http-decorators';
 import Router from '@koa/router';
@@ -47,11 +46,13 @@ export class KoaHttpContext extends HttpContext {
     return {
       query: context.request.query,
       body: request.body,
+      rawBody: request.rawBody,
       protocol: context.protocol,
       url: context.originalUrl,
       path: context.path,
       search: context.search,
       method: context.method,
+      address: context.request.ip,
       params: context.params,
       headers: context.headers,
       hostname: context.request.hostname,

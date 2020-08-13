@@ -40,6 +40,51 @@ describe('KoaHttpApplicationBuilder', () => {
       }
     };
   };
+
+  test('http context', async () => {
+    const customHeaderKey = 'X-CUSTOM-HEADER';
+    const customHeaderValue = Date.now().toString();
+    const forwardedFor = '1.2.3.4';
+    const forwardedProtocol = 'https';
+    const body = {foo: 'bar'};
+    const mockOrigin = 'https://example.com:8080/foo/bar?key=value';
+
+    @Controller('/')
+    class FooController {
+      @POST('/', {})
+      get(@Inject(HttpContext) ctx: HttpContext) {
+        expect(ctx.request.headers);
+        expect(ctx.request.headers[customHeaderKey.toLowerCase()]).toBe(customHeaderValue);
+        expect(ctx.request.body).toEqual(body);
+        expect(ctx.request.rawBody.toString()).toEqual(JSON.stringify(body));
+        expect(ctx.request.hostname).toEqual(expect.any(String));
+        expect(ctx.request.method).toEqual(expect.any(String));
+        expect(ctx.request.path).toEqual(expect.any(String));
+        expect(ctx.request.protocol).toBe(forwardedProtocol);
+        expect(ctx.request.address).toBe(forwardedFor);
+      }
+    }
+    const container = new Container();
+    container.bind(FooController).toSelf();
+    const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
+    koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
+    const koaHttpApplication = koaHttpApplicationBuilder.build(
+      {trustProxy: true, corsOption: {origin: '*'}},
+      container,
+    );
+
+    const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
+    await testClient
+      .post('/')
+      .set(customHeaderKey, customHeaderValue)
+      .set('x-forwarded-for', `${forwardedFor}, 2.3.4.5`)
+      .set('x-forwarded-proto', `${forwardedProtocol}, http`)
+      .set('origin', mockOrigin)
+      .send(body)
+      .expect('access-control-allow-origin', '*')
+      .expect(204);
+  });
+
   test('custom param binding', async () => {
     const stubForGet = jest.fn(),
       stubForGetStar = jest.fn(),
