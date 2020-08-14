@@ -26,6 +26,8 @@ describe('KoaHttpApplicationBuilder', () => {
         stub('before');
         expect(context.nativeRequest).toBeDefined();
         expect(context.nativeResponse).toBeDefined();
+        expect(typeof context.targetConstructor).toBe('function');
+        expect(typeof context.targetMethodKey).toBe('string');
 
         const statusCode = context.response.statusCode;
         const data = context.response.data;
@@ -125,6 +127,7 @@ describe('KoaHttpApplicationBuilder', () => {
 
       @GET('(.*)')
       getStart(@Inject(HttpContext) ctx: HttpContext, @Query() query: object) {
+        console.log(query);
         stubForGetStar(ctx.request);
         Object.entries(query).forEach(([key, value]) => ctx.response.set(key, value));
       }

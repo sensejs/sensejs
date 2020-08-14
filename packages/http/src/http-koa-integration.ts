@@ -10,6 +10,7 @@ import {Container} from 'inversify';
 import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
+import Router from '@koa/router';
 import KoaCors from '@koa/cors';
 import {
   HttpAdaptor,
@@ -21,7 +22,6 @@ import {
 } from './http-abstract';
 import koaQs from 'koa-qs';
 import {ControllerMetadata, getRequestMappingMetadata, HttpMethod} from './http-decorators';
-import Router from '@koa/router';
 
 interface MethodRouteSpec<T = any> {
   path: string;
@@ -43,7 +43,7 @@ class KoaHttpResponse implements HttpResponse {
 
   data?: any;
 
-  headerSet: Map<string, string> = new Map();
+  readonly headerSet: Map<string, string> = new Map();
 
   constructor(private koaHttpContext: KoaHttpContext) {}
 
@@ -82,7 +82,12 @@ export class KoaHttpContext extends HttpContext {
     return this.koaContext.response;
   }
 
-  constructor(private readonly container: Container, private readonly koaContext: KoaRouter.RouterContext) {
+  constructor(
+    private readonly container: Container,
+    private readonly koaContext: KoaRouter.RouterContext,
+    public readonly targetConstructor: Constructor,
+    public readonly targetMethodKey: keyof any,
+  ) {
     super();
   }
 
@@ -209,7 +214,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       const childContainer = container.createChild();
       const composedInterceptor = composeRequestInterceptor(childContainer, interceptors);
       childContainer.bind(Container).toConstantValue(childContainer);
-      const context = new KoaHttpContext(childContainer, ctx);
+      const context = new KoaHttpContext(childContainer, ctx, targetConstructor, targetMethod);
       childContainer.bind(HttpContext).toConstantValue(context);
       const interceptor: RequestInterceptor = childContainer.get(composedInterceptor);
       await interceptor.intercept(context, async () => {

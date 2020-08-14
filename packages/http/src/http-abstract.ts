@@ -68,6 +68,10 @@ export interface HttpResponse {
 }
 
 export abstract class HttpContext extends RequestContext {
+  abstract readonly targetConstructor: Constructor;
+
+  abstract readonly targetMethodKey: keyof any;
+
   abstract readonly nativeRequest: unknown;
 
   abstract readonly nativeResponse: unknown;
