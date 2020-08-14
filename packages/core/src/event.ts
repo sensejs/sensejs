@@ -35,6 +35,8 @@ interface AcknowledgeAwareEventMessenger extends EventMessenger {
 export interface AnnounceEventOption<T, Context> {
   /**
    * Context object that can be used in interceptor
+   *
+   * @deprecated
    */
   context?: Context;
 
@@ -45,6 +47,8 @@ export interface AnnounceEventOption<T, Context> {
 
   /**
    * The payload of this event
+   *
+   * @deprecated
    */
   payload: T;
 
@@ -170,13 +174,26 @@ export interface EventSubscriptionModuleOption extends ModuleOption {
 }
 
 export class EventSubscriptionContext extends RequestContext {
+  /**
+   * @deprecated
+   */
+  public readonly payload: unknown;
+  /**
+   * @deprecated
+   */
+  public readonly context: unknown;
+
   constructor(
     private container: Container,
     public readonly identifier: ServiceIdentifier,
-    public readonly payload: unknown,
-    public readonly context: unknown,
+    public readonly targetConstructor: Constructor,
+    public readonly targetMethodKey: keyof any,
+    payload: unknown,
+    context: unknown,
   ) {
     super();
+    this.payload = payload;
+    this.context = context;
     container.bind(EventSubscriptionContext).toConstantValue(this);
   }
 
@@ -360,7 +377,16 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
               .setContainer(container)
               .build(constructor, subscribeEventMetadata.name)
               .invoke({
-                contextFactory: (container) => new EventSubscriptionContext(container, identifier, payload, context),
+                contextFactory: (container, targetConstructor, targetMethodKey) => {
+                  return new EventSubscriptionContext(
+                    container,
+                    identifier,
+                    targetConstructor,
+                    targetMethodKey,
+                    payload,
+                    context,
+                  );
+                },
               }),
           );
         }),

@@ -28,11 +28,6 @@ interface MethodInjectProxy {
   call(paramsBindingMetadata: MethodInjectMetadata, self: any, target: Function): any;
 }
 
-interface MethodInvokeTarget {
-  constructor: Constructor;
-  key: keyof any;
-}
-
 const METHOD_INJECT_PROTOTYPE_METADATA = Symbol('METHOD_INJECT_PROTOTYPE_METADATA');
 
 export type MethodInjectPrototypeMetadata = Map<keyof any, MethodInjectMetadata>;

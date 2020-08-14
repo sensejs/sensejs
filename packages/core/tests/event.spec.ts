@@ -1,12 +1,12 @@
 import {
   createEventSubscriptionModule,
   EventAnnouncer,
+  EventSubscriptionContext,
   Inject,
   InjectEventAnnouncer,
   ModuleClass,
   ModuleRoot,
   RequestContext,
-  RequestInterceptor,
   SubscribeEvent,
   SubscribeEventController,
 } from '../src';
@@ -16,12 +16,6 @@ describe('Event subscribe and announce', () => {
     const spy = jest.fn();
     const spy2 = jest.fn();
     const spy3 = jest.fn();
-
-    class MockInterceptor extends RequestInterceptor {
-      intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
-        return next();
-      }
-    }
 
     @SubscribeEventController()
     class SubscribeController {
@@ -38,6 +32,14 @@ describe('Event subscribe and announce', () => {
       @SubscribeEvent('channel')
       channel(@Inject('a') a: any, @Inject('b') b: any) {
         spy3(a, b);
+      }
+    }
+
+    class MockInterceptor extends EventSubscriptionContext {
+      intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
+        expect(this.targetConstructor).toBe(SubscribeController);
+        expect(this.targetMethodKey).toBe(expect.any(String));
+        return next();
       }
     }
 
