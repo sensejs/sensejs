@@ -15,7 +15,7 @@ import {
 import {Constructor} from '@sensejs/utility';
 import {Container} from 'inversify';
 import {KafkaReceivedMessage, MessageConsumer, MessageConsumerOption} from '@sensejs/kafkajs-standalone';
-import {ConsumerContext} from './consumer-context';
+import {MessageConsumeContext} from './message-consume-context';
 import lodash from 'lodash';
 import {
   getSubscribeControllerMetadata,
@@ -25,7 +25,7 @@ import {
 } from './consumer-decorators';
 
 export interface MessageConsumerModuleOption extends ModuleOption {
-  globalInterceptors?: Constructor<RequestInterceptor>[];
+  globalInterceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
   messageConsumerOption?: Partial<MessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier;
   matchLabels?: (string | symbol)[] | Set<string | symbol>;
@@ -55,7 +55,7 @@ function scanSubscriber(
     requires: [connectionModule],
   })
   class SubscriberScanModule {
-    private methodInvokerBuilder = MethodInvokerBuilder.create<ConsumerContext>(this.container);
+    private methodInvokerBuilder = MethodInvokerBuilder.create<MessageConsumeContext>(this.container);
     constructor(
       @Inject(Container) private container: Container,
       @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
@@ -119,14 +119,16 @@ function scanSubscriber(
     }
 
     private getConsumeCallback<T>(
-      methodInvokerBuilder: MethodInvokerBuilder<ConsumerContext>,
+      methodInvokerBuilder: MethodInvokerBuilder<MessageConsumeContext>,
       target: Constructor<T>,
       method: keyof T,
     ) {
       return async (message: KafkaReceivedMessage) => {
         await methodInvokerBuilder.build(target, method).invoke({
-          contextFactory: (container) => new ConsumerContext(container, message),
-          contextIdentifier: ConsumerContext,
+          contextFactory: (container, targetConstructor, targetMethodKey) => {
+            return new MessageConsumeContext(container, message, targetConstructor, targetMethodKey);
+          },
+          contextIdentifier: MessageConsumeContext,
         });
       };
     }

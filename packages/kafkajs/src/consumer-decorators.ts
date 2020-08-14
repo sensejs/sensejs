@@ -5,10 +5,11 @@ import {
   ServiceIdentifier,
   validateMethodInjectMetadata,
 } from '@sensejs/core';
+import {MessageConsumeContext} from './message-consume-context';
 
 export interface SubscribeTopicMetadata {
   fallbackOption?: SubscribeTopicOption;
-  interceptors: Constructor<RequestInterceptor>[];
+  interceptors: Constructor<RequestInterceptor<MessageConsumeContext>>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
@@ -18,13 +19,13 @@ export interface SubscribeTopicOption {
 }
 
 export interface SubscribeControllerMetadata<T = any> {
-  interceptors: Constructor<RequestInterceptor>[];
+  interceptors: Constructor<RequestInterceptor<MessageConsumeContext>>[];
   target: Constructor<T>;
   labels: Set<string | symbol>;
 }
 
 export interface SubscribeControllerOption {
-  interceptors?: Constructor<RequestInterceptor>[];
+  interceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
   labels?: (string | symbol)[] | Set<string | symbol>;
 }
 
@@ -56,7 +57,7 @@ export function getSubscribeControllerMetadata(constructor: {}): SubscribeContro
 interface InjectedSubscribeTopicDecoratorOption {
   option?: SubscribeTopicOption;
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
-  interceptors?: Constructor<RequestInterceptor>[];
+  interceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
 }
 
 export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {

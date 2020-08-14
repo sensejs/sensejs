@@ -2,7 +2,7 @@ jest.mock('@sensejs/kafkajs-standalone');
 import {Component, createModule, Inject, ProcessManager, RequestInterceptor} from '@sensejs/core';
 import {MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
-  ConsumerContext,
+  MessageConsumeContext,
   createMessageConsumerModule,
   InjectSubscribeContext,
   Message,
@@ -42,7 +42,6 @@ describe('Subscribe decorators', () => {
 });
 
 describe('Subscriber', () => {
-
   const brokers = `host_${Date.now()}`; // for random string
   const groupId = `group_${Date.now()}`;
   const topic = `topic_${Date.now()}`;
@@ -65,8 +64,8 @@ describe('Subscriber', () => {
 
   const makeInterceptor = (symbol: symbol) => {
     @Component()
-    class Interceptor extends RequestInterceptor<ConsumerContext> {
-      async intercept(context: ConsumerContext, next: () => Promise<void>): Promise<void> {
+    class Interceptor extends RequestInterceptor<MessageConsumeContext> {
+      async intercept(context: MessageConsumeContext, next: () => Promise<void>): Promise<void> {
         context.bindContextValue(symbol, Math.random());
         await next();
       }
@@ -105,12 +104,12 @@ describe('Subscriber', () => {
         interceptors: [interceptorC],
       })
       foo(
-        @InjectSubscribeContext() ctx: ConsumerContext,
+        @InjectSubscribeContext() ctx: MessageConsumeContext,
         @Inject(symbolA) global: any,
         @Inject(symbolB) controller: any,
         @Inject(symbolC) fromTopic: any,
         @Message() message: string | Buffer,
-        @Inject(ProcessManager) processManager: ProcessManager
+        @Inject(ProcessManager) processManager: ProcessManager,
       ) {
         processManager.shutdown();
       }
@@ -135,20 +134,21 @@ describe('Subscriber', () => {
       onExit: () => {
         exitSubject.complete();
         return undefined as never;
-      }
+      },
     });
     await exitSubject.toPromise();
 
-    expect(MessageConsumer).toHaveBeenCalledWith(expect.objectContaining({
-      connectOption: expect.objectContaining({
-        brokers,
+    expect(MessageConsumer).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connectOption: expect.objectContaining({
+          brokers,
+        }),
       }),
-    }));
+    );
 
     expect(startSpy).toBeCalled();
     expect(subscribeSpy).toBeCalledTimes(1);
     expect(subscribeSpy).toBeCalledWith(topic, expect.any(Function), true);
     expect(stopSpy).toBeCalled();
   });
-
 });
