@@ -1,7 +1,6 @@
 import {
   composeRequestInterceptor,
   Constructor,
-  Deprecated,
   invokeMethod,
   RequestInterceptor,
   ServiceIdentifier,
@@ -39,6 +38,20 @@ interface ControllerRouteSpec {
 
 export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
 
+class KoaHttpResponse implements HttpResponse {
+  statusCode?: number;
+
+  data?: any;
+
+  headerSet: Map<string, string> = new Map();
+
+  constructor(private koaHttpContext: KoaHttpContext) {}
+
+  set(key: string, value: string): void {
+    this.headerSet.set(key, value);
+  }
+}
+
 export class KoaHttpContext extends HttpContext {
   get request(): HttpRequest {
     const context = this.koaContext;
@@ -59,30 +72,7 @@ export class KoaHttpContext extends HttpContext {
     };
   }
 
-  get response(): HttpResponse {
-    const context = this.koaContext;
-    return {
-      set statusCode(statusCode) {
-        context.response.status = statusCode;
-      },
-
-      set(key, value) {
-        context.response.set(key, value);
-      },
-
-      get statusCode() {
-        return context.response.status;
-      },
-
-      set data(data) {
-        context.body = data;
-      },
-
-      get data() {
-        return context.body;
-      },
-    };
-  }
+  readonly response = new KoaHttpResponse(this);
 
   get nativeRequest(): unknown {
     return this.koaContext.request;
@@ -223,7 +213,18 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       childContainer.bind(HttpContext).toConstantValue(context);
       const interceptor: RequestInterceptor = childContainer.get(composedInterceptor);
       await interceptor.intercept(context, async () => {
-        context.response.data = await invokeMethod(childContainer, targetConstructor, targetMethod);
+        const result = await invokeMethod(childContainer, targetConstructor, targetMethod);
+        if (typeof context.response.data === 'undefined') {
+          context.response.data = result;
+        }
+      });
+
+      ctx.response.body = context.response.data;
+      if (typeof context.response.statusCode === 'number') {
+        ctx.response.status = context.response.statusCode;
+      }
+      context.response.headerSet.forEach((value, key) => {
+        ctx.response.set(key, value);
       });
     });
   }

@@ -68,13 +68,13 @@ export interface HttpResponse {
 }
 
 export abstract class HttpContext extends RequestContext {
-  abstract nativeRequest: unknown;
+  abstract readonly nativeRequest: unknown;
 
-  abstract nativeResponse: unknown;
+  abstract readonly nativeResponse: unknown;
 
-  abstract request: HttpRequest;
+  abstract readonly request: HttpRequest;
 
-  abstract response: HttpResponse;
+  abstract readonly response: HttpResponse;
 }
 
 export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {}

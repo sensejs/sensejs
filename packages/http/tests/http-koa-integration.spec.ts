@@ -62,6 +62,10 @@ describe('KoaHttpApplicationBuilder', () => {
         expect(ctx.request.path).toEqual(expect.any(String));
         expect(ctx.request.protocol).toBe(forwardedProtocol);
         expect(ctx.request.address).toBe(forwardedFor);
+
+        ctx.response.statusCode = 200;
+        ctx.response.data = {};
+        expect(ctx.response.data).toBeInstanceOf(Object);
       }
     }
     const container = new Container();
@@ -82,7 +86,7 @@ describe('KoaHttpApplicationBuilder', () => {
       .set('origin', mockOrigin)
       .send(body)
       .expect('access-control-allow-origin', '*')
-      .expect(204);
+      .expect(200);
   });
 
   test('custom param binding', async () => {
