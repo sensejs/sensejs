@@ -28,6 +28,11 @@ interface MethodInjectProxy {
   call(paramsBindingMetadata: MethodInjectMetadata, self: any, target: Function): any;
 }
 
+interface MethodInvokeTarget {
+  constructor: Constructor;
+  key: keyof any;
+}
+
 const METHOD_INJECT_PROTOTYPE_METADATA = Symbol('METHOD_INJECT_PROTOTYPE_METADATA');
 
 export type MethodInjectPrototypeMetadata = Map<keyof any, MethodInjectMetadata>;
@@ -166,21 +171,23 @@ export function MethodInject<T extends {}, R = T>(
   };
 }
 
-export interface MethodInvoker<X extends RequestContext> {
-  bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U): this;
-
-  invoke(option: {
-    contextFactory: (container: Container) => X;
-    contextIdentifier?: ServiceIdentifier<X>;
-  }): Promise<void>;
+export interface MethodInvokeOption<X> {
+  contextFactory: (container: Container, targetConstructor: Constructor, targetMethodKey: keyof any) => X;
+  contextIdentifier?: ServiceIdentifier<X>;
 }
 
-const MethodInvoker = class<X extends RequestContext, T extends {}, K extends keyof T> {
+export interface MethodInvoker<X extends RequestContext> {
+  bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U): MethodInvoker<X>;
+
+  invoke(option: MethodInvokeOption<X>): Promise<void>;
+}
+
+const MethodInvoker = class<X extends RequestContext, T extends {}, K extends keyof T> implements MethodInvoker<X> {
   constructor(
     private readonly container: Container,
     private readonly interceptors: Constructor<RequestInterceptor<X>>[],
     private readonly targetConstructor: Constructor<T>,
-    private readonly methodKey: K,
+    private readonly targetMethodKey: K,
   ) {
     this.container.bind(Container).toConstantValue(this.container);
   }
@@ -190,15 +197,15 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
     return this;
   }
 
-  async invoke(option: {contextFactory: (container: Container) => X; contextIdentifier?: ServiceIdentifier<X>}) {
-    const context = option.contextFactory(this.container);
+  async invoke(option: MethodInvokeOption<X>) {
+    const context = option.contextFactory(this.container, this.targetConstructor, this.targetMethodKey);
     if (option.contextIdentifier) {
       this.container.bind(option.contextIdentifier).toConstantValue(context);
     }
     const composedInterceptorConstructor = composeRequestInterceptor(this.container, this.interceptors);
     const composedInterceptor = this.container.get(composedInterceptorConstructor);
     await composedInterceptor.intercept(context, async () => {
-      await invokeMethod(this.container, this.targetConstructor, this.methodKey);
+      await invokeMethod(this.container, this.targetConstructor, this.targetMethodKey);
     });
   }
 };
