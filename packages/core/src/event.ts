@@ -7,6 +7,7 @@ import {Container} from 'inversify';
 import {Inject, InjectionDecorator} from './decorators';
 import {MethodInvokerBuilder} from './method-inject';
 import {ModuleScanner} from './module-scanner';
+import {Deprecated} from './utils';
 
 export interface EventChannelSubscription {
   unsubscribe(): void;
@@ -202,6 +203,9 @@ export class EventSubscriptionContext extends RequestContext {
   }
 }
 
+/**
+ * @deprecated
+ */
 export interface EventAnnouncer {
   /**
    * Announce event, payload can be injected using target as symbol
@@ -223,6 +227,63 @@ export interface EventAnnouncer {
   announce(channel: ServiceIdentifier): Promise<void>;
 }
 
+export abstract class EventPublishPreparation {
+  abstract bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this;
+
+  abstract publish(): Promise<void>;
+}
+
+export abstract class EventPublisher {
+  abstract prepare(channel: ServiceIdentifier): EventPublishPreparation;
+}
+
+@Component({scope: ComponentScope.SINGLETON})
+class EventPublisherFactory extends ComponentFactory<EventPublisher> {
+  private static EventPublishPreparation = class extends EventPublishPreparation {
+    constructor(
+      private readonly container: Container,
+      private readonly eventBus: EventBusImplement,
+      private readonly channel: ServiceIdentifier,
+    ) {
+      super();
+    }
+
+    bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this {
+      this.container.bind(serviceIdentifier).toConstantValue(value);
+      return this;
+    }
+
+    async publish(): Promise<void> {
+      await this.eventBus.announceEvent(this.channel, this.container);
+    }
+  };
+
+  private static EventPublisher = class extends EventPublisher {
+    constructor(private readonly container: Container, private readonly eventBus: EventBusImplement) {
+      super();
+    }
+
+    prepare(channel: ServiceIdentifier): EventPublishPreparation {
+      return new EventPublisherFactory.EventPublishPreparation(this.container.createChild(), this.eventBus, channel);
+    }
+  };
+
+  constructor(
+    @Inject(EventBusImplement) private eventBus: EventBusImplement,
+    @Inject(Container) private container: Container,
+  ) {
+    super();
+  }
+
+  build(): EventPublisher {
+    return new EventPublisherFactory.EventPublisher(this.container, this.eventBus);
+  }
+}
+
+/**
+ * @deprecated
+ */
+@Deprecated()
 export class EventAnnouncer {
   private childContainer: Container;
 
@@ -305,7 +366,10 @@ export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>): Inje
 
 const eventBusModule = createModule({
   components: [EventBusImplement],
-  factories: [{provide: EventAnnouncer, factory: EventAnnouncerFactory, scope: ComponentScope.SINGLETON}],
+  factories: [
+    {provide: EventAnnouncer, factory: EventAnnouncerFactory, scope: ComponentScope.SINGLETON},
+    {provide: EventPublisher, factory: EventPublisherFactory, scope: ComponentScope.SINGLETON},
+  ],
 });
 
 export function createEventSubscriptionModule(option: EventSubscriptionModuleOption = {}): Constructor {
