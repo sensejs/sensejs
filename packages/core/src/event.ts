@@ -1,6 +1,6 @@
 import {Component} from './component';
 import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
-import {Subject} from 'rxjs';
+import {Subject, Subscription} from 'rxjs';
 import {RequestContext, RequestInterceptor} from './interceptor';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
 import {Container} from 'inversify';
@@ -59,19 +59,49 @@ export interface AnnounceEventOption<T, Context> {
   symbol?: ServiceIdentifier;
 }
 
+class SubscriptionInfo {
+  constructor(
+    public readonly channel: EventChannel,
+    public readonly subscription: Subscription,
+    public readonly subscriberInfo: SubscriberInfo,
+  ) {}
+
+  unsubscribe() {
+    this.subscription.unsubscribe();
+    this.channel.subscribers.delete(this);
+  }
+}
+
+class EventChannel {
+  public readonly subject = new Subject<AcknowledgeAwareEventMessenger>();
+  public readonly subscribers: Set<SubscriptionInfo> = new Set();
+
+  public subscribe(
+    subscriberInfo: SubscriberInfo,
+    callback: (payload: AcknowledgeAwareEventMessenger) => void,
+  ): SubscriptionInfo {
+    const subscription = this.subject.subscribe({
+      next: callback,
+    });
+    const subscriptionInfo = new SubscriptionInfo(this, subscription, subscriberInfo);
+    this.subscribers.add(subscriptionInfo);
+    return subscriptionInfo;
+  }
+}
+
 @Component({scope: ComponentScope.SINGLETON})
 class EventBusImplement {
-  private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger>> = new Map();
+  private channels: Map<ServiceIdentifier, EventChannel> = new Map();
 
   async announceEvent<T extends {}, Context>(
-    channel: ServiceIdentifier,
+    channelId: ServiceIdentifier,
     container: Container,
     payload?: unknown,
     context?: unknown,
   ): Promise<void> {
-    const subject = this.ensureEventChannel(channel);
+    const channel = this.ensureEventChannel(channelId);
     const consumePromises: Promise<void>[] = [];
-    subject.next({
+    channel.subject.next({
       container,
       payload,
       context,
@@ -81,21 +111,25 @@ class EventBusImplement {
   }
 
   subscribe<T>(
-    target: ServiceIdentifier<T>,
+    channelId: ServiceIdentifier<T>,
+    subscriberInfo: SubscriberInfo,
     callback: (payload: AcknowledgeAwareEventMessenger) => void,
   ): EventChannelSubscription {
-    return this.ensureEventChannel(target).subscribe({
-      next: callback,
-    });
+    const channel = this.ensureEventChannel(channelId);
+    return channel.subscribe(subscriberInfo, callback);
   }
 
-  private ensureEventChannel<T>(target: ServiceIdentifier<T>): Subject<AcknowledgeAwareEventMessenger> {
-    let channel = this.channels.get(target);
+  listSubscriber(channelId: ServiceIdentifier): SubscriberInfo[] {
+    return Array.from(this.channels.get(channelId)?.subscribers.values() ?? []).map((value) => value.subscriberInfo);
+  }
+
+  private ensureEventChannel<T>(channelId: ServiceIdentifier<T>): EventChannel {
+    let channel = this.channels.get(channelId);
     if (typeof channel !== 'undefined') {
       return channel;
     }
-    channel = new Subject<AcknowledgeAwareEventMessenger>();
-    this.channels.set(target, channel);
+    channel = new EventChannel();
+    this.channels.set(channelId, channel);
     return channel;
   }
 }
@@ -104,9 +138,16 @@ const SUBSCRIBE_EVENT_KEY = Symbol();
 
 const SUBSCRIBE_EVENT_CONTROLLER_KEY = Symbol();
 
+interface SubscriberInfo<P extends {} = {}> {
+  prototype: P;
+  id?: string;
+  targetMethod: keyof P & (string | symbol);
+}
+
 export interface SubscribeEventMetadata<P extends {} = {}> {
   prototype: P;
-  name: keyof P & (string | symbol);
+  id?: string;
+  targetMethod: keyof P & (string | symbol);
   identifier: ServiceIdentifier;
   filter: (message: any) => boolean;
   interceptors: Constructor<RequestInterceptor>[];
@@ -114,6 +155,7 @@ export interface SubscribeEventMetadata<P extends {} = {}> {
 
 export interface EventSubscriptionOption {
   interceptors?: Constructor<RequestInterceptor>[];
+  id?: string;
   filter?: (message: any) => boolean;
 }
 
@@ -153,15 +195,16 @@ export function SubscribeEventController(option: SubscribeEventControllerOption 
  * @decorator
  */
 export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubscriptionOption = {}) {
-  return <P extends {}>(prototype: P, name: keyof P & (string | symbol)): void => {
+  return <P extends {}>(prototype: P, targetMethod: keyof P & (string | symbol)): void => {
     const metadata: SubscribeEventMetadata<P> = {
       prototype,
-      name,
+      targetMethod,
       identifier,
       interceptors: option.interceptors ?? [],
       filter: option.filter ?? (() => true),
+      id: option.id,
     };
-    Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, prototype[name]);
+    Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, prototype[targetMethod]);
   };
 }
 
@@ -209,11 +252,11 @@ export class EventSubscriptionContext extends RequestContext {
 export interface EventAnnouncer {
   /**
    * Announce event, payload can be injected using target as symbol
-   * @param channel
+   * @param channelId
    * @param payload
    * @deprecated
    */
-  announceEvent<T>(channel: ServiceIdentifier<T>, payload: T): Promise<void>;
+  announceEvent<T>(channelId: ServiceIdentifier<T>, payload: T): Promise<void>;
 
   /**
    * Announce event in a way that described by {AnnounceEventOption}
@@ -224,7 +267,7 @@ export interface EventAnnouncer {
 
   bind<T>(target: ServiceIdentifier<T>, value: T): this;
 
-  announce(channel: ServiceIdentifier): Promise<void>;
+  announce(channelId: ServiceIdentifier): Promise<void>;
 }
 
 export abstract class EventPublishPreparation {
@@ -234,7 +277,9 @@ export abstract class EventPublishPreparation {
 }
 
 export abstract class EventPublisher {
-  abstract prepare(channel: ServiceIdentifier): EventPublishPreparation;
+  abstract prepare(channelId: ServiceIdentifier): EventPublishPreparation;
+
+  abstract getSubscribers(channelId: ServiceIdentifier): SubscriberInfo[];
 }
 
 @Component({scope: ComponentScope.SINGLETON})
@@ -243,7 +288,7 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
     constructor(
       private readonly container: Container,
       private readonly eventBus: EventBusImplement,
-      private readonly channel: ServiceIdentifier,
+      private readonly channelId: ServiceIdentifier,
     ) {
       super();
     }
@@ -254,17 +299,21 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
     }
 
     async publish(): Promise<void> {
-      await this.eventBus.announceEvent(this.channel, this.container);
+      await this.eventBus.announceEvent(this.channelId, this.container);
     }
   };
 
   private static EventPublisher = class extends EventPublisher {
-    constructor(private readonly container: Container, private readonly eventBus: EventBusImplement) {
+    constructor(readonly container: Container, readonly eventBus: EventBusImplement) {
       super();
     }
 
-    prepare(channel: ServiceIdentifier): EventPublishPreparation {
-      return new EventPublisherFactory.EventPublishPreparation(this.container.createChild(), this.eventBus, channel);
+    prepare(channelId: ServiceIdentifier): EventPublishPreparation {
+      return new EventPublisherFactory.EventPublishPreparation(this.container.createChild(), this.eventBus, channelId);
+    }
+
+    getSubscribers(channelId: ServiceIdentifier): SubscriberInfo[] {
+      return this.eventBus.listSubscriber(channelId);
     }
   };
 
@@ -301,22 +350,22 @@ export class EventAnnouncer {
     option: ServiceIdentifier<T> | AnnounceEventOption<T, Context>,
     ...rest: T[]
   ): Promise<void> {
-    let channel: ServiceIdentifier;
+    let channelId: ServiceIdentifier;
     let symbol: ServiceIdentifier;
     let payload: any;
     let context: any;
     if (typeof option === 'object') {
-      channel = option.channel;
+      channelId = option.channel;
       payload = option.payload;
-      symbol = option.symbol ?? channel;
+      symbol = option.symbol ?? channelId;
       context = option.context;
     } else {
-      channel = symbol = option;
+      channelId = symbol = option;
       payload = rest[0];
     }
     this.bind(symbol, payload);
     const origin = this.recreateContainer();
-    await this.eventBus.announceEvent(channel, origin, payload, context);
+    await this.eventBus.announceEvent(channelId, origin, payload, context);
   }
 
   bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this {
@@ -324,12 +373,15 @@ export class EventAnnouncer {
     return this;
   }
 
-  async announce(channel: ServiceIdentifier): Promise<void> {
+  async announce(channelId: ServiceIdentifier): Promise<void> {
     const origin = this.recreateContainer();
-    await this.eventBus.announceEvent(channel, origin);
+    await this.eventBus.announceEvent(channelId, origin);
   }
 }
 
+/**
+ * @deprecated
+ */
 @Component({scope: ComponentScope.SINGLETON})
 class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
   constructor(
@@ -350,15 +402,15 @@ class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
 export function InjectEventAnnouncer<T>(): InjectionDecorator;
 
 /**
- * @param channel Channel to be announced
+ * @param channelId Channel to be announced
  * @deprecated
  */
-export function InjectEventAnnouncer<T>(channel: ServiceIdentifier): InjectionDecorator;
+export function InjectEventAnnouncer<T>(channelId: ServiceIdentifier): InjectionDecorator;
 
-export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>): InjectionDecorator {
-  if (typeof identifier !== 'undefined') {
+export function InjectEventAnnouncer<T>(channelId?: ServiceIdentifier<T>): InjectionDecorator {
+  if (typeof channelId !== 'undefined') {
     return Inject(EventAnnouncer, {
-      transform: (eventBus) => (payload: T) => eventBus.announceEvent(identifier, payload),
+      transform: (eventBus) => (payload: T) => eventBus.announceEvent(channelId, payload),
     });
   }
   return Inject(EventAnnouncer);
@@ -429,9 +481,9 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
     ) {
       methodInvokerBuilder = methodInvokerBuilder.clone().addInterceptor(...subscribeEventMetadata.interceptors);
 
-      const identifier = subscribeEventMetadata.identifier;
+      const {identifier, prototype, targetMethod, id} = subscribeEventMetadata;
       this.subscriptions.push(
-        this.eventBus.subscribe(identifier, (messenger) => {
+        this.eventBus.subscribe(identifier, {prototype, targetMethod: targetMethod, id}, (messenger) => {
           if (!subscribeEventMetadata.filter(messenger.payload)) {
             return;
           }
@@ -439,7 +491,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
           acknowledge(
             methodInvokerBuilder
               .setContainer(container)
-              .build(constructor, subscribeEventMetadata.name)
+              .build(constructor, subscribeEventMetadata.targetMethod)
               .invoke({
                 contextFactory: (container, targetConstructor, targetMethodKey) => {
                   return new EventSubscriptionContext(

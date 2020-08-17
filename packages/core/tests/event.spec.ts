@@ -26,12 +26,12 @@ describe('Event subscribe and announce', () => {
         spy(param);
       }
 
-      @SubscribeEvent('event')
+      @SubscribeEvent('event', {id: 'bar2'})
       bar2(@Inject('event') param: string) {
         spy2(param);
       }
 
-      @SubscribeEvent('channel')
+      @SubscribeEvent('channel', {id: 'channel'})
       channel(@Inject('a') a: any, @Inject('b') b: any) {
         spy3(a, b);
       }
@@ -59,6 +59,19 @@ describe('Event subscribe and announce', () => {
         @InjectEventAnnouncer('event') eventAnnouncer: (value: any) => void,
         @Inject(EventPublisher) eventPublisher: EventPublisher,
       ) {
+        expect(eventPublisher.getSubscribers('event')).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({prototype: SubscribeController.prototype, targetMethod: 'bar'}),
+            expect.objectContaining({prototype: SubscribeController.prototype, targetMethod: 'bar2', id: 'bar2'}),
+          ]),
+        );
+
+        expect(eventPublisher.getSubscribers('channel')).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({prototype: SubscribeController.prototype, targetMethod: 'channel', id: 'channel'}),
+          ]),
+        );
+
         await announcer.announceEvent('event', 'foo');
         expect(spy).not.toHaveBeenCalled();
         expect(spy2).toHaveBeenCalledWith('foo');
