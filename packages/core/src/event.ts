@@ -14,10 +14,7 @@ export interface EventChannelSubscription {
 }
 
 interface EventMessenger {
-  /**
-   * @deprecated
-   */
-  payload?: unknown;
+  payload: unknown;
   /**
    * @deprecated
    */
