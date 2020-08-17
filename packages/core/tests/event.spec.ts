@@ -61,14 +61,22 @@ describe('Event subscribe and announce', () => {
       ) {
         expect(eventPublisher.getSubscribers('event')).toEqual(
           expect.arrayContaining([
-            expect.objectContaining({prototype: SubscribeController.prototype, targetMethod: 'bar'}),
-            expect.objectContaining({prototype: SubscribeController.prototype, targetMethod: 'bar2', id: 'bar2'}),
+            expect.objectContaining({targetConstructor: SubscribeController, targetMethod: 'bar'}),
+            expect.objectContaining({
+              targetConstructor: SubscribeController,
+              targetMethod: 'bar2',
+              subscriberId: 'bar2',
+            }),
           ]),
         );
 
         expect(eventPublisher.getSubscribers('channel')).toEqual(
           expect.arrayContaining([
-            expect.objectContaining({prototype: SubscribeController.prototype, targetMethod: 'channel', id: 'channel'}),
+            expect.objectContaining({
+              targetConstructor: SubscribeController,
+              targetMethod: 'channel',
+              subscriberId: 'channel',
+            }),
           ]),
         );
 

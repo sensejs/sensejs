@@ -135,15 +135,15 @@ const SUBSCRIBE_EVENT_KEY = Symbol();
 
 const SUBSCRIBE_EVENT_CONTROLLER_KEY = Symbol();
 
-interface SubscriberInfo<P extends {} = {}> {
-  prototype: P;
-  id?: string;
+export interface SubscriberInfo<P extends {} = {}> {
+  targetConstructor: Constructor<P>;
   targetMethod: keyof P & (string | symbol);
+  subscriberId?: string;
 }
 
 export interface SubscribeEventMetadata<P extends {} = {}> {
   prototype: P;
-  id?: string;
+  subscriberId?: string;
   targetMethod: keyof P & (string | symbol);
   identifier: ServiceIdentifier;
   filter: (message: any) => boolean;
@@ -199,7 +199,7 @@ export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubsc
       identifier,
       interceptors: option.interceptors ?? [],
       filter: option.filter ?? (() => true),
-      id: option.id,
+      subscriberId: option.id,
     };
     Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, prototype[targetMethod]);
   };
@@ -218,18 +218,15 @@ export class EventSubscriptionContext extends RequestContext {
   /**
    * @deprecated
    */
-  public readonly payload: unknown;
-  /**
-   * @deprecated
-   */
   public readonly context: unknown;
 
   constructor(
     private container: Container,
     public readonly identifier: ServiceIdentifier,
+    public readonly payload: unknown,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
-    payload: unknown,
+    public readonly subscriberInfo: string | undefined,
     context: unknown,
   ) {
     super();
@@ -251,14 +248,12 @@ export interface EventAnnouncer {
    * Announce event, payload can be injected using target as symbol
    * @param channelId
    * @param payload
-   * @deprecated
    */
   announceEvent<T>(channelId: ServiceIdentifier<T>, payload: T): Promise<void>;
 
   /**
    * Announce event in a way that described by {AnnounceEventOption}
    * @param option
-   * @deprecated
    */
   announceEvent<T, Context>(option: AnnounceEventOption<T, Context>): Promise<void>;
 
@@ -395,6 +390,7 @@ class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
 
 /**
  * Short for `Inject(EventAnnouncer)`
+ * @deprecated
  */
 export function InjectEventAnnouncer<T>(): InjectionDecorator;
 
@@ -478,14 +474,15 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
     ) {
       methodInvokerBuilder = methodInvokerBuilder.clone().addInterceptor(...subscribeEventMetadata.interceptors);
 
-      const {identifier, prototype, targetMethod, id} = subscribeEventMetadata;
+      const {identifier, targetMethod, subscriberId} = subscribeEventMetadata;
+      const subscriberInfo: SubscriberInfo = {targetConstructor: constructor, targetMethod, subscriberId};
       this.subscriptions.push(
-        this.eventBus.subscribe(identifier, {prototype, targetMethod: targetMethod, id}, (messenger) => {
+        this.eventBus.subscribe(identifier, subscriberInfo, (messenger) => {
           if (!subscribeEventMetadata.filter(messenger.payload)) {
             return;
           }
           const {acknowledge, container, payload, context} = messenger;
-          acknowledge(
+          return acknowledge(
             methodInvokerBuilder
               .setContainer(container)
               .build(constructor, subscribeEventMetadata.targetMethod)
@@ -494,9 +491,10 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
                   return new EventSubscriptionContext(
                     container,
                     identifier,
+                    payload,
                     targetConstructor,
                     targetMethodKey,
-                    payload,
+                    subscriberId,
                     context,
                   );
                 },
