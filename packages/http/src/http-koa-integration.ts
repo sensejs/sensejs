@@ -10,7 +10,6 @@ import {Container} from 'inversify';
 import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
-import Router from '@koa/router';
 import KoaCors from '@koa/cors';
 import {
   HttpAdaptor,
@@ -156,7 +155,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     for (const middleware of this.middlewareList) {
       koa.use(middleware);
     }
-    koa.use(this.createGlobalRouter(container));
+    koa.use(this.createGlobalRouter(container).routes());
     return koa.callback();
   }
 
@@ -191,7 +190,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     });
   }
 
-  private createGlobalRouter(container: Container) {
+  protected createGlobalRouter(container: Container): KoaRouter {
     const globalRouter = new KoaRouter();
     for (const controllerRouteSpec of this.controllerRouteSpecs) {
       const controllerRouter = new KoaRouter();
@@ -200,14 +199,14 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       }
       globalRouter.use(controllerRouteSpec.path, controllerRouter.routes(), controllerRouter.allowedMethods());
     }
-    return globalRouter.routes();
+    return globalRouter;
   }
 
-  private defineRouter<T>(
+  protected defineRouter<T>(
     methodRouteSpec: MethodRouteSpec<T>,
-    controllerRouter: Router<any, {}>,
+    controllerRouter: KoaRouter,
     container: Container,
-  ) {
+  ): void {
     const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
 
     controllerRouter[httpMethod](path, async (ctx) => {
