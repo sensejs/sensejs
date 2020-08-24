@@ -155,7 +155,9 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     for (const middleware of this.middlewareList) {
       koa.use(middleware);
     }
-    koa.use(this.createGlobalRouter(container).routes());
+    const router = this.createGlobalRouter(container);
+    koa.use(router.routes());
+    koa.use(router.allowedMethods());
     return koa.callback();
   }
 
@@ -197,7 +199,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       for (const methodRouteSpec of controllerRouteSpec.methodRouteSpecs) {
         this.defineRouter(methodRouteSpec, controllerRouter, container);
       }
-      globalRouter.use(controllerRouteSpec.path, controllerRouter.routes(), controllerRouter.allowedMethods());
+      globalRouter.use(controllerRouteSpec.path, controllerRouter.routes());
     }
     return globalRouter;
   }
