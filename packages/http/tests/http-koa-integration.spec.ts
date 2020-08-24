@@ -127,7 +127,6 @@ describe('KoaHttpApplicationBuilder', () => {
 
       @GET('(.*)')
       getStart(@Inject(HttpContext) ctx: HttpContext, @Query() query: object) {
-        console.log(query);
         stubForGetStar(ctx.request);
         Object.entries(query).forEach(([key, value]) => ctx.response.set(key, value));
       }
