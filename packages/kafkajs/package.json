@@ -21,9 +21,9 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/kafkajs-standalone": "workspace:^0.6.0",
-    "@sensejs/utility": "workspace:^0.6.0",
-    "lodash": "^4.17.19",
+    "@sensejs/kafkajs-standalone": "workspace:^0.6.1",
+    "@sensejs/utility": "workspace:^0.6.1",
+    "lodash": "^4.17.20",
     "tslib": "2.0.0"
   },
   "devDependencies": {

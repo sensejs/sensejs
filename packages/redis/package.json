@@ -22,7 +22,7 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@types/ioredis": "^4.17.3",
+    "@types/ioredis": "^4.17.4",
     "ioredis": "^4.17.3",
     "tslib": "2.0.0"
   },
