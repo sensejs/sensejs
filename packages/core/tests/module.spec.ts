@@ -19,11 +19,24 @@ import {ModuleInstance} from '../src/module-instance';
 describe('@ModuleClass', () => {
   test('created module metadata', () => {
     const dependency = createModule();
-    expect(getModuleMetadata(createModule({requires: [dependency]}))).toEqual(
+    const key = Symbol();
+    expect(
+      getModuleMetadata(
+        createModule({
+          requires: [dependency],
+          properties: {
+            [key]: 'value',
+          },
+        }),
+      ),
+    ).toEqual(
       expect.objectContaining({
         requires: [dependency],
         onModuleCreate: [],
         onModuleDestroy: [],
+        properties: expect.objectContaining({
+          [key]: 'value',
+        }),
       }),
     );
   });

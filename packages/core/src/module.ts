@@ -25,6 +25,11 @@ export interface ModuleOption {
    * Constants provided by this module
    */
   constants?: ConstantProvider<unknown>[];
+
+  /**
+   * Custom properties, useful for custom component discovery
+   */
+  properties?: object | null;
 }
 
 export interface ModuleMetadata<T = {}> extends Required<ModuleOption> {
@@ -84,10 +89,7 @@ export interface ModuleClassDecorator {
  * @decorator
  */
 export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
-  const requires = option.requires || [];
-  const constants = option.constants ?? [];
-  const components = option.components ?? [];
-  const factories = option.factories ?? [];
+  const {requires = [], constants = [], components = [], factories = [], properties = null} = option;
 
   return <T extends {}>(constructor: Constructor<T>): Constructor<T> => {
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
@@ -99,6 +101,7 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
       constants,
       factories,
       components,
+      properties,
       onModuleCreate,
       onModuleDestroy,
     });
