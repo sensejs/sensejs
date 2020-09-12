@@ -25,7 +25,7 @@ function adaptLogLevel(level: logLevel) {
   }
 }
 
-export function createLogOption(option?: KafkaLogAdapterOption): KafkaLogOption {
+export function createLogOption(option?: KafkaLogAdapterOption): Required<KafkaLogOption> {
   if (typeof option === 'undefined' || typeof option.loggerBuilder === 'undefined') {
     return {
       level: 0,
