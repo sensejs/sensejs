@@ -12,3 +12,4 @@ export * from './module-utility';
 export * from './module-scanner';
 export * from './utils';
 export * from './method-inject';
+export * from './uuid';

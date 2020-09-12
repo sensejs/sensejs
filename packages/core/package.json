@@ -24,7 +24,8 @@
   "dependencies": {
     "@sensejs/utility": "workspace:^0.6.1",
     "rxjs": "^6.6.3",
-    "tslib": "2.0.0"
+    "tslib": "2.0.0",
+    "uuid": "^8.3.0"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*"

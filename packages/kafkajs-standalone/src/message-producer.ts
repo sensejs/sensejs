@@ -1,7 +1,6 @@
 import {Kafka, Offsets, Partitioners, Producer, ProducerConfig, RecordMetadata, TopicMessages} from 'kafkajs';
 import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, MessageKeyProvider} from './types';
 import {convertConnectOption, KafkaLogOption} from './utils';
-import {uuidV1} from '@sensejs/utility';
 
 export interface MessageProducerOption {
   connectOption: KafkaConnectOption;
@@ -53,7 +52,6 @@ export class MessageProducer {
       return this.connectPromise;
     }
     const {
-      transactionalId = uuidV1(),
       maxInFlightRequests = 1,
       idempotent = true,
       createPartitioner = Partitioners.JavaCompatiblePartitioner,
@@ -62,7 +60,6 @@ export class MessageProducer {
     this.producer = this.client.producer({
       maxInFlightRequests,
       idempotent,
-      transactionalId,
       ...producerOption,
     });
     this.connectPromise = this.producer.connect();

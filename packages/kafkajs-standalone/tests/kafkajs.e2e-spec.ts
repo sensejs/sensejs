@@ -1,13 +1,13 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, MessageProducer} from '../src';
 import {Subject} from 'rxjs';
-import {consoleLogger, uuidV1} from '@sensejs/utility';
+import {consoleLogger} from '@sensejs/utility';
+import {uuidV1} from '@sensejs/core';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
 
 test('KafkaJS', async () => {
-
   const producerA = new MessageProducer({
     connectOption: {brokers: ['kafka-1:9092'], clientId: 'kafkajs-1'},
     producerOption: {
@@ -35,7 +35,8 @@ test('KafkaJS', async () => {
   }
 
   const producingPromise = sendBatch();
-  const observableA = new Subject(), observableB = new Subject();
+  const observableA = new Subject(),
+    observableB = new Subject();
 
   const consumerStubA = jest.fn().mockImplementationOnce(() => observableA.complete());
   const consumerStubB = jest.fn().mockImplementationOnce(() => observableB.complete());
@@ -62,34 +63,35 @@ test('KafkaJS', async () => {
     },
   });
 
-  messageConsumerB.subscribe(TOPIC, async (message) => {
-    if (stopped) {
-      return;
-    }
-    stopped = true;
-    const {topic, partition, offset} = message;
-    await producerA.sendBatch(
-      [
+  messageConsumerB.subscribe(
+    TOPIC,
+    async (message) => {
+      if (stopped) {
+        return;
+      }
+      stopped = true;
+      const {topic, partition, offset} = message;
+      await producerA.sendBatch(
+        [
+          {
+            topic: TX_TOPIC,
+            messages: [{key: new Date().toString(), value: new Date().toString()}],
+          },
+        ],
         {
-          topic: TX_TOPIC,
-          messages: [{key: new Date().toString(), value: new Date().toString()}],
+          transactional: true,
+          transactionalCommit: {
+            consumerGroupId: 'e2etest-earliest',
+            offsets: {topics: [{topic, partitions: [{partition, offset}]}]},
+          },
         },
-      ],
-      {
-        transactional: true,
-        transactionalCommit: {
-          consumerGroupId: 'e2etest-earliest',
-          offsets: {topics: [{topic, partitions: [{partition, offset}]}]},
-        },
-      },
-    );
-    consumerStubB(message.value?.toString());
-  }, true);
+      );
+      consumerStubB(message.value?.toString());
+    },
+    true,
+  );
 
-  const p = Promise.all([
-    observableA.toPromise(),
-    observableB.toPromise(),
-  ]);
+  const p = Promise.all([observableA.toPromise(), observableB.toPromise()]);
   await messageConsumerA.start();
   await messageConsumerA.start(); // safe to call start multiple times
   await messageConsumerB.start();

@@ -121,6 +121,7 @@ importers:
       '@sensejs/utility': 'link:../utility'
       rxjs: 6.6.3
       tslib: 2.0.0
+      uuid: 8.3.0
     devDependencies:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
     specifiers:
@@ -128,6 +129,7 @@ importers:
       '@sensejs/utility': 'workspace:^0.6.1'
       rxjs: ^6.6.3
       tslib: 2.0.0
+      uuid: ^8.3.0
   packages/http:
     dependencies:
       '@koa/cors': 3.1.0
@@ -223,13 +225,11 @@ importers:
   packages/utility:
     dependencies:
       tslib: 2.0.0
-      uuid: 8.3.0
     devDependencies:
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
     specifiers:
       '@sensejs/testing-utility': 'workspace:*'
       tslib: 2.0.0
-      uuid: ^8.3.0
   tools/testing-utility:
     specifiers: {}
 lockfileVersion: 5.1
