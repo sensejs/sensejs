@@ -2,16 +2,12 @@
   "extends": "./tsconfig",
   "compilerOptions": {
     "types": ["node", "jest", "reflect-metadata"],
-    "incremental": false
-  },
-  "include": [
-    "../src/**/*.ts",
-    "./**/*.spec.ts",
-    "./**/*.test.ts",
-    "./**/*.e2e-spec.ts",
-    "./**/*.e2e-test.ts"
-  ],
-  "exclude": [
-    "**/node_modules"
-  ]
+    "incremental": false,
+    "paths": {
+      "@sensejs/*": [
+        "./packages/*/src",
+        "./tools/*/src"
+      ]
+    }
+  }
 }

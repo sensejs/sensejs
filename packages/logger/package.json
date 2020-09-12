@@ -11,7 +11,7 @@
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "scripts": {
-    "prepare": "tsc",
+    "prepare": "tsc -p tsconfig.build.json",
     "clean": "rm -rf ./lib"
   },
   "publishConfig": {

@@ -16,9 +16,16 @@
     "sourceMap": true,
     "declaration": true,
     "lib": ["es2018"],
+    "types": ["node", "reflect-metadata"],
     "skipLibCheck": true,
     "noEmit": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sensejs/*": [
+        "./packages/*/src"
+      ]
+    }
   }
 }

@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "prepare": "tsc",
+    "prepare": "tsc -p tsconfig.build.json",
     "clean": "rm -rf ./lib"
   },
   "author": "Xingcan LAN <thynson@live.com>",

@@ -44,6 +44,8 @@ export interface Logger {
   fatal(...content: [unknown, ...unknown[]]): void;
 }
 
+declare const console: Logger;
+
 export class SilentLogger implements Logger {
   debug() {}
 
