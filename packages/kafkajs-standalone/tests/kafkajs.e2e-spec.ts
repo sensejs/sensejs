@@ -1,7 +1,6 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, MessageProducer} from '../src';
 import {Subject} from 'rxjs';
-import {uuidV1} from '@sensejs/core';
 import {logLevel} from 'kafkajs';
 
 const TOPIC = 'e2e-topic-' + Date.now();
@@ -12,7 +11,7 @@ test('KafkaJS', async () => {
     connectOption: {brokers: ['kafka-1:9092'], clientId: 'kafkajs-1'},
     producerOption: {
       transactionalId: 'txid' + Date.now(),
-      messageKeyProvider: () => uuidV1(),
+      messageKeyProvider: () => 'key',
     },
   });
 

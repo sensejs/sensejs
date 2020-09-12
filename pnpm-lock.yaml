@@ -174,10 +174,8 @@ importers:
       rxjs: 6.6.3
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
       '@sensejs/testing-utility': 'link:../../tools/testing-utility'
     specifiers:
-      '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
       long: ^4.0.0
       rxjs: ^6.6.3
