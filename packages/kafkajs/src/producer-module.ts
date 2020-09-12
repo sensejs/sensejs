@@ -3,6 +3,7 @@ import {
   Constructor,
   createModule,
   Inject,
+  LoggerBuilder,
   ModuleClass,
   ModuleOption,
   OnModuleCreate,
@@ -14,8 +15,8 @@ import {
 import {MessageProducer, MessageProducerOption} from '@sensejs/kafkajs-standalone';
 import {createLogOption, KafkaLogAdapterOption} from './logging';
 
-export interface ConfigurableMessageProducerOption extends Omit<Partial<MessageProducerOption>, 'logOption'> {
-  logOption: KafkaLogAdapterOption;
+export interface ConfigurableMessageProducerOption extends Omit<MessageProducerOption, 'logOption'> {
+  logOption?: KafkaLogAdapterOption;
 }
 
 export interface MessageProducerModuleOption extends ModuleOption {
@@ -27,12 +28,12 @@ export function createMessageProducerModule(option: MessageProducerModuleOption)
   const optionFactory = provideOptionInjector(
     option.messageProducerOption,
     option.injectOptionFrom,
-    (fallback, injected): MessageProducerOption => {
+    (fallback, injected): ConfigurableMessageProducerOption => {
       const {connectOption, logOption, ...rest} = Object.assign({}, fallback, injected);
       if (typeof connectOption?.brokers === 'undefined') {
         throw new TypeError('brokers not provided');
       }
-      return {connectOption, logOption: createLogOption(logOption), ...rest};
+      return {connectOption, ...rest};
     },
   );
 
@@ -54,13 +55,18 @@ export function createMessageProducerModule(option: MessageProducerModuleOption)
   })
   class KafkaPublishModule {
     constructor(
+      @Inject(LoggerBuilder)
+      private loggerBuilder: LoggerBuilder,
       @Inject(connectionFactory.factory)
       private factory: AbstractConnectionFactory<MessageProducer, MessageProducerOption>,
+      @Inject(optionFactory.provide)
+      private config: ConfigurableMessageProducerOption,
     ) {}
 
     @OnModuleCreate()
-    async onCreate(@Inject(optionFactory.provide) config: MessageProducerOption): Promise<void> {
-      await this.factory.connect(config);
+    async onCreate(): Promise<void> {
+      const {logOption, ...rest} = this.config;
+      await this.factory.connect({logOption: createLogOption(this.loggerBuilder, logOption), ...rest});
     }
 
     @OnModuleDestroy()
