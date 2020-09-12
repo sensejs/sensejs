@@ -28,8 +28,8 @@ export interface KafkaReceivedMessage extends KafkaMessage {
 }
 
 export interface KafkaLogOption {
-  level: logLevel;
-  logCreator: (level: number) => (logEntry: LogEntry) => void;
+  level?: logLevel;
+  logCreator?: (level: number) => (logEntry: LogEntry) => void;
 }
 
 export interface KafkaClientOption {

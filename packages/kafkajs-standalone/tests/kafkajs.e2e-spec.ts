@@ -1,8 +1,8 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, MessageProducer} from '../src';
 import {Subject} from 'rxjs';
-import {consoleLogger} from '@sensejs/utility';
 import {uuidV1} from '@sensejs/core';
+import {logLevel} from 'kafkajs';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
@@ -46,8 +46,7 @@ test('KafkaJS', async () => {
       groupId: 'e2etest-latest',
     },
     logOption: {
-      loggerBuilder: () => consoleLogger,
-      level: 'DEBUG',
+      level: logLevel.NOTHING,
     },
   });
 

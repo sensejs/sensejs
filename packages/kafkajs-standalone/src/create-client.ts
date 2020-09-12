@@ -4,7 +4,7 @@ import {KafkaClientOption, KafkaConnectOption, KafkaLogOption} from './types';
 export function createKafkaClient(clientOption: KafkaClientOption): Kafka {
   const {
     connectOption: {brokers, ...kafkaConfig},
-    logOption,
+    logOption = {},
   } = clientOption;
   return new Kafka({
     brokers: typeof brokers === 'string' ? brokers.split(',') : brokers,
