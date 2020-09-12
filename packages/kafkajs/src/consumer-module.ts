@@ -23,19 +23,24 @@ import {
   SubscribeControllerMetadata,
   SubscribeTopicOption,
 } from './consumer-decorators';
+import {createLogOption, KafkaLogAdapterOption} from './logging';
+
+export interface ConfigurableMessageConsumerOption extends Omit<Partial<MessageConsumerOption>, 'logOption'> {
+  logOption?: KafkaLogAdapterOption;
+}
 
 export interface MessageConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
-  messageConsumerOption?: Partial<MessageConsumerOption>;
+  messageConsumerOption?: Partial<ConfigurableMessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier;
   matchLabels?: (string | symbol)[] | Set<string | symbol>;
 }
 
 function mergeConnectOption(
-  fallback?: Partial<MessageConsumerOption>,
-  injected?: Partial<MessageConsumerOption>,
+  fallback?: Partial<ConfigurableMessageConsumerOption>,
+  injected?: Partial<ConfigurableMessageConsumerOption>,
 ): MessageConsumerOption {
-  const {connectOption, fetchOption, ...rest} = Object.assign({}, fallback, injected);
+  const {connectOption, fetchOption, logOption, ...rest} = Object.assign({}, fallback, injected);
   if (typeof connectOption?.brokers === 'undefined') {
     throw new TypeError('connectOption.brokers not provided');
   }
@@ -43,7 +48,7 @@ function mergeConnectOption(
   if (typeof fetchOption?.groupId === 'undefined') {
     throw new TypeError('fetchOption.groupId not provided');
   }
-  return {connectOption, fetchOption, ...rest};
+  return {connectOption, fetchOption, logOption: createLogOption(logOption), ...rest};
 }
 
 function scanSubscriber(

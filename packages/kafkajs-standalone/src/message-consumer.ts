@@ -1,7 +1,7 @@
 import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage as KafkaJsMessage} from 'kafkajs';
 import {WorkerController} from './worker-synchronizer';
-import {convertConnectOption, KafkaLogOption} from './utils';
-import {KafkaConnectOption, KafkaReceivedMessage} from './types';
+import {createKafkaClient} from './create-client';
+import {KafkaClientOption, KafkaReceivedMessage} from './types';
 
 export type KafkaFetchOption = ConsumerConfig;
 
@@ -9,11 +9,9 @@ export interface KafkaCommitOption {
   commitInterval: number;
 }
 
-export interface MessageConsumerOption {
-  connectOption: KafkaConnectOption;
+export interface MessageConsumerOption extends KafkaClientOption {
   fetchOption: KafkaFetchOption;
   commitOption?: KafkaCommitOption;
-  logOption?: KafkaLogOption;
 }
 
 export interface MessageConsumeCallback {
@@ -35,7 +33,7 @@ export class MessageConsumer {
   private stoppedPromise?: Promise<void>;
 
   constructor(private option: MessageConsumerOption) {
-    this.client = new Kafka(convertConnectOption(option.connectOption, option.logOption));
+    this.client = createKafkaClient(option);
     this.consumer = this.client.consumer(option.fetchOption);
   }
 

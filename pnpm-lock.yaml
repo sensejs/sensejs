@@ -170,7 +170,6 @@ importers:
       tslib: 2.0.0
   packages/kafkajs-standalone:
     dependencies:
-      '@sensejs/utility': 'link:../utility'
       long: 4.0.0
       rxjs: 6.6.3
       tslib: 2.0.0
@@ -180,7 +179,6 @@ importers:
     specifiers:
       '@sensejs/core': 'workspace:*'
       '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.6.1'
       long: ^4.0.0
       rxjs: ^6.6.3
       tslib: 2.0.0

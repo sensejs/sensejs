@@ -1,19 +1,13 @@
-import {KafkaConfig, LogEntry, logLevel} from 'kafkajs';
-
+import {LogEntry, logLevel} from 'kafkajs';
+import {KafkaLogOption} from '@sensejs/kafkajs-standalone';
 import {Logger} from '@sensejs/utility';
-import {KafkaConnectOption} from './types';
 
 export type KafkaLogLevel = 'NOTHING' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
 
-export interface KafkaLogOption {
+export interface KafkaLogAdapterOption {
   level: KafkaLogLevel;
   loggerBuilder?: (label: string) => Logger;
   labelPrefix?: string;
-}
-
-interface KafkaJsLoggingOption {
-  level: logLevel;
-  logCreator: (level: number) => ((logEntry: LogEntry) => void);
 }
 
 function adaptLogLevel(level: logLevel) {
@@ -31,8 +25,7 @@ function adaptLogLevel(level: logLevel) {
   }
 }
 
-export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {
-
+export function createLogOption(option?: KafkaLogAdapterOption): KafkaLogOption {
   if (typeof option === 'undefined' || typeof option.loggerBuilder === 'undefined') {
     return {
       level: 0,
@@ -58,15 +51,3 @@ export function createLogOption(option?: KafkaLogOption): KafkaJsLoggingOption {
     },
   };
 }
-
-export function convertConnectOption(connectOption: KafkaConnectOption, logOption?: KafkaLogOption): KafkaConfig {
-  const {brokers, ...kafkaConfig} = connectOption;
-  return {
-    brokers: typeof brokers === 'string'
-      ? brokers.split(',')
-      : brokers,
-    ...createLogOption(logOption),
-    ...kafkaConfig,
-  };
-}
-

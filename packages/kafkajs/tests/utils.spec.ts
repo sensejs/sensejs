@@ -1,6 +1,6 @@
 // tslint:disable:no-console
 import '@sensejs/testing-utility/lib/mock-console';
-import {createLogOption} from '../src/utils';
+import {createLogOption} from '../src/logging';
 import {consoleLogger} from '@sensejs/utility';
 
 const fixture = {
@@ -32,7 +32,7 @@ describe('createLogOption', () => {
     const opt = createLogOption({
       level: 'DEBUG',
       loggerBuilder: () => consoleLogger,
-      labelPrefix: 'KafkaJS'
+      labelPrefix: 'KafkaJS',
     });
 
     for (const level of [0, 1, 2, 3, 4, 5]) {

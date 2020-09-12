@@ -21,7 +21,6 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.6.1",
     "long": "^4.0.0",
     "rxjs": "^6.6.3",
     "tslib": "2.0.0"

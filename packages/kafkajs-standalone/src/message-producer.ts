@@ -1,10 +1,8 @@
 import {Kafka, Offsets, Partitioners, Producer, ProducerConfig, RecordMetadata, TopicMessages} from 'kafkajs';
-import {KafkaConnectOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, MessageKeyProvider} from './types';
-import {convertConnectOption, KafkaLogOption} from './utils';
+import {KafkaClientOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, MessageKeyProvider} from './types';
+import {createKafkaClient} from './create-client';
 
-export interface MessageProducerOption {
-  connectOption: KafkaConnectOption;
-  logOption?: KafkaLogOption;
+export interface MessageProducerOption extends KafkaClientOption {
   producerOption?: KafkaProducerOption;
   sendOption?: KafkaSendOption;
 }
@@ -37,12 +35,8 @@ export class MessageProducer {
   private readonly producerConfig: ProducerConfig;
 
   constructor(private option: MessageProducerOption) {
-    const {
-      connectOption,
-      logOption,
-      producerOption: {messageKeyProvider = defaultKeyPolicy, ...producerConfig} = {},
-    } = option;
-    this.client = new Kafka(convertConnectOption(connectOption, logOption));
+    const {producerOption: {messageKeyProvider = defaultKeyPolicy, ...producerConfig} = {}} = option;
+    this.client = createKafkaClient(option);
     this.messageKeyProvider = messageKeyProvider;
     this.producerConfig = producerConfig;
   }
