@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/http",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -21,7 +21,7 @@
   "dependencies": {
     "@koa/cors": "^3.1.0",
     "@koa/router": "^9.4.0",
-    "@sensejs/utility": "workspace:^0.6.1",
+    "@sensejs/utility": "workspace:^0.7.0",
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0",
     "koa-qs": "^3.0.0",

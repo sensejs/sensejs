@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/typeorm",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -21,7 +21,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.6.1",
+    "@sensejs/utility": "workspace:^0.7.0",
     "tslib": "2.0.0"
   },
   "devDependencies": {
@@ -29,7 +29,7 @@
     "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.6.0",
+    "@sensejs/core": "workspace:^0.7.0",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.2.24 || ^0.3.0-rc.19"
