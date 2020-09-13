@@ -29,6 +29,6 @@
     "@sensejs/core": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.6.0"
+    "@sensejs/core": "workspace:^"
   }
 }

@@ -32,7 +32,7 @@
     "@sensejs/core": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.6.0",
+    "@sensejs/core": "workspace:^",
     "inversify": "^5.0.1",
     "reflect-metadata": "^0.1.13"
   },
