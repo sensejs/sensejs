@@ -76,6 +76,8 @@ export abstract class HttpContext extends RequestContext {
 
   abstract readonly nativeResponse: unknown;
 
+  abstract readonly nativeContext: unknown;
+
   abstract readonly request: HttpRequest;
 
   abstract readonly response: HttpResponse;
