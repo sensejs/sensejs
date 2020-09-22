@@ -102,6 +102,7 @@ export class KoaHttpContext extends HttpContext {
 export class KoaHttpApplicationBuilder extends HttpAdaptor {
   private readonly globalInterceptors: Constructor<HttpInterceptor>[] = [];
   private readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
+  private errorHandler?: (e: unknown) => any;
   private middlewareList: Koa.Middleware[] = [];
   private bodyParserOption?: KoaBodyParserOption;
   private queryStringParsingMode: QueryStringParsingMode = 'simple';
@@ -148,9 +149,15 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     return this;
   }
 
+  setErrorHandler(cb: (e: unknown) => any): this {
+    this.errorHandler = cb;
+    return this;
+  }
+
   build(httpAppOption: HttpApplicationOption, container: Container): RequestListener {
     const koa = this.createKoaInstance();
     const {corsOption, trustProxy = false} = httpAppOption;
+    const errorHandler = this.errorHandler;
     koa.proxy = trustProxy;
     if (corsOption) {
       koa.use(KoaCors(corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
@@ -162,6 +169,10 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     const router = this.createGlobalRouter(container);
     koa.use(router.routes());
     koa.use(router.allowedMethods());
+    if (errorHandler) {
+      koa.on('error', errorHandler);
+    }
+
     return koa.callback();
   }
 

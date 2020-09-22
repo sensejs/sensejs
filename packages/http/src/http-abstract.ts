@@ -90,5 +90,7 @@ export abstract class HttpAdaptor {
 
   abstract addGlobalInspector(inspector: Constructor<HttpInterceptor>): this;
 
+  abstract setErrorHandler(cb: (e: unknown) => any): this;
+
   abstract build(appOption: HttpApplicationOption, container: Container): RequestListener;
 }

@@ -9,6 +9,9 @@ import {
   Constructor,
   createModule,
   Inject,
+  InjectLogger,
+  Logger,
+  LoggerBuilder,
   ModuleClass,
   ModuleOption,
   ModuleScanner,
@@ -30,7 +33,6 @@ const defaultHttpConfig = {
 };
 
 export interface HttpModuleOption extends ModuleOption {
-
   /**
    *
    */
@@ -68,9 +70,7 @@ export interface HttpModuleOption extends ModuleOption {
  * @constructor
  */
 export function createHttpModule(option: HttpModuleOption = {httpOption: defaultHttpConfig}): Constructor {
-  const httpAdaptorFactory = option.httpAdaptorFactory || (
-    () => new KoaHttpApplicationBuilder()
-  );
+  const httpAdaptorFactory = option.httpAdaptorFactory || (() => new KoaHttpApplicationBuilder());
   const optionProvider = provideOptionInjector<HttpOption>(
     option.httpOption,
     option.injectOptionFrom,
@@ -91,13 +91,16 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
     private httpServer?: http.Server;
 
     constructor(
+      @InjectLogger() private logger: Logger,
       @Inject(Container) private container: Container,
       @Inject(optionProvider.provide) private httpOption: HttpOption,
     ) {}
 
     @OnModuleCreate()
     async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
-      const httpAdaptor = httpAdaptorFactory();
+      const httpAdaptor = httpAdaptorFactory().setErrorHandler((e) => {
+        this.logger.error('Error occurred when handling http request: ', e);
+      });
 
       for (const inspector of option.globalInterceptors || []) {
         httpAdaptor.addGlobalInspector(inspector);
@@ -121,10 +124,7 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
       })();
     }
 
-    private scanControllers(
-      httpAdaptor: HttpAdaptor,
-      moduleScanner: ModuleScanner
-    ) {
+    private scanControllers(httpAdaptor: HttpAdaptor, moduleScanner: ModuleScanner) {
       const matchLabels = new Set<string | symbol>(option.matchLabels);
       moduleScanner.scanModule((metadata) => {
         metadata.components.forEach((component) => {
@@ -141,10 +141,11 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
     }
 
     private createHttpServer(httpOption: HttpOption, httpAdaptor: HttpAdaptor) {
+      const {listenPort, listenAddress, ...httpApplicationOption} = httpOption;
       return new Promise<http.Server>((resolve, reject) => {
-        const httpServer = http.createServer(httpAdaptor.build(httpOption, this.container));
+        const httpServer = http.createServer(httpAdaptor.build(httpApplicationOption, this.container));
         httpServer.once('error', reject);
-        httpServer.listen(httpOption.listenPort, httpOption.listenAddress, () => {
+        httpServer.listen(listenPort, listenAddress, () => {
           httpServer.removeListener('error', reject);
           resolve(httpServer);
         });
