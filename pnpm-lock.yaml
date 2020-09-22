@@ -142,10 +142,12 @@ importers:
       tslib: 2.0.0
     devDependencies:
       '@sensejs/core': 'link:../core'
+      '@sensejs/testing-utility': 'link:../../tools/testing-utility'
     specifiers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^9.4.0
       '@sensejs/core': 'workspace:*'
+      '@sensejs/testing-utility': 'workspace:*'
       '@sensejs/utility': 'workspace:^0.7.0'
       koa: ^2.13.0
       koa-bodyparser: ^4.3.0

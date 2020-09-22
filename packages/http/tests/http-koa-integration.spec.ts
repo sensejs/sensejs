@@ -1,3 +1,4 @@
+import '@sensejs/testing-utility/lib/mock-console';
 import {Constructor, Inject} from '@sensejs/core';
 import {Container} from 'inversify';
 import supertest from 'supertest';
@@ -70,6 +71,7 @@ describe('KoaHttpApplicationBuilder', () => {
         expect(ctx.response.data).toBeInstanceOf(Object);
       }
     }
+
     const container = new Container();
     container.bind(FooController).toSelf();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
@@ -89,6 +91,32 @@ describe('KoaHttpApplicationBuilder', () => {
       .send(body)
       .expect('access-control-allow-origin', '*')
       .expect(200);
+  });
+
+  test('error handling', async () => {
+    @Controller('/')
+    class FooController {
+      @GET('/')
+      method() {
+        const circular: any = {};
+        circular.circular = circular;
+        return circular;
+      }
+    }
+
+    const container = new Container();
+    container.bind(FooController).toSelf();
+    const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
+    koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
+    const koaHttpApplication = koaHttpApplicationBuilder.build(
+      {trustProxy: true, corsOption: {origin: '*'}},
+      container,
+    );
+    const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
+
+    const spy = jest.spyOn(console, 'error');
+    await testClient.get('/');
+    expect(spy).toHaveBeenCalled();
   });
 
   test('custom param binding', async () => {
