@@ -26,6 +26,7 @@ before_install:
   - ./cc-test-reporter before-build
   - docker-compose up -d zookeeper kafka-1 kafka-2 kafka-3
   - npm i -g coveralls
+  - docker pull docker/dockerfile:experimental
 
 after_success:
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
