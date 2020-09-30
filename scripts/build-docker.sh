@@ -22,7 +22,10 @@ function baseImage() {
 
 function buildRoot() {
     echo "FROM base AS dev"
-    echo "RUN --mount=type=bind,source=$HOME/.pnpm-store,target=/.pnpm-store pnpm recursive install --frozen-lockfile "
+    if [[ -n "$PNPM_STORE_CACHE" ]]; then
+      RUN_OPT="--mount=type=bind,source=${PNPM_STORE_CACHE},target=/.pnpm-store"
+    fi
+    echo "RUN ${RUN_OPT-} pnpm recursive install --frozen-lockfile "
     echo "COPY . ./"
     echo "RUN pnpm run build"
 }
