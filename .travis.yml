@@ -9,6 +9,10 @@ env:
   - NODE_VERSION=12
   - NODE_VERSION=14
 
+cache:
+  directories:
+    - /home/travis/.pnpm-store
+
 script:
   - docker-compose run -T test
 
