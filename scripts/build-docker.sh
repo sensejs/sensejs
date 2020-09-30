@@ -26,5 +26,6 @@ function buildRoot() {
     echo "COPY . ./"
     echo "RUN pnpm run build"
 }
-
+# Using docker buildkit to ensure bind mount
+export DOCKER_BUILDKIT=1
 (baseImage; buildRoot) | docker build -f - -t sensejs . $@
