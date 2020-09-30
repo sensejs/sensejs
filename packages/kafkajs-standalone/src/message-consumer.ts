@@ -85,7 +85,7 @@ export class MessageConsumer {
         autoCommitInterval: this.option.commitOption?.commitInterval,
         eachBatchAutoResolve: false,
         partitionsConsumedConcurrently: totalPartitions,
-        eachBatch: this.eachBatch.bind(this),
+        eachBatch: async (payload) => this.eachBatch(payload),
       });
     } finally {
       await admin.disconnect();
@@ -100,10 +100,7 @@ export class MessageConsumer {
     }
     const commitOffsets = async (forced: boolean = false) => {
       if (forced) {
-        // payload.uncommittedOffsets does not return a promise actually, which is an error of kafkajs' typing file
-        // however it's actually safe to await a non-promise value anyway.
-        // bso keep "await" keyword until kafkajs fix their typing bug
-        return payload.commitOffsetsIfNecessary(await payload.uncommittedOffsets());
+        return payload.commitOffsetsIfNecessary(payload.uncommittedOffsets());
       } else {
         return payload.commitOffsetsIfNecessary();
       }

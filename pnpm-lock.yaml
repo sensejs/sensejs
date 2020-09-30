@@ -22,7 +22,7 @@ importers:
       husky: 4.3.0
       inversify: 5.0.1
       jest: 26.4.2
-      kafkajs: 1.12.0
+      kafkajs: 1.14.0
       lint-staged: 10.3.0
       lodash: 4.17.20
       prettier: 2.1.1
@@ -58,7 +58,7 @@ importers:
       husky: ^4.3.0
       inversify: ^5.0.1
       jest: ^26.4.2
-      kafkajs: ^1.12.0
+      kafkajs: ^1.14.0
       lint-staged: ^10.3.0
       lodash: ^4.17.20
       prettier: ^2.1.1
@@ -4143,14 +4143,12 @@ packages:
       '0': node >=0.6.0
     resolution:
       integrity: sha1-MT5mvB5cwG5Di8G3SZwuXFastqI=
-  /kafkajs/1.12.0:
-    dependencies:
-      long: 4.0.0
+  /kafkajs/1.14.0:
     dev: true
     engines:
-      node: '>=8.6.0'
+      node: '>=10.13.0'
     resolution:
-      integrity: sha512-Izkd9iFRgeeKaHEgVpGQH08ygzCbHSxTbnu8W3G3uiNaVjGibUTmTwjv1Qf2M8NORXcPfzwVyg6bBlVj4SKr9g==
+      integrity: sha512-W+WCekiooY5rJP3Me5N3gWcQ8O6uG6lw0vv9t+sI+WqXKjKwj2+CWIXJy241x+ITE+1M1D19ABSiL2J8lKja5A==
   /keygrip/1.1.0:
     dependencies:
       tsscmp: 1.0.6
@@ -4398,6 +4396,7 @@ packages:
     resolution:
       integrity: sha512-9fkkDevMefjg0mmzWFBW8YkFP91OrizzkW3diF7CpG+S2EYdy4+TVfGwz1zeF8x7hCx1ovSPTOE9Ngib74qqUg==
   /long/4.0.0:
+    dev: false
     resolution:
       integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
   /make-dir/3.1.0:
