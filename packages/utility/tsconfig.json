@@ -1,8 +1,5 @@
 {
   "extends": "../../tsconfig",
-  "compilerOptions": {
-    "types": ["reflect-metadata"]
-  },
   "include": [
     "src/**/*.ts"
   ],
