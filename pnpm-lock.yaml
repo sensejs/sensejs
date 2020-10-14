@@ -34,7 +34,7 @@ importers:
       ts-jest: 26.3.0_jest@26.4.2+typescript@4.0.2
       ts-node: 9.0.0_typescript@4.0.2
       tslib: 2.0.0
-      typeorm: 0.2.25_sqlite3@5.0.0
+      typeorm: 0.3.0-rc.21_sqlite3@5.0.0
       typescript: 4.0.2
     specifiers:
       '@commitlint/cli': ^9.1.2
@@ -70,7 +70,7 @@ importers:
       ts-jest: ^26.3.0
       ts-node: ^9.0.0
       tslib: 2.0.0
-      typeorm: ^0.2.25
+      typeorm: ^0.3.0-rc.21
       typescript: ^4.0.2
   examples/demo-app:
     dependencies:
@@ -952,6 +952,10 @@ packages:
     dev: true
     resolution:
       integrity: sha512-MZPUxrmFubI36XS1DI3qmI0YdN1gks62JtFZvxR67ljjSNCeK6U08Zx4msEWOXuofgqUt6zPHSi1H9fbjR/NRA==
+  /@sqltools/formatter/1.2.2:
+    dev: true
+    resolution:
+      integrity: sha512-/5O7Fq6Vnv8L6ucmPjaWbVG1XkP4FO+w5glqfkIsq3Xw4oyNAdJddbnYodNDAfjVUvo/rrSCTom4kAND7T1o5Q==
   /@types/accepts/1.3.5:
     dependencies:
       '@types/node': 14.6.4
@@ -1908,6 +1912,7 @@ packages:
       string-width: 3.1.0
       strip-ansi: 5.2.0
       wrap-ansi: 5.1.0
+    dev: false
     resolution:
       integrity: sha512-PYeGSEmmHM6zvoef2w8TPzlrnNpXIjTipYK780YswmIP9vjxmd6Y2a3CB2Ks6/AU8NHjZugXvo8w3oWM2qnwXA==
   /cliui/6.0.0:
@@ -1917,6 +1922,14 @@ packages:
       wrap-ansi: 6.2.0
     resolution:
       integrity: sha512-t6wbgtoCXvAzst7QgXxJYqPt0usEfbgQdftEPbLL/cvv6HPE5VgvqCuAIDR0NgU52ds6rFwqrgakNLrHEjCbrQ==
+  /cliui/7.0.1:
+    dependencies:
+      string-width: 4.2.0
+      strip-ansi: 6.0.0
+      wrap-ansi: 7.0.0
+    dev: true
+    resolution:
+      integrity: sha512-rcvHOWyGyid6I1WjT/3NatKj2kDt9OdSHSXpyLXaMWFbKpGACNW8pRhhdPUq9MWUOdwn8Rz9AVETjF4105rZZQ==
   /cluster-key-slot/1.1.0:
     dev: false
     engines:
@@ -2394,10 +2407,17 @@ packages:
     resolution:
       integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==
   /dotenv/6.2.0:
+    dev: false
     engines:
       node: '>=6'
     resolution:
       integrity: sha512-HygQCKUBSFl8wKQZBSemMywRWcEDNidvNbjGVyZu3nbZ8qq9ubiPoGLMdRDpfSrpkkm9BXYFkpKxxFX38o/76w==
+  /dotenv/8.2.0:
+    dev: true
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
   /ecc-jsbn/0.1.2:
     dependencies:
       jsbn: 0.1.1
@@ -2446,6 +2466,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-7dFHNmqeFSEt2ZBsCriorKnn3Z2pj+fd9kmI6QoWw4//DL+icEBfc0U7qJCisqrTsKTjw4fNFy2pW9OqStD84g==
+  /escalade/3.1.1:
+    dev: true
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-k0er2gUkLf8O0zKJiAhmkTnJlTvINGv7ygDNPbeIsX/TJjGJZHuh9B2UxbsaEkmlEo9MfhrSzmhIlhRlI2GXnw==
   /escape-html/1.0.3:
     dev: false
     resolution:
@@ -2784,6 +2810,7 @@ packages:
   /find-up/3.0.0:
     dependencies:
       locate-path: 3.0.0
+    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -4329,6 +4356,7 @@ packages:
     dependencies:
       p-locate: 3.0.0
       path-exists: 3.0.0
+    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -4928,6 +4956,7 @@ packages:
   /p-locate/3.0.0:
     dependencies:
       p-limit: 2.3.0
+    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -4997,6 +5026,7 @@ packages:
     resolution:
       integrity: sha1-s2PlXoAGym/iF4TS2yK9FdeRfxQ=
   /path-exists/3.0.0:
+    dev: false
     engines:
       node: '>=4'
     resolution:
@@ -6329,11 +6359,38 @@ packages:
       xml2js: 0.4.23
       yargonaut: 1.1.4
       yargs: 13.3.2
+    dev: false
     hasBin: true
     peerDependencies:
       sqlite3: ^4.1.1
     resolution:
       integrity: sha512-yzQ995fyDy5wolSLK9cmjUNcmQdixaeEm2TnXB5HN++uKbs9TiR6Y7eYAHpDlAE8s9J1uniDBgytecCZVFergQ==
+  /typeorm/0.3.0-rc.21_sqlite3@5.0.0:
+    dependencies:
+      '@sqltools/formatter': 1.2.2
+      app-root-path: 3.0.0
+      buffer: 5.6.0
+      chalk: 4.1.0
+      cli-highlight: 2.1.4
+      debug: 4.1.1
+      dotenv: 8.2.0
+      glob: 7.1.6
+      js-yaml: 3.14.0
+      mkdirp: 1.0.4
+      reflect-metadata: 0.1.13
+      sha.js: 2.4.11
+      sqlite3: 5.0.0
+      tslib: 1.13.0
+      xml2js: 0.4.23
+      yargonaut: 1.1.4
+      yargs: 16.0.3
+      zen-observable-ts: 0.8.21
+    dev: true
+    hasBin: true
+    peerDependencies:
+      sqlite3: ^4.1.1
+    resolution:
+      integrity: sha512-GaMGby3Y7mMxAGBGYQfcZFs0hM6X1+XK4Fv1BnULSl9PmBRqnFpADBPT81odtc1hURxlykX6Meux2R3VTrbDRg==
   /typescript/4.0.2:
     dev: true
     engines:
@@ -6526,6 +6583,7 @@ packages:
       ansi-styles: 3.2.1
       string-width: 3.1.0
       strip-ansi: 5.2.0
+    dev: false
     engines:
       node: '>=6'
     resolution:
@@ -6539,6 +6597,16 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==
+  /wrap-ansi/7.0.0:
+    dependencies:
+      ansi-styles: 4.2.1
+      string-width: 4.2.0
+      strip-ansi: 6.0.0
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
   /wrappy/1.0.2:
     resolution:
       integrity: sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8=
@@ -6603,6 +6671,12 @@ packages:
   /y18n/4.0.0:
     resolution:
       integrity: sha512-r9S/ZyXu/Xu9q1tYlpsLIsa3EeLXXk0VwlxqTcFRfg9EhMW+17kbt9G0NrgCmhGb5vT2hyhJZLfDGx+7+5Uj/w==
+  /y18n/5.0.2:
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-CkwaeZw6dQgqgPGeTWKMXCRmMcBgETFlTml1+ZOO+q7kGst8NREJ+eWwFNPVUQ4QGdAaklbqCZHH6Zuep1RjiA==
   /yallist/3.1.1:
     resolution:
       integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==
@@ -6623,6 +6697,7 @@ packages:
     dependencies:
       camelcase: 5.3.1
       decamelize: 1.2.0
+    dev: false
     resolution:
       integrity: sha512-3lbsNRf/j+A4QuSZfDRA7HRSfWrzO0YjqTJd5kjAq37Zep1CEgaYmrH9Q3GwPiB9cHyd1Y1UwggGhJGoxipbzg==
   /yargs-parser/18.1.3:
@@ -6633,6 +6708,12 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-o50j0JeToy/4K6OZcaQmW6lyXXKhq7csREXcDwk2omFPJEwUNOVtJKvmDr9EI1fAJZUyZcRF7kxGBWmRXudrCQ==
+  /yargs-parser/20.2.1:
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-yYsjuSkjbLMBp16eaOt7/siKTjNVjMm3SoJnIg3sEh/JsvqVVDyjRKmaJV4cl+lNIgq6QEco2i3gDebJl7/vLA==
   /yargs/13.3.2:
     dependencies:
       cliui: 5.0.0
@@ -6645,6 +6726,7 @@ packages:
       which-module: 2.0.0
       y18n: 4.0.0
       yargs-parser: 13.1.2
+    dev: false
     resolution:
       integrity: sha512-AX3Zw5iPruN5ie6xGRIDgqkT+ZhnRlZMLMHAs8tg7nRruy2Nb+i5o9bwghAogtM08q1dpr2LVoS8KSTMYpWXUw==
   /yargs/15.4.1:
@@ -6664,6 +6746,20 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A==
+  /yargs/16.0.3:
+    dependencies:
+      cliui: 7.0.1
+      escalade: 3.1.1
+      get-caller-file: 2.0.5
+      require-directory: 2.1.1
+      string-width: 4.2.0
+      y18n: 5.0.2
+      yargs-parser: 20.2.1
+    dev: true
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-6+nLw8xa9uK1BOEOykaiYAJVh6/CjxWXK/q9b5FpRgNslt8s22F2xMBqVIKgCRjNgGvGPBy8Vog7WN7yh4amtA==
   /ylru/1.2.1:
     dev: false
     engines:
@@ -6676,3 +6772,14 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
+  /zen-observable-ts/0.8.21:
+    dependencies:
+      tslib: 1.13.0
+      zen-observable: 0.8.15
+    dev: true
+    resolution:
+      integrity: sha512-Yj3yXweRc8LdRMrCC8nIc4kkjWecPAUVh0TI0OUrWXx6aX790vLcDlWca6I4vsyCGH3LpWxq0dJRcMOFoVqmeg==
+  /zen-observable/0.8.15:
+    dev: true
+    resolution:
+      integrity: sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==

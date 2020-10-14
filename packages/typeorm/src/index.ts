@@ -34,24 +34,38 @@ function checkEntity(entityConstructor: string | Function, decorator: Function) 
   }
 }
 
+export const EntityManagerInjectSymbol = Symbol();
+
+export function InjectEntityManager() {
+  return Inject(EntityManagerInjectSymbol);
+}
+
 export function InjectRepository(entityConstructor: string | Function) {
   checkEntity(entityConstructor, InjectRepository);
-  return Inject(EntityManager, {transform: (entityManager) => entityManager.getRepository(entityConstructor)});
+  return Inject(EntityManagerInjectSymbol, {
+    transform: (entityManager: EntityManager) => entityManager.getRepository(entityConstructor),
+  });
 }
 
 export function InjectTreeRepository(entityConstructor: string | Function) {
   checkEntity(entityConstructor, InjectTreeRepository);
-  return Inject(EntityManager, {transform: (entityManager) => entityManager.getTreeRepository(entityConstructor)});
+  return Inject(EntityManagerInjectSymbol, {
+    transform: (entityManager: EntityManager) => entityManager.getTreeRepository(entityConstructor),
+  });
 }
 
 export function InjectMongoRepository(entityConstructor: string | Function) {
   checkEntity(entityConstructor, InjectMongoRepository);
-  return Inject(EntityManager, {transform: (entityManager) => entityManager.getMongoRepository(entityConstructor)});
+  return Inject(EntityManagerInjectSymbol, {
+    transform: (entityManager: EntityManager) => entityManager.getMongoRepository(entityConstructor),
+  });
 }
 
 export function InjectCustomRepository(entityConstructor: Function) {
   checkEntity(entityConstructor, InjectCustomRepository);
-  return Inject(EntityManager, {transform: (entityManager) => entityManager.getCustomRepository(entityConstructor)});
+  return Inject(EntityManagerInjectSymbol, {
+    transform: (entityManager: EntityManager) => entityManager.getCustomRepository(entityConstructor),
+  });
 }
 
 export enum TransactionLevel {
@@ -74,7 +88,7 @@ export function Transactional(level?: TransactionLevel): Constructor<RequestInte
       try {
         await this.queryRunner.connect();
         const runInTransaction = async (entityManager: EntityManager) => {
-          context.bindContextValue(EntityManager, entityManager);
+          context.bindContextValue(EntityManagerInjectSymbol, entityManager);
           return next();
         };
 
@@ -147,7 +161,7 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
       this.entityManager = connection.manager;
       attachLoggerToEntityManager(this.entityManager, this.logger);
       this.module = new ContainerModule(async (bind) => {
-        bind(EntityManager).toConstantValue(this.entityManager);
+        bind(EntityManagerInjectSymbol).toConstantValue(this.entityManager);
       });
     }
 
