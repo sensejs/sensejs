@@ -4,6 +4,10 @@ import {Component} from './component';
 import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
 
 export abstract class RequestContext {
+  abstract readonly targetConstructor: Constructor;
+
+  abstract readonly targetMethodKey: keyof any;
+
   abstract bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void;
 }
 

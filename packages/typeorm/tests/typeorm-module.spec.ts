@@ -1,5 +1,6 @@
 import {
   Component,
+  Constructor,
   Inject,
   ModuleClass,
   ModuleRoot,
@@ -21,6 +22,14 @@ import {
 import '@sensejs/testing-utility/lib/mock-console';
 
 class MockRequestContext extends RequestContext {
+  get targetConstructor(): Constructor {
+    throw new Error('mock');
+  }
+
+  get targetMethodKey(): keyof any {
+    throw new Error('mock');
+  }
+
   constructor(private container: Container) {
     super();
   }

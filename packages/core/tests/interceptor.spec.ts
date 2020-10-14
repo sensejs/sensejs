@@ -1,5 +1,12 @@
 import {Container} from 'inversify';
-import {composeRequestInterceptor, Inject, RequestContext, RequestInterceptor, ServiceIdentifier} from '../src';
+import {
+  composeRequestInterceptor,
+  Constructor,
+  Inject,
+  RequestContext,
+  RequestInterceptor,
+  ServiceIdentifier,
+} from '../src';
 
 const FOO_SYMBOL = Symbol('FOO_SYMBOL'),
   BAR_SYMBOL = Symbol('BAR_SYMBOL');
@@ -19,6 +26,12 @@ class BarInterceptor extends RequestInterceptor {
 }
 
 class MockRequestContext extends RequestContext {
+  get targetConstructor(): Constructor {
+    throw new Error('mock');
+  }
+  get targetMethodKey(): keyof any {
+    throw new Error('mock');
+  }
   constructor(private container: Container) {
     super();
   }
