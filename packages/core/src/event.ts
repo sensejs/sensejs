@@ -438,10 +438,15 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(
         this.eventBus.subscribe(identifier, (messenger) => {
-          if (!subscribeEventMetadata.filter(messenger.payload)) {
+          const {acknowledge, container, payload, context} = messenger;
+          try {
+            if (!subscribeEventMetadata.filter(messenger.payload)) {
+              return;
+            }
+          } catch (e) {
+            acknowledge(Promise.reject(e));
             return;
           }
-          const {acknowledge, container, payload, context} = messenger;
           acknowledge(
             methodInvokerBuilder
               .setContainer(container)

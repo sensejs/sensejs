@@ -7,7 +7,6 @@ import {
   InjectEventAnnouncer,
   ModuleClass,
   ModuleRoot,
-  RequestContext,
   RequestInterceptor,
   SubscribeEvent,
   SubscribeEventController,
@@ -81,6 +80,12 @@ describe('Event subscribe and announce', () => {
         expect(filterSpy).toHaveBeenNthCalledWith(1, undefined);
         expect(filterSpy).toHaveBeenNthCalledWith(2, 'payload');
         expect(spy3).toHaveBeenNthCalledWith(2, 2, 1);
+
+        filterSpy.mockImplementationOnce(() => {
+          throw new Error();
+        });
+        await expect(() => eventPublisher.prepare('channel').bind('a', 2).bind('b', 1).publish('channel', 'payload'))
+          .rejects;
       }
     }
 
