@@ -230,7 +230,9 @@ export interface EventAnnouncer {
 export abstract class EventPublishPreparation {
   abstract bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this;
 
-  abstract publish(): Promise<void>;
+  abstract publish<T>(): Promise<void>;
+
+  abstract publish<T>(serviceIdentifier: ServiceIdentifier<T>, payload: T): Promise<void>;
 }
 
 export abstract class EventPublisher {
@@ -253,8 +255,12 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
       return this;
     }
 
-    async publish(): Promise<void> {
-      await this.eventBus.announceEvent(this.channel, this.container);
+    async publish<T>(...args: [undefined] | [ServiceIdentifier<T>, T]): Promise<void> {
+      if (args[0] !== undefined) {
+        this.container.bind(args[0]).toConstantValue(args[1]);
+        return this.eventBus.announceEvent(this.channel, this.container, args[1]);
+      }
+      return this.eventBus.announceEvent(this.channel, this.container);
     }
   };
 

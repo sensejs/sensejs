@@ -18,6 +18,7 @@ describe('Event subscribe and announce', () => {
     const spy = jest.fn();
     const spy2 = jest.fn();
     const spy3 = jest.fn();
+    const filterSpy = jest.fn();
 
     @SubscribeEventController()
     class SubscribeController {
@@ -31,7 +32,12 @@ describe('Event subscribe and announce', () => {
         spy2(param);
       }
 
-      @SubscribeEvent('channel')
+      @SubscribeEvent('channel', {
+        filter: (x) => {
+          filterSpy(x);
+          return true;
+        },
+      })
       channel(@Inject('a') a: any, @Inject('b') b: any) {
         spy3(a, b);
       }
@@ -68,10 +74,12 @@ describe('Event subscribe and announce', () => {
           payload: 'bar',
         });
         await announcer.bind('a', 1).bind('b', 2).announce('channel');
-        await eventPublisher.prepare('channel').bind('a', 2).bind('b', 1).publish();
+        await eventPublisher.prepare('channel').bind('a', 2).bind('b', 1).publish('channel', 'payload');
         expect(spy).toHaveBeenCalledWith('bar');
         expect(spy2).toHaveBeenLastCalledWith('bar');
         expect(spy3).toHaveBeenNthCalledWith(1, 1, 2);
+        expect(filterSpy).toHaveBeenNthCalledWith(1, undefined);
+        expect(filterSpy).toHaveBeenNthCalledWith(2, 'payload');
         expect(spy3).toHaveBeenNthCalledWith(2, 2, 1);
       }
     }
