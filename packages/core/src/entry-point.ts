@@ -92,7 +92,7 @@ export class ApplicationRunner {
   private uncaughtErrorObservable = merge(
     fromEvent(this.process, 'uncaughtException'),
     fromEvent(this.process, 'unhandledRejection'),
-  ).pipe(mapTo(this.runOption.errorExitOption.exitCode));
+  );
 
   constructor(
     private process: NodeJS.EventEmitter,
@@ -163,14 +163,21 @@ export class ApplicationRunner {
 
   private async performRun() {
     const moduleRoot = new ModuleRoot(this.createApplicationRunnerModule(), this.processManager);
+    const uncaughtErrorExitCodeObservable = this.uncaughtErrorObservable.pipe(
+      mapTo(this.runOption.errorExitOption.exitCode),
+    );
 
     const warningSubscriber = this.getWarningSubscriber();
-    const uncaughtErrorSubscriber = this.getUncaughtErrorSubscriber(this.uncaughtErrorObservable);
+    const uncaughtErrorSubscriber = this.getUncaughtErrorSubscriber(uncaughtErrorExitCodeObservable);
     const shutdownSignalSubscriber = this.getShutdownSignalSubscriber(this.exitSignalObservable);
 
     const startupObservable = this.getStartupObservable(moduleRoot);
     const runningObservable = this.getRunningObservable(startupObservable, moduleRoot);
-    const shutdownObservable = this.getShutdownSubscriber(runningObservable, moduleRoot, this.uncaughtErrorObservable);
+    const shutdownObservable = this.getShutdownSubscriber(
+      runningObservable,
+      moduleRoot,
+      uncaughtErrorExitCodeObservable,
+    );
 
     try {
       const exitCode = await merge(shutdownObservable, this.forcedExitSignalObservable).pipe(first()).toPromise();
