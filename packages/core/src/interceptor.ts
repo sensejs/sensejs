@@ -23,7 +23,7 @@ export function composeRequestInterceptor<Context extends RequestContext>(
   interceptors.forEach((interceptor) => {
     container
       .bind(interceptor)
-      .to(createConstructorArgumentTransformerProxy(interceptor, getConstructorInjectMetadata(interceptor)));
+      .to(createConstructorArgumentTransformerProxy(interceptor));
   });
 
   @Component()

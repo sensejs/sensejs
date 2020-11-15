@@ -78,14 +78,15 @@ export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
 }
 
 export function SubscribeController(option: SubscribeControllerOption = {}) {
-  return (constructor: Constructor<{}>): void => {
+  return <T extends Constructor>(constructor: T): T => {
     const {interceptors = [], labels} = option;
+    constructor = Component()(constructor);
     const metadata: SubscribeControllerMetadata = {
       target: constructor,
       interceptors,
       labels: new Set(labels),
     };
     setSubscribeControllerMetadata(constructor, metadata);
-    Component()(constructor);
+    return constructor;
   };
 }

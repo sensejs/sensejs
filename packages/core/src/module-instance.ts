@@ -82,15 +82,12 @@ function createContainerModule<T>(option: ModuleMetadata<T>) {
     });
 
     components.forEach((component) => {
-      const constructor = createConstructorArgumentTransformerProxy(component, getConstructorInjectMetadata(component));
-      bindComponent(bind, constructor, getComponentMetadata(component));
+      bindComponent(bind, component, getComponentMetadata(component));
     });
 
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
       const {provide, factory, scope, ...rest} = factoryProvider;
-      const constructMetadata = getConstructorInjectMetadata(factory);
-      const proxy = createConstructorArgumentTransformerProxy(factory, constructMetadata);
-      const factoryBinding = bind(factory).to(proxy);
+      const factoryBinding = bind(factory).toSelf();
       scopedBindingHelper(factoryBinding, scope);
       const targetBinding = bind(provide).toDynamicValue((context: interfaces.Context) => {
         const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
@@ -155,9 +152,7 @@ export class ModuleInstance<T extends {} = {}> {
   }
 
   private async performSetup() {
-    const injectMetadata = getConstructorInjectMetadata(this.moduleClass);
-    const proxy = createConstructorArgumentTransformerProxy(this.moduleClass, injectMetadata);
-    this.container.bind(this.moduleClass).to(proxy).inSingletonScope();
+    this.container.bind(this.moduleClass).toSelf().inSingletonScope();
     this.container.load(this.containerModule);
     this.moduleInstance = this.container.get<object>(this.moduleClass);
     for (const method of this.moduleMetadata.onModuleCreate) {

@@ -139,12 +139,13 @@ function getSubscribeEventControllerMetadata(target: Constructor): SubscribeEven
 }
 
 export function SubscribeEventController(option: SubscribeEventControllerOption = {}) {
-  return (constructor: Constructor): void => {
-    Component()(constructor);
+  return <T extends Constructor>(constructor: T): T => {
+    constructor = Component()(constructor);
     setSubscribeEventControllerMetadata(constructor, {
       interceptors: option.interceptors ?? [],
       labels: new Set(option.labels),
     });
+    return constructor;
   };
 }
 

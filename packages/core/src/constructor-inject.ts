@@ -28,20 +28,19 @@ export function decorateInjectedConstructorParam(target: Class, index: number, t
   metadata.transformers[index] = transformer;
 }
 
-export function createConstructorArgumentTransformerProxy<T>(
-  target: Constructor<T>,
-  metadata?: ConstructorInjectMetadata,
-): Constructor<T> {
+export function createConstructorArgumentTransformerProxy<T extends Constructor>(target: T): T {
+  const metadata = getConstructorInjectMetadata(target);
   if (!metadata) {
     return target;
   }
   const untransformed = (x: unknown) => x;
+  const transformers = metadata.transformers;
   const argumentMapper = (arg: unknown, index: number) => {
-    const transformer = metadata.transformers[index] ?? untransformed;
+    const transformer = transformers[index] ?? untransformed;
     return transformer(arg);
   };
 
-  const proxy = new Proxy<Constructor<T>>(target, {
+  const proxy = new Proxy<T>(target, {
     construct: (target: Constructor, args: unknown[], self: object) => {
       return Reflect.construct(target, args.map(argumentMapper), self);
     },

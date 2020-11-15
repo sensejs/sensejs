@@ -189,10 +189,10 @@ export function getHttpControllerMetadata(target: object): ControllerMetadata | 
  * @decorator
  */
 export function Controller(path: string, controllerOption: ControllerOption = {}) {
-  return (target: Constructor): void => {
+  return <T extends Constructor>(target: T): T => {
     // Decorate target as a component
-    Component()(target);
     const labels = controllerOption.labels;
+    target = Component()(target);
     setHttpControllerMetadata(target, {
       target,
       path,
@@ -200,5 +200,6 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
       interceptors: controllerOption.interceptors ?? [],
       labels: labels instanceof Set ? labels : new Set(labels),
     });
+    return target;
   };
 }

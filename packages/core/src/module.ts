@@ -1,6 +1,7 @@
 import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
 import {decorate, injectable} from 'inversify';
 import {ensureMethodInjectMetadata} from './method-inject';
+import {createConstructorArgumentTransformerProxy} from './constructor-inject';
 
 /**
  * Options to define a module
@@ -96,6 +97,7 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
     onModuleCreate.forEach((key) => ensureMethodInjectMetadata(constructor.prototype, key));
     onModuleDestroy.forEach((key) => ensureMethodInjectMetadata(constructor.prototype, key));
+    constructor = createConstructorArgumentTransformerProxy(constructor);
     setModuleMetadata(constructor, {
       requires,
       constants,

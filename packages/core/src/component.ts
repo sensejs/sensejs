@@ -1,5 +1,7 @@
 import {decorate, injectable} from 'inversify';
 import {Class, ComponentMetadata, ComponentScope, Constructor} from './interfaces';
+import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
+import {copyMetadata} from './utils/copy-metadata';
 
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
 
@@ -44,13 +46,15 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
  * @decorator
  */
 export function Component(option: ComponentOption = {}) {
-  return (target: Constructor): void => {
+  return <T extends Constructor>(target: T): T => {
     decorate(injectable(), target);
     if (typeof option.id === 'function') {
       if (!(target.prototype instanceof option.id) && option.id !== target) {
         throw new Error('Explicitly specified component id must be string, symbol, or any of its base class');
       }
     }
+    target = createConstructorArgumentTransformerProxy(target);
     setComponentMetadata(target, option);
+    return target;
   };
 }

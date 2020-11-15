@@ -3,6 +3,7 @@ import {
   Component,
   consoleLogger,
   createModule,
+  Inject,
   InjectLogger,
   Logger,
   LOGGER_BUILDER_SYMBOL,
@@ -75,7 +76,7 @@ describe('Logger', () => {
       components: [FooComponent, BarComponent],
     })
     class MainModule {
-      constructor(@inject(FooComponent) fooComponent: FooComponent, @inject(BarComponent) barComponent: BarComponent) {}
+      constructor(@Inject(FooComponent) fooComponent: FooComponent, @Inject(BarComponent) barComponent: BarComponent) {}
     }
 
     await new ModuleRoot(createModule({requires: [MainModule]})).start();
