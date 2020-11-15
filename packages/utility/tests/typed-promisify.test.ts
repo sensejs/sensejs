@@ -1,4 +1,11 @@
-import {aggregatedPromisifiedCall, aggregatedPromisify, NodeCallback, promisifiedCall, promisify} from '../src';
+import {
+  AggregatedNodeCallback,
+  aggregatedPromisifiedCall,
+  aggregatedPromisify,
+  NodeCallback,
+  promisifiedCall,
+  promisify,
+} from '../src';
 
 function f1(cb: NodeCallback<number>) {
   return cb(null, 42);
@@ -7,15 +14,15 @@ function f2(cb: NodeCallback<number>) {
   return cb(new Error());
 }
 
-function g1(a: number, b: string, cb: (...e: [Error] | [null, ...result: number[]]) => void) {
+function g1(a: number, b: string, cb: AggregatedNodeCallback<number[]>) {
   return cb(null, 42, 43);
 }
 
-function g2(a: number, b: string, cb: (...e: [Error] | [null, ...result: number[]]) => void) {
+function g2(a: number, b: string, cb: AggregatedNodeCallback<number[]>) {
   return cb(new Error());
 }
 
-function g3(a: number, b: string, cb: (...e: [Error] | [null, ...result: number[]]) => void) {
+function g3(a: number, b: string, cb: AggregatedNodeCallback<number[]>) {
   return cb(null);
 }
 
