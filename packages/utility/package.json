@@ -22,8 +22,8 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "uuid": "^8.3.0",
-    "tslib": "2.0.0"
+    "tslib": "2.0.0",
+    "uuid": "^8.3.1"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*"

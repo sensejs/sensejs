@@ -22,7 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "@sensejs/kafkajs-standalone": "workspace:^0.7.0",
-    "@sensejs/utility": "workspace:^0.7.0",
+    "@sensejs/utility": "workspace:^0.7.2",
     "lodash": "^4.17.20",
     "tslib": "2.0.0"
   },

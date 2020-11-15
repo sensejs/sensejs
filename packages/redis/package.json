@@ -22,8 +22,8 @@
   "author": "Chalin Shi",
   "license": "ISC",
   "dependencies": {
-    "@types/ioredis": "^4.17.4",
-    "ioredis": "^4.17.3",
+    "@types/ioredis": "^4.17.7",
+    "ioredis": "^4.19.2",
     "tslib": "2.0.0"
   },
   "devDependencies": {
