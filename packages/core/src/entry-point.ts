@@ -168,7 +168,7 @@ export class ApplicationRunner {
     );
 
     const warningSubscriber = this.getWarningSubscriber();
-    const uncaughtErrorSubscriber = this.getUncaughtErrorSubscriber(uncaughtErrorExitCodeObservable);
+    const uncaughtErrorSubscriber = this.getUncaughtErrorSubscriber(this.uncaughtErrorObservable);
     const shutdownSignalSubscriber = this.getShutdownSignalSubscriber(this.exitSignalObservable);
 
     const startupObservable = this.getStartupObservable(moduleRoot);
@@ -231,7 +231,7 @@ export class ApplicationRunner {
     });
   }
 
-  private getUncaughtErrorSubscriber(uncaughtErrorObserver: Observable<number>) {
+  private getUncaughtErrorSubscriber(uncaughtErrorObserver: Observable<unknown>) {
     return uncaughtErrorObserver.subscribe({
       next: (e) => {
         this.logger.error('Going to quit due to uncaught error:', e);
