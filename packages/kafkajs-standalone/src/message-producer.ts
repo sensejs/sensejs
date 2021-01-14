@@ -109,7 +109,7 @@ export class MessageProducer {
     if (!producer) {
       return this.disconnectPromise;
     }
-    delete this.producer;
+    this.producer = undefined;
 
     this.disconnectPromise = this.allMessageSend.then(() => {
       return producer.disconnect();

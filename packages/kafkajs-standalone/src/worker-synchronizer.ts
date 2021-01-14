@@ -53,7 +53,7 @@ export class WorkerController<T = void> {
     const allCancelSynchronized = new Subject<T>();
     allCancelSynchronized.subscribe({
       complete: () => {
-        delete this.inFlightSynchronization;
+        this.inFlightSynchronization = undefined;
       },
     });
     const allCancellationProcess: Observable<void>[] = [];

@@ -39,7 +39,7 @@ export function createConnectionFactory<T, Option>(
     async disconnect() {
       if (this.connection) {
         const connection = this.connection;
-        delete this.connection;
+        this.connection = undefined;
         await destroy(connection);
       }
     }
