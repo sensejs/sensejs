@@ -21,14 +21,14 @@
     "@sensejs/logger": "workspace:*",
     "@sensejs/typeorm": "workspace:*",
     "@sensejs/utility": "workspace:*",
-    "config": "^3.3.1",
-    "fp-ts": "^2.8.2",
-    "inversify": "^5.0.1",
-    "io-ts": "^2.2.10",
-    "js-yaml": "^3.14.0",
+    "config": "^3.3.3",
+    "fp-ts": "^2.9.3",
+    "inversify": "^5.0.5",
+    "io-ts": "^2.2.13",
+    "js-yaml": "^3.14.1",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "5.0.0",
-    "typeorm": "^0.2.25"
+    "typeorm": "^0.2.30"
   },
   "devDependencies": {
     "@types/config": "^0.0.36"

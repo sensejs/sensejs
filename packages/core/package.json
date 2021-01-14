@@ -22,10 +22,10 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.7.0",
+    "@sensejs/utility": "workspace:^0.7.2",
     "rxjs": "^6.6.3",
     "tslib": "2.0.0",
-    "uuid": "^8.3.0"
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*"

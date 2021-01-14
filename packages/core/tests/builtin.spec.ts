@@ -3,7 +3,7 @@ import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, BackgroundTaskQueue, Mo
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {
     let resolvePromise: () => void;
-    const longRunningTask = new Promise((resolve) => (resolvePromise = resolve));
+    const longRunningTask = new Promise<void>((resolve) => (resolvePromise = resolve));
     const originWaitAllTaskFinished = BackgroundTaskQueue.prototype.waitAllTaskFinished;
     const stoppedStub = jest.fn();
 

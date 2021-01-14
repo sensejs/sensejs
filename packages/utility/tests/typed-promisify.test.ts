@@ -7,15 +7,15 @@ function f2(cb: NodeCallback<number>) {
   return cb(new Error());
 }
 
-function g1(a: number, b: string, cb: (...e: [Error] | [null, ...result: number[]]) => void) {
+function g1(a: number, b: string, cb: (...e: [Error] | [null, ...number[]]) => void) {
   return cb(null, 42, 43);
 }
 
-function g2(a: number, b: string, cb: (...e: [Error] | [null, ...result: number[]]) => void) {
+function g2(a: number, b: string, cb: (...e: [Error] | [null, ...number[]]) => void) {
   return cb(new Error());
 }
 
-function g3(a: number, b: string, cb: (...e: [Error] | [null, ...result: number[]]) => void) {
+function g3(a: number, b: string, cb: (...e: [Error] | [null, ...number[]]) => void) {
   return cb(null);
 }
 

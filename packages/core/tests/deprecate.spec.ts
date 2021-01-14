@@ -3,7 +3,7 @@ import {Container, inject, injectable} from 'inversify';
 import {Inject, invokeMethod} from '../src';
 
 const awaitWarningCalled = (stub: jest.SpyInstance) =>
-  new Promise((done) => {
+  new Promise<void>((done) => {
     stub.mockImplementationOnce(() => {
       done();
     });
@@ -36,7 +36,7 @@ describe('Deprecate on class', () => {
       constructor() {}
     }
 
-    const mockCalled = new Promise((done) => {
+    const mockCalled = new Promise<void>((done) => {
       emitWarningSpy.mockImplementation(() => {
         done();
       });
