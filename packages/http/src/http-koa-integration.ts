@@ -37,6 +37,36 @@ interface ControllerRouteSpec {
 
 export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
 
+class KoaHttpRequest implements HttpRequest {
+  query;
+  body;
+  rawBody;
+  protocol;
+  url;
+  path;
+  search;
+  method;
+  address;
+  params;
+  headers;
+  hostname;
+
+  constructor(context: KoaHttpContext) {
+    this.query = context.nativeContext.query;
+    this.body = context.nativeContext.request.body;
+    this.rawBody = context.nativeContext.request.rawBody;
+    this.protocol = context.nativeContext.request.protocol;
+    this.path = context.nativeContext.request.path;
+    this.url = context.nativeContext.request.url;
+    this.search = context.nativeContext.request.search;
+    this.method = context.nativeContext.request.method;
+    this.address = context.nativeContext.request.ip;
+    this.headers = context.nativeContext.request.headers;
+    this.params = context.nativeContext.params;
+    this.hostname = context.nativeContext.hostname;
+  }
+}
+
 class KoaHttpResponse implements HttpResponse {
   statusCode?: number;
 
@@ -52,46 +82,25 @@ class KoaHttpResponse implements HttpResponse {
 }
 
 export class KoaHttpContext extends HttpContext {
-  get request(): HttpRequest {
-    const context = this.koaContext;
-    const request = context.request as any;
-    return {
-      query: context.request.query,
-      body: request.body,
-      rawBody: request.rawBody,
-      protocol: context.protocol,
-      url: context.originalUrl,
-      path: context.path,
-      search: context.search,
-      method: context.method,
-      address: context.request.ip,
-      params: context.params,
-      headers: context.headers,
-      hostname: context.request.hostname,
-    };
-  }
+  readonly nativeRequest: Koa.Request;
 
-  readonly response = new KoaHttpResponse(this);
+  readonly nativeResponse: Koa.Response;
 
-  get nativeRequest(): unknown {
-    return this.koaContext.request;
-  }
+  readonly request: KoaHttpRequest;
 
-  get nativeResponse(): unknown {
-    return this.koaContext.response;
-  }
-
-  get nativeContext(): unknown {
-    return this.koaContext;
-  }
+  readonly response: KoaHttpResponse;
 
   constructor(
     private readonly container: Container,
-    private readonly koaContext: KoaRouter.RouterContext,
+    readonly nativeContext: KoaRouter.RouterContext,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
   ) {
     super();
+    this.nativeRequest = this.nativeContext.request;
+    this.nativeResponse = this.nativeContext.response;
+    this.request = new KoaHttpRequest(this);
+    this.response = new KoaHttpResponse(this);
   }
 
   bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
@@ -214,7 +223,7 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
       for (const methodRouteSpec of controllerRouteSpec.methodRouteSpecs) {
         this.defineRouter(methodRouteSpec, controllerRouter, container);
       }
-      globalRouter.use(controllerRouteSpec.path, controllerRouter.routes());
+      globalRouter.use(controllerRouteSpec.path, controllerRouter.routes(), controllerRouter.allowedMethods());
     }
     return globalRouter;
   }

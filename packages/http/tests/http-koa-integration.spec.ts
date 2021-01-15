@@ -154,7 +154,7 @@ describe('KoaHttpApplicationBuilder', () => {
       }
 
       @GET('(.*)')
-      getStart(@Inject(HttpContext) ctx: HttpContext, @Query() query: object) {
+      getStar(@Inject(HttpContext) ctx: HttpContext, @Query() query: object) {
         stubForGetStar(ctx.request);
         Object.entries(query).forEach(([key, value]) => ctx.response.set(key, value));
       }
@@ -187,10 +187,10 @@ describe('KoaHttpApplicationBuilder', () => {
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
-    await testClient.get('/');
     await testClient.get('/any?key=value').then((result) => {
       expect(result.header['key']).toBe('value');
     });
+    await testClient.get('/').expect(204);
     await testClient.post('/');
     await testClient.delete('/');
     await testClient.put('/');
