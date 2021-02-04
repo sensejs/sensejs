@@ -127,14 +127,14 @@ export interface SubscribeEventControllerOption {
   labels?: (string | symbol)[] | Set<symbol | string>;
 }
 
-function setSubscribeEventControllerMetadata(target: Constructor, metadata: SubscribeEventControllerMetadata) {
+export function setSubscribeEventControllerMetadata(target: Constructor, metadata: SubscribeEventControllerMetadata) {
   if (Reflect.hasMetadata(SUBSCRIBE_EVENT_CONTROLLER_KEY, target)) {
     throw new Error(`@SubscribeEventController() cannot applied multiple times on "${target.name}"`);
   }
   Reflect.defineMetadata(SUBSCRIBE_EVENT_CONTROLLER_KEY, metadata, target);
 }
 
-function getSubscribeEventControllerMetadata(target: Constructor): SubscribeEventControllerMetadata | undefined {
+export function getSubscribeEventControllerMetadata(target: Constructor): SubscribeEventControllerMetadata | undefined {
   return Reflect.getMetadata(SUBSCRIBE_EVENT_CONTROLLER_KEY, target);
 }
 
@@ -165,7 +165,9 @@ export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubsc
   };
 }
 
-function getEventSubscriptionMetadata<P extends {} = {}>(target: Function): SubscribeEventMetadata<P> | undefined {
+export function getEventSubscriptionMetadata<P extends {} = {}>(
+  target: Function,
+): SubscribeEventMetadata<P> | undefined {
   return Reflect.getMetadata(SUBSCRIBE_EVENT_KEY, target);
 }
 
