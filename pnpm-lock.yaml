@@ -74,12 +74,12 @@ importers:
       typescript: ^4.0.2
   examples/demo-app:
     dependencies:
-      '@sensejs/config': 'link:../../packages/config'
-      '@sensejs/core': 'link:../../packages/core'
-      '@sensejs/http': 'link:../../packages/http'
-      '@sensejs/logger': 'link:../../packages/logger'
-      '@sensejs/typeorm': 'link:../../packages/typeorm'
-      '@sensejs/utility': 'link:../../packages/utility'
+      '@sensejs/config': link:../../packages/config
+      '@sensejs/core': link:../../packages/core
+      '@sensejs/http': link:../../packages/http
+      '@sensejs/logger': link:../../packages/logger
+      '@sensejs/typeorm': link:../../packages/typeorm
+      '@sensejs/utility': link:../../packages/utility
       config: 3.3.1
       fp-ts: 2.8.2
       inversify: 5.0.1
@@ -91,12 +91,12 @@ importers:
     devDependencies:
       '@types/config': 0.0.36
     specifiers:
-      '@sensejs/config': 'workspace:*'
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/http': 'workspace:*'
-      '@sensejs/logger': 'workspace:*'
-      '@sensejs/typeorm': 'workspace:*'
-      '@sensejs/utility': 'workspace:*'
+      '@sensejs/config': workspace:*
+      '@sensejs/core': workspace:*
+      '@sensejs/http': workspace:*
+      '@sensejs/logger': workspace:*
+      '@sensejs/typeorm': workspace:*
+      '@sensejs/utility': workspace:*
       '@types/config': ^0.0.36
       config: ^3.3.1
       fp-ts: ^2.8.2
@@ -111,22 +111,22 @@ importers:
       traverse: 0.6.6
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
+      '@sensejs/core': link:../core
     specifiers:
-      '@sensejs/core': 'workspace:*'
+      '@sensejs/core': workspace:*
       traverse: ^0.6.6
       tslib: 2.0.0
   packages/core:
     dependencies:
-      '@sensejs/utility': 'link:../utility'
+      '@sensejs/utility': link:../utility
       rxjs: 6.6.3
       tslib: 2.0.0
       uuid: 8.3.0
     devDependencies:
-      '@sensejs/testing-utility': 'link:../../tools/testing-utility'
+      '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
-      '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.7.0'
+      '@sensejs/testing-utility': workspace:*
+      '@sensejs/utility': workspace:^0.7.0
       rxjs: ^6.6.3
       tslib: 2.0.0
       uuid: ^8.3.0
@@ -134,21 +134,21 @@ importers:
     dependencies:
       '@koa/cors': 3.1.0
       '@koa/router': 9.4.0
-      '@sensejs/utility': 'link:../utility'
+      '@sensejs/utility': link:../utility
       koa: 2.13.0
       koa-bodyparser: 4.3.0
       koa-qs: 3.0.0
       lodash: 4.17.20
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
-      '@sensejs/testing-utility': 'link:../../tools/testing-utility'
+      '@sensejs/core': link:../core
+      '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^9.4.0
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.7.0'
+      '@sensejs/core': workspace:*
+      '@sensejs/testing-utility': workspace:*
+      '@sensejs/utility': workspace:^0.7.0
       koa: ^2.13.0
       koa-bodyparser: ^4.3.0
       koa-qs: ^3.0.0
@@ -156,18 +156,18 @@ importers:
       tslib: 2.0.0
   packages/kafkajs:
     dependencies:
-      '@sensejs/kafkajs-standalone': 'link:../kafkajs-standalone'
-      '@sensejs/utility': 'link:../utility'
+      '@sensejs/kafkajs-standalone': link:../kafkajs-standalone
+      '@sensejs/utility': link:../utility
       lodash: 4.17.20
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
-      '@sensejs/testing-utility': 'link:../../tools/testing-utility'
+      '@sensejs/core': link:../core
+      '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/kafkajs-standalone': 'workspace:^0.7.0'
-      '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.7.0'
+      '@sensejs/core': workspace:*
+      '@sensejs/kafkajs-standalone': workspace:^0.7.0
+      '@sensejs/testing-utility': workspace:*
+      '@sensejs/utility': workspace:^0.7.0
       lodash: ^4.17.20
       tslib: 2.0.0
   packages/kafkajs-standalone:
@@ -176,21 +176,31 @@ importers:
       rxjs: 6.6.3
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/testing-utility': 'link:../../tools/testing-utility'
+      '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
-      '@sensejs/testing-utility': 'workspace:*'
+      '@sensejs/testing-utility': workspace:*
       long: ^4.0.0
       rxjs: ^6.6.3
       tslib: 2.0.0
+  packages/kafkajs-zstd-support:
+    dependencies:
+      tslib: 2.0.0
+      zstd-napi: 0.0.6
+    devDependencies:
+      kafkajs: 1.15.0
+    specifiers:
+      kafkajs: ^1.15.0
+      tslib: 2.0.0
+      zstd-napi: ^0.0.6
   packages/logger:
     dependencies:
       colors: 1.4.0
       moment: 2.27.0
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
+      '@sensejs/core': link:../core
     specifiers:
-      '@sensejs/core': 'workspace:*'
+      '@sensejs/core': workspace:*
       colors: ^1.4.0
       moment: ^2.27.0
       tslib: 2.0.0
@@ -200,34 +210,34 @@ importers:
       ioredis: 4.17.3
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
-      '@sensejs/http': 'link:../http'
+      '@sensejs/core': link:../core
+      '@sensejs/http': link:../http
     specifiers:
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/http': 'workspace:*'
+      '@sensejs/core': workspace:*
+      '@sensejs/http': workspace:*
       '@types/ioredis': ^4.17.4
       ioredis: ^4.17.3
       tslib: 2.0.0
   packages/typeorm:
     dependencies:
-      '@sensejs/utility': 'link:../utility'
+      '@sensejs/utility': link:../utility
       tslib: 2.0.0
     devDependencies:
-      '@sensejs/core': 'link:../core'
-      '@sensejs/testing-utility': 'link:../../tools/testing-utility'
+      '@sensejs/core': link:../core
+      '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
-      '@sensejs/core': 'workspace:*'
-      '@sensejs/testing-utility': 'workspace:*'
-      '@sensejs/utility': 'workspace:^0.7.0'
+      '@sensejs/core': workspace:*
+      '@sensejs/testing-utility': workspace:*
+      '@sensejs/utility': workspace:^0.7.0
       tslib: 2.0.0
   packages/utility:
     dependencies:
       tslib: 2.0.0
       uuid: 8.3.0
     devDependencies:
-      '@sensejs/testing-utility': 'link:../../tools/testing-utility'
+      '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
-      '@sensejs/testing-utility': 'workspace:*'
+      '@sensejs/testing-utility': workspace:*
       tslib: 2.0.0
       uuid: ^8.3.0
   tools/testing-utility:
@@ -1675,6 +1685,14 @@ packages:
       tweetnacl: 0.14.5
     resolution:
       integrity: sha1-pDAdOJtqQ/m2f/PKEaP2Y342Dp4=
+  /bl/4.0.4:
+    dependencies:
+      buffer: 5.6.0
+      inherits: 2.0.4
+      readable-stream: 3.6.0
+    dev: false
+    resolution:
+      integrity: sha512-7tdr4EpSd7jJ6tuQ21vu2ke8w7pNEstzj1O8wwq6sNNzO3UDi5MA8Gny/gquCj7r2C6fHudg8tKRGyjRgmvNxQ==
   /block-stream/0.0.9:
     dependencies:
       inherits: 2.0.4
@@ -2260,6 +2278,14 @@ packages:
       node: '>=0.10'
     resolution:
       integrity: sha1-6zkTMzRYd1y4TNGh+uBiEGu4dUU=
+  /decompress-response/4.2.1:
+    dependencies:
+      mimic-response: 2.1.0
+    dev: false
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-jOSne2qbyE+/r8G1VU+G/82LBs2Fs4LAsTiLSHOCOMZQl2OKZ6i8i4IyHemTe+/yIXOtTcRQMzPcgyhoFlqPkw==
   /dedent/0.7.0:
     dev: true
     resolution:
@@ -2451,7 +2477,6 @@ packages:
   /end-of-stream/1.4.4:
     dependencies:
       once: 1.4.0
-    dev: true
     resolution:
       integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==
   /enquirer/2.3.6:
@@ -2681,6 +2706,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-t3c14xXOMPa27/D4OwQVGiJEliI=
+  /expand-template/2.0.3:
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==
   /expect/26.4.2:
     dependencies:
       '@jest/types': 26.3.0
@@ -2897,6 +2928,10 @@ packages:
       node: '>= 0.6'
     resolution:
       integrity: sha1-PYyt2Q2XZWn6g1qx+OSyOhBWBac=
+  /fs-constants/1.0.0:
+    dev: false
+    resolution:
+      integrity: sha512-y6OAwoSIf7FyjMIv94u+b5rdheZEjzR63GTyZJm5qh4Bi+2YgwLCcI/fPFZkL5PSixOt6ZNKm+w+Hfp/Bciwow==
   /fs-extra/8.1.0:
     dependencies:
       graceful-fs: 4.2.4
@@ -3018,6 +3053,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-SkwrTqrDxw8y0G1uGJ9Zw13F7qu3LF8V4BifyDeiJCxSnjRGZD9SaoMiMqUvvXMXh6S3sOQ1DsBN7L2fMUZW/g==
+  /github-from-package/0.0.0:
+    dev: false
+    resolution:
+      integrity: sha1-l/tdlr/eiXMxPyDoKI75oWf6ZM4=
   /glob-parent/5.1.1:
     dependencies:
       is-glob: 4.0.1
@@ -3315,6 +3354,7 @@ packages:
     resolution:
       integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
   /ini/1.3.5:
+    deprecated: Please update to ini >=1.3.6 to avoid a prototype pollution issue
     resolution:
       integrity: sha512-RZY5huIKCMRWDUqZlEi72f/lmXKMvuszcMBduliQ3nnWbx9X/ZBQO7DijMEYS9EhHBb2qacRUMtC7svLwe0lcw==
   /inversify/5.0.1:
@@ -4176,6 +4216,12 @@ packages:
       node: '>=10.13.0'
     resolution:
       integrity: sha512-W+WCekiooY5rJP3Me5N3gWcQ8O6uG6lw0vv9t+sI+WqXKjKwj2+CWIXJy241x+ITE+1M1D19ABSiL2J8lKja5A==
+  /kafkajs/1.15.0:
+    dev: true
+    engines:
+      node: '>=10.13.0'
+    resolution:
+      integrity: sha512-yjPyEnQCkPxAuQLIJnY5dI+xnmmgXmhuOQ1GVxClG5KTOV/rJcW1qA3UfvyEJKTp/RTSqQnUR3HJsKFvHyTpNg==
   /keygrip/1.1.0:
     dependencies:
       tsscmp: 1.0.6
@@ -4568,6 +4614,12 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==
+  /mimic-response/2.1.0:
+    dev: false
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-wXqjST+SLt7R009ySCglWBCFpjUygmCIfD790/kVbiGmUgfYGuB14PiTd5DwVxSV4NcYHjzMkoj5LjQZwTQLEA==
   /min-indent/1.0.1:
     dev: true
     engines:
@@ -4612,6 +4664,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-WRoDn//mXBiJ1H40rqa3vH0toePwSsGb45iInWlTySa+Uu4k3tYUSxa2v1KqAiLtvlrSzaExqS1gtk96A9zvEA==
+  /mkdirp-classic/0.5.3:
+    dev: false
+    resolution:
+      integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==
   /mkdirp/0.5.5:
     dependencies:
       minimist: 1.2.5
@@ -4659,6 +4715,10 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-fpoe2T0RbHwBTBUOftAfBPaDEi06ufaUai0mE6Yn1kacc3SnTErfb/h+X94VXzI64rKFHYImXSvdwGGCmwOqCA==
+  /napi-build-utils/1.0.2:
+    dev: false
+    resolution:
+      integrity: sha512-ONmRUqK7zj7DWX0D9ADe03wbwOBZxNAfF20PlGfCWQcD3+/MakShIHrMqx9YwPTfxDdF1zLeL+RGZiR9kGMLdg==
   /natural-compare/1.4.0:
     dev: true
     resolution:
@@ -4683,6 +4743,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==
+  /node-abi/2.19.3:
+    dependencies:
+      semver: 5.7.1
+    dev: false
+    resolution:
+      integrity: sha512-9xZrlyfvKhWme2EXFKQhZRp1yNWT/uI1luYPr3sFl+H4keYY4xR+1jO7mvTTijIsHf1M+QDe9uWuKeEpLInIlg==
   /node-addon-api/2.0.0:
     resolution:
       integrity: sha512-ASCL5U13as7HhOExbT6OlWJJUV/lLzL2voOSP1UVehpRD8FbSrSDjfScK/KwAvVTI5AS6r4VwbOMlIqtvRidnA==
@@ -4743,6 +4809,10 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-TwWAOZb0j7e9eGaf9esRx3ZcLaE5tQ2lvYy1pb5IAaG1a2e2Kv5Lms1Y4hpj+ciXJRofIxxlt5haeQ/2ANeE0Q==
+  /noop-logger/0.1.1:
+    dev: false
+    resolution:
+      integrity: sha1-lKKxYzxPExdVMAfYlm/Q6EG2pMI=
   /nopt/3.0.6:
     dependencies:
       abbrev: 1.1.1
@@ -5104,6 +5174,29 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha1-AerA/jta9xoqbAL+q7jB/vfgDqs=
+  /prebuild-install/5.3.6:
+    dependencies:
+      detect-libc: 1.0.3
+      expand-template: 2.0.3
+      github-from-package: 0.0.0
+      minimist: 1.2.5
+      mkdirp-classic: 0.5.3
+      napi-build-utils: 1.0.2
+      node-abi: 2.19.3
+      noop-logger: 0.1.1
+      npmlog: 4.1.2
+      pump: 3.0.0
+      rc: 1.2.8
+      simple-get: 3.1.0
+      tar-fs: 2.1.1
+      tunnel-agent: 0.6.0
+      which-pm-runs: 1.0.0
+    dev: false
+    engines:
+      node: '>=6'
+    hasBin: true
+    resolution:
+      integrity: sha512-s8Aai8++QQGi4sSbs/M1Qku62PFK49Jm1CbgXklGz4nmHveDq0wzJkg7Na5QbnO1uNH8K7iqx2EQ/mV0MZEmOg==
   /prelude-ls/1.1.2:
     dev: true
     engines:
@@ -5170,7 +5263,6 @@ packages:
     dependencies:
       end-of-stream: 1.4.4
       once: 1.4.0
-    dev: true
     resolution:
       integrity: sha512-LwZy+p3SFs1Pytd/jYct4wpv49HiYCqd9Rlc5ZVdk0V+8Yzv6jR5Blk3TRmPL1ft69TxP0IMZGJ+WPFU2BFhww==
   /punycode/2.1.1:
@@ -5262,7 +5354,6 @@ packages:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
-    dev: true
     engines:
       node: '>= 6'
     resolution:
@@ -5349,7 +5440,7 @@ packages:
       request-promise-core: 1.1.4_request@2.88.2
       stealthy-require: 1.1.1
       tough-cookie: 2.5.0
-    deprecated: 'request-promise-native has been deprecated because it extends the now deprecated request package, see https://github.com/request/request/issues/3142'
+    deprecated: request-promise-native has been deprecated because it extends the now deprecated request package, see https://github.com/request/request/issues/3142
     dev: true
     engines:
       node: '>=0.12.0'
@@ -5379,7 +5470,7 @@ packages:
       tough-cookie: 2.5.0
       tunnel-agent: 0.6.0
       uuid: 3.4.0
-    deprecated: 'request has been deprecated, see https://github.com/request/request/issues/3142'
+    deprecated: request has been deprecated, see https://github.com/request/request/issues/3142
     engines:
       node: '>= 6'
     resolution:
@@ -5421,7 +5512,7 @@ packages:
     resolution:
       integrity: sha512-zFa12V4OLtT5XUX/Q4VLvTfBf+Ok0SPc1FNGM/z9ctUdiU618qwKpWnd0CHs3+RqROfyEg/DhuHbMWYqcgljEw==
   /resolve-url/0.2.1:
-    deprecated: 'https://github.com/lydell/resolve-url#deprecated'
+    deprecated: https://github.com/lydell/resolve-url#deprecated
     dev: true
     resolution:
       integrity: sha1-LGN/53yJOv0qZj/iGqkIAGjiBSo=
@@ -5629,6 +5720,18 @@ packages:
   /signal-exit/3.0.3:
     resolution:
       integrity: sha512-VUJ49FC8U1OxwZLxIbTTrDvLnf/6TDgxZcK8wxR8zs13xpx7xbG60ndBlhNrFi2EMuFRoeDoJO7wthSLq42EjA==
+  /simple-concat/1.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-cSFtAPtRhljv69IK0hTVZQ+OfE9nePi/rtJmw5UjHeVyVroEqJXP1sFztKUy1qU+xvz3u/sfYJLa947b7nAN2Q==
+  /simple-get/3.1.0:
+    dependencies:
+      decompress-response: 4.2.1
+      once: 1.4.0
+      simple-concat: 1.0.1
+    dev: false
+    resolution:
+      integrity: sha512-bCR6cP+aTdScaQCnQKbPKtJOKDp/hj9EDLJo3Nw4y1QksqaovlW/bnptB6/c1e+qmNIDHRK+oXFDdEqBT8WzUA==
   /sisteransi/1.0.5:
     dev: true
     resolution:
@@ -5891,7 +5994,6 @@ packages:
   /string_decoder/1.3.0:
     dependencies:
       safe-buffer: 5.2.1
-    dev: true
     resolution:
       integrity: sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA==
   /stringify-object/3.3.0:
@@ -6031,6 +6133,27 @@ packages:
       node: '>=6.0.0'
     resolution:
       integrity: sha512-wmEc8m4fjnob4gt5riFRtTu/6+4rSe12TpAELNSqHMfF3IqnA+CH37USM6/YR3qRZv7e56kAEAtd6nKZaxe0Ug==
+  /tar-fs/2.1.1:
+    dependencies:
+      chownr: 1.1.4
+      mkdirp-classic: 0.5.3
+      pump: 3.0.0
+      tar-stream: 2.2.0
+    dev: false
+    resolution:
+      integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==
+  /tar-stream/2.2.0:
+    dependencies:
+      bl: 4.0.4
+      end-of-stream: 1.4.4
+      fs-constants: 1.0.0
+      inherits: 2.0.4
+      readable-stream: 3.6.0
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==
   /tar/2.2.2:
     dependencies:
       block-stream: 0.0.9
@@ -6436,7 +6559,7 @@ packages:
     resolution:
       integrity: sha512-B0yRTzYdUCCn9n+F4+Gh4yIDtMQcaJsmYBDsTSG8g/OejKBodLQ2IHfN3bM7jUsRXndopT7OIXWdYqc1fjmV6g==
   /urix/0.1.0:
-    deprecated: 'Please see https://github.com/lydell/urix#deprecated'
+    deprecated: Please see https://github.com/lydell/urix#deprecated
     dev: true
     resolution:
       integrity: sha1-2pN/emLiH+wf0Y1Js1wpNQZ6bHI=
@@ -6549,7 +6672,6 @@ packages:
     resolution:
       integrity: sha1-2e8H3Od7mQK4o6j6SzHD4/fm6Ho=
   /which-pm-runs/1.0.0:
-    dev: true
     resolution:
       integrity: sha1-Zws6+8VS4LVd9rd4DKdGFfI60cs=
   /which/1.3.1:
@@ -6783,3 +6905,12 @@ packages:
     dev: true
     resolution:
       integrity: sha512-PQ2PC7R9rslx84ndNBZB/Dkv8V8fZEpk83RLgXtYd0fwUgEjseMn1Dgajh2x6S8QbZAFa9p2qVCEuYZNgve0dQ==
+  /zstd-napi/0.0.6:
+    dependencies:
+      '@types/node': 14.6.4
+      node-addon-api: 2.0.0
+      prebuild-install: 5.3.6
+    dev: false
+    requiresBuild: true
+    resolution:
+      integrity: sha512-CKYrptAvjMhxQTuC7J42UXdmgKc73piuZHNGg0dya6qYZzPmaH31fXxuFv7B9QGAWX8tBmFlDJo9aXne7bmx3g==

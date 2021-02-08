@@ -1,0 +1,33 @@
+{
+  "name": "@sensejs/kafkajs-zstd-support",
+  "version": "0.7.0",
+  "description": "",
+  "files": [
+    "lib/**/*.d.ts",
+    "lib/**/*.js",
+    "lib/**/*.js.map",
+    "src/**/*.ts",
+    "README.md"
+  ],
+  "types": "lib/index.d.ts",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf ./lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC",
+  "dependencies": {
+    "zstd-napi": "^0.0.6",
+    "tslib": "2.0.0"
+  },
+  "devDependencies": {
+    "kafkajs": "^1.15.0"
+  },
+  "peerDependencies": {
+    "kafkajs": "^1.15.0"
+  }
+}
