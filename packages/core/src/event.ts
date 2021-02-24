@@ -7,7 +7,7 @@ import {Container} from 'inversify';
 import {Inject, InjectionDecorator} from './decorators';
 import {MethodInvokerBuilder} from './method-inject';
 import {ModuleScanner} from './module-scanner';
-import {Deprecated} from './utils';
+import {Deprecated, matchLabels} from './utils';
 
 export interface EventChannelSubscription {
   unsubscribe(): void;
@@ -402,6 +402,11 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
           if (typeof metadata === 'undefined') {
             return;
           }
+
+          if (!matchLabels(metadata.labels, option.matchLabels)) {
+            return;
+          }
+
           this.scanPrototype(component, metadata);
         });
       });
