@@ -4,14 +4,13 @@ import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {HttpAdaptor, HttpApplicationOption, HttpInterceptor} from './http-abstract';
-import lodash from 'lodash';
 import {
   Constructor,
   createModule,
   Inject,
   InjectLogger,
   Logger,
-  LoggerBuilder,
+  matchLabels,
   ModuleClass,
   ModuleOption,
   ModuleScanner,
@@ -61,7 +60,7 @@ export interface HttpModuleOption extends ModuleOption {
   /**
    * If specified, only match the controllers which contains all required label
    */
-  matchLabels?: (string | symbol)[] | Set<string | symbol>;
+  matchLabels?: (string | symbol)[] | Set<string | symbol> | ((labels: Set<string | symbol>) => boolean);
 }
 
 /**
@@ -125,17 +124,16 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
     }
 
     private scanControllers(httpAdaptor: HttpAdaptor, moduleScanner: ModuleScanner) {
-      const matchLabels = new Set<string | symbol>(option.matchLabels);
       moduleScanner.scanModule((metadata) => {
         metadata.components.forEach((component) => {
           const httpControllerMetadata = getHttpControllerMetadata(component);
           if (!httpControllerMetadata) {
             return;
           }
-          const intersectedLabel = lodash.intersection([...matchLabels], [...httpControllerMetadata.labels]);
-          if (intersectedLabel.length === matchLabels.size) {
-            httpAdaptor.addControllerWithMetadata(httpControllerMetadata);
+          if (!matchLabels(httpControllerMetadata.labels, option.matchLabels)) {
+            return;
           }
+          httpAdaptor.addControllerWithMetadata(httpControllerMetadata);
         });
       });
     }
