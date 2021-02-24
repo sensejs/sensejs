@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/core",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
