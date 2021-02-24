@@ -34,7 +34,7 @@ export interface MessageConsumerModuleOption extends ModuleOption {
   globalInterceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
   messageConsumerOption?: Partial<ConfigurableMessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier<ConfigurableMessageConsumerOption>;
-  matchLabels?: (string | symbol)[] | Set<string | symbol>;
+  matchLabels?: (string | symbol)[] | Set<string | symbol> | ((labels: Set<string | symbol>) => boolean);
 }
 
 function mergeConnectOption(
@@ -79,11 +79,18 @@ function scanSubscriber(
           if (!controllerMetadata) {
             return;
           }
-          const matchLabels = new Set(option.matchLabels);
-          const intersectedLabels = lodash.intersection([...matchLabels], [...controllerMetadata.labels]);
-          if (intersectedLabels.length === matchLabels.size) {
-            this.scanPrototypeMethod(component, controllerMetadata);
+          if (typeof option.matchLabels === 'function') {
+            if (!option.matchLabels(controllerMetadata.labels)) {
+              return;
+            }
+          } else {
+            const matchLabels = new Set(option.matchLabels);
+            const intersectedLabels = lodash.intersection([...matchLabels], [...controllerMetadata.labels]);
+            if (intersectedLabels.length !== matchLabels.size) {
+              return;
+            }
           }
+          this.scanPrototypeMethod(component, controllerMetadata);
         });
       });
 

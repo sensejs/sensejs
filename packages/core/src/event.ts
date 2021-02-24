@@ -7,7 +7,7 @@ import {Container} from 'inversify';
 import {Inject, InjectionDecorator} from './decorators';
 import {MethodInvokerBuilder} from './method-inject';
 import {ModuleScanner} from './module-scanner';
-import {Deprecated} from './utils';
+import {Deprecated, matchLabels} from './utils';
 
 export interface EventChannelSubscription {
   unsubscribe(): void;
@@ -173,7 +173,7 @@ export function getEventSubscriptionMetadata<P extends {} = {}>(
 
 export interface EventSubscriptionModuleOption extends ModuleOption {
   interceptors?: Constructor<RequestInterceptor>[];
-  matchLabels?: Set<string | symbol> | (string | symbol)[];
+  matchLabels?: Set<string | symbol> | (string | symbol)[] | ((labels: Set<string | symbol>) => boolean);
 }
 
 export class EventSubscriptionContext extends RequestContext {
@@ -404,6 +404,11 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
           if (typeof metadata === 'undefined') {
             return;
           }
+
+          if (!matchLabels(metadata.labels, option.matchLabels)) {
+            return;
+          }
+
           this.scanPrototype(component, metadata);
         });
       });
