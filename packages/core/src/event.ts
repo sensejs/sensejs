@@ -171,7 +171,7 @@ function getEventSubscriptionMetadata<P extends {} = {}>(target: Function): Subs
 
 export interface EventSubscriptionModuleOption extends ModuleOption {
   interceptors?: Constructor<RequestInterceptor>[];
-  matchLabels?: Set<string | symbol> | (string | symbol)[];
+  matchLabels?: Set<string | symbol> | (string | symbol)[] | ((labels: Set<string | symbol>) => boolean);
 }
 
 export class EventSubscriptionContext extends RequestContext {
