@@ -5,6 +5,7 @@ import {logLevel} from 'kafkajs';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
+const BATCH_TOPIC = 'e2e-batch-topic' + Date.now();
 
 test('KafkaJS', async () => {
   const producerA = new MessageProducer({
@@ -28,6 +29,10 @@ test('KafkaJS', async () => {
           topic: TOPIC,
           messages: [{value: new Date().toString()}],
         },
+        {
+          topic: BATCH_TOPIC,
+          messages: [{value: new Date().toString()}],
+        },
       ]);
     }
     await producerA.disconnect();
@@ -35,9 +40,11 @@ test('KafkaJS', async () => {
 
   const producingPromise = sendBatch();
   const observableA = new Subject(),
+    observableBatchA = new Subject(),
     observableB = new Subject();
 
   const consumerStubA = jest.fn().mockImplementationOnce(() => observableA.complete());
+  const batchedConsumerStubA = jest.fn().mockImplementationOnce(() => observableBatchA.complete());
   const consumerStubB = jest.fn().mockImplementationOnce(() => observableB.complete());
   const messageConsumerA = new MessageConsumer({
     connectOption: {brokers: ['kafka-2:9092'], clientId: 'kafkajs-2'},
@@ -52,6 +59,14 @@ test('KafkaJS', async () => {
   messageConsumerA.subscribe(TOPIC, async (message) => {
     consumerStubA(message.value?.toString());
     expect(Buffer.isBuffer(message.key));
+  });
+
+  messageConsumerA.subscribeBatched({
+    topic: BATCH_TOPIC,
+    fromBeginning: false,
+    consumer: async () => {
+      batchedConsumerStubA();
+    },
   });
 
   const messageConsumerB = new MessageConsumer({
@@ -89,7 +104,7 @@ test('KafkaJS', async () => {
     true,
   );
 
-  const p = Promise.all([observableA.toPromise(), observableB.toPromise()]);
+  const p = Promise.all([observableA.toPromise(), observableBatchA.toPromise(), observableB.toPromise()]);
   await messageConsumerA.start();
   await messageConsumerA.start(); // safe to call start multiple times
   await messageConsumerB.start();
