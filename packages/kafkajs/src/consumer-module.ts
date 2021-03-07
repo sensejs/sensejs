@@ -139,7 +139,13 @@ function scanSubscriber(
       return async (message: KafkaReceivedMessage) => {
         await methodInvokerBuilder.build(target, method).invoke({
           contextFactory: (container, targetConstructor, targetMethodKey) => {
-            return new MessageConsumeContext(container, message, targetConstructor, targetMethodKey);
+            return new MessageConsumeContext(
+              container,
+              message,
+              this.messageConsumer.consumerGroupId,
+              targetConstructor,
+              targetMethodKey,
+            );
           },
           contextIdentifier: MessageConsumeContext,
         });

@@ -31,10 +31,14 @@ export class MessageConsumer {
   private workerController = new WorkerController<boolean>();
   private startedPromise?: Promise<void>;
   private stoppedPromise?: Promise<void>;
+  private commitOption?: KafkaCommitOption;
+  public readonly consumerGroupId;
 
-  constructor(private option: MessageConsumerOption) {
+  constructor(option: MessageConsumerOption) {
     this.client = createKafkaClient(option);
     this.consumer = this.client.consumer(option.fetchOption);
+    this.commitOption = option.commitOption;
+    this.consumerGroupId = option.fetchOption.groupId;
   }
 
   subscribe(topic: string, consumer: MessageConsumeCallback, fromBeginning: boolean = false): this {
@@ -82,7 +86,7 @@ export class MessageConsumer {
 
       this.runPromise = this.consumer.run({
         autoCommit: true,
-        autoCommitInterval: this.option.commitOption?.commitInterval,
+        autoCommitInterval: this.commitOption?.commitInterval,
         eachBatchAutoResolve: false,
         partitionsConsumedConcurrently: totalPartitions,
         eachBatch: async (payload) => this.eachBatch(payload),

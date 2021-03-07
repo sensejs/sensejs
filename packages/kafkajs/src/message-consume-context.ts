@@ -6,7 +6,8 @@ import {KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
 export class MessageConsumeContext extends RequestContext {
   constructor(
     private readonly container: Container,
-    readonly message: KafkaReceivedMessage,
+    public readonly message: KafkaReceivedMessage,
+    public readonly consumerGroup: string,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
   ) {
