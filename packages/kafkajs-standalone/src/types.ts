@@ -19,6 +19,7 @@ export interface KafkaSendOption {
   compression?: k.CompressionTypes;
 }
 
+export type KafkaBatchConsumeMessageParam = k.EachBatchPayload;
 export type KafkaMessage = k.Message;
 
 export interface KafkaReceivedMessage extends KafkaMessage {

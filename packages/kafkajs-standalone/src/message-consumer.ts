@@ -1,7 +1,7 @@
 import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage as KafkaJsMessage} from 'kafkajs';
 import {WorkerController} from './worker-synchronizer';
 import {createKafkaClient} from './create-client';
-import {KafkaClientOption, KafkaReceivedMessage} from './types';
+import {KafkaBatchConsumeMessageParam, KafkaClientOption, KafkaReceivedMessage} from './types';
 
 export type KafkaFetchOption = ConsumerConfig;
 
@@ -18,10 +18,31 @@ export interface MessageConsumeCallback {
   (message: KafkaReceivedMessage): Promise<void>;
 }
 
-interface ConsumeOption {
+export interface BatchMessageConsumeCallback {
+  (message: KafkaBatchConsumeMessageParam): Promise<void>;
+}
+
+export interface SimpleConsumeOption {
+  type: 'simple';
   consumer: MessageConsumeCallback;
   fromBeginning: boolean;
 }
+
+export interface BatchConsumeOption {
+  type: 'batch';
+  consumer: BatchMessageConsumeCallback;
+  fromBeginning?: boolean;
+  autoResolveBatch?: boolean;
+}
+
+export interface BatchSubscribeOption {
+  topic: string;
+  consumer: BatchMessageConsumeCallback;
+  fromBeginning?: boolean;
+  autoResolve?: boolean;
+}
+
+type ConsumeOption = SimpleConsumeOption | BatchConsumeOption;
 
 export class MessageConsumer {
   private client: Kafka;
@@ -42,7 +63,13 @@ export class MessageConsumer {
   }
 
   subscribe(topic: string, consumer: MessageConsumeCallback, fromBeginning: boolean = false): this {
-    this.consumeOptions.set(topic, {consumer, fromBeginning});
+    this.consumeOptions.set(topic, {type: 'simple', consumer, fromBeginning});
+    return this;
+  }
+
+  subscribeBatched(option: BatchSubscribeOption): this {
+    const {topic, ...rest} = option;
+    this.consumeOptions.set(topic, {type: 'batch', ...rest});
     return this;
   }
 
@@ -101,7 +128,11 @@ export class MessageConsumer {
     const consumeOption = this.consumeOptions.get(topic);
     if (!consumeOption) {
       throw new Error('Message received from unsubscribed topic');
+    } else if (consumeOption.type === 'batch') {
+      const {consumer} = consumeOption;
+      return consumer(payload);
     }
+    const {consumer} = consumeOption;
     const commitOffsets = async (forced: boolean = false) => {
       if (forced) {
         return payload.commitOffsetsIfNecessary(payload.uncommittedOffsets());
@@ -122,7 +153,7 @@ export class MessageConsumer {
 
     await this.processBatch(
       async (message: KafkaJsMessage) => {
-        await consumeOption.consumer({topic, partition, ...message});
+        await consumer({topic, partition, ...message});
         payload.resolveOffset(message.offset);
         await payload.commitOffsetsIfNecessary();
       },
