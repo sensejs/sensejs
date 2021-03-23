@@ -42,7 +42,7 @@ export function createConstructorArgumentTransformerProxy<T>(
   };
 
   const proxy = new Proxy<Constructor<T>>(target, {
-    construct: (target: Constructor, args: unknown[], self: object) => {
+    construct: (target: Constructor, args: unknown[], self: Function) => {
       return Reflect.construct(target, args.map(argumentMapper), self);
     },
   });

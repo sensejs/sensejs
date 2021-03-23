@@ -1,5 +1,5 @@
 import {Constructor, RequestContext, RequestInterceptor} from '@sensejs/core';
-import {RequestListener} from 'http';
+import {IncomingHttpHeaders, RequestListener} from 'http';
 import {Container} from 'inversify';
 import {ControllerMetadata} from './http-decorators';
 
@@ -54,9 +54,7 @@ export interface HttpRequest {
   readonly params: {
     [name: string]: string | undefined;
   };
-  readonly headers: {
-    [name: string]: string | undefined;
-  };
+  readonly headers: IncomingHttpHeaders;
 }
 
 export interface HttpResponse {
