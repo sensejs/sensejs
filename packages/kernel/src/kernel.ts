@@ -108,6 +108,7 @@ class ResolveContext {
 
   constructor(
     readonly bindingMap: Map<ServiceId<any>, Binding<any>>,
+    readonly compiledInstructionMap: Map<ServiceId<any>, Instruction[]>,
     readonly globalSingletonCache: Map<any, any>,
     readonly target: ServiceId<any>,
   ) {
@@ -135,9 +136,6 @@ class ResolveContext {
         case InstructionCode.BUILD:
           this.performBuild(instruction);
           break;
-        default: {
-          const never: never = instruction;
-        }
       }
     }
   }
@@ -180,8 +178,9 @@ class ResolveContext {
         this.stack.push(binding.value);
         break;
       case BindingType.INSTANCE:
+      case BindingType.FACTORY:
         {
-          const {constructor, paramInjectionMetadata, scope, id} = binding;
+          const {scope, id} = binding;
           if (scope === Scope.SINGLETON) {
             if (this.globalSingletonCache.has(id)) {
               this.stack.push(this.globalSingletonCache.get(id));
@@ -194,27 +193,13 @@ class ResolveContext {
             }
           }
           this.planingSet.add(target);
-          this.instructions.push({
-            code: InstructionCode.CONSTRUCT,
-            constructor,
-            serviceId: target,
-            paramCount: paramInjectionMetadata.length,
-            cacheScope: scope,
-          });
-          paramInjectionMetadata.reduceRight((unused, pim) => {
-            const {id, optional} = pim;
-            this.instructions.push({
-              code: InstructionCode.PLAN,
-              target: id,
-              optional,
-            });
-            return null;
-          }, null);
+          const instructions = this.compiledInstructionMap.get(target);
+          if (!instructions) {
+            throw new Error('No compiled instruction found');
+          }
+          this.instructions.push(...instructions);
         }
         break;
-      case BindingType.FACTORY: {
-        throw new Error('Unsupported');
-      }
     }
   }
 
@@ -269,7 +254,7 @@ class ResolveContext {
 
 export class Kernel {
   private bindingMap: Map<ServiceId<any>, Binding<any>> = new Map();
-  private resolvePlanMap: Map<ServiceId<any>, Instruction[]> = new Map();
+  private compiledInstructionMap: Map<ServiceId<any>, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId<any>, any> = new Map();
 
   addBinding<T>(binding: Binding<T>) {
@@ -286,17 +271,14 @@ export class Kernel {
     }
   }
 
-  private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
-    const {scope, factoryParamInjectionMetadata, factory, id} = binding;
-    const compiledInstructions = this.verifyAndCompileToInstruction(factoryParamInjectionMetadata, {
-      code: InstructionCode.BUILD,
-      serviceId: id,
-      paramCount: factoryParamInjectionMetadata.length,
-      factory,
-      cacheScope: scope,
-    });
-
-    this.resolvePlanMap.set(id, compiledInstructions);
+  resolve<T>(serviceId: ServiceId<T>): T {
+    const requestContext = new ResolveContext(
+      this.bindingMap,
+      this.compiledInstructionMap,
+      this.singletonCache,
+      serviceId,
+    );
+    return requestContext.resolve();
   }
 
   private verifyAndCompileToInstruction(
@@ -322,6 +304,19 @@ export class Kernel {
     );
   }
 
+  private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
+    const {scope, factoryParamInjectionMetadata, factory, id} = binding;
+    const compiledInstructions = this.verifyAndCompileToInstruction(factoryParamInjectionMetadata, {
+      code: InstructionCode.BUILD,
+      serviceId: id,
+      paramCount: factoryParamInjectionMetadata.length,
+      factory,
+      cacheScope: scope,
+    });
+
+    this.compiledInstructionMap.set(id, compiledInstructions);
+  }
+
   private compileInstanceBinding<T>(binding: InstanceBinding<T>) {
     const {scope, paramInjectionMetadata, constructor, id} = binding;
     const planInstructions = this.verifyAndCompileToInstruction(paramInjectionMetadata, {
@@ -331,11 +326,6 @@ export class Kernel {
       serviceId: id,
       constructor,
     });
-    this.resolvePlanMap.set(id, planInstructions);
-  }
-
-  resolve<T>(serviceId: ServiceId<T>): T {
-    const requestContext = new ResolveContext(this.bindingMap, this.singletonCache, serviceId);
-    return requestContext.resolve();
+    this.compiledInstructionMap.set(id, planInstructions);
   }
 }

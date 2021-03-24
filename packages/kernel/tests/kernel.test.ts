@@ -29,6 +29,33 @@ describe('Kernel', () => {
     expect(result.param).toBe(value);
   });
 
+  test('factory', () => {
+    const kernel = new Kernel();
+    const value = 1;
+
+    class Foo {
+      constructor(readonly param: number) {}
+    }
+
+    kernel.addBinding({
+      type: BindingType.CONSTANT,
+      value,
+      id: '1',
+    });
+
+    kernel.addBinding({
+      id: Foo,
+      type: BindingType.FACTORY,
+      factory: (param: number) => new Foo(param),
+      factoryParamInjectionMetadata: [{id: '1', index: 0, optional: false, transform: untransformed}],
+      scope: Scope.SINGLETON,
+    });
+
+    const result = kernel.resolve(Foo);
+    expect(result).toBeInstanceOf(Foo);
+    expect(result.param).toBe(value);
+  });
+
   test('optional', () => {
     const kernel = new Kernel();
     const value = 1;
@@ -100,6 +127,11 @@ describe('Kernel', () => {
     expect(result.param1).toBeInstanceOf(Foo);
     expect(result.param2).toBeInstanceOf(Foo);
     expect(result.param2).toBe(result.param1);
+  });
+
+  test('no binding', () => {
+    const kernel = new Kernel();
+    expect(() => kernel.resolve('aa')).toThrow();
   });
 
   test('circular dependency', () => {
@@ -186,13 +218,13 @@ describe('Kernel', () => {
 
     kernel.addBinding({
       id: Root,
-      type: BindingType.INSTANCE,
-      constructor: Root,
-      paramInjectionMetadata: [
+      type: BindingType.FACTORY,
+      factory: (a: Transient, b: Transient) => new Root(a, b),
+      factoryParamInjectionMetadata: [
         {id: Transient, index: 0, optional: false, transform: untransformed},
         {id: Transient, index: 1, optional: false, transform: untransformed},
       ],
-      scope: Scope.TRANSIENT,
+      scope: Scope.REQUEST,
     });
 
     const root = kernel.resolve(Root);
