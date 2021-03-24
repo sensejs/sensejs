@@ -5,16 +5,16 @@ import {
   CircularDependencyError,
   DuplicatedBindingError,
   InvalidParamBindingError,
-  Kernel,
+  Container,
   Scope,
-} from '../src/kernel';
+} from '../src';
 
 function untransformed(input: any) {
   return input;
 }
 describe('Kernel', () => {
   test('simple resolve', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
     const value = 1;
 
     class Foo {
@@ -43,7 +43,7 @@ describe('Kernel', () => {
   });
 
   test('factory', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
     const value = 1;
 
     class Foo {
@@ -70,7 +70,7 @@ describe('Kernel', () => {
   });
 
   test('optional', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
     const value = 1;
 
     class Foo {
@@ -101,7 +101,7 @@ describe('Kernel', () => {
   });
 
   test('singleton alias', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
 
     class Foo {
       constructor() {}
@@ -143,12 +143,12 @@ describe('Kernel', () => {
   });
 
   test('no binding', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
     expect(() => kernel.resolve('aa')).toThrow(BindingNotFoundError);
   });
 
   test('duplicated', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
     kernel.addBinding({
       type: BindingType.ALIAS,
       id: 'duplicated',
@@ -164,7 +164,7 @@ describe('Kernel', () => {
   });
 
   test('invalid param injection metadata', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
     class Foo {}
     expect(() =>
       kernel.addBinding({
@@ -188,7 +188,7 @@ describe('Kernel', () => {
 
     class Bar {}
 
-    const kernel = new Kernel();
+    const kernel = new Container();
 
     kernel.addBinding({
       id: Foo,
@@ -209,7 +209,7 @@ describe('Kernel', () => {
   });
 
   test('circular alias', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
     kernel.addBinding({
       type: BindingType.ALIAS,
       id: 'foo',
@@ -220,7 +220,7 @@ describe('Kernel', () => {
   });
 
   test('scope', () => {
-    const kernel = new Kernel();
+    const kernel = new Container();
 
     class GlobalSingleton {
       constructor() {}

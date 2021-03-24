@@ -273,7 +273,7 @@ class ResolveContext {
   }
 }
 
-export class Kernel {
+export class Container {
   private bindingMap: Map<ServiceId<any>, Binding<any>> = new Map();
   private compiledInstructionMap: Map<ServiceId<any>, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId<any>, any> = new Map();
