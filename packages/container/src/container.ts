@@ -24,13 +24,26 @@ export interface FactoryBinding<T> {
   factoryParamInjectionMetadata: ParamInjectionMetadata<any>[];
 }
 
+export interface ProviderBinding<T> {
+  type: BindingType.PROVIDER;
+  id: ServiceId<T>;
+  scope: Scope.REQUEST | Scope.TRANSIENT;
+  provider: (...args: any[]) => Promise<T>;
+  providerParamInjectionMetadata: ParamInjectionMetadata<any>[];
+}
+
 export interface AliasBinding<T> {
   type: BindingType.ALIAS;
   id: ServiceId<T>;
   canonicalId: ServiceId<any>;
 }
 
-export type Binding<T> = ConstantBinding<T> | InstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>;
+export type Binding<T> =
+  | ConstantBinding<T>
+  | InstanceBinding<T>
+  | FactoryBinding<T>
+  | ProviderBinding<T>
+  | AliasBinding<T>;
 
 export class InvalidParamBindingError extends Error {
   constructor(readonly received: ParamInjectionMetadata<any>[], readonly invalidIndex: number) {
@@ -65,11 +78,19 @@ export class BindingNotFoundError extends Error {
   }
 }
 
+export class AsyncUnsupportedError extends Error {
+  constructor(readonly serviceId: ServiceId<any>) {
+    super();
+    Error.captureStackTrace(this, AsyncUnsupportedError);
+  }
+}
+
 enum InstructionCode {
   PLAN = 'PLAN',
   CONSTRUCT = 'CONSTRUCT',
   TRANSFORM = 'TRANSFORM',
   BUILD = 'BUILD',
+  ASYNC_BUILD = 'ASYNC_BUILD',
 }
 
 interface PlanInstruction {
@@ -94,12 +115,25 @@ interface BuildInstruction {
   cacheScope: Scope;
 }
 
+interface AsyncBuildInstruction {
+  code: InstructionCode.ASYNC_BUILD;
+  serviceId: ServiceId<any>;
+  provider: (...args: any[]) => any;
+  paramCount: number;
+  cacheScope: Scope.REQUEST | Scope.TRANSIENT;
+}
+
 interface TransformInstruction {
   code: InstructionCode.TRANSFORM;
   transformer: (input: any) => any;
 }
 
-export type Instruction = PlanInstruction | ConstructInstruction | BuildInstruction | TransformInstruction;
+export type Instruction =
+  | PlanInstruction
+  | ConstructInstruction
+  | BuildInstruction
+  | TransformInstruction
+  | AsyncBuildInstruction;
 
 class ResolveContext {
   readonly planingSet: Set<ServiceId<any>> = new Set();
@@ -114,6 +148,34 @@ class ResolveContext {
     readonly target: ServiceId<any>,
   ) {
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
+  }
+
+  async resolveAsync() {
+    for (;;) {
+      const instruction = this.instructions.pop();
+      if (!instruction) {
+        return this.stack[0];
+      }
+
+      switch (instruction.code) {
+        case InstructionCode.CONSTRUCT:
+          this.performConstruction(instruction);
+          break;
+
+        case InstructionCode.PLAN:
+          this.performPlan(instruction);
+          break;
+        case InstructionCode.TRANSFORM:
+          this.performTransform(instruction);
+          break;
+        case InstructionCode.BUILD:
+          this.performBuild(instruction);
+          break;
+        case InstructionCode.ASYNC_BUILD:
+          await this.performAsyncBuild(instruction);
+          break;
+      }
+    }
   }
 
   resolve() {
@@ -137,6 +199,8 @@ class ResolveContext {
         case InstructionCode.BUILD:
           this.performBuild(instruction);
           break;
+        case InstructionCode.ASYNC_BUILD:
+          throw new AsyncUnsupportedError(instruction.serviceId);
       }
     }
   }
@@ -201,6 +265,23 @@ class ResolveContext {
           this.instructions.push(...instructions);
         }
         break;
+      case BindingType.PROVIDER:
+        {
+          const {scope, id} = binding;
+          if (scope === Scope.REQUEST) {
+            if (this.requestSingletonCache.has(id)) {
+              this.stack.push(this.requestSingletonCache.get(id));
+              return;
+            }
+          }
+          this.planingSet.add(target);
+          const instructions = this.compiledInstructionMap.get(target);
+          if (!instructions) {
+            throw new Error('BUG: No compiled instruction found');
+          }
+          this.instructions.push(...instructions);
+        }
+        break;
     }
   }
 
@@ -233,6 +314,18 @@ class ResolveContext {
       this.requestSingletonCache.set(serviceId, result);
     } else if (cacheScope === Scope.SINGLETON) {
       this.globalSingletonCache.set(serviceId, result);
+    }
+    this.stack.push(result);
+    this.planingSet.delete(serviceId);
+  }
+
+  private async performAsyncBuild(instruction: AsyncBuildInstruction) {
+    const {paramCount, provider, cacheScope, serviceId} = instruction;
+    this.checkCache(cacheScope, serviceId);
+    const args = this.stack.splice(this.stack.length - paramCount);
+    const result = await provider(...args);
+    if (cacheScope === Scope.REQUEST) {
+      this.requestSingletonCache.set(serviceId, result);
     }
     this.stack.push(result);
     this.planingSet.delete(serviceId);
@@ -293,6 +386,8 @@ export class Container {
       this.compileInstanceBinding(binding);
     } else if (binding.type === BindingType.FACTORY) {
       this.compileFactoryBinding(binding);
+    } else if (binding.type === BindingType.PROVIDER) {
+      this.compileProviderBinding(binding);
     }
   }
 
@@ -304,6 +399,16 @@ export class Container {
       serviceId,
     );
     return requestContext.resolve();
+  }
+
+  resolveAsync<T>(serviceId: ServiceId<T>): Promise<T> {
+    const requestContext = new ResolveContext(
+      this.bindingMap,
+      this.compiledInstructionMap,
+      this.singletonCache,
+      serviceId,
+    );
+    return requestContext.resolveAsync();
   }
 
   private verifyAndCompileToInstruction(
@@ -350,6 +455,18 @@ export class Container {
       paramCount: paramInjectionMetadata.length,
       serviceId: id,
       constructor,
+    });
+    this.compiledInstructionMap.set(id, planInstructions);
+  }
+
+  private compileProviderBinding<T>(binding: ProviderBinding<T>) {
+    const {scope, providerParamInjectionMetadata, provider, id} = binding;
+    const planInstructions = this.verifyAndCompileToInstruction(providerParamInjectionMetadata, {
+      code: InstructionCode.ASYNC_BUILD,
+      cacheScope: scope,
+      paramCount: providerParamInjectionMetadata.length,
+      serviceId: id,
+      provider,
     });
     this.compiledInstructionMap.set(id, planInstructions);
   }

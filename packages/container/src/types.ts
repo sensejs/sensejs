@@ -4,6 +4,7 @@ export enum BindingType {
   CONSTANT = 'CONSTANT',
   INSTANCE = 'INSTANCE',
   FACTORY = 'FACTORY',
+  PROVIDER = 'PROVIDER',
   ALIAS = 'ALIAS',
 }
 
