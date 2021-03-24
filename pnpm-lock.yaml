@@ -114,6 +114,14 @@ importers:
       '@sensejs/core': workspace:*
       traverse: ^0.6.6
       tslib: 2.0.0
+  packages/container:
+    dependencies:
+      '@sensejs/utility': link:../utility
+    devDependencies:
+      '@sensejs/testing-utility': link:../../tools/testing-utility
+    specifiers:
+      '@sensejs/testing-utility': workspace:*
+      '@sensejs/utility': workspace:^0.7.2
   packages/core:
     dependencies:
       '@sensejs/utility': link:../utility
@@ -190,14 +198,6 @@ importers:
       kafkajs: ^1.15.0
       tslib: 2.0.0
       zstd-napi: ^0.0.6
-  packages/kernel:
-    dependencies:
-      '@sensejs/utility': link:../utility
-    devDependencies:
-      '@sensejs/testing-utility': link:../../tools/testing-utility
-    specifiers:
-      '@sensejs/testing-utility': workspace:*
-      '@sensejs/utility': workspace:^0.7.2
   packages/logger:
     dependencies:
       colors: 1.4.0

@@ -21,7 +21,8 @@
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
       <excludeFolder url="file://$MODULE_DIR$/tools/testing-utility/lib" />
-      <excludeFolder url="file://$MODULE_DIR$/packages/kernel/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/container/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/kafkajs-zstd-support/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -1,5 +1,5 @@
 {
-  "name": "@sensejs/kernel",
+  "name": "@sensejs/container",
   "version": "0.7.0",
   "description": "",
   "files": [
