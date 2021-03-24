@@ -40,11 +40,11 @@ export interface InstanceBinding<T> {
   scope: Scope;
 }
 
-export interface FactoryBinding<T, F = any> {
+export interface FactoryBinding<T> {
   type: BindingType.FACTORY;
   id: ServiceId<T>;
-  factoryId: ServiceId<(...args: any[]) => T>;
-  factoryScope: Scope;
+  scope: Scope;
+  factory: (...args: any[]) => T;
   factoryParamInjectionMetadata: ParamInjectionMetadata<any>[];
 }
 
@@ -56,10 +56,19 @@ export interface AliasBinding<T> {
 
 export type Binding<T> = ConstantBinding<T> | InstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>;
 
+interface CompiledInstanceBinding<T> {
+  type: BindingType.INSTANCE;
+  id: ServiceId<T>;
+  instructions: Instruction[];
+}
+
+type CompiledBinding<T> = ConstantBinding<T> | CompiledInstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>;
+
 export enum InstructionCode {
   PLAN = 'PLAN',
   CONSTRUCT = 'CONSTRUCT',
   TRANSFORM = 'TRANSFORM',
+  BUILD = 'BUILD',
 }
 
 interface PlanInstruction {
@@ -76,12 +85,20 @@ interface ConstructInstruction {
   cacheScope: Scope;
 }
 
+interface BuildInstruction {
+  code: InstructionCode.BUILD;
+  serviceId: ServiceId<any>;
+  factory: (...args: any[]) => any;
+  paramCount: number;
+  cacheScope: Scope;
+}
+
 interface TransformInstruction {
   code: InstructionCode.TRANSFORM;
   transformer: (input: any) => any;
 }
 
-export type Instruction = PlanInstruction | ConstructInstruction | TransformInstruction;
+export type Instruction = PlanInstruction | ConstructInstruction | BuildInstruction | TransformInstruction;
 
 class ResolveContext {
   readonly planingSet: Set<ServiceId<any>> = new Set();
@@ -114,6 +131,9 @@ class ResolveContext {
           break;
         case InstructionCode.TRANSFORM:
           this.performTransform(instruction);
+          break;
+        case InstructionCode.BUILD:
+          this.performBuild(instruction);
           break;
         default: {
           const never: never = instruction;
@@ -200,17 +220,7 @@ class ResolveContext {
 
   private performConstruction(instruction: ConstructInstruction) {
     const {paramCount, constructor, cacheScope, serviceId} = instruction;
-    if (cacheScope === Scope.SINGLETON) {
-      if (this.globalSingletonCache.has(serviceId)) {
-        throw new Error('Reconstruct a global singleton');
-      }
-    }
-
-    if (cacheScope === Scope.REQUEST) {
-      if (this.requestSingletonCache.has(serviceId)) {
-        throw new Error('Reconstruct a request-scope singleton');
-      }
-    }
+    this.checkCache(cacheScope, serviceId);
     const args = this.stack.splice(this.stack.length - paramCount);
     const result = Reflect.construct(constructor, args);
     if (cacheScope === Scope.REQUEST) {
@@ -227,6 +237,34 @@ class ResolveContext {
     const top = this.stack.pop();
     this.stack.push(transformer(top));
   }
+
+  private performBuild(instruction: BuildInstruction) {
+    const {paramCount, factory, cacheScope, serviceId} = instruction;
+    this.checkCache(cacheScope, serviceId);
+    const args = this.stack.splice(this.stack.length - paramCount);
+    const result = factory(...args);
+    if (cacheScope === Scope.REQUEST) {
+      this.requestSingletonCache.set(serviceId, result);
+    } else if (cacheScope === Scope.SINGLETON) {
+      this.globalSingletonCache.set(serviceId, result);
+    }
+    this.stack.push(result);
+    this.planingSet.delete(serviceId);
+  }
+
+  private checkCache(cacheScope: Scope, serviceId: Class<any> | string | symbol) {
+    if (cacheScope === Scope.SINGLETON) {
+      if (this.globalSingletonCache.has(serviceId)) {
+        throw new Error('Reconstruct a global singleton');
+      }
+    }
+
+    if (cacheScope === Scope.REQUEST) {
+      if (this.requestSingletonCache.has(serviceId)) {
+        throw new Error('Reconstruct a request-scope singleton');
+      }
+    }
+  }
 }
 
 export class Kernel {
@@ -242,35 +280,58 @@ export class Kernel {
     this.bindingMap.set(id, binding);
 
     if (binding.type === BindingType.INSTANCE) {
-      const {scope, paramInjectionMetadata, constructor, id} = binding;
-      const sortedMetadata = Array.from(binding.paramInjectionMetadata).sort((l, r) => l.index - r.index);
-      sortedMetadata.forEach((value, index) => {
-        if (value.index !== index) {
-          throw new Error('param inject metadata is invalid');
-        }
-      });
-
-      const planInstructions = sortedMetadata.reduceRight(
-        (instructions, m): Instruction[] => {
-          const {id, transform, optional} = m;
-          if (typeof transform === 'function') {
-            instructions.push({code: InstructionCode.TRANSFORM, transformer: transform});
-          }
-          instructions.push({code: InstructionCode.PLAN, target: id, optional});
-          return instructions;
-        },
-        [
-          {
-            code: InstructionCode.CONSTRUCT,
-            cacheScope: scope,
-            paramCount: paramInjectionMetadata.length,
-            serviceId: id,
-            constructor,
-          },
-        ] as Instruction[],
-      );
-      this.resolvePlanMap.set(id, planInstructions);
+      this.compileInstanceBinding(binding);
+    } else if (binding.type === BindingType.FACTORY) {
+      this.compileFactoryBinding(binding);
     }
+  }
+
+  private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
+    const {scope, factoryParamInjectionMetadata, factory, id} = binding;
+    const compiledInstructions = this.verifyAndCompileToInstruction(factoryParamInjectionMetadata, {
+      code: InstructionCode.BUILD,
+      serviceId: id,
+      paramCount: factoryParamInjectionMetadata.length,
+      factory,
+      cacheScope: scope,
+    });
+
+    this.resolvePlanMap.set(id, compiledInstructions);
+  }
+
+  private verifyAndCompileToInstruction(
+    paramInjectionMetadata: ParamInjectionMetadata<any>[],
+    consumingInstruction: Instruction,
+  ) {
+    const sortedMetadata = Array.from(paramInjectionMetadata).sort((l, r) => l.index - r.index);
+    sortedMetadata.forEach((value, index) => {
+      if (value.index !== index) {
+        throw new Error('param inject metadata is invalid');
+      }
+    });
+    return sortedMetadata.reduceRight(
+      (instructions, m): Instruction[] => {
+        const {id, transform, optional} = m;
+        if (typeof transform === 'function') {
+          instructions.push({code: InstructionCode.TRANSFORM, transformer: transform});
+        }
+        instructions.push({code: InstructionCode.PLAN, target: id, optional});
+        return instructions;
+      },
+      [consumingInstruction],
+    );
+  }
+
+  private compileInstanceBinding<T>(binding: InstanceBinding<T>) {
+    const {scope, paramInjectionMetadata, constructor, id} = binding;
+    const planInstructions = this.verifyAndCompileToInstruction(paramInjectionMetadata, {
+      code: InstructionCode.CONSTRUCT,
+      cacheScope: scope,
+      paramCount: paramInjectionMetadata.length,
+      serviceId: id,
+      constructor,
+    });
+    this.resolvePlanMap.set(id, planInstructions);
   }
 
   resolve<T>(serviceId: ServiceId<T>): T {

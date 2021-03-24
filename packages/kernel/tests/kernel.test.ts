@@ -48,8 +48,8 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: Foo,
       paramInjectionMetadata: [
-        {id: '1', index: 0, optional: false, transform: untransformed},
-        {id: 'optional', index: 1, optional: true, transform: untransformed},
+        {id: '1', index: 0, optional: false},
+        {id: 'optional', index: 1, optional: true},
       ],
       scope: Scope.SINGLETON,
     });
@@ -90,8 +90,8 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: Bar,
       paramInjectionMetadata: [
-        {id: Foo, index: 0, optional: false, transform: untransformed},
-        {id: 'alias', index: 1, optional: false, transform: untransformed},
+        {id: Foo, index: 0, optional: false},
+        {id: 'alias', index: 1, optional: false},
       ],
       scope: Scope.SINGLETON,
     });
@@ -113,14 +113,14 @@ describe('Kernel', () => {
       id: Foo,
       type: BindingType.INSTANCE,
       constructor: Foo,
-      paramInjectionMetadata: [{id: Bar, index: 0, optional: false, transform: untransformed}],
+      paramInjectionMetadata: [{id: Bar, index: 0, optional: false}],
       scope: Scope.SINGLETON,
     });
     kernel.addBinding({
       id: Bar,
       type: BindingType.INSTANCE,
       constructor: Bar,
-      paramInjectionMetadata: [{id: Foo, index: 0, optional: false, transform: untransformed}],
+      paramInjectionMetadata: [{id: Foo, index: 0, optional: false}],
       scope: Scope.SINGLETON,
     });
 
