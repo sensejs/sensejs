@@ -52,15 +52,40 @@ export interface AliasBinding<T> {
 
 export type Binding<T> = ConstantBinding<T> | InstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>;
 
-interface CompiledInstanceBinding<T> {
-  type: BindingType.INSTANCE;
-  id: ServiceId<T>;
-  instructions: Instruction[];
+export class InvalidParamBindingError extends Error {
+  constructor(readonly received: ParamInjectionMetadata<any>[], readonly invalidIndex: number) {
+    super();
+    Error.captureStackTrace(this, InvalidParamBindingError);
+  }
+}
+export class DuplicatedBindingError extends Error {
+  constructor(readonly serviceId: ServiceId<any>) {
+    super();
+    Error.captureStackTrace(this, DuplicatedBindingError);
+  }
+}
+export class CircularAliasError extends Error {
+  constructor(readonly serviceId: ServiceId<any>) {
+    super();
+    Error.captureStackTrace(this, CircularAliasError);
+  }
 }
 
-type CompiledBinding<T> = ConstantBinding<T> | CompiledInstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>;
+export class CircularDependencyError extends Error {
+  constructor(readonly serviceId: ServiceId<any>) {
+    super();
+    Error.captureStackTrace(this, CircularDependencyError);
+  }
+}
 
-export enum InstructionCode {
+export class BindingNotFoundError extends Error {
+  constructor(readonly serviceId: ServiceId<any>) {
+    super();
+    Error.captureStackTrace(this, BindingNotFoundError);
+  }
+}
+
+enum InstructionCode {
   PLAN = 'PLAN',
   CONSTRUCT = 'CONSTRUCT',
   TRANSFORM = 'TRANSFORM',
@@ -149,7 +174,7 @@ class ResolveContext {
       }
       target = binding.canonicalId;
       if (resolvingSet.has(target)) {
-        throw new Error('circular alias');
+        throw new CircularAliasError(target);
       }
       resolvingSet.add(target);
     }
@@ -158,7 +183,7 @@ class ResolveContext {
   private performPlan(instruction: PlanInstruction) {
     const {target, optional} = instruction;
     if (this.planingSet.has(target)) {
-      throw new Error('circular detected');
+      throw new CircularDependencyError(target);
     }
     const binding = this.internalGetBinding(target);
     if (!binding) {
@@ -166,7 +191,7 @@ class ResolveContext {
         this.stack.push(undefined);
         return;
       } else {
-        throw new Error('No binding found');
+        throw new BindingNotFoundError(target);
       }
     }
     switch (binding.type) {
@@ -256,7 +281,7 @@ export class Kernel {
   addBinding<T>(binding: Binding<T>) {
     const id = binding.id;
     if (this.bindingMap.has(id)) {
-      throw new Error('Duplicated');
+      throw new DuplicatedBindingError(id);
     }
     this.bindingMap.set(id, binding);
 
@@ -284,7 +309,7 @@ export class Kernel {
     const sortedMetadata = Array.from(paramInjectionMetadata).sort((l, r) => l.index - r.index);
     sortedMetadata.forEach((value, index) => {
       if (value.index !== index) {
-        throw new Error('param inject metadata is invalid');
+        throw new InvalidParamBindingError(sortedMetadata, index);
       }
     });
     return sortedMetadata.reduceRight(

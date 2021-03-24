@@ -1,4 +1,13 @@
-import {BindingType, Kernel, Scope} from '../src/kernel';
+import {
+  BindingNotFoundError,
+  BindingType,
+  CircularAliasError,
+  CircularDependencyError,
+  DuplicatedBindingError,
+  InvalidParamBindingError,
+  Kernel,
+  Scope,
+} from '../src/kernel';
 
 function untransformed(input: any) {
   return input;
@@ -135,7 +144,7 @@ describe('Kernel', () => {
 
   test('no binding', () => {
     const kernel = new Kernel();
-    expect(() => kernel.resolve('aa')).toThrow();
+    expect(() => kernel.resolve('aa')).toThrow(BindingNotFoundError);
   });
 
   test('duplicated', () => {
@@ -151,7 +160,7 @@ describe('Kernel', () => {
         id: 'duplicated',
         canonicalId: 'canonicalId',
       }),
-    ).toThrow();
+    ).toThrow(DuplicatedBindingError);
   });
 
   test('invalid param injection metadata', () => {
@@ -171,7 +180,7 @@ describe('Kernel', () => {
         scope: Scope.TRANSIENT,
         constructor: Foo,
       }),
-    ).toThrow();
+    ).toThrow(InvalidParamBindingError);
   });
 
   test('circular dependency', () => {
@@ -196,7 +205,7 @@ describe('Kernel', () => {
       scope: Scope.SINGLETON,
     });
 
-    expect(() => kernel.resolve(Foo)).toThrow();
+    expect(() => kernel.resolve(Foo)).toThrow(CircularDependencyError);
   });
 
   test('circular alias', () => {
@@ -207,7 +216,7 @@ describe('Kernel', () => {
       canonicalId: 'foo',
     });
 
-    expect(() => kernel.resolve('foo')).toThrow();
+    expect(() => kernel.resolve('foo')).toThrow(CircularAliasError);
   });
 
   test('scope', () => {
