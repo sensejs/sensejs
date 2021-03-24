@@ -124,6 +124,7 @@ class ResolveContext {
 
   private internalGetBinding(target: ServiceId<any>) {
     let binding;
+    const resolvingSet = new Set();
     for (;;) {
       binding = this.bindingMap.get(target);
       if (!binding) {
@@ -133,6 +134,10 @@ class ResolveContext {
         return binding;
       }
       target = binding.canonicalId;
+      if (resolvingSet.has(target)) {
+        throw new Error('circular alias');
+      }
+      resolvingSet.add(target);
     }
   }
 

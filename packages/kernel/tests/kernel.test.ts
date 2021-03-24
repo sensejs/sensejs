@@ -102,7 +102,7 @@ describe('Kernel', () => {
     expect(result.param2).toBe(result.param1);
   });
 
-  test('circular', () => {
+  test('circular dependency', () => {
     class Foo {}
 
     class Bar {}
@@ -125,6 +125,17 @@ describe('Kernel', () => {
     });
 
     expect(() => kernel.resolve(Foo)).toThrow();
+  });
+
+  test('circular alias', () => {
+    const kernel = new Kernel();
+    kernel.addBinding({
+      type: BindingType.ALIAS,
+      id: 'foo',
+      canonicalId: 'foo',
+    });
+
+    expect(() => kernel.resolve('foo')).toThrow();
   });
 
   test('scope', () => {
