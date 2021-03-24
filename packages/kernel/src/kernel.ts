@@ -15,10 +15,6 @@ export enum Scope {
   TRANSIENT = 'TRANSIENT',
 }
 
-export function untransformed<T>(input: T) {
-  return input;
-}
-
 export interface ParamInjectionMetadata<T> {
   index: number;
   id: ServiceId<T>;
@@ -195,7 +191,7 @@ class ResolveContext {
           this.planingSet.add(target);
           const instructions = this.compiledInstructionMap.get(target);
           if (!instructions) {
-            throw new Error('No compiled instruction found');
+            throw new Error('BUG: No compiled instruction found');
           }
           this.instructions.push(...instructions);
         }
@@ -240,13 +236,13 @@ class ResolveContext {
   private checkCache(cacheScope: Scope, serviceId: Class<any> | string | symbol) {
     if (cacheScope === Scope.SINGLETON) {
       if (this.globalSingletonCache.has(serviceId)) {
-        throw new Error('Reconstruct a global singleton');
+        throw new Error('BUG: Reconstruct a global singleton');
       }
     }
 
     if (cacheScope === Scope.REQUEST) {
       if (this.requestSingletonCache.has(serviceId)) {
-        throw new Error('Reconstruct a request-scope singleton');
+        throw new Error('BUG: Reconstruct a request-scope singleton');
       }
     }
   }

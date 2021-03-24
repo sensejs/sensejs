@@ -1,6 +1,8 @@
 import {BindingType, Kernel, Scope} from '../src/kernel';
-import {untransformed} from '../lib/kernel';
 
+function untransformed(input: any) {
+  return input;
+}
 describe('Kernel', () => {
   test('simple resolve', () => {
     const kernel = new Kernel();
@@ -15,18 +17,20 @@ describe('Kernel', () => {
       value,
       id: '1',
     });
+    const transformer = jest.fn((x) => x);
 
     kernel.addBinding({
       id: Foo,
       type: BindingType.INSTANCE,
       constructor: Foo,
-      paramInjectionMetadata: [{id: '1', index: 0, optional: false, transform: untransformed}],
+      paramInjectionMetadata: [{id: '1', index: 0, optional: false, transform: transformer}],
       scope: Scope.SINGLETON,
     });
 
     const result = kernel.resolve(Foo);
     expect(result).toBeInstanceOf(Foo);
     expect(result.param).toBe(value);
+    expect(transformer).toHaveBeenCalledWith(value);
   });
 
   test('factory', () => {
@@ -132,6 +136,42 @@ describe('Kernel', () => {
   test('no binding', () => {
     const kernel = new Kernel();
     expect(() => kernel.resolve('aa')).toThrow();
+  });
+
+  test('duplicated', () => {
+    const kernel = new Kernel();
+    kernel.addBinding({
+      type: BindingType.ALIAS,
+      id: 'duplicated',
+      canonicalId: 'canonicalId',
+    });
+    expect(() =>
+      kernel.addBinding({
+        type: BindingType.ALIAS,
+        id: 'duplicated',
+        canonicalId: 'canonicalId',
+      }),
+    ).toThrow();
+  });
+
+  test('invalid param injection metadata', () => {
+    const kernel = new Kernel();
+    class Foo {}
+    expect(() =>
+      kernel.addBinding({
+        type: BindingType.INSTANCE,
+        id: Foo,
+        paramInjectionMetadata: [
+          {
+            index: 1,
+            id: 'foo',
+            optional: true,
+          },
+        ],
+        scope: Scope.TRANSIENT,
+        constructor: Foo,
+      }),
+    ).toThrow();
   });
 
   test('circular dependency', () => {
