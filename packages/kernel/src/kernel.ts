@@ -23,7 +23,7 @@ export interface ParamInjectionMetadata<T> {
   index: number;
   id: ServiceId<T>;
   optional: boolean;
-  transform: (input: T) => any;
+  transform?: (input: T) => any;
 }
 
 export interface ConstantBinding<T> {
@@ -154,7 +154,6 @@ class ResolveContext {
       case BindingType.CONSTANT:
         this.stack.push(binding.value);
         break;
-
       case BindingType.INSTANCE:
         {
           const {constructor, paramInjectionMetadata, scope, id} = binding;
@@ -227,6 +226,7 @@ class ResolveContext {
 
 export class Kernel {
   private bindingMap: Map<ServiceId<any>, Binding<any>> = new Map();
+  private resolvePlanMap: Map<ServiceId<any>, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId<any>, any> = new Map();
 
   addBinding<T>(binding: Binding<T>) {
@@ -235,6 +235,37 @@ export class Kernel {
       throw new Error('Duplicated');
     }
     this.bindingMap.set(id, binding);
+
+    if (binding.type === BindingType.INSTANCE) {
+      const {scope, paramInjectionMetadata, constructor, id} = binding;
+      const sortedMetadata = Array.from(binding.paramInjectionMetadata).sort((l, r) => l.index - r.index);
+      sortedMetadata.forEach((value, index, array) => {
+        if (value.index !== array.length - index) {
+          throw new Error('param inject metadata is invalid');
+        }
+      });
+
+      const planInstructions = sortedMetadata.reduceRight(
+        (instructions, m): Instruction[] => {
+          const {id, transform, optional} = m;
+          if (typeof transform === 'function') {
+            instructions.push({code: InstructionCode.TRANSFORM, transformer: transform});
+          }
+          instructions.push({code: InstructionCode.PLAN, target: id, optional});
+          return instructions;
+        },
+        [
+          {
+            code: InstructionCode.CONSTRUCT,
+            cacheScope: scope,
+            paramCount: paramInjectionMetadata.length,
+            serviceId: id,
+            constructor,
+          },
+        ] as Instruction[],
+      );
+      this.resolvePlanMap.set(id, planInstructions);
+    }
   }
 
   resolve<T>(serviceId: ServiceId<T>): T {
