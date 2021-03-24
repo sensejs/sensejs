@@ -1,26 +1,6 @@
 import {Class, Constructor} from '@sensejs/utility';
-
-export type ServiceId<T> = Class<T> | string | symbol;
-
-export enum BindingType {
-  CONSTANT = 'CONSTANT',
-  INSTANCE = 'INSTANCE',
-  FACTORY = 'FACTORY',
-  ALIAS = 'ALIAS',
-}
-
-export enum Scope {
-  SINGLETON = 'SINGLETON',
-  REQUEST = 'REQUEST',
-  TRANSIENT = 'TRANSIENT',
-}
-
-export interface ParamInjectionMetadata<T> {
-  index: number;
-  id: ServiceId<T>;
-  optional: boolean;
-  transform?: (input: T) => any;
-}
+import {BindingType, ParamInjectionMetadata, Scope, ServiceId} from './types';
+import {ensureConstructorParamInjectMetadata} from './decorator';
 
 export interface ConstantBinding<T> {
   type: BindingType.CONSTANT;
@@ -277,6 +257,30 @@ export class Container {
   private bindingMap: Map<ServiceId<any>, Binding<any>> = new Map();
   private compiledInstructionMap: Map<ServiceId<any>, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId<any>, any> = new Map();
+
+  add(ctor: Constructor) {
+    const cm = ensureConstructorParamInjectMetadata(ctor);
+    this.addBinding({
+      type: BindingType.INSTANCE,
+      id: ctor,
+      constructor: ctor,
+      scope: cm.scope,
+      paramInjectionMetadata: Array.from(cm.params.entries()).map(
+        ([index, value]): ParamInjectionMetadata<any> => {
+          const {id, transform, optional = false} = value;
+          if (typeof id === 'undefined') {
+            throw new TypeError('param inject id is undefined');
+          }
+          return {
+            index,
+            id,
+            transform,
+            optional,
+          };
+        },
+      ),
+    });
+  }
 
   addBinding<T>(binding: Binding<T>) {
     const id = binding.id;
