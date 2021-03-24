@@ -244,8 +244,8 @@ export class Kernel {
     if (binding.type === BindingType.INSTANCE) {
       const {scope, paramInjectionMetadata, constructor, id} = binding;
       const sortedMetadata = Array.from(binding.paramInjectionMetadata).sort((l, r) => l.index - r.index);
-      sortedMetadata.forEach((value, index, array) => {
-        if (value.index !== array.length - index) {
+      sortedMetadata.forEach((value, index) => {
+        if (value.index !== index) {
           throw new Error('param inject metadata is invalid');
         }
       });
