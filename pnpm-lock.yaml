@@ -20,7 +20,6 @@ importers:
       '@typescript-eslint/parser': 4.19.0_eslint@7.22.0+typescript@4.2.3
       eslint: 7.22.0
       husky: 4.3.8
-      inversify: 5.0.5
       jest: 26.6.3_ts-node@9.1.1
       kafkajs: 1.15.0
       lint-staged: 10.5.4
@@ -56,7 +55,6 @@ importers:
       '@typescript-eslint/parser': ^4.13.0
       eslint: ^7.17.0
       husky: ^4.3.7
-      inversify: ^5.0.5
       jest: ^26.6.3
       kafkajs: ^1.15.0
       lint-staged: ^10.5.3
@@ -215,20 +213,6 @@ importers:
       '@sensejs/core': workspace:*
       colors: ^1.4.0
       moment: ^2.29.1
-      tslib: 2.0.0
-  packages/redis:
-    dependencies:
-      '@types/ioredis': 4.22.1
-      ioredis: 4.24.3
-      tslib: 2.0.0
-    devDependencies:
-      '@sensejs/core': link:../core
-      '@sensejs/http': link:../http
-    specifiers:
-      '@sensejs/core': workspace:*
-      '@sensejs/http': workspace:*
-      '@types/ioredis': ^4.17.11
-      ioredis: ^4.19.4
       tslib: 2.0.0
   packages/typeorm:
     dependencies:
@@ -1104,12 +1088,6 @@ packages:
     dev: true
     resolution:
       integrity: sha512-2aoSC4UUbHDj2uCsCxcG/vRMXey/m17bC7UwitVm5hn22nI8O8Y9iDpA76Orc+DWkQ4zZrOKEshCqR/jSuXAHA==
-  /@types/ioredis/4.22.1:
-    dependencies:
-      '@types/node': 14.14.35
-    dev: false
-    resolution:
-      integrity: sha512-GxXT828fkvBeThO68ZJg8cD2haqea5ANBJaxA+UZqLranNkEnQ8N7QLPtykwWbN/sRQz75O7kj+PNmCKF4CEKw==
   /@types/istanbul-lib-coverage/2.0.3:
     dev: true
     resolution:
@@ -2000,12 +1978,6 @@ packages:
       wrap-ansi: 7.0.0
     resolution:
       integrity: sha512-OcRE68cOsVMXp1Yvonl/fzkQOyjLSu/8bhPDfQt0e0/Eb283TKP20Fs2MqoPsr9SwA595rRCA+QMzYc9nBP+JQ==
-  /cluster-key-slot/1.1.0:
-    dev: false
-    engines:
-      node: '>=0.10.0'
-    resolution:
-      integrity: sha512-2Nii8p3RwAPiFwsnZvukotvow2rIHM+yQ6ZcBXGHdniadkYGZYiGmkHJIbZPIV9nfv7m/U1IPMVVcAhoWFeklw==
   /co-body/6.1.0:
     dependencies:
       inflation: 2.0.0
@@ -2386,12 +2358,6 @@ packages:
   /delegates/1.0.0:
     resolution:
       integrity: sha1-hMbhWbgZBP3KWaDvRM2HDTElD5o=
-  /denque/1.5.0:
-    dev: false
-    engines:
-      node: '>=0.10'
-    resolution:
-      integrity: sha512-CYiCSgIF1p6EUByQPlGkKnP1M9g0ZV3qMIrqMqZqdwazygIA/YP2vrbcyl1h/WppKJTdl1F85cXIle+394iDAQ==
   /depd/1.1.2:
     dev: false
     engines:
@@ -3425,6 +3391,7 @@ packages:
     resolution:
       integrity: sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
   /inversify/5.0.5:
+    dev: false
     resolution:
       integrity: sha512-60QsfPz8NAU/GZqXu8hJ+BhNf/C/c+Hp0eDc6XMIJTxBiP36AQyyQKpBkOVTLWBFDQWYVHpbbEuIsHu9dLuJDA==
   /io-ts/2.2.16_fp-ts@2.9.5:
@@ -3435,23 +3402,6 @@ packages:
       fp-ts: ^2.5.0
     resolution:
       integrity: sha512-y5TTSa6VP6le0hhmIyN0dqEXkrZeJLeC5KApJq6VLci3UEKF80lZ+KuoUs02RhBxNWlrqSNxzfI7otLX1Euv8Q==
-  /ioredis/4.24.3:
-    dependencies:
-      cluster-key-slot: 1.1.0
-      debug: 4.3.1
-      denque: 1.5.0
-      lodash.defaults: 4.2.0
-      lodash.flatten: 4.4.0
-      p-map: 2.1.0
-      redis-commands: 1.7.0
-      redis-errors: 1.2.0
-      redis-parser: 3.0.0
-      standard-as-callback: 2.1.0
-    dev: false
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-ANE2YT2fCa+KE0EUmx8VMZuJ+LaTNVXhjyAUDAxom9nqJGAXzCbNBMcujrUSJbz6xc2ZMaMxGB5y10cfYo/0IA==
   /is-accessor-descriptor/0.1.6:
     dependencies:
       kind-of: 3.2.2
@@ -4486,14 +4436,6 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==
-  /lodash.defaults/4.2.0:
-    dev: false
-    resolution:
-      integrity: sha1-0JF4cW/+pN3p5ft7N/bwgCJ0WAw=
-  /lodash.flatten/4.4.0:
-    dev: false
-    resolution:
-      integrity: sha1-8xwiIlqWMtK7+OSt2+8kCqdlph8=
   /lodash.sortby/4.7.0:
     dev: true
     resolution:
@@ -5134,12 +5076,6 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==
-  /p-map/2.1.0:
-    dev: false
-    engines:
-      node: '>=6'
-    resolution:
-      integrity: sha512-y3b8Kpd8OAN444hxfBbFfj1FY/RjtTd8tzYwhUqNYXx0fXx2iX4maP4Qr6qhIKbQXI02wTLAda4fYUbDagTUFw==
   /p-map/4.0.0:
     dependencies:
       aggregate-error: 3.1.0
@@ -5471,24 +5407,6 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==
-  /redis-commands/1.7.0:
-    dev: false
-    resolution:
-      integrity: sha512-nJWqw3bTFy21hX/CPKHth6sfhZbdiHP6bTawSgQBlKOVRG7EZkfHbbHwQJnrE4vsQf0CMNE+3gJ4Fmm16vdVlQ==
-  /redis-errors/1.2.0:
-    dev: false
-    engines:
-      node: '>=4'
-    resolution:
-      integrity: sha1-62LSrbFeTq9GEMBK/hUpOEJQq60=
-  /redis-parser/3.0.0:
-    dependencies:
-      redis-errors: 1.2.0
-    dev: false
-    engines:
-      node: '>=4'
-    resolution:
-      integrity: sha1-tm2CjNyv5rS4pCin3vTGvKwxyLQ=
   /reflect-metadata/0.1.13:
     resolution:
       integrity: sha512-Ts1Y/anZELhSsjMcU605fU9RE4Oi3p5ORujwbIKXfWa+0Zxs510Qrmrce5/Jowq3cHSZSJqBjypxmHarc+vEWg==
@@ -6030,10 +5948,6 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-gL//fkxfWUsIlFL2Tl42Cl6+HFALEaB1FU76I/Fy+oZjRreP7OPMXFlGbxM7NQsI0ZpUfw76sHnv0WNYuTb7Iw==
-  /standard-as-callback/2.1.0:
-    dev: false
-    resolution:
-      integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==
   /static-extend/0.1.2:
     dependencies:
       define-property: 0.2.5

@@ -1,6 +1,5 @@
-import {ModuleClass, ModuleRoot} from '@sensejs/core';
+import {ModuleClass, ModuleRoot, Inject} from '@sensejs/core';
 import {createConfigModule} from '../src';
-import {inject} from 'inversify';
 
 describe('ConfigModule', () => {
   test('circurlar dependency', () => {
@@ -26,11 +25,11 @@ describe('ConfigModule', () => {
     @ModuleClass({requires: [createConfigModule({config: root, prefix: 'config'})]})
     class MyModule {
       constructor(
-        @inject('config') config: object,
-        @inject('config.object.foo') nestedObject: string,
-        @inject('config.array.1') arrayElement: number,
-        @inject('config.array.2.deepNested') deepNested: object,
-        @inject('config.\\\\fancy\\.name.key') fancyConfig: boolean,
+        @Inject('config') config: object,
+        @Inject('config.object.foo') nestedObject: string,
+        @Inject('config.array.1') arrayElement: number,
+        @Inject('config.array.2.deepNested') deepNested: object,
+        @Inject('config.\\\\fancy\\.name.key') fancyConfig: boolean,
       ) {
         expect(config).toBe(root);
         expect(nestedObject).toBe(root.object.foo);

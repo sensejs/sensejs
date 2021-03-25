@@ -1,8 +1,8 @@
-import {inject} from 'inversify';
 import {
   Component,
   consoleLogger,
   createModule,
+  Inject,
   InjectLogger,
   Logger,
   LOGGER_BUILDER_SYMBOL,
@@ -57,7 +57,7 @@ describe('Logger', () => {
       constructor(
         @InjectLogger('CustomNamedLogger') private logger: Logger,
         @InjectLogger() private unnamedLogger: Logger,
-        @inject(FooComponent) private barComponent: FooComponent,
+        @Inject(FooComponent) private barComponent: FooComponent,
       ) {
         expect(spy).toHaveBeenCalledWith('CustomNamedLogger');
         expect(spy).toHaveBeenCalledWith(FooComponent.name);
@@ -75,7 +75,7 @@ describe('Logger', () => {
       components: [FooComponent, BarComponent],
     })
     class MainModule {
-      constructor(@inject(FooComponent) fooComponent: FooComponent, @inject(BarComponent) barComponent: BarComponent) {}
+      constructor(@Inject(FooComponent) fooComponent: FooComponent, @Inject(BarComponent) barComponent: BarComponent) {}
     }
 
     await new ModuleRoot(createModule({requires: [MainModule]})).start();

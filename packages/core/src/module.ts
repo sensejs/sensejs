@@ -1,5 +1,5 @@
 import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
-import {decorate, injectable} from 'inversify';
+import {injectable} from '@sensejs/container';
 import {ensureMethodInjectMetadata} from './method-inject';
 
 /**
@@ -55,7 +55,7 @@ export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> 
  * @private
  */
 export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMetadata<T>): void {
-  decorate(injectable(), module);
+  injectable()(module);
 
   for (const dependency of metadata.requires) {
     if (!Reflect.getMetadata(MODULE_REFLECT_SYMBOL, dependency)) {
