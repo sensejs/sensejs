@@ -5,8 +5,11 @@ import {
   CircularDependencyError,
   Container,
   DuplicatedBindingError,
+  injectable,
+  inject,
   InvalidParamBindingError,
   Scope,
+  optional,
 } from '../src';
 
 function untransformed(input: any) {
@@ -376,5 +379,25 @@ describe('Kernel', () => {
     expect(root.param2.param1).toBeInstanceOf(GlobalSingleton);
     expect(root.param1.param1).toBe(root.param2.param1);
     expect(root.param1.param2).toBe(root.param2.param2);
+  });
+
+  test('decorator', () => {
+    @injectable({scope: Scope.SINGLETON})
+    class Foo {
+      constructor() {}
+    }
+
+    @injectable()
+    class X {
+      constructor(@inject(Foo) readonly foo: Foo, @optional() @inject('optional') optional?: any) {}
+    }
+
+    const container = new Container();
+    container.add(Foo);
+    container.add(X);
+    const x = container.resolve(X);
+    const y = container.resolve(X);
+    expect(x.foo).toBeInstanceOf(Foo);
+    expect(y.foo).toBe(y.foo);
   });
 });
