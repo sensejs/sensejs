@@ -279,6 +279,11 @@ class ResolveContext {
     });
   }
 
+  /**
+   * Get binding and resolve alias
+   * @param target
+   * @private
+   */
   private internalGetBinding(target: ServiceId<any>) {
     let binding;
     const resolvingSet = new Set();
@@ -298,16 +303,27 @@ class ResolveContext {
     }
   }
 
+  private resolveFromCache(target: ServiceId<any>) {
+    if (this.globalSingletonCache.has(target)) {
+      this.stack.push(this.globalSingletonCache.get(target));
+      return true;
+    } else if (this.requestSingletonCache.has(target)) {
+      this.stack.push(this.requestSingletonCache.get(target));
+      return true;
+    }
+    return false;
+  }
+
   private performPlan(instruction: PlanInstruction) {
     const {target, optional} = instruction;
     if (this.planingSet.has(target)) {
       throw new CircularDependencyError(target);
     }
-    if (this.globalSingletonCache.has(target)) {
-      this.stack.push(this.globalSingletonCache.get(target));
-      return;
-    } else if (this.requestSingletonCache.has(target)) {
-      this.stack.push(this.requestSingletonCache.get(target));
+    /**
+     * Interceptor may directly put something into request cache, we need to
+     * check the cache first, otherwise a BindingNotFoundError may be thrown
+     */
+    if (this.resolveFromCache(target)) {
       return;
     }
     const binding = this.internalGetBinding(target);
@@ -319,6 +335,9 @@ class ResolveContext {
         throw new BindingNotFoundError(target);
       }
     }
+    if (this.resolveFromCache(binding.id)) {
+      return;
+    }
     switch (binding.type) {
       case BindingType.CONSTANT:
         this.stack.push(binding.value);
@@ -326,18 +345,6 @@ class ResolveContext {
       case BindingType.INSTANCE:
       case BindingType.FACTORY:
         {
-          const {scope, id} = binding;
-          if (scope === Scope.SINGLETON) {
-            if (this.globalSingletonCache.has(id)) {
-              this.stack.push(this.globalSingletonCache.get(id));
-              return;
-            }
-          } else if (scope === Scope.REQUEST) {
-            if (this.requestSingletonCache.has(id)) {
-              this.stack.push(this.requestSingletonCache.get(id));
-              return;
-            }
-          }
           this.planingSet.add(target);
           const instructions = this.compiledInstructionMap.get(target);
           if (!instructions) {
@@ -348,13 +355,6 @@ class ResolveContext {
         break;
       case BindingType.ASYNC_FACTORY:
         {
-          const {scope, id} = binding;
-          if (scope === Scope.REQUEST) {
-            if (this.requestSingletonCache.has(id)) {
-              this.stack.push(this.requestSingletonCache.get(id));
-              return;
-            }
-          }
           this.planingSet.add(target);
           const instructions = this.compiledInstructionMap.get(target);
           if (!instructions) {
