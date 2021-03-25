@@ -235,9 +235,11 @@ importers:
       '@sensejs/utility': link:../utility
       tslib: 2.0.0
     devDependencies:
+      '@sensejs/container': link:../container
       '@sensejs/core': link:../core
       '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
+      '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
       '@sensejs/testing-utility': workspace:*
       '@sensejs/utility': workspace:^0.7.2

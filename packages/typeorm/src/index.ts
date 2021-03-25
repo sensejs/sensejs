@@ -15,7 +15,7 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {Container, ContainerModule} from 'inversify';
+import {BindingType, Container} from '@sensejs/container';
 import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
 import {attachLoggerToEntityManager, createTypeOrmLogger} from './logger';
 
@@ -150,7 +150,6 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     requires: [createConnectionModule(option)],
   })
   class TypeOrmModule {
-    private readonly module: ContainerModule;
     private readonly entityManager: EntityManager;
 
     constructor(
@@ -160,20 +159,19 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     ) {
       this.entityManager = connection.manager;
       attachLoggerToEntityManager(this.entityManager, this.logger);
-      this.module = new ContainerModule(async (bind) => {
-        bind(EntityManagerInjectSymbol).toConstantValue(this.entityManager);
-      });
     }
 
     @OnModuleCreate()
     async onCreate() {
-      this.container.load(this.module);
+      this.container.addBinding({
+        type: BindingType.CONSTANT,
+        id: EntityManagerInjectSymbol,
+        value: this.entityManager,
+      });
     }
 
     @OnModuleDestroy()
-    async onDestroy() {
-      await this.container.unload(this.module);
-    }
+    async onDestroy() {}
   }
 
   return TypeOrmModule;

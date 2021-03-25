@@ -7,9 +7,8 @@ import {
   OnModuleCreate,
   RequestContext,
   RequestInterceptor,
-  ServiceIdentifier,
 } from '@sensejs/core';
-import {Container} from 'inversify';
+import {Container, ResolveContext} from '@sensejs/container';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
 import {
   createTypeOrmModule,
@@ -30,12 +29,8 @@ class MockRequestContext extends RequestContext {
     throw new Error('mock');
   }
 
-  constructor(private container: Container) {
+  constructor(protected resolveContext: ResolveContext) {
     super();
-  }
-
-  bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
-    this.container.bind(key).toConstantValue(value);
   }
 }
 
@@ -133,9 +128,9 @@ describe('TypeOrmModule', () => {
 
       @OnModuleCreate()
       async onCreate() {
-        const childContainer = this.container.createChild();
-        const context = new MockRequestContext(childContainer);
-        const controller = this.container.get(ExampleHttpController);
+        const resolveContext = this.container.createResolveContext();
+        const context = new MockRequestContext(resolveContext);
+        const controller = this.container.resolve(ExampleHttpController);
         const now = Date.now();
         const vid = `v${now}`;
         const pid = `p${now}`;
@@ -153,7 +148,7 @@ describe('TypeOrmModule', () => {
           ]),
         );
         await this.interceptor.intercept(context, () => Promise.resolve());
-        childContainer.get<ExampleHttpController>(ExampleHttpController);
+        resolveContext.resolve(ExampleHttpController);
         spy();
       }
     }
