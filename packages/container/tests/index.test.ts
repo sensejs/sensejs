@@ -3,9 +3,9 @@ import {
   BindingType,
   CircularAliasError,
   CircularDependencyError,
+  Container,
   DuplicatedBindingError,
   InvalidParamBindingError,
-  Container,
   Scope,
 } from '../src';
 
@@ -217,6 +217,36 @@ describe('Kernel', () => {
     });
 
     expect(() => kernel.resolve('foo')).toThrow(CircularAliasError);
+  });
+
+  test('async resolve', async () => {
+    const kernel = new Container();
+    const value1 = Number();
+    const value2 = Number();
+    kernel.addBinding({
+      type: BindingType.CONSTANT,
+      id: 'constant',
+      value: value1,
+    });
+    kernel.addBinding({
+      type: BindingType.PROVIDER,
+      id: 'provider1',
+      provider: () => Promise.resolve(value2),
+      providerParamInjectionMetadata: [],
+      scope: Scope.REQUEST,
+    });
+    kernel.addBinding({
+      type: BindingType.PROVIDER,
+      id: 'provider2',
+      provider: (constant: number, provider1: number) => Promise.resolve(constant + provider1),
+      providerParamInjectionMetadata: [
+        {id: 'constant', optional: false, index: 0},
+        {id: 'provider1', optional: false, index: 1},
+      ],
+      scope: Scope.REQUEST,
+    });
+    const result = await kernel.resolveAsync('provider2');
+    expect(result).toEqual(value1 + value2);
   });
 
   test('scope', () => {
