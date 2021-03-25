@@ -49,10 +49,7 @@ function createProxy<T extends {}>(prototype: T, method: keyof T) {
       }
       const self = this.args[0];
       const args = this.args.slice(1);
-      return target.apply(
-        self,
-        args.map((elem, idx) => methodInjectMetadata.paramsMetadata[idx].transform(elem)),
-      );
+      return target.apply(self, args);
     }
   }
 
@@ -197,12 +194,11 @@ export function MethodInject<T extends {}, R = T>(
     if (metadata.paramsMetadata[paramIndex]) {
       throw new MethodParamDecorateError();
     }
-    const parameterDecorator = inject(target);
+    const parameterDecorator = inject(target, option.transform);
     parameterDecorator(metadata.proxy as Constructor, undefined, paramIndex + 1);
 
     metadata.paramsMetadata[paramIndex] = Object.assign(
       {target},
-      {transform: option.transform ? option.transform : (x: unknown) => x},
     );
   };
 }
@@ -221,7 +217,7 @@ export interface MethodInvokeOption<X> {
 export interface MethodInvoker<X extends RequestContext> {
   bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U): this;
 
-  invoke(option: MethodInvokeOption<X>): Promise<void>;
+  invoke(option: MethodInvokeOption<X>): Promise<any>;
 }
 
 const MethodInvoker = class<X extends RequestContext, T extends {}, K extends keyof T> implements MethodInvoker<X> {
@@ -242,13 +238,15 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
     const contextIdentifier = option.contextIdentifier ?? Symbol();
     const context = option.contextFactory(this.resolveContext, this.targetConstructor, this.targetMethodKey);
     this.bind(contextIdentifier, context);
-    await invokeMethodAsync(
+    const result = await invokeMethodAsync(
       this.resolveContext,
       this.targetConstructor,
       this.targetMethodKey,
       this.interceptors,
       contextIdentifier,
     );
+    await this.resolveContext.cleanUp();
+    return result;
   }
 };
 
