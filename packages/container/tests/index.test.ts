@@ -318,7 +318,7 @@ describe('Kernel', () => {
     expect(result).toEqual(value1 + value2 + value3);
     expect(postNext1).not.toHaveBeenCalled();
     expect(postNext2).not.toHaveBeenCalled();
-    await context.wait();
+    await context.cleanUp();
     expect(postNext1).toHaveBeenCalled();
     expect(postNext2).toHaveBeenCalled();
   });

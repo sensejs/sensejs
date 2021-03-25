@@ -182,7 +182,7 @@ class ResolveContext {
   private readonly requestSingletonCache: Map<any, any> = new Map();
   private readonly stack: any[] = [];
   private readonly interceptorFactories: ResolveInterceptorFactory<any>[] = [];
-  private cleanUp?: () => void;
+  private dependentsCleanedUp?: () => void;
   private allResolved = Promise.resolve();
 
   constructor(
@@ -191,10 +191,10 @@ class ResolveContext {
     readonly globalSingletonCache: Map<any, any>,
   ) {}
 
-  async wait() {
-    if (this.cleanUp) {
-      this.cleanUp();
-      this.cleanUp = undefined;
+  async cleanUp() {
+    if (this.dependentsCleanedUp) {
+      this.dependentsCleanedUp();
+      this.dependentsCleanedUp = undefined;
     }
     return this.allResolved;
   }
@@ -431,7 +431,7 @@ class ResolveContext {
 
     const args = this.stack.splice(this.stack.length - paramCount);
     const interceptor = interceptorBuilder(...args);
-    const cleanUp = this.cleanUp;
+    const cleanUp = this.dependentsCleanedUp;
     const allResolved = this.allResolved;
     this.allResolved = interceptor(
       (serviceId, value) => {
@@ -439,7 +439,7 @@ class ResolveContext {
       },
       () =>
         new Promise<void>((resolve) => {
-          this.cleanUp = resolve;
+          this.dependentsCleanedUp = resolve;
         }),
     ).finally(() => {
       if (cleanUp) {
