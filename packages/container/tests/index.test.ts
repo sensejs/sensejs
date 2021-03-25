@@ -226,6 +226,15 @@ describe('Kernel', () => {
     const kernel = new Container();
     const value1 = Math.random();
     const value2 = Math.random();
+
+    class Foo {
+      bar;
+
+      constructor(param1: number, param2: number) {
+        this.bar = param1 + param2;
+      }
+    }
+
     kernel.addBinding({
       type: BindingType.CONSTANT,
       id: 'constant',
@@ -238,18 +247,18 @@ describe('Kernel', () => {
       paramInjectionMetadata: [],
       scope: Scope.REQUEST,
     });
-    kernel.addBinding<number>({
-      type: BindingType.ASYNC_FACTORY,
-      id: 'provider2',
-      factory: (constant: number, provider1: number) => Promise.resolve(constant + provider1),
+    kernel.addBinding({
+      type: BindingType.INSTANCE,
+      id: Foo,
+      constructor: Foo,
       paramInjectionMetadata: [
-        {id: 'constant', optional: false, index: 0},
+        {id: 'constant', optional: false, index: 0, transform: untransformed},
         {id: 'provider1', optional: false, index: 1},
       ],
       scope: Scope.REQUEST,
     });
-    const result = await kernel.resolveAsync('provider2');
-    expect(result).toEqual(value1 + value2);
+    const result = await kernel.resolveAsync(Foo);
+    expect(result.bar).toEqual(value1 + value2);
   });
 
   test('interceptor', async () => {
