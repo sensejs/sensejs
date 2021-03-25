@@ -1,12 +1,15 @@
-import {Container, inject, injectable} from 'inversify';
+import {BindingType, Container, inject, injectable, ResolveContext, ServiceId} from '@sensejs/container';
 import {
   Component,
   invokeMethod,
   MethodInject,
   MethodParamDecorateError,
-  MethodParamInjectError,
+  MethodParamInjectError, RequestContext, RequestInterceptor,
   validateMethodInjectMetadata,
 } from '../src';
+import {MethodInvokerBuilder} from '../src/method-inject';
+import {Constructor} from '@sensejs/utility';
+import {interfaces} from 'inversify';
 
 describe('@Inject', () => {
   test('param binding', () => {
@@ -22,10 +25,18 @@ describe('@Inject', () => {
 
     const container = new Container();
     const constValue = 'deadbeef';
-    container.bind(x).toConstantValue(constValue);
-    container.bind(y).toConstantValue(2);
-    container.bind(Foo).toSelf();
-    expect(invokeMethod(container, Foo, 'bar')).toBe(constValue.repeat(3));
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: x,
+      value: constValue,
+    });
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: y,
+      value: 2,
+    });
+    container.add(Foo);
+    expect(invokeMethod(container.createResolveContext(), Foo, 'bar')).toBe(constValue.repeat(3));
   });
 
   test('Validate param binding', () => {
@@ -63,9 +74,13 @@ describe('@Inject', () => {
     }
 
     const container = new Container();
-    container.bind(String).toConstantValue('deadbeef');
-    container.bind(Foo).toSelf();
-    expect(() => invokeMethod(container, Foo, 'bar')).toThrow(MethodParamInjectError);
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: String,
+      value: 'deadbeef',
+    });
+    container.add(Foo);
+    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow(MethodParamInjectError);
   });
 
   test('Okay for method takes no argument', () => {
@@ -73,11 +88,12 @@ describe('@Inject', () => {
     class Foo {
       bar() {}
     }
+
     const spy = jest.spyOn(Foo.prototype, 'bar');
 
     const container = new Container();
-    container.bind(Foo).toSelf();
-    invokeMethod(container, Foo, 'bar');
+    container.add(Foo);
+    invokeMethod(container.createResolveContext(), Foo, 'bar');
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
@@ -90,19 +106,23 @@ describe('@Inject', () => {
     }
 
     const container = new Container();
-    container.bind(Foo).toSelf();
+    container.add(Foo);
 
-    container.bind(String).toConstantValue('deadbeef');
-    expect(() => invokeMethod(container, Foo, 'bar')).toThrow();
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: String,
+      value: 'deadbeef',
+    });
+    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow();
 
     MethodInject(String)(Foo.prototype, 'bar', 1);
-    expect(() => invokeMethod(container, Foo, 'bar')).toThrow();
+    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow();
 
     MethodInject(String)(Foo.prototype, 'bar', 2);
-    expect(() => invokeMethod(container, Foo, 'bar')).toThrow();
+    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow();
   });
 
-  test('Performance test', () => {
+  test('Performance test', async () => {
     const a = Symbol(),
       b = Symbol();
 
@@ -110,12 +130,24 @@ describe('@Inject', () => {
     class Test {}
 
     const container = new Container();
-    container.bind(a).toConstantValue('deadbeef');
-    container.bind(b).toConstantValue(2);
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: a,
+      value: 'deadbeef',
+    });
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: b,
+      value: 2,
+    });
     let constructor: any;
     for (let i = 0; i < 10000; i++) {
       if (i % 100) {
-        container.bind(Symbol()).toConstantValue(i);
+        container.addBinding({
+          type: BindingType.CONSTANT,
+          id: Symbol(),
+          value: i,
+        });
         continue;
       }
       if (constructor) {
@@ -124,7 +156,7 @@ describe('@Inject', () => {
           constructor(@inject(constructor) private empty: any) {}
         }
 
-        container.bind(X).to(X);
+        container.add(X);
         constructor = X;
       } else {
         @injectable()
@@ -132,7 +164,7 @@ describe('@Inject', () => {
           constructor() {}
         }
 
-        container.bind(X).to(X);
+        container.add(X);
         constructor = X;
       }
     }
@@ -149,17 +181,39 @@ describe('@Inject', () => {
       }
     }
 
-    container.bind(Foo).toSelf();
+    container.add(Foo);
 
     let N = 10000;
     // 10000 method invoking should be done within 30s
-    while (N--) {
-      const childContainer = container.createChild();
-      for (let i = 0; i < 1000; i++) {
-        childContainer.bind(Symbol()).toConstantValue(i);
+    const interceptors = Array(100).fill(null).map((value) => {
+      return class extends RequestInterceptor {
+        async intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
+          context.bindContextValue(Symbol(), value);
+          await next();
+        }
+      };
+    });
+
+    class CustomContext extends RequestContext {
+      constructor(
+        readonly resolveContext: ResolveContext,
+        readonly targetConstructor: Constructor,
+        readonly targetMethodKey: keyof any,
+      ) {
+        super();
       }
-      childContainer.bind(Test).toConstantValue(new Test());
-      invokeMethod(childContainer, Foo, 'bar');
+
+      bindContextValue<T>(key: ServiceId<T>, value: T): void {
+        this.resolveContext.addTemporaryConstantBinding(key, value);
+      }
+    }
+
+    while (N--) {
+      await MethodInvokerBuilder.create(container).addInterceptor(...interceptors).build(Foo, 'bar').invoke({
+        contextFactory: (resolveContext, targetConstructor, targetKey)=> {
+          return new CustomContext(resolveContext, targetConstructor, targetKey);
+        }
+      });
     }
   }, 10000);
 });

@@ -1,10 +1,8 @@
 import {
   createEventSubscriptionModule,
-  EventAnnouncer,
   EventPublisher,
   EventSubscriptionContext,
   Inject,
-  InjectEventAnnouncer,
   ModuleClass,
   ModuleRoot,
   RequestInterceptor,
@@ -60,23 +58,13 @@ describe('Event subscribe and announce', () => {
     })
     class EntryModule {
       async onModuleCreate(
-        @InjectEventAnnouncer() announcer: EventAnnouncer,
-        @InjectEventAnnouncer('event') eventAnnouncer: (value: any) => void,
         @Inject(EventPublisher) eventPublisher: EventPublisher,
       ) {
-        await announcer.announceEvent('event', 'foo');
-        expect(spy).not.toHaveBeenCalled();
-        expect(spy2).toHaveBeenCalledWith('foo');
-        await announcer.announceEvent({
-          channel: 'event',
-          symbol: 'event',
-          payload: 'bar',
-        });
-        await announcer.bind('a', 1).bind('b', 2).announce('channel');
+        await eventPublisher.prepare('event').publish('event', 'bar');
+        await eventPublisher.prepare('channel').bind('a', 1).bind('b', 2).publish();
         await eventPublisher.prepare('channel').bind('a', 2).bind('b', 1).publish('channel', 'payload');
         expect(spy).toHaveBeenCalledWith('bar');
         expect(spy2).toHaveBeenLastCalledWith('bar');
-        expect(spy3).toHaveBeenNthCalledWith(1, 1, 2);
         expect(filterSpy).toHaveBeenNthCalledWith(1, undefined);
         expect(filterSpy).toHaveBeenNthCalledWith(2, 'payload');
         expect(spy3).toHaveBeenNthCalledWith(2, 2, 1);
@@ -92,3 +80,4 @@ describe('Event subscribe and announce', () => {
     await ModuleRoot.run(EntryModule, 'onModuleCreate');
   });
 });
+

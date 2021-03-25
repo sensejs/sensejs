@@ -1,24 +1,16 @@
-import {injectable, interfaces} from 'inversify';
+import {injectable, Scope} from '@sensejs/container';
 import {Class, Constructor} from '@sensejs/utility';
 export {Class, Constructor} from '@sensejs/utility';
 
-export enum ComponentScope {
-  SINGLETON,
-  REQUEST,
-  TRANSIENT,
-}
-
-export type ComponentFactoryContext = interfaces.Context;
-
 @injectable()
 export abstract class ComponentFactory<T> {
-  abstract build(context: ComponentFactoryContext): T;
+  abstract build(): T;
 }
 
 export type ServiceIdentifier<T extends {} = {}> = string | symbol | Class<T>;
 
 export interface BindingSpec {
-  scope?: ComponentScope;
+  scope?: Scope;
   name?: string | symbol;
   tags?: {
     key: symbol | string | number;
@@ -50,5 +42,5 @@ export interface ConstantProvider<T> {
 export interface ComponentMetadata<T extends {} = {}> extends BindingSpec {
   target: Constructor<T>;
   id?: ServiceIdentifier<T>;
-  cache: WeakMap<interfaces.Context, T>;
+  cache: WeakMap<{}, T>;
 }

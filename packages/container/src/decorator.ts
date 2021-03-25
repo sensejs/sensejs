@@ -9,9 +9,10 @@ export interface ConstructorParamInjectMetadata {
 }
 
 export function ensureConstructorParamInjectMetadata(ctor: Class): ConstructorParamInjectMetadata {
-  let metadata = Reflect.getMetadata(PARAM_INJECT_METADATA_KEY, ctor.prototype) as ConstructorParamInjectMetadata;
+  let metadata = Reflect.getOwnMetadata(PARAM_INJECT_METADATA_KEY, ctor) as ConstructorParamInjectMetadata;
 
-  if (metadata) {
+  if (!metadata) {
+    metadata = Reflect.getMetadata(PARAM_INJECT_METADATA_KEY, ctor);
     return metadata;
   }
 
@@ -19,7 +20,7 @@ export function ensureConstructorParamInjectMetadata(ctor: Class): ConstructorPa
     params: new Map(),
     scope: Scope.TRANSIENT,
   };
-  Reflect.defineMetadata(PARAM_INJECT_METADATA_KEY, metadata, ctor.prototype);
+  Reflect.defineMetadata(PARAM_INJECT_METADATA_KEY, metadata, ctor);
   return metadata;
 }
 

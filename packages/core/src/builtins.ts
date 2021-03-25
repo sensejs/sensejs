@@ -1,7 +1,7 @@
 import {Component} from './component';
-import {ComponentScope} from './interfaces';
+import {Scope} from '@sensejs/container';
 
-@Component({scope: ComponentScope.SINGLETON})
+@Component({scope: Scope.SINGLETON})
 export class BackgroundTaskQueue {
   private taskFinished = Promise.resolve<unknown>(undefined);
 

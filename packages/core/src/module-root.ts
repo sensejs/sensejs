@@ -1,4 +1,5 @@
-import {Container} from 'inversify';
+// import {Container} from 'inversify';
+import {BindingType, Container} from '@sensejs/container';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 import {BackgroundTaskQueue, ProcessManager} from './builtins';
@@ -21,13 +22,34 @@ export class ModuleRoot<T extends {} = {}> {
 
   public constructor(entryModule: Constructor<T>, processManager?: ProcessManager) {
     this.moduleScanner = new ModuleScanner(entryModule);
-    this.container = new Container({skipBaseClassChecks: true});
-    this.container.bind(Container).toConstantValue(this.container);
+    this.container = new Container();
+    this.container.addBinding({
+      type: BindingType.CONSTANT,
+      value: this.container,
+      id: Container,
+    });
+    // this.container.bind(Container).toConstantValue(this.container);
     if (processManager) {
-      this.container.bind(ProcessManager).toConstantValue(processManager);
+      this.container.addBinding({
+        type: BindingType.CONSTANT,
+        value: processManager,
+        id: ProcessManager,
+      });
+      // this.container.bind(ProcessManager).toConstantValue(processManager);
     }
-    this.container.bind(BackgroundTaskQueue).toConstantValue(this.backgroundTaskQueue);
-    this.container.bind(ModuleScanner).toConstantValue(this.moduleScanner);
+    this.container.addBinding({
+      type: BindingType.CONSTANT,
+      value: this.backgroundTaskQueue,
+      id: BackgroundTaskQueue,
+    });
+    this.container.addBinding({
+      type: BindingType.CONSTANT,
+      value: this.moduleScanner,
+      id: ModuleScanner
+    });
+
+    // this.container.bind(BackgroundTaskQueue).toConstantValue(this.backgroundTaskQueue);
+    // this.container.bind(ModuleScanner).toConstantValue(this.moduleScanner);
     this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, this.moduleInstanceMap);
   }
 
@@ -80,6 +102,6 @@ export class ModuleRoot<T extends {} = {}> {
   }
 
   public run<K extends keyof T>(method: K): T[K] extends (...args: any[]) => infer R ? R : never {
-    return invokeMethod(this.container, this.entryModuleInstance.moduleClass, method);
+    return invokeMethod(this.container.createResolveContext(), this.entryModuleInstance.moduleClass, method);
   }
 }

@@ -1,29 +1,23 @@
-import {Component} from './component';
-import {ComponentFactory, ComponentScope, Constructor, ServiceIdentifier} from './interfaces';
+import {Component, ComponentScope} from './component';
+import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces';
 import {Subject} from 'rxjs';
 import {RequestContext, RequestInterceptor} from './interceptor';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
-import {Container} from 'inversify';
-import {Inject, InjectionDecorator} from './decorators';
+import {Container, ResolveContext} from '@sensejs/container';
+import {Inject} from './decorators';
 import {MethodInvokerBuilder} from './method-inject';
 import {ModuleScanner} from './module-scanner';
-import {Deprecated, matchLabels} from './utils';
+import {matchLabels} from './utils';
 
 export interface EventChannelSubscription {
   unsubscribe(): void;
 }
 
 interface EventMessenger {
-  /**
-   * @deprecated
-   */
-  payload?: unknown;
-  /**
-   * @deprecated
-   */
-  context: unknown;
 
-  container: Container;
+  payload: unknown;
+
+  resolveContext: ResolveContext
 }
 
 interface AcknowledgeAwareEventMessenger extends EventMessenger {
@@ -34,24 +28,11 @@ interface AcknowledgeAwareEventMessenger extends EventMessenger {
  * Describe how an event announcement will be performed
  */
 export interface AnnounceEventOption<T, Context> {
-  /**
-   * Context object that can be used in interceptor
-   *
-   * @deprecated
-   */
-  context?: Context;
 
   /**
    * To which channel the event is announced
    */
   channel: ServiceIdentifier;
-
-  /**
-   * The payload of this event
-   *
-   * @deprecated
-   */
-  payload: T;
 
   /**
    * Using which symbol the payload can be injected, if not specified, default to `channel`
@@ -65,16 +46,14 @@ class EventBusImplement {
 
   async announceEvent<T extends {}, Context>(
     channel: ServiceIdentifier,
-    container: Container,
-    payload?: unknown,
-    context?: unknown,
+    resolveContext: ResolveContext,
+    payload?: unknown
   ): Promise<void> {
     const subject = this.ensureEventChannel(channel);
     const consumePromises: Promise<void>[] = [];
     subject.next({
-      container,
       payload,
-      context,
+      resolveContext,
       acknowledge: (p: Promise<void>) => consumePromises.push(p),
     });
     await Promise.all(consumePromises);
@@ -177,56 +156,16 @@ export interface EventSubscriptionModuleOption extends ModuleOption {
 }
 
 export class EventSubscriptionContext extends RequestContext {
-  /**
-   * @deprecated
-   */
-  public readonly payload: unknown;
-  /**
-   * @deprecated
-   */
-  public readonly context: unknown;
 
   constructor(
-    private container: Container,
+    protected  resolveContext: ResolveContext,
     public readonly identifier: ServiceIdentifier,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
-    payload: unknown,
-    context: unknown,
+    public readonly payload: unknown,
   ) {
     super();
-    this.payload = payload;
-    this.context = context;
-    container.bind(EventSubscriptionContext).toConstantValue(this);
   }
-
-  bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
-    this.container.bind(key).toConstantValue(value);
-  }
-}
-
-/**
- * @deprecated
- */
-export interface EventAnnouncer {
-  /**
-   * Announce event, payload can be injected using target as symbol
-   * @param channel
-   * @param payload
-   * @deprecated
-   */
-  announceEvent<T>(channel: ServiceIdentifier<T>, payload: T): Promise<void>;
-
-  /**
-   * Announce event in a way that described by {AnnounceEventOption}
-   * @param option
-   * @deprecated
-   */
-  announceEvent<T, Context>(option: AnnounceEventOption<T, Context>): Promise<void>;
-
-  bind<T>(target: ServiceIdentifier<T>, value: T): this;
-
-  announce(channel: ServiceIdentifier): Promise<void>;
 }
 
 export abstract class EventPublishPreparation {
@@ -245,7 +184,7 @@ export abstract class EventPublisher {
 class EventPublisherFactory extends ComponentFactory<EventPublisher> {
   private static EventPublishPreparation = class extends EventPublishPreparation {
     constructor(
-      private readonly container: Container,
+      private readonly resolveContext: ResolveContext,
       private readonly eventBus: EventBusImplement,
       private readonly channel: ServiceIdentifier,
     ) {
@@ -253,16 +192,16 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
     }
 
     bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this {
-      this.container.bind(serviceIdentifier).toConstantValue(value);
+      this.resolveContext.addTemporaryConstantBinding(serviceIdentifier, value);
       return this;
     }
 
     async publish<T>(...args: [undefined] | [ServiceIdentifier<T>, T]): Promise<void> {
       if (args[0] !== undefined) {
-        this.container.bind(args[0]).toConstantValue(args[1]);
-        return this.eventBus.announceEvent(this.channel, this.container, args[1]);
+        this.resolveContext.addTemporaryConstantBinding(args[0], args[1]);
+        return this.eventBus.announceEvent(this.channel, this.resolveContext, args[1]);
       }
-      return this.eventBus.announceEvent(this.channel, this.container);
+      return this.eventBus.announceEvent(this.channel, this.resolveContext);
     }
   };
 
@@ -272,7 +211,7 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
     }
 
     prepare(channel: ServiceIdentifier): EventPublishPreparation {
-      return new EventPublisherFactory.EventPublishPreparation(this.container.createChild(), this.eventBus, channel);
+      return new EventPublisherFactory.EventPublishPreparation(this.container.createResolveContext(), this.eventBus, channel);
     }
   };
 
@@ -288,99 +227,14 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
   }
 }
 
-/**
- * @deprecated
- */
-@Deprecated()
-export class EventAnnouncer {
-  private childContainer: Container;
-
-  constructor(private readonly container: Container, private readonly eventBus: EventBusImplement) {
-    this.childContainer = container.createChild();
-  }
-
-  private recreateContainer() {
-    const origin = this.childContainer;
-    this.childContainer = this.container.createChild();
-    return origin;
-  }
-
-  async announceEvent<T, Context>(
-    option: ServiceIdentifier<T> | AnnounceEventOption<T, Context>,
-    ...rest: T[]
-  ): Promise<void> {
-    let channel: ServiceIdentifier;
-    let symbol: ServiceIdentifier;
-    let payload: any;
-    let context: any;
-    if (typeof option === 'object') {
-      channel = option.channel;
-      payload = option.payload;
-      symbol = option.symbol ?? channel;
-      context = option.context;
-    } else {
-      channel = symbol = option;
-      payload = rest[0];
-    }
-    this.bind(symbol, payload);
-    const origin = this.recreateContainer();
-    await this.eventBus.announceEvent(channel, origin, payload, context);
-  }
-
-  bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this {
-    this.childContainer.bind(serviceIdentifier).toConstantValue(value);
-    return this;
-  }
-
-  async announce(channel: ServiceIdentifier): Promise<void> {
-    const origin = this.recreateContainer();
-    await this.eventBus.announceEvent(channel, origin);
-  }
-}
-
-@Component({scope: ComponentScope.SINGLETON})
-class EventAnnouncerFactory extends ComponentFactory<EventAnnouncer> {
-  constructor(
-    @Inject(EventBusImplement) private eventBus: EventBusImplement,
-    @Inject(Container) private container: Container,
-  ) {
-    super();
-  }
-
-  build() {
-    return new EventAnnouncer(this.container, this.eventBus);
-  }
-}
-
-/**
- * Short for `Inject(EventAnnouncer)`
- */
-export function InjectEventAnnouncer<T>(): InjectionDecorator;
-
-/**
- * @param channel Channel to be announced
- * @deprecated
- */
-export function InjectEventAnnouncer<T>(channel: ServiceIdentifier): InjectionDecorator;
-
-export function InjectEventAnnouncer<T>(identifier?: ServiceIdentifier<T>): InjectionDecorator {
-  if (typeof identifier !== 'undefined') {
-    return Inject(EventAnnouncer, {
-      transform: (eventBus) => (payload: T) => eventBus.announceEvent(identifier, payload),
-    });
-  }
-  return Inject(EventAnnouncer);
-}
-
-const eventBusModule = createModule({
-  components: [EventBusImplement],
-  factories: [
-    {provide: EventAnnouncer, factory: EventAnnouncerFactory, scope: ComponentScope.SINGLETON},
-    {provide: EventPublisher, factory: EventPublisherFactory, scope: ComponentScope.SINGLETON},
-  ],
-});
 
 export function createEventSubscriptionModule(option: EventSubscriptionModuleOption = {}): Constructor {
+  const eventBusModule = createModule({
+    components: [EventBusImplement],
+    factories: [
+      {provide: EventPublisher, factory: EventPublisherFactory, scope: ComponentScope.SINGLETON},
+    ],
+  });
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
     private subscriptions: EventChannelSubscription[] = [];
@@ -445,9 +299,9 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(
         this.eventBus.subscribe(identifier, (messenger) => {
-          const {acknowledge, container, payload, context} = messenger;
+          const {acknowledge, resolveContext, payload} = messenger;
           try {
-            if (!subscribeEventMetadata.filter(messenger.payload)) {
+            if (!subscribeEventMetadata.filter(payload)) {
               return;
             }
           } catch (e) {
@@ -456,17 +310,16 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
           }
           acknowledge(
             methodInvokerBuilder
-              .setContainer(container)
+              .setResolveContext(resolveContext)
               .build(constructor, subscribeEventMetadata.name)
               .invoke({
-                contextFactory: (container, targetConstructor, targetMethodKey) => {
+                contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
                   return new EventSubscriptionContext(
-                    container,
+                    resolveContext,
                     identifier,
                     targetConstructor,
                     targetMethodKey,
                     payload,
-                    context,
                   );
                 },
               }),
@@ -478,3 +331,4 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
 
   return EventSubscriptionModule;
 }
+

@@ -1,4 +1,4 @@
-import {Container} from 'inversify';
+import {BindingType, Container} from '@sensejs/container';
 import {
   Component,
   ComponentFactory,
@@ -76,7 +76,11 @@ describe('@ModuleClass', () => {
 describe('ModuleInstance', () => {
   const container = new Container();
   const injectToken = Symbol();
-  container.bind(injectToken).toConstantValue(Symbol());
+  container.addBinding({
+    type: BindingType.CONSTANT,
+    id: injectToken,
+    value: Symbol(),
+  });
   test('Run Module lifecycle', async () => {
     // For unknown reason jest.spy does not work here. Use stub pattern instead
     const onCreateStub = jest.fn(),
@@ -161,8 +165,8 @@ describe('Module resolve', () => {
       @OnModuleCreate()
       onCreate(
         @Inject(unnamedTarget) unnamed: unknown,
-        @Inject(namedTarget) @Named(name) named: unknown,
-        @Inject(taggedTarget) @Tagged(key, value) tagged: unknown,
+        @Inject(namedTarget)  named: unknown,
+        @Inject(taggedTarget)  tagged: unknown,
       ) {}
 
       @OnModuleDestroy()
@@ -229,7 +233,12 @@ describe('Module resolve', () => {
         TaggedComponent,
       ),
     );
-    await instance.start();
+    try {
+      await instance.start();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
     await instance.stop();
   });
 
@@ -259,8 +268,14 @@ describe('Module resolve', () => {
       }),
       new Container(),
     );
-    await instance.onSetup();
-    await instance.onDestroy();
+    try {
+
+      await instance.onSetup();
+      await instance.onDestroy();
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
   });
 
   test('Constants resolve', async () => {

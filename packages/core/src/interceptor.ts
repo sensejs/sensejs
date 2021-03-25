@@ -1,14 +1,18 @@
-import {Container, injectable} from 'inversify';
+import {injectable, Container, ResolveContext} from '@sensejs/container';
 import {Constructor, ServiceIdentifier} from './interfaces';
 import {Component} from './component';
 import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
 
 export abstract class RequestContext {
+  protected abstract resolveContext: ResolveContext;
+
   abstract readonly targetConstructor: Constructor;
 
   abstract readonly targetMethodKey: keyof any;
 
-  abstract bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void;
+  bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
+    this.resolveContext.addTemporaryConstantBinding(key, value);
+  };
 }
 
 @injectable()
@@ -20,11 +24,6 @@ export function composeRequestInterceptor<Context extends RequestContext>(
   container: Container,
   interceptors: Constructor<RequestInterceptor<Context>>[],
 ): Constructor<RequestInterceptor<Context>> {
-  interceptors.forEach((interceptor) => {
-    container
-      .bind(interceptor)
-      .to(createConstructorArgumentTransformerProxy(interceptor, getConstructorInjectMetadata(interceptor)));
-  });
 
   @Component()
   class ComposedRequestInterceptor extends RequestInterceptor<Context> {
@@ -37,7 +36,7 @@ export function composeRequestInterceptor<Context extends RequestContext>(
         }
         index = i;
         if (i < interceptors.length) {
-          return container.get(interceptors[i]).intercept(context, () => dispatch(i + 1));
+          // return container.get(interceptors[i]).intercept(context, () => dispatch(i + 1));
         }
         return next();
       };
@@ -45,7 +44,8 @@ export function composeRequestInterceptor<Context extends RequestContext>(
       return dispatch(0);
     }
   }
-
-  container.bind(ComposedRequestInterceptor).toSelf();
+  container.createResolveContext();
+  //
+  // container.bind(ComposedRequestInterceptor).toSelf();
   return ComposedRequestInterceptor;
 }

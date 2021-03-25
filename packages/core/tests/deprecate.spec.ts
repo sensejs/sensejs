@@ -1,6 +1,6 @@
 import {Deprecated} from '../src/utils';
-import {Container, inject, injectable} from 'inversify';
-import {Inject, invokeMethod} from '../src';
+import {BindingType, Container, inject, injectable} from '@sensejs/container';
+import {getMethodInjectMetadata, Inject, invokeMethod} from '../src';
 
 const awaitWarningCalled = (stub: jest.SpyInstance) =>
   new Promise<void>((done) => {
@@ -91,33 +91,29 @@ describe('Deprecate on class', () => {
       }
     }
 
-    @Deprecated()
-    class W extends U {}
-
     const container = new Container();
-    container.bind('key').toConstantValue('value');
-    container.bind(X).toSelf();
-    container.bind(Y).toSelf();
-    container.bind(V).toSelf();
-    container.bind(W).toSelf();
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: 'key',
+      value: 'value',
+    });
+    container.add(X);
+    container.add(Y);
+    container.add(V);
 
-    expect(container.get(X)).toBeInstanceOf(X);
+    expect(container.resolve(X)).toBeInstanceOf(X);
     expect(stub).lastCalledWith(X);
     await awaitWarningCalled(warningStub);
 
-    expect(container.get(Y)).toBeInstanceOf(Y);
+    expect(container.resolve(Y)).toBeInstanceOf(Y);
     expect(stub).lastCalledWith(Y);
     await awaitWarningCalled(warningStub);
 
-    expect(container.get(V)).toBeInstanceOf(V);
+    expect(container.resolve(V)).toBeInstanceOf(V);
     expect(stub).lastCalledWith(V); // Called With U and V
     await awaitWarningCalled(warningStub);
 
-    expect(container.get(W)).toBeInstanceOf(W);
-    expect(stub).lastCalledWith(U);
-    await awaitWarningCalled(warningStub);
-
-    expect(stub).toHaveBeenCalledTimes(5);
+    expect(stub).toHaveBeenCalledTimes(4);
   });
 });
 
@@ -176,8 +172,18 @@ describe('Deprecate instance method', () => {
     }
 
     const container = new Container();
-    container.bind('key').toConstantValue(result);
-    container.bind(X).toSelf();
-    expect(invokeMethod(container, X, 'foo')).toBe(result);
+    container.addBinding({
+      type: BindingType.CONSTANT,
+      id: 'key',
+      value: result,
+    });
+    container.add(X);
+    try {
+      expect(invokeMethod(container.createResolveContext(), X, 'foo')).toBe(result);
+    } catch (e) {
+
+      console.error(e);
+      throw e;
+    }
   });
 });

@@ -1,104 +1,21 @@
-import {Container, ContainerModule, interfaces} from 'inversify';
+import {BindingType, Container, Scope, ServiceId} from '@sensejs/container';
 import {getModuleMetadata, ModuleMetadata} from './module';
-import {invokeMethod} from './method-inject';
-import {
-  BindingSpec,
-  ComponentFactory,
-  ComponentMetadata,
-  ComponentScope,
-  Constructor,
-  FactoryProvider,
-  ServiceIdentifier,
-} from './interfaces';
+import {invokeMethodAsync} from './method-inject';
+import {ComponentFactory, ComponentMetadata, Constructor, FactoryProvider} from './interfaces';
 import {getComponentMetadata} from './component';
-import {createConstructorArgumentTransformerProxy, getConstructorInjectMetadata} from './constructor-inject';
 
-function scopedBindingHelper<T>(
-  binding: interfaces.BindingInSyntax<T>,
-  scope: ComponentScope = ComponentScope.TRANSIENT,
-): interfaces.BindingWhenOnSyntax<T> {
-  switch (scope) {
-    case ComponentScope.SINGLETON:
-      return binding.inSingletonScope();
-    case ComponentScope.REQUEST:
-      return binding.inRequestScope();
-    default:
-      return binding.inTransientScope();
-  }
-}
-
-function constraintBindingHelper<T>(spec: BindingSpec, binding: interfaces.BindingWhenOnSyntax<T>) {
-  if (spec.name) {
-    binding.whenTargetNamed(spec.name);
-  }
-  if (spec.tags) {
-    for (const {key, value} of spec.tags) {
-      binding.whenTargetTagged(key, value);
-    }
-  }
-  return binding;
-}
-
-function aliasBindingHelper<T>(
-  bind: interfaces.Bind,
-  metadata: ComponentMetadata<T>,
-  target: ServiceIdentifier<T>,
-  symbol: symbol,
-) {
-  const binding = bind(target).toDynamicValue((context) => {
-    let result = metadata.cache.get(context);
-    if (!result) {
-      result = context.container.get<T>(symbol);
-      metadata.cache.set(context, result);
-    }
-    return result;
-  });
-  constraintBindingHelper(metadata, binding);
-}
-
-function bindComponent(bind: interfaces.Bind, constructor: Constructor, metadata: ComponentMetadata) {
-  const {target, id, scope} = metadata;
-  const symbol = Symbol();
-  const binding = bind(symbol).to(constructor);
-  scopedBindingHelper(binding, scope);
-  aliasBindingHelper(bind, metadata, target, symbol);
-
-  if (id && target !== id) {
-    aliasBindingHelper(bind, metadata, id, symbol);
+function bindComponent(container: Container, constructor: Constructor, metadata: ComponentMetadata) {
+  const {target, id} = metadata;
+  container.add(constructor);
+  if (id !== target) {
+    container.addBinding({type: BindingType.ALIAS, id: id as ServiceId<any>, canonicalId: constructor});
   }
 
   let parentConstructor = Object.getPrototypeOf(target);
   while (parentConstructor.prototype) {
-    aliasBindingHelper(bind, metadata, parentConstructor, symbol);
+    container.addBinding({type: BindingType.ALIAS, id: parentConstructor, canonicalId: constructor});
     parentConstructor = Object.getPrototypeOf(parentConstructor);
   }
-}
-
-function createContainerModule<T>(option: ModuleMetadata<T>) {
-  const {components, factories, constants} = option;
-  return new ContainerModule((bind) => {
-    constants.forEach((constantProvider) => {
-      bind(constantProvider.provide).toConstantValue(constantProvider.value);
-    });
-
-    components.forEach((component) => {
-      const constructor = createConstructorArgumentTransformerProxy(component, getConstructorInjectMetadata(component));
-      bindComponent(bind, constructor, getComponentMetadata(component));
-    });
-
-    factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, factory, scope, ...rest} = factoryProvider;
-      const constructMetadata = getConstructorInjectMetadata(factory);
-      const proxy = createConstructorArgumentTransformerProxy(factory, constructMetadata);
-      const factoryBinding = bind(factory).to(proxy);
-      scopedBindingHelper(factoryBinding, scope);
-      const targetBinding = bind(provide).toDynamicValue((context: interfaces.Context) => {
-        const factoryInstance = context.container.get<ComponentFactory<unknown>>(factory);
-        return factoryInstance.build(context);
-      });
-      constraintBindingHelper(rest, targetBinding);
-    });
-  });
 }
 
 /**
@@ -108,7 +25,6 @@ export class ModuleInstance<T extends {} = {}> {
   public readonly dependencies: ModuleInstance[] = [];
   public readonly moduleMetadata: ModuleMetadata<T>;
   public referencedCounter = 0;
-  private readonly containerModule: ContainerModule;
   private setupPromise?: Promise<void>;
   private destroyPromise?: Promise<void>;
   private moduleInstance?: any;
@@ -119,7 +35,6 @@ export class ModuleInstance<T extends {} = {}> {
     instanceMap: Map<Constructor, ModuleInstance<any>> = new Map(),
   ) {
     this.moduleMetadata = getModuleMetadata(this.moduleClass);
-    this.containerModule = createContainerModule(this.moduleMetadata);
     instanceMap.set(moduleClass, this);
     this.moduleMetadata.requires.forEach((moduleClass) => {
       let dependency = instanceMap.get(moduleClass);
@@ -142,8 +57,8 @@ export class ModuleInstance<T extends {} = {}> {
   invokeMethod<K extends keyof T>(
     container: Container,
     method: keyof T,
-  ): T[K] extends (...args: any[]) => infer R ? R : never {
-    return invokeMethod(container, this.moduleClass, method, this.moduleInstance);
+  ) {
+    return invokeMethodAsync(container.createResolveContext(), this.moduleClass, method, []);
   }
 
   async onDestroy(): Promise<void> {
@@ -154,23 +69,49 @@ export class ModuleInstance<T extends {} = {}> {
     return this.destroyPromise;
   }
 
+  private bindComponents(option: ModuleMetadata<any>) {
+    const {components, factories, constants} = option;
+    constants.forEach((constantProvider) => {
+      this.container.addBinding({
+        type: BindingType.CONSTANT,
+        value: constantProvider.value,
+        id: constantProvider.provide
+      });
+    });
+
+    components.forEach((component) => {
+      bindComponent(this.container, component, getComponentMetadata(component));
+    });
+
+    factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
+      const {provide, factory, scope = Scope.REQUEST, ...rest} = factoryProvider;
+      this.container.add(factory);
+      this.container.addBinding({
+        type: BindingType.FACTORY,
+        id: provide,
+        factory: (factory: ComponentFactory<any>)=> {
+          return factory.build();
+        },
+        paramInjectionMetadata: [{index: 0, id: factory, optional: false}],
+        scope ,
+      });
+    });
+  }
+
   private async performSetup() {
-    const injectMetadata = getConstructorInjectMetadata(this.moduleClass);
-    const proxy = createConstructorArgumentTransformerProxy(this.moduleClass, injectMetadata);
-    this.container.bind(this.moduleClass).to(proxy).inSingletonScope();
-    this.container.load(this.containerModule);
-    this.moduleInstance = this.container.get<object>(this.moduleClass);
+    this.container.add(this.moduleClass);
+    this.bindComponents(this.moduleMetadata);
+    this.moduleInstance = this.container.resolve<object>(this.moduleClass);
     for (const method of this.moduleMetadata.onModuleCreate) {
-      await invokeMethod(this.container, this.moduleClass, method, this.moduleInstance);
+      await invokeMethodAsync(this.container.createResolveContext(), this.moduleClass, method, []);
     }
   }
 
   private async performDestroy() {
     if (this.moduleInstance) {
       for (const method of this.moduleMetadata.onModuleDestroy.reverse()) {
-        await invokeMethod(this.container, this.moduleClass, method, this.moduleInstance);
+        await invokeMethodAsync(this.container.createResolveContext(), this.moduleClass, method, []);
       }
     }
-    this.container.unload(this.containerModule);
   }
 }

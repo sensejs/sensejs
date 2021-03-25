@@ -1,6 +1,6 @@
 import {EventEmitter} from 'events';
 import {Component, ModuleClass, ModuleRoot, OnModuleCreate, OnModuleDestroy} from '../src';
-import {inject} from 'inversify';
+import {inject} from '@sensejs/container';
 
 describe('ModuleRoot', () => {
   test('lifecycle', async () => {

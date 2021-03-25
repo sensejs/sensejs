@@ -1,5 +1,5 @@
 import {ServiceIdentifier} from './interfaces';
-import {decorate, inject, named, optional, tagged} from 'inversify';
+import {inject, optional} from '@sensejs/container';
 import {
   ConstructorParamDecorator,
   DecoratorBuilder,
@@ -11,7 +11,7 @@ import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} f
 import {decorateInjectedConstructorParam} from './constructor-inject';
 
 function applyToParamBindingInvoker<P extends {}>(
-  decorator: ParameterDecorator,
+  decorator: ConstructorParamDecorator,
   prototype: P,
   name: keyof P,
   index: number,
@@ -19,7 +19,10 @@ function applyToParamBindingInvoker<P extends {}>(
   const targetMethod = Reflect.get(prototype, name);
   const metadata = ensureMethodInjectMetadata(prototype, name);
   if (typeof targetMethod === 'function') {
-    decorate(decorator, metadata.proxy, index);
+    /**
+     * The 0-th parameter of decorator proxy is `this', so the param index need to increased by 1
+     */
+    decorator(metadata.proxy, undefined, index + 1);
   }
 }
 
@@ -39,21 +42,19 @@ export function Inject<T>(
     })
     .whenApplyToConstructorParam((constructor, index) => {
       decorateInjectedConstructorParam(constructor, index, option?.transform);
-      return decorate(inject(target) as ParameterDecorator, constructor, index);
+      return inject(target, option?.transform)(constructor, undefined, index);
     })
     .build<ParamDecorator>();
 }
 
 export function Optional(): InjectionDecorator {
-  // XXX: Inversify Typing Error?
-  // Need to use @optional() instead of @optional
-  const decorator = optional() as ParameterDecorator;
+  const decorator = optional() as ConstructorParamDecorator;
   return new DecoratorBuilder('Optional')
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
       return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      return decorate(decorator, constructor, index);
+      return decorator(constructor, undefined, index);
     })
     .build<ParamDecorator>();
 }
@@ -61,25 +62,19 @@ export function Optional(): InjectionDecorator {
 export interface InjectionConstraintDecorator extends ConstructorParamDecorator, MethodParamDecorator {}
 
 export function Tagged(key: string | number | symbol, value: unknown): InjectionDecorator {
-  const decorator = tagged(key, value) as ParameterDecorator;
   return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
-      return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      return decorate(decorator, constructor, index);
     })
     .build<InjectionConstraintDecorator>();
 }
 
 export function Named(name: string | symbol): InjectionDecorator {
-  const decorator = named(name) as ParameterDecorator;
   return new DecoratorBuilder(`Named(name="${name.toString()}")`)
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
-      return applyToParamBindingInvoker(decorator, prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      return decorate(decorator, constructor, index);
     })
     .build<InjectionConstraintDecorator>();
 }

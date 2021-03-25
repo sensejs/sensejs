@@ -1,12 +1,20 @@
-import {decorate, injectable} from 'inversify';
-import {Class, ComponentMetadata, ComponentScope, Constructor} from './interfaces';
+import {injectable, Scope} from '@sensejs/container';
+import {Class, ComponentMetadata, Constructor} from './interfaces';
+export {Scope as ComponentScope} from '@sensejs/container';
+
 
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
 
 export interface ComponentOption<T extends {} = {}> {
-  scope?: ComponentScope;
+  scope?: Scope;
   id?: string | symbol | Class<T>;
+  /**
+   * @deprecated
+   */
   name?: string | symbol;
+  /**
+   * @deprecated
+   */
   tags?: {
     key: string | number | symbol;
     value: unknown;
@@ -25,7 +33,7 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
   if (Reflect.hasOwnMetadata(COMPONENT_METADATA_KEY, target)) {
     throw new Error(`Decorator @${Component.name} cannot applied multiple times to "${target.name}`);
   }
-  const {tags = [], name, id = target, scope = ComponentScope.TRANSIENT} = option;
+  const {tags = [], name, id = target, scope = Scope.TRANSIENT} = option;
   const metadata: ComponentMetadata<T> = {
     target,
     id,
@@ -45,7 +53,8 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
  */
 export function Component(option: ComponentOption = {}) {
   return (target: Constructor): void => {
-    decorate(injectable(), target);
+    const {scope} = option;
+    injectable({scope})(target);
     if (typeof option.id === 'function') {
       if (!(target.prototype instanceof option.id) && option.id !== target) {
         throw new Error('Explicitly specified component id must be string, symbol, or any of its base class');
