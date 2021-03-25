@@ -4,12 +4,13 @@ import {
   invokeMethod,
   MethodInject,
   MethodParamDecorateError,
-  MethodParamInjectError, RequestContext, RequestInterceptor,
+  MethodParamInjectError,
+  RequestContext,
+  RequestInterceptor,
   validateMethodInjectMetadata,
 } from '../src';
 import {MethodInvokerBuilder} from '../src/method-inject';
 import {Constructor} from '@sensejs/utility';
-import {interfaces} from 'inversify';
 
 describe('@Inject', () => {
   test('param binding', () => {
@@ -185,14 +186,16 @@ describe('@Inject', () => {
 
     let N = 10000;
     // 10000 method invoking should be done within 30s
-    const interceptors = Array(100).fill(null).map((value) => {
-      return class extends RequestInterceptor {
-        async intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
-          context.bindContextValue(Symbol(), value);
-          await next();
-        }
-      };
-    });
+    const interceptors = Array(100)
+      .fill(null)
+      .map((value) => {
+        return class extends RequestInterceptor {
+          async intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
+            context.bindContextValue(Symbol(), value);
+            await next();
+          }
+        };
+      });
 
     class CustomContext extends RequestContext {
       constructor(
@@ -209,11 +212,14 @@ describe('@Inject', () => {
     }
 
     while (N--) {
-      await MethodInvokerBuilder.create(container).addInterceptor(...interceptors).build(Foo, 'bar').invoke({
-        contextFactory: (resolveContext, targetConstructor, targetKey)=> {
-          return new CustomContext(resolveContext, targetConstructor, targetKey);
-        }
-      });
+      await MethodInvokerBuilder.create(container)
+        .addInterceptor(...interceptors)
+        .build(Foo, 'bar')
+        .invoke({
+          contextFactory: (resolveContext, targetConstructor, targetKey) => {
+            return new CustomContext(resolveContext, targetConstructor, targetKey);
+          },
+        });
     }
   }, 10000);
 });
