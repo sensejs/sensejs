@@ -1,11 +1,11 @@
 import {Constructor, Transformer} from '@sensejs/utility';
-import {Inject, InjectionDecorator, RequestContext, RequestInterceptor, ServiceIdentifier} from '@sensejs/core';
-import {Container} from 'inversify';
+import {Inject, InjectionDecorator, RequestContext} from '@sensejs/core';
 import {KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
+import {ResolveContext} from '@sensejs/container';
 
 export class MessageConsumeContext extends RequestContext {
   constructor(
-    private readonly container: Container,
+    protected readonly resolveContext: ResolveContext,
     public readonly message: KafkaReceivedMessage,
     public readonly consumerGroup: string,
     public readonly targetConstructor: Constructor,
@@ -13,16 +13,7 @@ export class MessageConsumeContext extends RequestContext {
   ) {
     super();
   }
-
-  bindContextValue<T>(id: ServiceIdentifier<T>, value: T): void {
-    this.container.bind(id).toConstantValue(value);
-  }
 }
-
-/**
- * @deprecated
- */
-export const ConsumerContext = MessageConsumeContext;
 
 export function InjectSubscribeContext(transform: Transformer = (x) => x): InjectionDecorator {
   return Inject(MessageConsumeContext, {transform});

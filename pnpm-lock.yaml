@@ -171,9 +171,11 @@ importers:
       lodash: 4.17.21
       tslib: 2.0.0
     devDependencies:
+      '@sensejs/container': link:../container
       '@sensejs/core': link:../core
       '@sensejs/testing-utility': link:../../tools/testing-utility
     specifiers:
+      '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
       '@sensejs/kafkajs-standalone': workspace:^0.7.0
       '@sensejs/testing-utility': workspace:*

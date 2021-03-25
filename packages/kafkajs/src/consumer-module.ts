@@ -14,7 +14,7 @@ import {
   ServiceIdentifier,
 } from '@sensejs/core';
 import {Constructor} from '@sensejs/utility';
-import {Container} from 'inversify';
+import {Container} from '@sensejs/container';
 import {KafkaReceivedMessage, MessageConsumer, MessageConsumerOption} from '@sensejs/kafkajs-standalone';
 import {MessageConsumeContext} from './message-consume-context';
 import lodash from 'lodash';
@@ -115,7 +115,7 @@ function scanSubscriber(
         }
 
         const {fallbackOption = {}, injectOptionFrom} = subscribeMetadata;
-        const injected = injectOptionFrom ? this.container.get<SubscribeTopicOption>(injectOptionFrom) : {};
+        const injected = injectOptionFrom ? this.container.resolve<SubscribeTopicOption>(injectOptionFrom) : {};
 
         const subscribeOption = Object.assign({}, fallbackOption, injected);
         if (typeof subscribeOption.topic !== 'string') {
@@ -138,9 +138,9 @@ function scanSubscriber(
     ) {
       return async (message: KafkaReceivedMessage) => {
         await methodInvokerBuilder.build(target, method).invoke({
-          contextFactory: (container, targetConstructor, targetMethodKey) => {
+          contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
             return new MessageConsumeContext(
-              container,
+              resolveContext,
               message,
               this.messageConsumer.consumerGroupId,
               targetConstructor,
