@@ -293,28 +293,32 @@ describe('Kernel', () => {
     });
 
     const context = kernel.createResolveContext();
-    context.addResolveInterceptor({
-      interceptorBuilder: (param1: number) => {
-        return async (provide, next) => {
-          provide('interceptor1', value2);
-          await next();
-          postNext1(param1);
-        };
-      },
-      paramInjectionMetadata: [{id: 'constant', index: 0, optional: false}],
-    });
-    context.addResolveInterceptor({
-      interceptorBuilder: (param1: number) => {
-        return async (provide, next) => {
-          provide('interceptor2', param1 + value3);
-          await next();
-          postNext2(param1);
-        };
-      },
-      paramInjectionMetadata: [{id: 'interceptor1', index: 0, optional: false}],
-    });
 
-    const result = await context.resolveAsync('async_factory');
+    const result = await context.resolveAsync('async_factory', {
+      interceptors: [
+        {
+          interceptorBuilder: (param1: number) => {
+            return async (next) => {
+              context.addTemporaryConstantBinding('interceptor1', value2);
+              await next();
+              postNext1(param1);
+            };
+          },
+          paramInjectionMetadata: [{id: 'constant', index: 0, optional: false}],
+        },
+
+        {
+          interceptorBuilder: (param1: number) => {
+            return async (next) => {
+              context.addTemporaryConstantBinding('interceptor2', param1 + value3);
+              await next();
+              postNext2(param1);
+            };
+          },
+          paramInjectionMetadata: [{id: 'interceptor1', index: 0, optional: false}],
+        }
+      ]
+    });
     expect(result).toEqual(value1 + value2 + value3);
     expect(postNext1).not.toHaveBeenCalled();
     expect(postNext2).not.toHaveBeenCalled();

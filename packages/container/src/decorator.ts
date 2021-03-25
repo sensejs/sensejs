@@ -11,8 +11,7 @@ export interface ConstructorParamInjectMetadata {
 export function ensureConstructorParamInjectMetadata(ctor: Class): ConstructorParamInjectMetadata {
   let metadata = Reflect.getOwnMetadata(PARAM_INJECT_METADATA_KEY, ctor) as ConstructorParamInjectMetadata;
 
-  if (!metadata) {
-    metadata = Reflect.getMetadata(PARAM_INJECT_METADATA_KEY, ctor);
+  if (metadata) {
     return metadata;
   }
 
