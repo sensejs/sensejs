@@ -1,7 +1,6 @@
 import {Body, Controller, GET, Path, POST, Query} from '@sensejs/http';
 import {PublishingFacade} from '../example/publishing-facade.component';
-import {inject} from 'inversify';
-import {InjectLogger, Logger} from '@sensejs/core';
+import {Inject, InjectLogger, Logger} from '@sensejs/core';
 import {
   CreateAuthorFormTransformer,
   CreateAuthorFormType,
@@ -12,7 +11,7 @@ import {
 @Controller('/example')
 export class ExampleController {
   constructor(
-    @inject(PublishingFacade) private writingFacade: PublishingFacade,
+    @Inject(PublishingFacade) private writingFacade: PublishingFacade,
     @InjectLogger(ExampleController) private logger: Logger,
   ) {
     this.logger.info('Exmaple created');

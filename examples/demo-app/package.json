@@ -23,7 +23,6 @@
     "@sensejs/utility": "workspace:*",
     "config": "^3.3.3",
     "fp-ts": "^2.9.3",
-    "inversify": "^5.0.5",
     "io-ts": "^2.2.13",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.2s",
