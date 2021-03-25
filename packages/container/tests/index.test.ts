@@ -60,7 +60,7 @@ describe('Kernel', () => {
       id: Foo,
       type: BindingType.FACTORY,
       factory: (param: number) => new Foo(param),
-      factoryParamInjectionMetadata: [{id: '1', index: 0, optional: false, transform: untransformed}],
+      paramInjectionMetadata: [{id: '1', index: 0, optional: false, transform: untransformed}],
       scope: Scope.SINGLETON,
     });
 
@@ -221,25 +221,25 @@ describe('Kernel', () => {
 
   test('async resolve', async () => {
     const kernel = new Container();
-    const value1 = Number();
-    const value2 = Number();
+    const value1 = Math.random();
+    const value2 = Math.random();
     kernel.addBinding({
       type: BindingType.CONSTANT,
       id: 'constant',
       value: value1,
     });
-    kernel.addBinding({
-      type: BindingType.PROVIDER,
+    kernel.addBinding<number>({
+      type: BindingType.ASYNC_FACTORY,
       id: 'provider1',
-      provider: () => Promise.resolve(value2),
-      providerParamInjectionMetadata: [],
+      factory: async () => value2,
+      paramInjectionMetadata: [],
       scope: Scope.REQUEST,
     });
-    kernel.addBinding({
-      type: BindingType.PROVIDER,
+    kernel.addBinding<number>({
+      type: BindingType.ASYNC_FACTORY,
       id: 'provider2',
-      provider: (constant: number, provider1: number) => Promise.resolve(constant + provider1),
-      providerParamInjectionMetadata: [
+      factory: (constant: number, provider1: number) => Promise.resolve(constant + provider1),
+      paramInjectionMetadata: [
         {id: 'constant', optional: false, index: 0},
         {id: 'provider1', optional: false, index: 1},
       ],
@@ -247,6 +247,68 @@ describe('Kernel', () => {
     });
     const result = await kernel.resolveAsync('provider2');
     expect(result).toEqual(value1 + value2);
+  });
+
+  test('interceptor', async () => {
+    const kernel = new Container();
+    const value1 = Math.random();
+    const value2 = Math.random();
+    const value3 = Math.random();
+    const postNext1 = jest.fn();
+    const postNext2 = jest.fn();
+    kernel.addBinding({
+      type: BindingType.CONSTANT,
+      id: 'constant',
+      value: value1,
+    });
+    kernel.addBinding<number>({
+      type: BindingType.ASYNC_FACTORY,
+      id: 'async_factory',
+      factory: async (param1, param2) => param1 + param2,
+      paramInjectionMetadata: [
+        {
+          id: 'constant',
+          index: 0,
+          optional: false,
+        },
+        {
+          id: 'interceptor2',
+          index: 1,
+          optional: false,
+        },
+      ],
+      scope: Scope.REQUEST,
+    });
+
+    const context = kernel.createResolveContext();
+    context.addResolveInterceptor({
+      interceptorBuilder: (param1: number) => {
+        return async (provide, next) => {
+          provide('interceptor1', value2);
+          await next();
+          postNext1(param1);
+        };
+      },
+      paramInjectionMetadata: [{id: 'constant', index: 0, optional: false}],
+    });
+    context.addResolveInterceptor({
+      interceptorBuilder: (param1: number) => {
+        return async (provide, next) => {
+          provide('interceptor2', param1 + value3);
+          await next();
+          postNext2(param1);
+        };
+      },
+      paramInjectionMetadata: [{id: 'interceptor1', index: 0, optional: false}],
+    });
+
+    const result = await context.resolveAsync('async_factory');
+    expect(result).toEqual(value1 + value2 + value3);
+    expect(postNext1).not.toHaveBeenCalled();
+    expect(postNext2).not.toHaveBeenCalled();
+    await context.wait();
+    expect(postNext1).toHaveBeenCalled();
+    expect(postNext2).toHaveBeenCalled();
   });
 
   test('scope', () => {
@@ -299,7 +361,7 @@ describe('Kernel', () => {
       id: Root,
       type: BindingType.FACTORY,
       factory: (a: Transient, b: Transient) => new Root(a, b),
-      factoryParamInjectionMetadata: [
+      paramInjectionMetadata: [
         {id: Transient, index: 0, optional: false, transform: untransformed},
         {id: Transient, index: 1, optional: false, transform: untransformed},
       ],
