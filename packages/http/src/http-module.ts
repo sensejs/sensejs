@@ -1,4 +1,4 @@
-import {Container} from 'inversify';
+import {BindingType, Container} from '@sensejs/container';
 import * as http from 'http';
 import {getHttpControllerMetadata} from './http-decorators';
 import {promisify} from 'util';
@@ -109,7 +109,11 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
       this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);
 
       if (option.serverIdentifier) {
-        this.container.bind(option.serverIdentifier).toConstantValue(this.httpServer);
+        this.container.addBinding({
+          type: BindingType.CONSTANT,
+          value: this.httpServer,
+          id: option.serverIdentifier,
+        });
       }
     }
 

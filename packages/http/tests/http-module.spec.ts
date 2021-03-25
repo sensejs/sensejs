@@ -1,5 +1,12 @@
-import {ApplicationRunner, Component, createModule, Inject, ModuleClass, OnModuleCreate, ProcessManager} from '@sensejs/core';
-import {inject} from 'inversify';
+import {
+  ApplicationRunner,
+  Component,
+  createModule,
+  Inject,
+  ModuleClass,
+  OnModuleCreate,
+  ProcessManager,
+} from '@sensejs/core';
 import supertest from 'supertest';
 import {
   Controller,
@@ -45,7 +52,7 @@ test('HttpModule', async () => {
 
   @Controller('/foo', {interceptors: [MockInterceptor], labels: ['foo']})
   class FooController {
-    constructor(@inject(MyComponent) private myComponent: MyComponent) {}
+    constructor(@Inject(MyComponent) private myComponent: MyComponent) {}
 
     @GET('/')
     handleRequest() {

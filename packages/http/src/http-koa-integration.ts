@@ -1,12 +1,6 @@
-import {
-  composeRequestInterceptor,
-  Constructor,
-  invokeMethod,
-  RequestInterceptor,
-  ServiceIdentifier,
-} from '@sensejs/core';
+import {Constructor, MethodInvokerBuilder} from '@sensejs/core';
 import {RequestListener} from 'http';
-import {Container} from 'inversify';
+import {Container, ResolveContext} from '@sensejs/container';
 import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
@@ -91,7 +85,7 @@ export class KoaHttpContext extends HttpContext {
   readonly response: KoaHttpResponse;
 
   constructor(
-    private readonly container: Container,
+    protected readonly resolveContext: ResolveContext,
     readonly nativeContext: KoaRouter.RouterContext,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
@@ -101,10 +95,6 @@ export class KoaHttpContext extends HttpContext {
     this.nativeResponse = this.nativeContext.response;
     this.request = new KoaHttpRequest(this);
     this.response = new KoaHttpResponse(this);
-  }
-
-  bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
-    this.container.bind(key).toConstantValue(value);
   }
 }
 
@@ -236,20 +226,17 @@ export class KoaHttpApplicationBuilder extends HttpAdaptor {
     const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
 
     controllerRouter[httpMethod](path, async (ctx) => {
-      const childContainer = container.createChild();
-      const composedInterceptor = composeRequestInterceptor(childContainer, interceptors);
-      childContainer.bind(Container).toConstantValue(childContainer);
-      const context = new KoaHttpContext(childContainer, ctx, targetConstructor, targetMethod);
-      childContainer.bind(HttpContext).toConstantValue(context);
-      const interceptor: RequestInterceptor = childContainer.get(composedInterceptor);
-      await interceptor.intercept(context, async () => {
-        const result = await invokeMethod(childContainer, targetConstructor, targetMethod);
-        if (typeof context.response.data === 'undefined') {
-          context.response.data = result;
-        }
-      });
-
-      ctx.response.body = context.response.data;
+      const resolveContext = container.createResolveContext();
+      const context = new KoaHttpContext(resolveContext, ctx, targetConstructor, targetMethod);
+      resolveContext.addTemporaryConstantBinding(HttpContext, context);
+      const result = await MethodInvokerBuilder.create(container)
+        .setResolveContext(resolveContext)
+        .addInterceptor(...interceptors)
+        .build(targetConstructor, targetMethod)
+        .invoke({
+          contextFactory: () => context,
+        });
+      ctx.response.body = context.response.data ?? result;
       if (typeof context.response.statusCode === 'number') {
         ctx.response.status = context.response.statusCode;
       }

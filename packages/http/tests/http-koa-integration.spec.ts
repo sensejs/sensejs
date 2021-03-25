@@ -1,6 +1,6 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {Constructor, Inject} from '@sensejs/core';
-import {Container} from 'inversify';
+import {Container} from '@sensejs/container';
 import supertest from 'supertest';
 import {
   Body,
@@ -73,7 +73,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.bind(FooController).toSelf();
+    container.add(FooController);
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build(
@@ -105,7 +105,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.bind(FooController).toSelf();
+    container.add(FooController);
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build(
@@ -181,7 +181,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.bind(FooController).toSelf();
+    container.add(FooController);
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addGlobalInspector(InterceptorA);
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
@@ -242,7 +242,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.bind(FooController).toSelf();
+    container.add(FooController);
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     const middlewareSpy = jest.fn();
     koaHttpApplicationBuilder.clearMiddleware();

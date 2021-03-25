@@ -1,6 +1,6 @@
 import {Constructor, RequestContext, RequestInterceptor} from '@sensejs/core';
 import {IncomingHttpHeaders, RequestListener} from 'http';
-import {Container} from 'inversify';
+import {Container} from '@sensejs/container';
 import {ControllerMetadata} from './http-decorators';
 
 interface CrossOriginResourceShareOption {
