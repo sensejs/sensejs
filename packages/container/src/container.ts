@@ -1,6 +1,6 @@
 import {Class, Constructor} from '@sensejs/utility';
 import {BindingType, ParamInjectionMetadata, Scope, ServiceId} from './types';
-import {ensureConstructorParamInjectMetadata} from './decorator';
+import {ConstructorParamInjectMetadata, ensureConstructorParamInjectMetadata} from './decorator';
 
 export interface ConstantBinding<T> {
   type: BindingType.CONSTANT;
@@ -32,13 +32,12 @@ export interface AsyncFactoryBinding<T> {
   paramInjectionMetadata: ParamInjectionMetadata<any>[];
 }
 
-export type ResolveInterceptor = (
-  provide: <R>(serviceId: ServiceId<R>, value: R) => void,
+export type AsyncResolveInterceptor = (
   next: () => Promise<void>,
 ) => Promise<any>;
 
-export interface ResolveInterceptorFactory<T> {
-  interceptorBuilder: (...args: any[]) => ResolveInterceptor;
+export interface AsyncResolveInterceptorFactory<T> {
+  interceptorBuilder: (...args: any[]) => AsyncResolveInterceptor;
   paramInjectionMetadata: ParamInjectionMetadata<any>[];
 }
 
@@ -136,7 +135,7 @@ interface AsyncBuildInstruction {
 
 interface AsyncInterceptInstruction {
   code: InstructionCode.ASYNC_INTERCEPT;
-  interceptorBuilder: (...args: any[]) => ResolveInterceptor;
+  interceptorBuilder: (...args: any[]) => AsyncResolveInterceptor;
   paramCount: number;
 }
 
@@ -176,14 +175,18 @@ function verifyParamInjectAndCompile(
   );
 }
 
-class ResolveContext {
+interface AsyncResolveOption {
+  interceptors?: AsyncResolveInterceptorFactory<any>[]
+}
+
+export class ResolveContext {
   private readonly planingSet: Set<ServiceId<any>> = new Set();
   private readonly instructions: Instruction[] = [];
   private readonly requestSingletonCache: Map<any, any> = new Map();
   private readonly stack: any[] = [];
-  private readonly interceptorFactories: ResolveInterceptorFactory<any>[] = [];
   private dependentsCleanedUp?: () => void;
   private allResolved = Promise.resolve();
+  private allowUnbound = false;
 
   constructor(
     readonly bindingMap: Map<ServiceId<any>, Binding<any>>,
@@ -199,19 +202,20 @@ class ResolveContext {
     return this.allResolved;
   }
 
-  addResolveInterceptor(interceptorFactory: ResolveInterceptorFactory<any>) {
-    this.interceptorFactories.push(interceptorFactory);
+  setAllowUnbound(value: boolean) {
+    this.allowUnbound = value;
     return this;
   }
 
-  async resolveAsync(target: ServiceId<any>) {
+  async resolveAsync(target: ServiceId<any>, option: AsyncResolveOption = {}) {
+    const {interceptors = []} = option;
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
-    this.interceptorFactories.reduceRight((output, i) => {
+    interceptors.reduceRight((output, i) => {
       this.instructions.push(...this.compileInterceptor(i));
       return null;
     }, null);
 
-    for (;;) {
+    for (; ;) {
       const instruction = this.instructions.pop();
       if (!instruction) {
         return this.stack[0];
@@ -242,7 +246,7 @@ class ResolveContext {
 
   resolve(target: ServiceId<any>) {
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
-    for (;;) {
+    for (; ;) {
       const instruction = this.instructions.pop();
       if (!instruction) {
         return this.stack[0];
@@ -270,7 +274,7 @@ class ResolveContext {
     }
   }
 
-  private compileInterceptor(interceptorFactory: ResolveInterceptorFactory<any>) {
+  private compileInterceptor(interceptorFactory: AsyncResolveInterceptorFactory<any>) {
     const {interceptorBuilder, paramInjectionMetadata} = interceptorFactory;
     return verifyParamInjectAndCompile(interceptorFactory.paramInjectionMetadata, {
       code: InstructionCode.ASYNC_INTERCEPT,
@@ -314,7 +318,7 @@ class ResolveContext {
     return false;
   }
 
-  private performPlan(instruction: PlanInstruction) {
+  private performPlan(instruction: PlanInstruction, allowUnbound = false) {
     const {target, optional} = instruction;
     if (this.planingSet.has(target)) {
       throw new CircularDependencyError(target);
@@ -331,9 +335,19 @@ class ResolveContext {
       if (optional) {
         this.stack.push(undefined);
         return;
-      } else {
-        throw new BindingNotFoundError(target);
+      } else if (this.allowUnbound && typeof target === 'function') {
+        const cm = ensureConstructorParamInjectMetadata(target);
+        this.instructions.push(...verifyParamInjectAndCompile(
+          convertParamInjectionMetadata(cm), {
+            code: InstructionCode.CONSTRUCT,
+            cacheScope: Scope.TRANSIENT,
+            constructor: target as Constructor,
+            paramCount: cm.params.size,
+            serviceId: target,
+          }));
+        return;
       }
+      throw new BindingNotFoundError(target);
     }
     if (this.resolveFromCache(binding.id)) {
       return;
@@ -345,8 +359,8 @@ class ResolveContext {
       case BindingType.INSTANCE:
       case BindingType.FACTORY:
         {
-          this.planingSet.add(target);
-          const instructions = this.compiledInstructionMap.get(target);
+          this.planingSet.add(binding.id);
+          const instructions = this.compiledInstructionMap.get(binding.id);
           if (!instructions) {
             throw new Error('BUG: No compiled instruction found');
           }
@@ -355,8 +369,8 @@ class ResolveContext {
         break;
       case BindingType.ASYNC_FACTORY:
         {
-          this.planingSet.add(target);
-          const instructions = this.compiledInstructionMap.get(target);
+          this.planingSet.add(binding.id);
+          const instructions = this.compiledInstructionMap.get(binding.id);
           if (!instructions) {
             throw new Error('BUG: No compiled instruction found');
           }
@@ -426,6 +440,11 @@ class ResolveContext {
     }
   }
 
+  public addTemporaryConstantBinding<T>(serviceId:ServiceId<T>, value: T) {
+    this.requestSingletonCache.set(serviceId, value);
+    return this;
+  }
+
   private async performIntercept(instruction: AsyncInterceptInstruction) {
     const {paramCount, interceptorBuilder} = instruction;
 
@@ -434,9 +453,6 @@ class ResolveContext {
     const cleanUp = this.dependentsCleanedUp;
     const allResolved = this.allResolved;
     this.allResolved = interceptor(
-      (serviceId, value) => {
-        this.requestSingletonCache.set(serviceId, value);
-      },
       () =>
         new Promise<void>((resolve) => {
           this.dependentsCleanedUp = resolve;
@@ -448,6 +464,18 @@ class ResolveContext {
       return allResolved;
     });
   }
+}
+
+function convertParamInjectionMetadata(cm: ConstructorParamInjectMetadata) {
+  return Array.from(cm.params.entries()).map(
+    ([index, value]): ParamInjectionMetadata<any> => {
+      const {id, transform, optional = false} = value;
+      if (typeof id === 'undefined') {
+        throw new TypeError('param inject id is undefined');
+      }
+      return {index, id, transform, optional};
+    },
+  );
 }
 
 export class Container {
@@ -466,20 +494,7 @@ export class Container {
       id: ctor,
       constructor: ctor,
       scope: cm.scope,
-      paramInjectionMetadata: Array.from(cm.params.entries()).map(
-        ([index, value]): ParamInjectionMetadata<any> => {
-          const {id, transform, optional = false} = value;
-          if (typeof id === 'undefined') {
-            throw new TypeError('param inject id is undefined');
-          }
-          return {
-            index,
-            id,
-            transform,
-            optional,
-          };
-        },
-      ),
+      paramInjectionMetadata: convertParamInjectionMetadata(cm),
     });
   }
 
