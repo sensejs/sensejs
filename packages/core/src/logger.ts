@@ -1,6 +1,6 @@
-import {Class} from './interfaces';
+import {Class, Transformer} from './interfaces';
 import {Inject, InjectionDecorator, Optional} from './decorators';
-import {consoleLogger, DecoratorBuilder, Logger, Transformer} from '@sensejs/utility';
+import {consoleLogger, DecoratorBuilder, Logger} from '@sensejs/utility';
 
 export {consoleLogger, Logger} from '@sensejs/utility';
 

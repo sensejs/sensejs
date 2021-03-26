@@ -14,10 +14,9 @@ export interface EventChannelSubscription {
 }
 
 interface EventMessenger {
-
   payload: unknown;
 
-  resolveContext: ResolveContext
+  resolveContext: ResolveContext;
 }
 
 interface AcknowledgeAwareEventMessenger extends EventMessenger {
@@ -28,7 +27,6 @@ interface AcknowledgeAwareEventMessenger extends EventMessenger {
  * Describe how an event announcement will be performed
  */
 export interface AnnounceEventOption<T, Context> {
-
   /**
    * To which channel the event is announced
    */
@@ -47,7 +45,7 @@ class EventBusImplement {
   async announceEvent<T extends {}, Context>(
     channel: ServiceIdentifier,
     resolveContext: ResolveContext,
-    payload?: unknown
+    payload?: unknown,
   ): Promise<void> {
     const subject = this.ensureEventChannel(channel);
     const consumePromises: Promise<void>[] = [];
@@ -106,7 +104,10 @@ export interface SubscribeEventControllerOption {
   labels?: (string | symbol)[] | Set<symbol | string>;
 }
 
-export function setSubscribeEventControllerMetadata(target: Constructor, metadata: SubscribeEventControllerMetadata) {
+export function setSubscribeEventControllerMetadata(
+  target: Constructor,
+  metadata: SubscribeEventControllerMetadata,
+): void {
   if (Reflect.hasMetadata(SUBSCRIBE_EVENT_CONTROLLER_KEY, target)) {
     throw new Error(`@SubscribeEventController() cannot applied multiple times on "${target.name}"`);
   }
@@ -156,9 +157,8 @@ export interface EventSubscriptionModuleOption extends ModuleOption {
 }
 
 export class EventSubscriptionContext extends RequestContext {
-
   constructor(
-    protected  resolveContext: ResolveContext,
+    protected resolveContext: ResolveContext,
     public readonly identifier: ServiceIdentifier,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
@@ -211,7 +211,11 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
     }
 
     prepare(channel: ServiceIdentifier): EventPublishPreparation {
-      return new EventPublisherFactory.EventPublishPreparation(this.container.createResolveContext(), this.eventBus, channel);
+      return new EventPublisherFactory.EventPublishPreparation(
+        this.container.createResolveContext(),
+        this.eventBus,
+        channel,
+      );
     }
   };
 
@@ -227,13 +231,10 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
   }
 }
 
-
 export function createEventSubscriptionModule(option: EventSubscriptionModuleOption = {}): Constructor {
   const eventBusModule = createModule({
     components: [EventBusImplement],
-    factories: [
-      {provide: EventPublisher, factory: EventPublisherFactory, scope: ComponentScope.SINGLETON},
-    ],
+    factories: [{provide: EventPublisher, factory: EventPublisherFactory, scope: ComponentScope.SINGLETON}],
   });
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
@@ -331,4 +332,3 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
 
   return EventSubscriptionModule;
 }
-

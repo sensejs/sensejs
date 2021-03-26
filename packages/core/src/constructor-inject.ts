@@ -1,5 +1,4 @@
-import {Transformer} from '@sensejs/utility';
-import {Class} from './interfaces';
+import {Class, Transformer} from './interfaces';
 
 const CONSTRUCTOR_INJECT_KEY = Symbol('CONSTRUCTOR_INJECT_KEY');
 

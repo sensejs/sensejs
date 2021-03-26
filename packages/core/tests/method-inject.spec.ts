@@ -1,16 +1,16 @@
 import {BindingType, Container, inject, injectable, ResolveContext, ServiceId} from '@sensejs/container';
 import {
   Component,
+  Constructor,
   invokeMethod,
   MethodInject,
+  MethodInvokerBuilder,
   MethodParamDecorateError,
   MethodParamInjectError,
   RequestContext,
   RequestInterceptor,
   validateMethodInjectMetadata,
 } from '../src';
-import {MethodInvokerBuilder} from '../src/method-inject';
-import {Constructor} from '@sensejs/utility';
 
 describe('@Inject', () => {
   test('param binding', () => {

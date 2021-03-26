@@ -1,4 +1,14 @@
-import {Class} from '@sensejs/utility';
+export interface Class<T extends {} = {}> extends Function {
+  prototype: T;
+}
+
+export interface Constructor<T extends {} = {}> extends Class<T> {
+  new (...args: any[]): T;
+}
+
+export interface Transformer<Input = any, Output = Input> {
+  (input: Input): Output;
+}
 
 export enum BindingType {
   CONSTANT = 'CONSTANT',
@@ -9,7 +19,7 @@ export enum BindingType {
   ALIAS = 'ALIAS',
 }
 
-export type ServiceId<T> = Class<T> | string | symbol;
+export type ServiceId<T = any> = Class<T> | string | symbol;
 
 export enum Scope {
   SINGLETON = 'SINGLETON',
@@ -17,9 +27,9 @@ export enum Scope {
   TRANSIENT = 'TRANSIENT',
 }
 
-export interface ParamInjectionMetadata<T> {
+export interface ParamInjectionMetadata<T = any> {
   index: number;
   id: ServiceId<T>;
   optional: boolean;
-  transform?: (input: T) => any;
+  transform?: Transformer<T>;
 }

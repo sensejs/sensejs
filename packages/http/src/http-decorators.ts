@@ -1,5 +1,11 @@
-import {Transformer} from '@sensejs/utility';
-import {Component, Constructor, Inject, InjectionDecorator, validateMethodInjectMetadata} from '@sensejs/core';
+import {
+  Component,
+  Constructor,
+  Inject,
+  InjectionDecorator,
+  validateMethodInjectMetadata,
+  Transformer,
+} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {

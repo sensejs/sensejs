@@ -1,6 +1,5 @@
 import {Container, inject, injectable, ResolveContext, ServiceId} from '@sensejs/container';
-import {Constructor, ServiceIdentifier} from './interfaces';
-import * as utility from '@sensejs/utility';
+import {Constructor, ServiceIdentifier, Transformer} from './interfaces';
 import {RequestContext, RequestInterceptor} from './interceptor';
 
 export class MethodParamDecorateError extends Error {}
@@ -11,12 +10,12 @@ export interface MethodParameterInjectOption<T, R> {
   /**
    * Transform the injected target
    */
-  transform?: utility.Transformer<T, R>;
+  transform?: Transformer<T, R>;
 }
 
 interface MethodParameterInjectMetadata {
   target: ServiceIdentifier;
-  transform: utility.Transformer;
+  transform: Transformer;
 }
 
 interface MethodInjectMetadata {
@@ -157,31 +156,29 @@ export async function invokeMethodAsync<T extends {}, K extends keyof T>(
       }.${methodKey} is not a function, typeof targetMethod is ${typeof targetMethod}, typeof method is ${typeof methodKey}`,
     );
   }
-  const invoker = await resolveContext.setAllowUnbound(true)
-    .resolveAsync(metadata.proxy, {
-      interceptors: interceptors.map((interceptor) => {
-        return {
-          interceptorBuilder: (context: RequestContext, interceptor: RequestInterceptor) => {
-            return async (next) => {
-              return interceptor.intercept(context, next);
-            };
+  const invoker = (await resolveContext.setAllowUnbound(true).resolveAsync(metadata.proxy, {
+    interceptors: interceptors.map((interceptor) => {
+      return {
+        interceptorBuilder: (context: RequestContext, interceptor: RequestInterceptor) => {
+          return async (next) => {
+            return interceptor.intercept(context, next);
+          };
+        },
+        paramInjectionMetadata: [
+          {
+            id: contextIdentifier ?? Symbol(),
+            optional: !contextIdentifier,
+            index: 0,
           },
-          paramInjectionMetadata: [
-            {
-              id: contextIdentifier ?? Symbol(),
-              optional: !contextIdentifier,
-              index: 0,
-            },
-            {
-              id: interceptor,
-              optional: false,
-              index: 1,
-            },
-          ],
-
-        };
-      }),
-    }) as MethodInjectProxy;
+          {
+            id: interceptor,
+            optional: false,
+            index: 1,
+          },
+        ],
+      };
+    }),
+  })) as MethodInjectProxy;
   return invoker.call(metadata, targetMethod);
 }
 
@@ -197,9 +194,7 @@ export function MethodInject<T extends {}, R = T>(
     const parameterDecorator = inject(target, option.transform);
     parameterDecorator(metadata.proxy as Constructor, undefined, paramIndex + 1);
 
-    metadata.paramsMetadata[paramIndex] = Object.assign(
-      {target},
-    );
+    metadata.paramsMetadata[paramIndex] = Object.assign({target});
   };
 }
 
@@ -226,8 +221,7 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
     private readonly interceptors: Constructor<RequestInterceptor<X>>[],
     private readonly targetConstructor: Constructor<T>,
     private readonly targetMethodKey: K,
-  ) {
-  }
+  ) {}
 
   bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U) {
     this.resolveContext.addTemporaryConstantBinding(serviceIdentifier, x);

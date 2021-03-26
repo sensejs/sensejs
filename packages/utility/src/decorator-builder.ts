@@ -1,41 +1,47 @@
-import {Class, PrototypeKey} from './types';
+export type PrototypeKey = string | symbol;
 
-export interface ClassDecorator<Constraint = Class> {
-  <T extends Constraint>(target: T): T | void;
+export interface Class<T extends {} = {}> extends Function {
+  prototype: T;
+}
+
+export interface ClassDecorator {
+  <C extends Class>(target: C): C | void;
 }
 
 export interface InstancePropertyDecorator {
-  (target: object, name: PrototypeKey): void;
+  <P extends {}>(target: P, name: keyof P): void;
 }
 
 export interface StaticPropertyDecorator {
-  <T extends Class>(target: T, name: PrototypeKey): void;
+  <C extends Class>(target: C, name: keyof C): void;
 }
 
 export interface StaticMethodDecorator {
   <T extends Function, R extends Class>(
     target: R,
-    name: PrototypeKey,
+    name: keyof R,
     pd: TypedPropertyDescriptor<T>,
   ): TypedPropertyDescriptor<T> | void;
 }
 
 export interface InstanceMethodDecorator {
-  <T extends Function>(target: object, name: PrototypeKey, pd: TypedPropertyDescriptor<T>): TypedPropertyDescriptor<
-    T
-  > | void;
+  <F extends Function, P extends object = {}>(
+    target: P,
+    name: keyof P,
+    pd: TypedPropertyDescriptor<F>,
+  ): TypedPropertyDescriptor<F> | void;
 }
 
 export interface InstanceMethodParamDecorator {
-  <K extends keyof P, P extends object = any>(target: P, name: K, pd: number): void;
+  <K extends keyof P, P extends object = {}>(target: P, name: K, pd: number): void;
 }
 
 export interface StaticMethodParamDecorator {
-  (target: Function, name: PrototypeKey, pd: number): void;
+  <C extends Class>(target: C, name: keyof C, pd: number): void;
 }
 
 export interface ConstructorParamDecorator {
-  (target: Function, name: any, pd: number): void;
+  <C extends Class>(target: C, name: unknown, pd: number): void;
 }
 
 export interface PropertyDecorator extends StaticPropertyDecorator, InstancePropertyDecorator {}
@@ -66,52 +72,52 @@ export class DecoratorBuilder {
     }
   }
 
-  whenApplyToConstructor(fn: ClassDecorator) {
+  whenApplyToConstructor(fn: ClassDecorator): this {
     this.applyToClass = fn;
     return this;
   }
 
-  whenApplyToInstanceProperty(fn: InstancePropertyDecorator) {
+  whenApplyToInstanceProperty(fn: InstancePropertyDecorator): this {
     this.applyToInstanceProperty = fn;
     return this;
   }
 
-  whenApplyToStaticProperty(fn: StaticPropertyDecorator) {
+  whenApplyToStaticProperty(fn: StaticPropertyDecorator): this {
     this.applyToStaticProperty = fn;
     return this;
   }
 
-  whenApplyToInstanceMethod(fn: InstanceMethodDecorator) {
+  whenApplyToInstanceMethod(fn: InstanceMethodDecorator): this {
     this.applyToInstanceMethod = fn;
     return this;
   }
 
-  whenApplyToStaticMethod(fn: StaticMethodDecorator) {
+  whenApplyToStaticMethod(fn: StaticMethodDecorator): this {
     this.applyToStaticMethod = fn;
     return this;
   }
 
-  whenApplyToConstructorParam(fn: <T extends Class>(ctr: T, index: number) => T | void) {
+  whenApplyToConstructorParam(fn: <T extends Class>(ctr: T, index: number) => T | void): this {
     this.applyToConstructorParam = <T extends Class>(ctr: T, name: any, index: number) => fn(ctr, index);
     return this;
   }
 
-  whenApplyToStaticMethodParam(fn: StaticMethodParamDecorator) {
+  whenApplyToStaticMethodParam(fn: StaticMethodParamDecorator): this {
     this.applyToStaticMethodParam = fn;
     return this;
   }
 
-  whenApplyToInstanceMethodParam(fn: InstanceMethodParamDecorator) {
+  whenApplyToInstanceMethodParam(fn: InstanceMethodParamDecorator): this {
     this.applyToInstanceMethodParam = fn;
     return this;
   }
 
   build<T = Decorator>(): NarrowTo<T> {
-    const result = <T extends Function, R extends PrototypeKey>(
+    const result = <F extends Function, R extends PrototypeKey>(
       target: R | Class<R>,
-      name?: PrototypeKey,
-      descriptor?: number | TypedPropertyDescriptor<T>,
-    ): void | TypedPropertyDescriptor<T> | Class<R> => {
+      name?: keyof (R | Class<R>),
+      descriptor?: number | TypedPropertyDescriptor<F>,
+    ): void | TypedPropertyDescriptor<F> | Class<R> => {
       if (typeof target === 'function') {
         if (typeof name === 'undefined') {
           return this.applyConstructorDecorator(target, descriptor);
@@ -145,7 +151,7 @@ export class DecoratorBuilder {
     throw new Error(`@${this.decoratorName} cannot apply to static method`);
   };
 
-  private applyToConstructorParam: (ctr: Class, name: any, index: number) => void | Class = () => {
+  private applyToConstructorParam: <T extends Class>(ctr: T, name: any, index: number) => void | T = () => {
     throw new Error(`@${this.decoratorName} cannot apply to param of class constructor`);
   };
 
@@ -161,10 +167,7 @@ export class DecoratorBuilder {
     throw new Error(`@${this.decoratorName} cannot be applied here`);
   };
 
-  private applyConstructorDecorator<T extends Function, R extends {}>(
-    target: object | Class<R>,
-    descriptor?: number | TypedPropertyDescriptor<T>,
-  ) {
+  private applyConstructorDecorator<C extends Class>(target: object | C, descriptor: unknown) {
     const {applyToClass, applyToConstructorParam} = this;
     if (typeof target === 'function') {
       if (typeof descriptor === 'number') {
@@ -176,15 +179,15 @@ export class DecoratorBuilder {
     return this.applyToWrongPlace();
   }
 
-  private applyInstanceDecorator<T extends Function, R extends {}>(
-    target: R,
-    name: symbol | string,
-    descriptor?: number | TypedPropertyDescriptor<T>,
+  private applyInstanceDecorator<F extends Function, P extends {}, K extends keyof P>(
+    target: P,
+    name: K,
+    descriptor?: number | TypedPropertyDescriptor<F>,
   ) {
     const {applyToInstanceMethodParam, applyToInstanceProperty, applyToInstanceMethod} = this;
 
     if (typeof descriptor === 'number') {
-      return applyToInstanceMethodParam(target, name as keyof R, descriptor);
+      return applyToInstanceMethodParam(target, name as keyof P, descriptor);
     } else if (typeof descriptor === 'object') {
       return applyToInstanceMethod(target, name, descriptor);
     } else {
@@ -192,10 +195,10 @@ export class DecoratorBuilder {
     }
   }
 
-  private applyStaticDecorator<T extends Function, R extends {}>(
-    target: Class<R>,
-    name: PrototypeKey,
-    descriptor?: number | TypedPropertyDescriptor<T>,
+  private applyStaticDecorator<F extends Function, C extends Class>(
+    target: C,
+    name: keyof C,
+    descriptor?: number | TypedPropertyDescriptor<F>,
   ) {
     const {applyToStaticMethodParam, applyToStaticProperty, applyToStaticMethod} = this;
     if (typeof descriptor === 'number') {

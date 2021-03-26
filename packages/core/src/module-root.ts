@@ -1,4 +1,3 @@
-// import {Container} from 'inversify';
 import {BindingType, Container} from '@sensejs/container';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
@@ -45,7 +44,7 @@ export class ModuleRoot<T extends {} = {}> {
     this.container.addBinding({
       type: BindingType.CONSTANT,
       value: this.moduleScanner,
-      id: ModuleScanner
+      id: ModuleScanner,
     });
 
     // this.container.bind(BackgroundTaskQueue).toConstantValue(this.backgroundTaskQueue);

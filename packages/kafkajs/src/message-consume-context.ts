@@ -1,5 +1,4 @@
-import {Constructor, Transformer} from '@sensejs/utility';
-import {Inject, InjectionDecorator, RequestContext} from '@sensejs/core';
+import {Constructor, Inject, InjectionDecorator, RequestContext, Transformer} from '@sensejs/core';
 import {KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
 import {ResolveContext} from '@sensejs/container';
 

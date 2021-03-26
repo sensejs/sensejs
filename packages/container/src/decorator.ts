@@ -1,10 +1,9 @@
-import {Class, ConstructorParamDecorator, DecoratorBuilder} from '@sensejs/utility';
-import {ParamInjectionMetadata, Scope, ServiceId} from './types';
+import {ParamInjectionMetadata, Scope, ServiceId, Transformer, Class} from './types';
 
 const PARAM_INJECT_METADATA_KEY = Symbol();
 
 export interface ConstructorParamInjectMetadata {
-  params: Map<number, Partial<ParamInjectionMetadata<any>>>;
+  params: Map<number, Partial<ParamInjectionMetadata>>;
   scope: Scope;
 }
 
@@ -23,7 +22,7 @@ export function ensureConstructorParamInjectMetadata(ctor: Class): ConstructorPa
   return metadata;
 }
 
-function assignParamInjectMetadata(ctor: Class, index: number, metadata: Partial<ParamInjectionMetadata<any>>) {
+function assignParamInjectMetadata(ctor: Class, index: number, metadata: Partial<ParamInjectionMetadata>) {
   const cm = ensureConstructorParamInjectMetadata(ctor);
   let pm = cm.params.get(index);
   if (!pm) {
@@ -33,20 +32,16 @@ function assignParamInjectMetadata(ctor: Class, index: number, metadata: Partial
   Object.assign(pm, metadata);
 }
 
-export function inject<T>(serviceId: ServiceId<T>, transformer?: (x: T) => any): ConstructorParamDecorator {
-  return new DecoratorBuilder(inject.name)
-    .whenApplyToConstructorParam((ctor, index) => {
-      assignParamInjectMetadata(ctor, index, {id: serviceId, transform: transformer});
-    })
-    .build<ConstructorParamDecorator>();
+export function inject<T, R = T>(serviceId: ServiceId<T>, transformer?: Transformer<T, R>) {
+  return (ctor: Class, name: unknown, index: number): void => {
+    assignParamInjectMetadata(ctor, index, {id: serviceId, transform: transformer});
+  };
 }
 
-export function optional(): ConstructorParamDecorator {
-  return new DecoratorBuilder(optional.name)
-    .whenApplyToConstructorParam((ctor, index) => {
-      assignParamInjectMetadata(ctor, index, {optional: true});
-    })
-    .build<ConstructorParamDecorator>();
+export function optional() {
+  return (ctor: Class, name: unknown, index: number): void => {
+    assignParamInjectMetadata(ctor, index, {optional: true});
+  };
 }
 
 export interface InjectableOption {
@@ -54,12 +49,10 @@ export interface InjectableOption {
 }
 
 export function injectable(option: InjectableOption = {}): ClassDecorator {
-  return new DecoratorBuilder(injectable.name)
-    .whenApplyToConstructor((ctor) => {
-      const m = ensureConstructorParamInjectMetadata(ctor);
-      if (typeof option.scope !== 'undefined') {
-        m.scope = option.scope;
-      }
-    })
-    .build<ClassDecorator>();
+  return (ctor: Class) => {
+    const m = ensureConstructorParamInjectMetadata(ctor);
+    if (typeof option.scope !== 'undefined') {
+      m.scope = option.scope;
+    }
+  };
 }

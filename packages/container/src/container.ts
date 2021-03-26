@@ -1,5 +1,4 @@
-import {Class, Constructor} from '@sensejs/utility';
-import {BindingType, ParamInjectionMetadata, Scope, ServiceId} from './types';
+import {BindingType, Class, Constructor, ParamInjectionMetadata, Scope, ServiceId} from './types';
 import {ConstructorParamInjectMetadata, ensureConstructorParamInjectMetadata} from './decorator';
 
 export interface ConstantBinding<T> {
@@ -12,7 +11,7 @@ export interface InstanceBinding<T> {
   type: BindingType.INSTANCE;
   id: ServiceId<T>;
   constructor: Constructor<T>;
-  paramInjectionMetadata: ParamInjectionMetadata<any>[];
+  paramInjectionMetadata: ParamInjectionMetadata[];
   scope: Scope;
 }
 
@@ -21,7 +20,7 @@ export interface FactoryBinding<T> {
   id: ServiceId<T>;
   scope: Scope;
   factory: (...args: any[]) => T;
-  paramInjectionMetadata: ParamInjectionMetadata<any>[];
+  paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
 export interface AsyncFactoryBinding<T> {
@@ -29,16 +28,14 @@ export interface AsyncFactoryBinding<T> {
   id: ServiceId<T>;
   scope: Scope.REQUEST | Scope.TRANSIENT;
   factory: (...args: any[]) => Promise<T>;
-  paramInjectionMetadata: ParamInjectionMetadata<any>[];
+  paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
-export type AsyncResolveInterceptor = (
-  next: () => Promise<void>,
-) => Promise<any>;
+export type AsyncResolveInterceptor = (next: () => Promise<void>) => Promise<any>;
 
 export interface AsyncResolveInterceptorFactory<T> {
   interceptorBuilder: (...args: any[]) => AsyncResolveInterceptor;
-  paramInjectionMetadata: ParamInjectionMetadata<any>[];
+  paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
 export interface AliasBinding<T> {
@@ -55,7 +52,7 @@ export type Binding<T> =
   | AliasBinding<T>;
 
 export class InvalidParamBindingError extends Error {
-  constructor(readonly received: ParamInjectionMetadata<any>[], readonly invalidIndex: number) {
+  constructor(readonly received: ParamInjectionMetadata[], readonly invalidIndex: number) {
     super();
     Error.captureStackTrace(this, InvalidParamBindingError);
   }
@@ -176,7 +173,7 @@ function verifyParamInjectAndCompile(
 }
 
 interface AsyncResolveOption {
-  interceptors?: AsyncResolveInterceptorFactory<any>[]
+  interceptors?: AsyncResolveInterceptorFactory<any>[];
 }
 
 export class ResolveContext {
@@ -215,7 +212,7 @@ export class ResolveContext {
       return null;
     }, null);
 
-    for (; ;) {
+    for (;;) {
       const instruction = this.instructions.pop();
       if (!instruction) {
         return this.stack[0];
@@ -246,7 +243,7 @@ export class ResolveContext {
 
   resolve(target: ServiceId<any>) {
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
-    for (; ;) {
+    for (;;) {
       const instruction = this.instructions.pop();
       if (!instruction) {
         return this.stack[0];
@@ -337,14 +334,15 @@ export class ResolveContext {
         return;
       } else if (this.allowUnbound && typeof target === 'function') {
         const cm = ensureConstructorParamInjectMetadata(target);
-        this.instructions.push(...verifyParamInjectAndCompile(
-          convertParamInjectionMetadata(cm), {
+        this.instructions.push(
+          ...verifyParamInjectAndCompile(convertParamInjectionMetadata(cm), {
             code: InstructionCode.CONSTRUCT,
             cacheScope: Scope.TRANSIENT,
             constructor: target as Constructor,
             paramCount: cm.params.size,
             serviceId: target,
-          }));
+          }),
+        );
         return;
       }
       throw new BindingNotFoundError(target);
@@ -426,7 +424,7 @@ export class ResolveContext {
     this.planingSet.delete(serviceId);
   }
 
-  private checkCache(cacheScope: Scope, serviceId: Class<any> | string | symbol) {
+  private checkCache(cacheScope: Scope, serviceId: Class | string | symbol) {
     if (cacheScope === Scope.SINGLETON) {
       if (this.globalSingletonCache.has(serviceId)) {
         throw new Error('BUG: Reconstruct a global singleton');
@@ -440,7 +438,7 @@ export class ResolveContext {
     }
   }
 
-  public addTemporaryConstantBinding<T>(serviceId:ServiceId<T>, value: T) {
+  public addTemporaryConstantBinding<T>(serviceId: ServiceId<T>, value: T) {
     this.requestSingletonCache.set(serviceId, value);
     return this;
   }
@@ -468,7 +466,7 @@ export class ResolveContext {
 
 function convertParamInjectionMetadata(cm: ConstructorParamInjectMetadata) {
   return Array.from(cm.params.entries()).map(
-    ([index, value]): ParamInjectionMetadata<any> => {
+    ([index, value]): ParamInjectionMetadata => {
       const {id, transform, optional = false} = value;
       if (typeof id === 'undefined') {
         throw new TypeError('param inject id is undefined');

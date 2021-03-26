@@ -1,4 +1,5 @@
 import {
+  Constructor,
   createModule,
   Inject,
   LoggerBuilder,
@@ -13,7 +14,6 @@ import {
   RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {Constructor} from '@sensejs/utility';
 import {Container} from '@sensejs/container';
 import {KafkaReceivedMessage, MessageConsumer, MessageConsumerOption} from '@sensejs/kafkajs-standalone';
 import {MessageConsumeContext} from './message-consume-context';
