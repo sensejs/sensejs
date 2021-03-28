@@ -7,34 +7,34 @@ export class InvalidParamBindingError extends Error {
   }
 }
 export class DuplicatedBindingError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
+  constructor(readonly serviceId: ServiceId) {
     super();
     Error.captureStackTrace(this, DuplicatedBindingError);
   }
 }
 export class CircularAliasError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
+  constructor(readonly serviceId: ServiceId) {
     super();
     Error.captureStackTrace(this, CircularAliasError);
   }
 }
 
 export class CircularDependencyError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
+  constructor(readonly serviceId: ServiceId) {
     super();
     Error.captureStackTrace(this, CircularDependencyError);
   }
 }
 
 export class BindingNotFoundError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
+  constructor(readonly serviceId: ServiceId) {
     super();
     Error.captureStackTrace(this, BindingNotFoundError);
   }
 }
 
 export class AsyncUnsupportedError extends Error {
-  constructor(readonly serviceId?: ServiceId<any>) {
+  constructor(readonly serviceId?: ServiceId) {
     super();
     Error.captureStackTrace(this, AsyncUnsupportedError);
   }

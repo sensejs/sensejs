@@ -33,3 +33,4 @@ export interface ParamInjectionMetadata<T = any> {
   optional: boolean;
   transform?: Transformer<T>;
 }
+export type AsyncResolveInterceptor = (next: () => Promise<void>) => Promise<any>;

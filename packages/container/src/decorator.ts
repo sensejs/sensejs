@@ -2,13 +2,13 @@ import {ParamInjectionMetadata, Scope, ServiceId, Transformer, Class} from './ty
 
 const PARAM_INJECT_METADATA_KEY = Symbol();
 
-export interface ConstructorParamInjectMetadata {
+export interface DecoratorMetadata {
   params: Map<number, Partial<ParamInjectionMetadata>>;
   scope: Scope;
 }
 
-export function ensureConstructorParamInjectMetadata(ctor: Class): ConstructorParamInjectMetadata {
-  let metadata = Reflect.getOwnMetadata(PARAM_INJECT_METADATA_KEY, ctor) as ConstructorParamInjectMetadata;
+export function ensureConstructorParamInjectMetadata(ctor: Class): DecoratorMetadata {
+  let metadata = Reflect.getOwnMetadata(PARAM_INJECT_METADATA_KEY, ctor) as DecoratorMetadata;
 
   if (metadata) {
     return metadata;
@@ -48,8 +48,8 @@ export interface InjectableOption {
   scope?: Scope;
 }
 
-export function injectable(option: InjectableOption = {}): ClassDecorator {
-  return (ctor: Class) => {
+export function injectable(option: InjectableOption = {}) {
+  return (ctor: Class): void => {
     const m = ensureConstructorParamInjectMetadata(ctor);
     if (typeof option.scope !== 'undefined') {
       m.scope = option.scope;
