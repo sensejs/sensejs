@@ -24,7 +24,6 @@ import {
   AsyncBuildInstruction,
   AsyncInterceptInstruction,
   BuildInstruction,
-  ConstructInstruction,
   Instruction,
   InstructionCode,
   PlanInstruction,
@@ -58,6 +57,9 @@ function compileParamInjectInstruction(paramInjectionMetadata: ParamInjectionMet
     instructions.push({code: InstructionCode.PLAN, target: id, optional});
     return instructions;
   }, [] as Instruction[]);
+}
+function constructorToFactory(constructor: Class) {
+  return (...params: any[]) => Reflect.construct(constructor, params);
 }
 
 export class ResolveContext {
@@ -111,9 +113,6 @@ export class ResolveContext {
       }
 
       switch (instruction.code) {
-        case InstructionCode.CONSTRUCT:
-          this.performConstruction(instruction);
-          break;
         case InstructionCode.PLAN:
           this.performPlan(instruction);
           break;
@@ -142,10 +141,6 @@ export class ResolveContext {
       }
 
       switch (instruction.code) {
-        case InstructionCode.CONSTRUCT:
-          this.performConstruction(instruction);
-          break;
-
         case InstructionCode.PLAN:
           this.performPlan(instruction);
           break;
@@ -210,9 +205,9 @@ export class ResolveContext {
       const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(target));
       this.instructions.push(
         {
-          code: InstructionCode.CONSTRUCT,
+          code: InstructionCode.BUILD,
           cacheScope: Scope.TRANSIENT,
-          constructor: target as Constructor,
+          factory: constructorToFactory(target),
           paramCount: cm.length,
           serviceId: target,
         },
@@ -259,16 +254,6 @@ export class ResolveContext {
         }
         break;
     }
-  }
-
-  private performConstruction(instruction: ConstructInstruction) {
-    const {paramCount, constructor, cacheScope, serviceId} = instruction;
-    this.checkCache(cacheScope, serviceId);
-    const args = this.stack.splice(this.stack.length - paramCount);
-    const result = Reflect.construct(constructor, args);
-    this.cacheIfNecessary(cacheScope, serviceId, result);
-    this.stack.push(result);
-    this.planingSet.delete(serviceId);
   }
 
   private performTransform(instruction: TransformInstruction) {
@@ -401,11 +386,11 @@ export class Container {
     const {scope, paramInjectionMetadata, factory, id} = binding;
     this.compiledInstructionMap.set(id, [
       {
-        code: InstructionCode.BUILD,
-        serviceId: id,
-        paramCount: paramInjectionMetadata.length,
-        factory,
         cacheScope: scope,
+        code: InstructionCode.BUILD,
+        factory,
+        paramCount: paramInjectionMetadata.length,
+        serviceId: id,
       },
       ...compileParamInjectInstruction(paramInjectionMetadata),
     ]);
@@ -415,11 +400,11 @@ export class Container {
     const {scope, paramInjectionMetadata, constructor, id} = binding;
     this.compiledInstructionMap.set(id, [
       {
-        code: InstructionCode.CONSTRUCT,
         cacheScope: scope,
+        code: InstructionCode.BUILD,
+        factory: (...params: any[]) => Reflect.construct(constructor, params),
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
-        constructor,
       },
       ...compileParamInjectInstruction(paramInjectionMetadata),
     ]);
@@ -429,8 +414,8 @@ export class Container {
     const {scope, paramInjectionMetadata, factory, id} = binding;
     this.compiledInstructionMap.set(id, [
       {
-        code: InstructionCode.ASYNC_BUILD,
         cacheScope: scope,
+        code: InstructionCode.ASYNC_BUILD,
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
         factory,
