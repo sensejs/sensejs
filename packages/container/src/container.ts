@@ -246,6 +246,31 @@ export class ResolveContext {
     return false;
   }
 
+  private getBindingForPlan(target: ServiceId, optionalInject: boolean) {
+    const binding = this.internalGetBinding(target);
+    if (binding) {
+      return binding;
+    }
+    if (optionalInject) {
+      this.stack.push(undefined);
+      return;
+    } else if (this.allowUnbound && typeof target === 'function') {
+      const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(target));
+      this.instructions.push(
+        {
+          code: InstructionCode.CONSTRUCT,
+          cacheScope: Scope.TRANSIENT,
+          constructor: target as Constructor,
+          paramCount: cm.length,
+          serviceId: target,
+        },
+        ...compileParamInjectInstruction(cm),
+      );
+      return;
+    }
+    throw new BindingNotFoundError(target);
+  }
+
   private performPlan(instruction: PlanInstruction) {
     const {target, optional} = instruction;
     if (this.planingSet.has(target)) {
@@ -258,26 +283,9 @@ export class ResolveContext {
     if (this.resolveFromCache(target)) {
       return;
     }
-    const binding = this.internalGetBinding(target);
+    const binding = this.getBindingForPlan(target, optional);
     if (!binding) {
-      if (optional) {
-        this.stack.push(undefined);
-        return;
-      } else if (this.allowUnbound && typeof target === 'function') {
-        const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(target));
-        this.instructions.push(
-          {
-            code: InstructionCode.CONSTRUCT,
-            cacheScope: Scope.TRANSIENT,
-            constructor: target as Constructor,
-            paramCount: cm.length,
-            serviceId: target,
-          },
-          ...compileParamInjectInstruction(cm),
-        );
-        return;
-      }
-      throw new BindingNotFoundError(target);
+      return;
     }
     if (this.resolveFromCache(binding.id)) {
       return;
@@ -288,15 +296,6 @@ export class ResolveContext {
         break;
       case BindingType.INSTANCE:
       case BindingType.FACTORY:
-        {
-          this.planingSet.add(binding.id);
-          const instructions = this.compiledInstructionMap.get(binding.id);
-          if (!instructions) {
-            throw new Error('BUG: No compiled instruction found');
-          }
-          this.instructions.push(...instructions);
-        }
-        break;
       case BindingType.ASYNC_FACTORY:
         {
           this.planingSet.add(binding.id);
@@ -315,11 +314,7 @@ export class ResolveContext {
     this.checkCache(cacheScope, serviceId);
     const args = this.stack.splice(this.stack.length - paramCount);
     const result = Reflect.construct(constructor, args);
-    if (cacheScope === Scope.REQUEST) {
-      this.requestSingletonCache.set(serviceId, result);
-    } else if (cacheScope === Scope.SINGLETON) {
-      this.globalSingletonCache.set(serviceId, result);
-    }
+    this.cacheIfNecessary(cacheScope, serviceId, result);
     this.stack.push(result);
     this.planingSet.delete(serviceId);
   }
@@ -335,13 +330,21 @@ export class ResolveContext {
     this.checkCache(cacheScope, serviceId);
     const args = this.stack.splice(this.stack.length - paramCount);
     const result = factory(...args);
+    this.cacheIfNecessary(cacheScope, serviceId, result);
+    this.stack.push(result);
+    this.planingSet.delete(serviceId);
+  }
+
+  private cacheIfNecessary(
+    cacheScope: Scope | Scope.SINGLETON | Scope.TRANSIENT,
+    serviceId: Class<any> | string | symbol,
+    result: any,
+  ) {
     if (cacheScope === Scope.REQUEST) {
       this.requestSingletonCache.set(serviceId, result);
     } else if (cacheScope === Scope.SINGLETON) {
       this.globalSingletonCache.set(serviceId, result);
     }
-    this.stack.push(result);
-    this.planingSet.delete(serviceId);
   }
 
   private async performAsyncBuild(instruction: AsyncBuildInstruction) {
