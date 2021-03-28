@@ -1,9 +1,10 @@
-import {AsyncResolveInterceptor, Constructor, Scope, ServiceId} from './types';
+import {AsyncResolveInterceptor, Class, Constructor, Scope, ServiceId} from './types';
 
 export enum InstructionCode {
   PLAN = 'PLAN',
   TRANSFORM = 'TRANSFORM',
   BUILD = 'BUILD',
+  INVOKE = 'INVOKE',
   ASYNC_BUILD = 'ASYNC_BUILD',
   ASYNC_INTERCEPT = 'ASYNC_INTERCEPT',
 }
@@ -12,6 +13,12 @@ export interface PlanInstruction {
   code: InstructionCode.PLAN;
   target: ServiceId;
   optional: boolean;
+}
+
+export interface InvokeInstruction {
+  code: InstructionCode.INVOKE;
+  target: ServiceId & Class;
+  methodKey: keyof any;
 }
 
 export interface BuildInstruction {
@@ -44,6 +51,7 @@ export interface TransformInstruction {
 export type Instruction =
   | PlanInstruction
   | BuildInstruction
+  | InvokeInstruction
   | TransformInstruction
   | AsyncBuildInstruction
   | AsyncInterceptInstruction;

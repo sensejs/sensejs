@@ -1,5 +1,6 @@
 import {
-  AsyncFactoryBinding,
+  AsyncFactoryBinding, AsyncResolveInterceptor,
+  AsyncResolveInterceptorFactory,
   AsyncResolveOption,
   Binding,
   BindingType,
@@ -11,7 +12,7 @@ import {
   Scope,
   ServiceId,
 } from './types';
-import {DecoratorMetadata, ensureConstructorParamInjectMetadata} from './decorator';
+import {DecoratorMetadata, ensureConstructorParamInjectMetadata, ensureMethodInvokeProxy, inject} from './decorator';
 import {
   AsyncUnsupportedError,
   BindingNotFoundError,
@@ -67,20 +68,61 @@ export class ResolveContext {
   private readonly instructions: Instruction[] = [];
   private readonly requestSingletonCache: Map<any, any> = new Map();
   private readonly stack: any[] = [];
-  private dependentsCleanedUp?: () => void;
-  private allResolved = Promise.resolve();
+  private allResolved: Promise<void>;
   private allowUnbound = false;
 
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
     readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
     readonly globalSingletonCache: Map<any, any>,
-  ) {}
+  ) {
+    this.allResolved = new Promise<void>((resolve, reject) => {
+      this.dependentsCleanedUp = (e?: Error) => {
+        if (e) {
+          return reject(e);
+        }
+        return resolve();
+      };
+    });
+  }
+
+  async intercept(interceptor: AsyncResolveInterceptorFactory): Promise<void> {
+
+    const {interceptorBuilder, paramInjectionMetadata} = interceptor;
+    const serviceId = Symbol();
+    this.instructions.push(
+      {
+        code: InstructionCode.BUILD,
+        cacheScope: Scope.TRANSIENT,
+        factory: interceptorBuilder,
+        paramCount: paramInjectionMetadata.length,
+        serviceId,
+      },
+      ...compileParamInjectInstruction(paramInjectionMetadata),
+    );
+    const interceptorInstance = this.evalInstructions() as AsyncResolveInterceptor;
+    const cleanUp = this.dependentsCleanedUp;
+    const allResolved = new Promise<void>((resolve, reject) => {
+      this.dependentsCleanedUp = (e?: Error) => {
+        if (e) {
+          return reject(e);
+        }
+        return resolve();
+      };
+    }).then(() => cleanUp(), (e) => cleanUp(e));
+    return new Promise<void>((resolve, reject) => {
+      interceptorInstance(
+        async () => {
+          resolve();
+          return allResolved;
+        },
+      ).catch(reject);
+    });
+  }
 
   async cleanUp(): Promise<void> {
     if (this.dependentsCleanedUp) {
       this.dependentsCleanedUp();
-      this.dependentsCleanedUp = undefined;
     }
     return this.allResolved;
   }
@@ -132,12 +174,47 @@ export class ResolveContext {
     }
   }
 
-  resolve<T>(target: ServiceId<T>): T {
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target});
-    for (;;) {
+  invoke<T extends Constructor, K extends keyof InstanceType<T>>(
+    target: T,
+    key: K,
+  ): InvokeResult<T, K> {
+    const proxy = ensureMethodInvokeProxy(target.prototype, key);
+    inject(target)(proxy, undefined, 0);
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy});
+    for (; ;) {
       const instruction = this.instructions.pop();
       if (!instruction) {
-        return this.stack[0];
+        const proxyInstance = this.stack[0] as InstanceType<typeof proxy>;
+        return proxyInstance.call();
+      }
+
+      switch (instruction.code) {
+        case InstructionCode.PLAN:
+          this.performPlan(instruction);
+          break;
+        case InstructionCode.TRANSFORM:
+          this.performTransform(instruction);
+            break;
+          case InstructionCode.BUILD:
+            this.performBuild(instruction);
+            break;
+      }
+    }
+  }
+
+  resolve<T>(target: ServiceId<T>): T {
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target});
+    return this.evalInstructions();
+  }
+
+  private dependentsCleanedUp: (e?: Error) => void = () => {};
+
+  private evalInstructions() {
+    for (; ;) {
+      const instruction = this.instructions.pop();
+      if (!instruction) {
+        return this.stack.pop();
+        // return this.stack[0];
       }
 
       switch (instruction.code) {
@@ -166,7 +243,7 @@ export class ResolveContext {
   private internalGetBinding(target: ServiceId) {
     let binding;
     const resolvingSet = new Set();
-    for (;;) {
+    for (; ;) {
       binding = this.bindingMap.get(target);
       if (!binding) {
         return;
@@ -324,8 +401,11 @@ export class ResolveContext {
     const allResolved = this.allResolved;
     this.allResolved = interceptor(
       () =>
-        new Promise<void>((resolve) => {
-          this.dependentsCleanedUp = resolve;
+        new Promise<void>((resolve, reject) => {
+          this.dependentsCleanedUp = (e) => {
+            if (e) return reject(e);
+            return resolve();
+          };
         }),
     ).finally(() => {
       if (cleanUp) {
@@ -335,6 +415,14 @@ export class ResolveContext {
     });
   }
 }
+
+export type InvokeResult<T extends Constructor, K extends keyof InstanceType<T>> = Promise<
+  InstanceType<T>[K] extends (...args: any[]) => Promise<infer R>
+    ? R
+    : InstanceType<T>[K] extends (...args: any[]) => infer R
+    ? R
+    : never
+>;
 
 export class Container {
   private bindingMap: Map<ServiceId, Binding<any>> = new Map();

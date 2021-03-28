@@ -261,6 +261,63 @@ describe('Kernel', () => {
     expect(result.bar).toEqual(value1 + value2);
   });
 
+  test('invoke', async () => {
+    const kernel = new Container();
+    const value1 = Math.random();
+    const value2 = Math.random();
+
+    class Foo {
+      bar;
+
+      constructor(@inject('const1') readonly param1: number) {
+        this.bar = param1;
+      }
+
+      method(@inject('const2') value: number, @inject('temp2') value2: number) {
+        expect(value + this.param1).toEqual(value2);
+      }
+    }
+
+    const methodSpy = jest.spyOn(Foo.prototype, 'method');
+
+    kernel.add(Foo);
+    kernel.addBinding({
+      type: BindingType.CONSTANT,
+      id: 'const1',
+      value: value1,
+    });
+    kernel.addBinding<number>({
+      type: BindingType.CONSTANT,
+      id: 'const2',
+      value: value2,
+    });
+    const context = await kernel.createResolveContext().setAllowUnbound(true);
+    await context.intercept({
+      interceptorBuilder: (param1: number) => {
+        return async (next) => {
+          context.addTemporaryConstantBinding('temp1', param1);
+          await next();
+        };
+      },
+      paramInjectionMetadata: [{id: 'const1', index: 0, optional: false}],
+    });
+    await context.intercept({
+      interceptorBuilder: (param1: number, param2: number) => {
+        return async (next) => {
+          context.addTemporaryConstantBinding('temp2', param1 + param2);
+          await next();
+        };
+      },
+      paramInjectionMetadata: [
+        {id: 'temp1', index: 0, optional: false},
+        {id: 'const2', index: 1, optional: false},
+      ],
+    });
+    await context.invoke(Foo, 'method');
+    expect(methodSpy).toHaveBeenCalled();
+    await context.cleanUp();
+  });
+
   test('interceptor', async () => {
     const kernel = new Container();
     const value1 = Math.random();
@@ -316,8 +373,8 @@ describe('Kernel', () => {
             };
           },
           paramInjectionMetadata: [{id: 'interceptor1', index: 0, optional: false}],
-        }
-      ]
+        },
+      ],
     });
     expect(result).toEqual(value1 + value2 + value3);
     expect(postNext1).not.toHaveBeenCalled();

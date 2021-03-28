@@ -64,7 +64,9 @@ export interface AsyncFactoryBinding<T> {
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
-export interface AsyncResolveInterceptorFactory<T> {
+export type AsyncResolveInterceptor = (next: () => Promise<void>) => Promise<any>;
+
+export interface AsyncResolveInterceptorFactory {
   interceptorBuilder: (...args: any[]) => AsyncResolveInterceptor;
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
@@ -83,7 +85,5 @@ export type Binding<T> =
   | AliasBinding<T>;
 
 export interface AsyncResolveOption {
-  interceptors?: AsyncResolveInterceptorFactory<any>[];
+  interceptors?: AsyncResolveInterceptorFactory[];
 }
-
-export type AsyncResolveInterceptor = (next: () => Promise<void>) => Promise<any>;
