@@ -1,12 +1,17 @@
-import {Container, inject, injectable} from 'inversify';
+import {Container, inject, injectable, interfaces} from 'inversify';
 import {
   Component,
+  composeRequestInterceptor,
   invokeMethod,
   MethodInject,
   MethodParamDecorateError,
   MethodParamInjectError,
+  RequestContext,
+  RequestInterceptor,
   validateMethodInjectMetadata,
 } from '../src';
+import {Constructor} from '@sensejs/utility';
+import ServiceIdentifier = interfaces.ServiceIdentifier;
 
 describe('@Inject', () => {
   test('param binding', () => {
@@ -102,7 +107,7 @@ describe('@Inject', () => {
     expect(() => invokeMethod(container, Foo, 'bar')).toThrow();
   });
 
-  test('Performance test', () => {
+  test('Performance test', async () => {
     const a = Symbol(),
       b = Symbol();
 
@@ -153,13 +158,40 @@ describe('@Inject', () => {
 
     let N = 10000;
     // 10000 method invoking should be done within 30s
+    const interceptors = Array(10)
+      .fill(null)
+      .map((value) => {
+        return class extends RequestInterceptor {
+          async intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {
+            context.bindContextValue(Symbol(), value);
+            await next();
+          }
+        };
+      });
+
+    class CustomContext extends RequestContext {
+      constructor(
+        readonly container: Container,
+        readonly targetConstructor: Constructor,
+        readonly targetMethodKey: keyof any,
+      ) {
+        super();
+      }
+
+      bindContextValue<T>(key: ServiceIdentifier<T>, value: T): void {
+        this.container.bind(key).toConstantValue(value);
+      }
+    }
+
+    const t = Date.now();
     while (N--) {
       const childContainer = container.createChild();
-      for (let i = 0; i < 1000; i++) {
-        childContainer.bind(Symbol()).toConstantValue(i);
-      }
+      const interceptor = composeRequestInterceptor(childContainer, interceptors);
       childContainer.bind(Test).toConstantValue(new Test());
-      invokeMethod(childContainer, Foo, 'bar');
+      await childContainer.get(interceptor).intercept(new CustomContext(childContainer, Foo, 'bar'), async () => {
+        invokeMethod(childContainer, Foo, 'bar');
+      });
     }
+    console.log('duration: ', Date.now() - t);
   }, 10000);
 });
