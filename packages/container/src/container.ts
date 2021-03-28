@@ -1,5 +1,13 @@
 import {BindingType, Class, Constructor, ParamInjectionMetadata, Scope, ServiceId} from './types';
 import {ConstructorParamInjectMetadata, ensureConstructorParamInjectMetadata} from './decorator';
+import {
+  AsyncUnsupportedError,
+  BindingNotFoundError,
+  CircularAliasError,
+  CircularDependencyError,
+  DuplicatedBindingError,
+  InvalidParamBindingError,
+} from './errors';
 
 export interface ConstantBinding<T> {
   type: BindingType.CONSTANT;
@@ -50,46 +58,6 @@ export type Binding<T> =
   | FactoryBinding<T>
   | AsyncFactoryBinding<T>
   | AliasBinding<T>;
-
-export class InvalidParamBindingError extends Error {
-  constructor(readonly received: ParamInjectionMetadata[], readonly invalidIndex: number) {
-    super();
-    Error.captureStackTrace(this, InvalidParamBindingError);
-  }
-}
-export class DuplicatedBindingError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
-    super();
-    Error.captureStackTrace(this, DuplicatedBindingError);
-  }
-}
-export class CircularAliasError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
-    super();
-    Error.captureStackTrace(this, CircularAliasError);
-  }
-}
-
-export class CircularDependencyError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
-    super();
-    Error.captureStackTrace(this, CircularDependencyError);
-  }
-}
-
-export class BindingNotFoundError extends Error {
-  constructor(readonly serviceId: ServiceId<any>) {
-    super();
-    Error.captureStackTrace(this, BindingNotFoundError);
-  }
-}
-
-export class AsyncUnsupportedError extends Error {
-  constructor(readonly serviceId?: ServiceId<any>) {
-    super();
-    Error.captureStackTrace(this, AsyncUnsupportedError);
-  }
-}
 
 enum InstructionCode {
   PLAN = 'PLAN',
