@@ -6,8 +6,7 @@ SENSE.JS
 
 SENSE.JS is a flexible IoC Framework.
 
-This framework aims to provide an enterprise Typescript framework, based on
-[inversify-js] to provide the ability of Dependency Injection, providing common components
+This project aims to provide an enterprise Typescript framework,  providing common components
 for web application development like HTTP support while keep extensibility
 to make end-user fit their own need.
 
