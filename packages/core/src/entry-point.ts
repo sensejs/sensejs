@@ -100,7 +100,7 @@ export class ApplicationRunner {
     private runOption: RunOption<unknown>,
   ) {}
 
-  static async runModule(entryModule: Constructor, runOption: Partial<RunOption> = {}): Promise<void> {
+  static async runModule<T>(entryModule: Constructor, runOption: Partial<RunOption<T>> = {}): Promise<void> {
     const actualRunOption = Object.assign({}, defaultRunOption, runOption);
     const runner = new ApplicationRunner(process, entryModule, actualRunOption);
     await runner.run();
