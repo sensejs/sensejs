@@ -1,8 +1,12 @@
 import {
-  AsyncResolveInterceptor,
+  AsyncFactoryBinding,
+  AsyncResolveOption,
+  Binding,
   BindingType,
   Class,
   Constructor,
+  FactoryBinding,
+  InstanceBinding,
   ParamInjectionMetadata,
   Scope,
   ServiceId,
@@ -26,58 +30,6 @@ import {
   PlanInstruction,
   TransformInstruction,
 } from './instructions';
-
-export interface ConstantBinding<T> {
-  type: BindingType.CONSTANT;
-  id: ServiceId<T>;
-  value: T;
-}
-
-export interface InstanceBinding<T> {
-  type: BindingType.INSTANCE;
-  id: ServiceId<T>;
-  constructor: Constructor<T>;
-  paramInjectionMetadata: ParamInjectionMetadata[];
-  scope: Scope;
-}
-
-export interface FactoryBinding<T> {
-  type: BindingType.FACTORY;
-  id: ServiceId<T>;
-  scope: Scope;
-  factory: (...args: any[]) => T;
-  paramInjectionMetadata: ParamInjectionMetadata[];
-}
-
-export interface AsyncFactoryBinding<T> {
-  type: BindingType.ASYNC_FACTORY;
-  id: ServiceId<T>;
-  scope: Scope.REQUEST | Scope.TRANSIENT;
-  factory: (...args: any[]) => Promise<T>;
-  paramInjectionMetadata: ParamInjectionMetadata[];
-}
-
-export interface AsyncResolveInterceptorFactory<T> {
-  interceptorBuilder: (...args: any[]) => AsyncResolveInterceptor;
-  paramInjectionMetadata: ParamInjectionMetadata[];
-}
-
-export interface AliasBinding<T> {
-  type: BindingType.ALIAS;
-  id: ServiceId<T>;
-  canonicalId: ServiceId;
-}
-
-export type Binding<T> =
-  | ConstantBinding<T>
-  | InstanceBinding<T>
-  | FactoryBinding<T>
-  | AsyncFactoryBinding<T>
-  | AliasBinding<T>;
-
-export interface AsyncResolveOption {
-  interceptors?: AsyncResolveInterceptorFactory<any>[];
-}
 
 function convertParamInjectionMetadata(cm: DecoratorMetadata) {
   return Array.from(cm.params.entries()).map(
