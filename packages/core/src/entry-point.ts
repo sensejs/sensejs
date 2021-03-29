@@ -210,7 +210,7 @@ export class ApplicationRunner {
       startupProcessObservable,
       new Observable<ExitOption>((subscriber) =>
         merge(
-          of(moduleRoot.run('main')).pipe(
+          from(Promise.resolve(moduleRoot.run('main'))).pipe(
             catchError((e) => {
               this.logger.error('Error occurred while running:', e);
               this.logger.error('Going to quit.');
