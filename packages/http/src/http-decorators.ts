@@ -1,11 +1,4 @@
-import {
-  Component,
-  Constructor,
-  Inject,
-  InjectionDecorator,
-  validateMethodInjectMetadata,
-  Transformer,
-} from '@sensejs/core';
+import {Component, Constructor, Inject, InjectionDecorator, Transformer} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from './http-abstract';
 
 export enum HttpMethod {
@@ -118,7 +111,6 @@ export function RequestMapping(
   option: RequestMappingOption = {},
 ): RequestMappingDecorator {
   return <T extends {}>(prototype: T, method: keyof T & string): void => {
-    validateMethodInjectMetadata(prototype, method);
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,

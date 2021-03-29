@@ -1,6 +1,5 @@
 import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
 import {injectable, Scope} from '@sensejs/container';
-import {ensureMethodInjectMetadata} from './method-inject';
 
 /**
  * Options to define a module
@@ -94,8 +93,6 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
   return <T extends {}>(constructor: Constructor<T>): Constructor<T> => {
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
-    onModuleCreate.forEach((key) => ensureMethodInjectMetadata(constructor.prototype, key));
-    onModuleDestroy.forEach((key) => ensureMethodInjectMetadata(constructor.prototype, key));
     setModuleMetadata(constructor, {
       requires,
       constants,

@@ -1,5 +1,5 @@
 import {ServiceIdentifier} from './interfaces';
-import {inject, optional} from '@sensejs/container';
+import {inject, optional, Transformer} from '@sensejs/container';
 import {
   ConstructorParamDecorator,
   DecoratorBuilder,
@@ -7,31 +7,18 @@ import {
   MethodParamDecorator,
   ParamDecorator,
 } from '@sensejs/utility';
-import {ensureMethodInjectMetadata, MethodInject, MethodParameterInjectOption} from './method-inject';
 import {decorateInjectedConstructorParam} from './constructor-inject';
-
-function applyToParamBindingInvoker<P extends {}>(
-  decorator: ConstructorParamDecorator,
-  prototype: P,
-  name: keyof P,
-  index: number,
-) {
-  const targetMethod = Reflect.get(prototype, name);
-  const metadata = ensureMethodInjectMetadata(prototype, name);
-  if (typeof targetMethod === 'function') {
-    /**
-     * The 0-th parameter of decorator proxy is `this', so the param index need to increased by 1
-     */
-    decorator(metadata.proxy, undefined, index + 1);
-  }
-}
 
 export interface InjectionDecorator extends ConstructorParamDecorator, InstanceMethodParamDecorator {}
 
-export function Inject<T>(
-  target: ServiceIdentifier<T>,
-  option?: MethodParameterInjectOption<T, any>,
-): InjectionDecorator {
+export interface InjectOption<T, R> {
+  /**
+   * Transform the injected target
+   */
+  transform?: Transformer<T, R>;
+}
+
+export function Inject<T>(target: ServiceIdentifier<T>, option?: InjectOption<T, any>): InjectionDecorator {
   if (typeof target == 'undefined') {
     throw new TypeError('Invalid service identifier "undefined". This may be caused by cyclic dependencies!');
   }
@@ -63,18 +50,14 @@ export interface InjectionConstraintDecorator extends ConstructorParamDecorator,
 
 export function Tagged(key: string | number | symbol, value: unknown): InjectionDecorator {
   return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
-    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
-    })
-    .whenApplyToConstructorParam((constructor, index) => {
-    })
+    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {})
+    .whenApplyToConstructorParam((constructor, index) => {})
     .build<InjectionConstraintDecorator>();
 }
 
 export function Named(name: string | symbol): InjectionDecorator {
   return new DecoratorBuilder(`Named(name="${name.toString()}")`)
-    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
-    })
-    .whenApplyToConstructorParam((constructor, index) => {
-    })
+    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {})
+    .whenApplyToConstructorParam((constructor, index) => {})
     .build<InjectionConstraintDecorator>();
 }

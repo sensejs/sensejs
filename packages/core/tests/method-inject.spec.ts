@@ -1,128 +1,7 @@
-import {BindingType, Container, inject, injectable, ResolveContext, ServiceId} from '@sensejs/container';
-import {
-  Component,
-  Constructor,
-  invokeMethod,
-  MethodInject,
-  MethodInvokerBuilder,
-  MethodParamDecorateError,
-  MethodParamInjectError,
-  RequestContext,
-  RequestInterceptor,
-  validateMethodInjectMetadata,
-} from '../src';
+import {BindingType, Container, injectable, ResolveContext, ServiceId} from '@sensejs/container';
+import {Component, Constructor, Inject, MethodInvokerBuilder, RequestContext, RequestInterceptor} from '../src';
 
 describe('@Inject', () => {
-  test('param binding', () => {
-    const x = Symbol(),
-      y = Symbol();
-
-    @injectable()
-    class Foo {
-      bar(@MethodInject(x) param: string, @MethodInject(y, {transform: (x: number) => x + 1}) number: number) {
-        return param.repeat(number);
-      }
-    }
-
-    const container = new Container();
-    const constValue = 'deadbeef';
-    container.addBinding({
-      type: BindingType.CONSTANT,
-      id: x,
-      value: constValue,
-    });
-    container.addBinding({
-      type: BindingType.CONSTANT,
-      id: y,
-      value: 2,
-    });
-    container.add(Foo);
-    expect(invokeMethod(container.createResolveContext(), Foo, 'bar')).toBe(constValue.repeat(3));
-  });
-
-  test.skip('Validate param binding', () => {
-    const x = Symbol();
-
-    class Foo {
-      shouldOkay(@MethodInject(x) foo: any) {}
-
-      shouldFail(foo: any) {}
-
-      noParam() {}
-    }
-
-    expect(() => validateMethodInjectMetadata(Foo.prototype, 'shouldOkay')).not.toThrow();
-    expect(() => validateMethodInjectMetadata(Foo.prototype, 'shouldFail')).toThrow();
-    expect(() => validateMethodInjectMetadata(Foo.prototype, 'noParam')).not.toThrow();
-  });
-
-  test.skip('Duplicated param binding', () => {
-    const x = Symbol(),
-      y = Symbol();
-    expect(() => {
-      class Foo {
-        bar(@MethodInject(x) @MethodInject(y) foo: any) {}
-      }
-    }).toThrow(MethodParamDecorateError);
-  });
-
-  test.skip('Fail for method takes arguments lacks @Inject()', () => {
-    @injectable()
-    class Foo {
-      bar(param: string) {
-        return param;
-      }
-    }
-
-    const container = new Container();
-    container.addBinding({
-      type: BindingType.CONSTANT,
-      id: String,
-      value: 'deadbeef',
-    });
-    container.add(Foo);
-    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow(MethodParamInjectError);
-  });
-
-  test('Okay for method takes no argument', () => {
-    @injectable()
-    class Foo {
-      bar() {}
-    }
-
-    const spy = jest.spyOn(Foo.prototype, 'bar');
-
-    const container = new Container();
-    container.add(Foo);
-    invokeMethod(container.createResolveContext(), Foo, 'bar');
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
-
-  test.skip('Inconsistent param binding', () => {
-    @injectable()
-    class Foo {
-      bar(undecorated: string, param: string) {
-        return param;
-      }
-    }
-
-    const container = new Container();
-    container.add(Foo);
-
-    container.addBinding({
-      type: BindingType.CONSTANT,
-      id: String,
-      value: 'deadbeef',
-    });
-    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow();
-
-    MethodInject(String)(Foo.prototype, 'bar', 1);
-    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow();
-
-    MethodInject(String)(Foo.prototype, 'bar', 2);
-    expect(() => invokeMethod(container.createResolveContext(), Foo, 'bar')).toThrow();
-  });
-
   test('Performance test', async () => {
     const a = Symbol(),
       b = Symbol();
@@ -154,7 +33,7 @@ describe('@Inject', () => {
       if (constructor) {
         @injectable()
         class X {
-          constructor(@inject(constructor) private empty: any) {}
+          constructor(@Inject(constructor) private empty: any) {}
         }
 
         container.add(X);
@@ -173,10 +52,10 @@ describe('@Inject', () => {
     @Component()
     class Foo {
       bar(
-        @MethodInject(a, {transform: (x: string) => x.repeat(2)}) param: string,
-        @MethodInject(b, {transform: (x: number) => x * x}) number: number,
-        @MethodInject(Test) test: Test,
-        @MethodInject(constructor) x: any,
+        @Inject(a, {transform: (x: string) => x.repeat(2)}) param: string,
+        @Inject(b, {transform: (x: number) => x * x}) number: number,
+        @Inject(Test) test: Test,
+        @Inject(constructor) x: any,
       ) {
         return param.repeat(number);
       }
