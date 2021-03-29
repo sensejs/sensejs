@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/container",
-  "version": "0.8.0-alpha.1",
+  "version": "0.8.0-alpha.2",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -26,5 +26,8 @@
   },
   "peerDependencies": {
     "reflect-metadata": "^0.1.13"
+  },
+  "dependencies": {
+    "tslib": "^2.1.0"
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs-zstd-support",
-  "version": "0.8.0-alpha.1",
+  "version": "0.8.0-alpha.2",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -22,7 +22,7 @@
   "license": "ISC",
   "dependencies": {
     "zstd-napi": "^0.0.6",
-    "tslib": "2.0.0"
+    "tslib": "^2.1.0"
   },
   "devDependencies": {
     "kafkajs": "^1.15.0"

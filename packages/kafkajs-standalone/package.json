@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs-standalone",
-  "version": "0.8.0-alpha.1",
+  "version": "0.8.0-alpha.2",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
@@ -22,8 +22,8 @@
   "license": "ISC",
   "dependencies": {
     "long": "^4.0.0",
-    "rxjs": "^6.6.3",
-    "tslib": "2.0.0"
+    "rxjs": "^6.6.7",
+    "tslib": "^2.1.0"
   },
   "peerDependencies": {
     "kafkajs": "^1.14.0"
