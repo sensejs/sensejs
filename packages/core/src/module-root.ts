@@ -27,14 +27,12 @@ export class ModuleRoot<T extends {} = {}> {
       value: this.container,
       id: Container,
     });
-    // this.container.bind(Container).toConstantValue(this.container);
     if (processManager) {
       this.container.addBinding({
         type: BindingType.CONSTANT,
         value: processManager,
         id: ProcessManager,
       });
-      // this.container.bind(ProcessManager).toConstantValue(processManager);
     }
     this.container.addBinding({
       type: BindingType.CONSTANT,
@@ -100,7 +98,7 @@ export class ModuleRoot<T extends {} = {}> {
     await this.backgroundTaskQueue.waitAllTaskFinished();
   }
 
-  public run<K extends keyof T>(method: K): InvokeResult<Constructor<T>, K> {
+  public run<K extends keyof T>(method: K): InvokeResult<T, K> {
     return invokeMethod(this.container.createResolveContext(), this.entryModuleInstance.moduleClass, method);
   }
 }

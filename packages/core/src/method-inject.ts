@@ -9,11 +9,10 @@ export function invokeMethod<T extends {}, K extends keyof T>(
   resolveContext: ResolveContext,
   constructor: Constructor<T>,
   methodKey: keyof T,
-): InvokeResult<Constructor<T>, K> {
+): InvokeResult<T, K> {
   resolveContext.setAllowUnbound(true);
   return resolveContext.invoke(constructor, methodKey);
 }
-
 
 export type ContextFactory<X> = (
   resolveContext: ResolveContext,
@@ -72,11 +71,7 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
           ],
         });
       }
-      return invokeMethod(
-        this.resolveContext,
-        this.targetConstructor,
-        this.targetMethodKey,
-      );
+      return invokeMethod(this.resolveContext, this.targetConstructor, this.targetMethodKey);
     } finally {
       await this.resolveContext.cleanUp();
     }

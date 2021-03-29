@@ -1,4 +1,4 @@
-import {AsyncResolveInterceptor, Class, Constructor, Scope, ServiceId} from './types';
+import {Class, Scope, ServiceId} from './types';
 
 export enum InstructionCode {
   PLAN = 'PLAN',

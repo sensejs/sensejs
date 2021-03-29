@@ -11,43 +11,23 @@ import {
   Scope,
   ServiceId,
 } from './types';
-import {DecoratorMetadata, ensureConstructorParamInjectMetadata, ensureMethodInvokeProxy, inject} from './decorator';
-import {
-  BindingNotFoundError,
-  CircularAliasError,
-  CircularDependencyError,
-  DuplicatedBindingError,
-  InvalidParamBindingError,
-} from './errors';
+import {BindingNotFoundError, CircularAliasError, CircularDependencyError, DuplicatedBindingError} from './errors';
 import {BuildInstruction, Instruction, InstructionCode, PlanInstruction, TransformInstruction} from './instructions';
+import {
+  convertParamInjectionMetadata,
+  ensureConstructorParamInjectMetadata,
+  ensureValidatedMethodInvokeProxy,
+  ensureValidatedParamInjectMetadata,
+} from './metadata';
 
-export type InvokeResult<T extends Constructor, K extends keyof InstanceType<T>> = InstanceType<T>[K] extends (
-  ...args: any[]
-) => Promise<infer R>
+export type InvokeResult<T extends {}, K extends keyof T> = T[K] extends (...args: any[]) => Promise<infer R>
   ? R
-  : InstanceType<T>[K] extends (...args: any[]) => infer R
+  : T[K] extends (...args: any[]) => infer R
   ? R
   : never;
 
-function convertParamInjectionMetadata(cm: DecoratorMetadata) {
-  return Array.from(cm.params.entries()).map(
-    ([index, value]): ParamInjectionMetadata => {
-      const {id, transform, optional = false} = value;
-      if (typeof id === 'undefined') {
-        throw new TypeError('param inject id is undefined');
-      }
-      return {index, id, transform, optional};
-    },
-  );
-}
-
 function compileParamInjectInstruction(paramInjectionMetadata: ParamInjectionMetadata[]): Instruction[] {
-  const sortedMetadata = Array.from(paramInjectionMetadata).sort((l, r) => l.index - r.index);
-  sortedMetadata.forEach((value, index) => {
-    if (value.index !== index) {
-      throw new InvalidParamBindingError(sortedMetadata, index);
-    }
-  });
+  const sortedMetadata = ensureValidatedParamInjectMetadata(paramInjectionMetadata);
   return sortedMetadata.reduceRight((instructions, m): Instruction[] => {
     const {id, transform, optional} = m;
     if (typeof transform === 'function') {
@@ -117,7 +97,7 @@ export class ResolveContext {
         return successorsFinished;
       });
       this.allFinished.catch(reject);
-      this.allFinished.finally(()=> allFinished);
+      this.allFinished.finally(() => allFinished);
     });
   }
 
@@ -133,12 +113,17 @@ export class ResolveContext {
     return this;
   }
 
-  invoke<T extends Constructor, K extends keyof InstanceType<T>>(target: T, key: K): InvokeResult<T, K> {
-    const proxy = ensureMethodInvokeProxy(target.prototype, key);
-    inject(target)(proxy, undefined, 0);
+  invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target});
+    const self = this.evalInstructions() as T;
+    const fn = self[key];
+    if (typeof fn !== 'function') {
+      throw new TypeError(`${target.name}.${String(key)} is not a function`);
+    }
+    const proxy = ensureValidatedMethodInvokeProxy(target.prototype, key);
     this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy});
     const proxyInstance = this.evalInstructions() as InstanceType<typeof proxy>;
-    return proxyInstance.call();
+    return proxyInstance.call(fn, self);
   }
 
   resolve<T>(target: ServiceId<T>): T {
