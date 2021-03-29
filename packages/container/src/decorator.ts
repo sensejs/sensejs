@@ -1,10 +1,5 @@
-import {Class, ParamInjectionMetadata, Scope, ServiceId, Transformer} from './types';
+import {Class, Scope, ServiceId, Transformer} from './types';
 import {assignParamInjectMetadata, ensureConstructorParamInjectMetadata, ensureMethodInvokeProxy} from './metadata';
-
-export interface DecoratorMetadata {
-  params: Map<number, Partial<ParamInjectionMetadata>>;
-  scope: Scope;
-}
 
 export function inject<T, R = T>(serviceId: ServiceId<T>, transformer?: Transformer<T, R>) {
   return (ctor: Class | {}, name: any, index: number): void => {

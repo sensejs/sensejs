@@ -7,6 +7,7 @@ import {
   Constructor,
   FactoryBinding,
   InstanceBinding,
+  InvokeResult,
   ParamInjectionMetadata,
   Scope,
   ServiceId,
@@ -19,12 +20,6 @@ import {
   ensureValidatedMethodInvokeProxy,
   ensureValidatedParamInjectMetadata,
 } from './metadata';
-
-export type InvokeResult<T extends {}, K extends keyof T> = T[K] extends (...args: any[]) => Promise<infer R>
-  ? R
-  : T[K] extends (...args: any[]) => infer R
-  ? R
-  : never;
 
 function compileParamInjectInstruction(paramInjectionMetadata: ParamInjectionMetadata[]): Instruction[] {
   const sortedMetadata = ensureValidatedParamInjectMetadata(paramInjectionMetadata);
@@ -114,13 +109,9 @@ export class ResolveContext {
   }
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
+    const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
     const self = this.evalInstructions() as T;
-    const fn = self[key];
-    if (typeof fn !== 'function') {
-      throw new TypeError(`${target.name}.${String(key)} is not a function`);
-    }
-    const proxy = ensureValidatedMethodInvokeProxy(target.prototype, key);
     this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy});
     const proxyInstance = this.evalInstructions() as InstanceType<typeof proxy>;
     return proxyInstance.call(fn, self);

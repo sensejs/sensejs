@@ -10,6 +10,7 @@ import {
   InvalidParamBindingError,
   Scope,
   optional,
+  NoEnoughInjectMetadataError,
 } from '../src';
 
 function untransformed(input: any) {
@@ -277,6 +278,20 @@ describe('Kernel', () => {
     await context.invoke(Foo, 'method');
     expect(methodSpy).toHaveBeenCalled();
     await context.cleanUp();
+  });
+
+  test('invalid invoke', () => {
+    const kernel = new Container();
+
+    class Foo {
+      constructor() {}
+
+      method(@inject('const2') param1: number, param2: number) {}
+    }
+
+    expect(() => kernel.createResolveContext().setAllowUnbound(true).invoke(Foo, 'method')).toThrow(
+      NoEnoughInjectMetadataError,
+    );
   });
 
   test('scope', () => {

@@ -87,3 +87,9 @@ export type Binding<T> =
 export interface AsyncResolveOption {
   interceptors?: AsyncResolveInterceptorFactory[];
 }
+
+export type InvokeResult<T extends {}, K extends keyof T> = T[K] extends (...args: any[]) => Promise<infer R>
+  ? R
+  : T[K] extends (...args: any[]) => infer R
+  ? R
+  : never;

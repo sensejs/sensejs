@@ -1,4 +1,11 @@
-import {ParamInjectionMetadata, ServiceId} from './types';
+import {Constructor, ParamInjectionMetadata, ServiceId} from './types';
+
+export class NoEnoughInjectMetadataError<T extends {}> extends Error {
+  constructor(private target: Constructor<T>, private methodKey?: keyof T) {
+    super();
+    Error.captureStackTrace(this, NoEnoughInjectMetadataError);
+  }
+}
 
 export class InvalidParamBindingError extends Error {
   constructor(readonly received: ParamInjectionMetadata[], readonly invalidIndex: number) {
