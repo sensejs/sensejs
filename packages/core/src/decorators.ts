@@ -38,7 +38,7 @@ export function Inject<T>(
   const name = typeof target === 'function' ? target.name : target.toString();
   return new DecoratorBuilder(`Inject(${name})`)
     .whenApplyToInstanceMethodParam((prototype, name, index) => {
-      return MethodInject(target, option)(prototype, name, index);
+      return inject(target, option?.transform)(prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
       decorateInjectedConstructorParam(constructor, index, option?.transform);
@@ -51,7 +51,7 @@ export function Optional(): InjectionDecorator {
   const decorator = optional() as ConstructorParamDecorator;
   return new DecoratorBuilder('Optional')
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
-      return applyToParamBindingInvoker(decorator, prototype, name, index);
+      return optional()(prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
       return decorator(constructor, undefined, index);

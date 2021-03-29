@@ -40,7 +40,7 @@ describe('@Inject', () => {
     expect(invokeMethod(container.createResolveContext(), Foo, 'bar')).toBe(constValue.repeat(3));
   });
 
-  test('Validate param binding', () => {
+  test.skip('Validate param binding', () => {
     const x = Symbol();
 
     class Foo {
@@ -56,7 +56,7 @@ describe('@Inject', () => {
     expect(() => validateMethodInjectMetadata(Foo.prototype, 'noParam')).not.toThrow();
   });
 
-  test('Duplicated param binding', () => {
+  test.skip('Duplicated param binding', () => {
     const x = Symbol(),
       y = Symbol();
     expect(() => {
@@ -66,7 +66,7 @@ describe('@Inject', () => {
     }).toThrow(MethodParamDecorateError);
   });
 
-  test('Fail for method takes arguments lacks @Inject()', () => {
+  test.skip('Fail for method takes arguments lacks @Inject()', () => {
     @injectable()
     class Foo {
       bar(param: string) {
@@ -98,7 +98,7 @@ describe('@Inject', () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  test('Inconsistent param binding', () => {
+  test.skip('Inconsistent param binding', () => {
     @injectable()
     class Foo {
       bar(undecorated: string, param: string) {

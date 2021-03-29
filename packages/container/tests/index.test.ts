@@ -222,45 +222,6 @@ describe('Kernel', () => {
     expect(() => kernel.resolve('foo')).toThrow(CircularAliasError);
   });
 
-  test('async resolve', async () => {
-    const kernel = new Container();
-    const value1 = Math.random();
-    const value2 = Math.random();
-
-    class Foo {
-      bar;
-
-      constructor(param1: number, param2: number) {
-        this.bar = param1 + param2;
-      }
-    }
-
-    kernel.addBinding({
-      type: BindingType.CONSTANT,
-      id: 'constant',
-      value: value1,
-    });
-    kernel.addBinding<number>({
-      type: BindingType.ASYNC_FACTORY,
-      id: 'provider1',
-      factory: async () => value2,
-      paramInjectionMetadata: [],
-      scope: Scope.REQUEST,
-    });
-    kernel.addBinding({
-      type: BindingType.INSTANCE,
-      id: Foo,
-      constructor: Foo,
-      paramInjectionMetadata: [
-        {id: 'constant', optional: false, index: 0, transform: untransformed},
-        {id: 'provider1', optional: false, index: 1},
-      ],
-      scope: Scope.REQUEST,
-    });
-    const result = await kernel.resolveAsync(Foo);
-    expect(result.bar).toEqual(value1 + value2);
-  });
-
   test('invoke', async () => {
     const kernel = new Container();
     const value1 = Math.random();
@@ -316,72 +277,6 @@ describe('Kernel', () => {
     await context.invoke(Foo, 'method');
     expect(methodSpy).toHaveBeenCalled();
     await context.cleanUp();
-  });
-
-  test('interceptor', async () => {
-    const kernel = new Container();
-    const value1 = Math.random();
-    const value2 = Math.random();
-    const value3 = Math.random();
-    const postNext1 = jest.fn();
-    const postNext2 = jest.fn();
-    kernel.addBinding({
-      type: BindingType.CONSTANT,
-      id: 'constant',
-      value: value1,
-    });
-    kernel.addBinding<number>({
-      type: BindingType.ASYNC_FACTORY,
-      id: 'async_factory',
-      factory: async (param1, param2) => param1 + param2,
-      paramInjectionMetadata: [
-        {
-          id: 'constant',
-          index: 0,
-          optional: false,
-        },
-        {
-          id: 'interceptor2',
-          index: 1,
-          optional: false,
-        },
-      ],
-      scope: Scope.REQUEST,
-    });
-
-    const context = kernel.createResolveContext();
-
-    const result = await context.resolveAsync('async_factory', {
-      interceptors: [
-        {
-          interceptorBuilder: (param1: number) => {
-            return async (next) => {
-              context.addTemporaryConstantBinding('interceptor1', value2);
-              await next();
-              postNext1(param1);
-            };
-          },
-          paramInjectionMetadata: [{id: 'constant', index: 0, optional: false}],
-        },
-
-        {
-          interceptorBuilder: (param1: number) => {
-            return async (next) => {
-              context.addTemporaryConstantBinding('interceptor2', param1 + value3);
-              await next();
-              postNext2(param1);
-            };
-          },
-          paramInjectionMetadata: [{id: 'interceptor1', index: 0, optional: false}],
-        },
-      ],
-    });
-    expect(result).toEqual(value1 + value2 + value3);
-    expect(postNext1).not.toHaveBeenCalled();
-    expect(postNext2).not.toHaveBeenCalled();
-    await context.cleanUp();
-    expect(postNext1).toHaveBeenCalled();
-    expect(postNext2).toHaveBeenCalled();
   });
 
   test('scope', () => {
@@ -459,7 +354,7 @@ describe('Kernel', () => {
 
     @injectable()
     class X {
-      constructor(@inject(Foo) readonly foo: Foo, @optional() @inject('optional') optional?: any) {}
+      constructor(@inject(Foo) readonly foo: Foo, @optional() @inject('optional') optionalParam?: any) {}
     }
 
     const container = new Container();

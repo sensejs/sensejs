@@ -1,7 +1,6 @@
 import {
-  AsyncFactoryBinding, AsyncResolveInterceptor,
+  AsyncResolveInterceptor,
   AsyncResolveInterceptorFactory,
-  AsyncResolveOption,
   Binding,
   BindingType,
   Class,
@@ -14,22 +13,21 @@ import {
 } from './types';
 import {DecoratorMetadata, ensureConstructorParamInjectMetadata, ensureMethodInvokeProxy, inject} from './decorator';
 import {
-  AsyncUnsupportedError,
   BindingNotFoundError,
   CircularAliasError,
   CircularDependencyError,
   DuplicatedBindingError,
   InvalidParamBindingError,
 } from './errors';
-import {
-  AsyncBuildInstruction,
-  AsyncInterceptInstruction,
-  BuildInstruction,
-  Instruction,
-  InstructionCode,
-  PlanInstruction,
-  TransformInstruction,
-} from './instructions';
+import {BuildInstruction, Instruction, InstructionCode, PlanInstruction, TransformInstruction} from './instructions';
+
+export type InvokeResult<T extends Constructor, K extends keyof InstanceType<T>> = InstanceType<T>[K] extends (
+  ...args: any[]
+) => Promise<infer R>
+  ? R
+  : InstanceType<T>[K] extends (...args: any[]) => infer R
+  ? R
+  : never;
 
 function convertParamInjectionMetadata(cm: DecoratorMetadata) {
   return Array.from(cm.params.entries()).map(
@@ -68,7 +66,7 @@ export class ResolveContext {
   private readonly instructions: Instruction[] = [];
   private readonly requestSingletonCache: Map<any, any> = new Map();
   private readonly stack: any[] = [];
-  private allResolved: Promise<void>;
+  private allFinished: Promise<void>;
   private allowUnbound = false;
 
   constructor(
@@ -76,7 +74,7 @@ export class ResolveContext {
     readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
     readonly globalSingletonCache: Map<any, any>,
   ) {
-    this.allResolved = new Promise<void>((resolve, reject) => {
+    this.allFinished = new Promise<void>((resolve, reject) => {
       this.dependentsCleanedUp = (e?: Error) => {
         if (e) {
           return reject(e);
@@ -87,7 +85,6 @@ export class ResolveContext {
   }
 
   async intercept(interceptor: AsyncResolveInterceptorFactory): Promise<void> {
-
     const {interceptorBuilder, paramInjectionMetadata} = interceptor;
     const serviceId = Symbol();
     this.instructions.push(
@@ -102,21 +99,25 @@ export class ResolveContext {
     );
     const interceptorInstance = this.evalInstructions() as AsyncResolveInterceptor;
     const cleanUp = this.dependentsCleanedUp;
-    const allResolved = new Promise<void>((resolve, reject) => {
+    const successorsFinished = new Promise<void>((resolve, reject) => {
       this.dependentsCleanedUp = (e?: Error) => {
         if (e) {
           return reject(e);
         }
         return resolve();
       };
-    }).then(() => cleanUp(), (e) => cleanUp(e));
+    }).then(
+      () => cleanUp(),
+      (e) => cleanUp(e),
+    );
     return new Promise<void>((resolve, reject) => {
-      interceptorInstance(
-        async () => {
-          resolve();
-          return allResolved;
-        },
-      ).catch(reject);
+      const allFinished = this.allFinished;
+      this.allFinished = interceptorInstance(async () => {
+        resolve();
+        return successorsFinished;
+      });
+      this.allFinished.catch(reject);
+      this.allFinished.finally(()=> allFinished);
     });
   }
 
@@ -124,7 +125,7 @@ export class ResolveContext {
     if (this.dependentsCleanedUp) {
       this.dependentsCleanedUp();
     }
-    return this.allResolved;
+    return this.allFinished;
   }
 
   setAllowUnbound(value: boolean): this {
@@ -132,74 +133,12 @@ export class ResolveContext {
     return this;
   }
 
-  async resolveAsync<T>(target: ServiceId<T>, option: AsyncResolveOption = {}): Promise<T> {
-    const {interceptors = []} = option;
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target});
-    interceptors.reduceRight((output, i) => {
-      const {interceptorBuilder, paramInjectionMetadata} = i;
-      this.instructions.push(
-        {
-          code: InstructionCode.ASYNC_INTERCEPT,
-          interceptorBuilder: interceptorBuilder,
-          paramCount: paramInjectionMetadata.length,
-        },
-        ...compileParamInjectInstruction(i.paramInjectionMetadata),
-      );
-      return output;
-    }, null);
-
-    for (;;) {
-      const instruction = this.instructions.pop();
-      if (!instruction) {
-        return this.stack[0];
-      }
-
-      switch (instruction.code) {
-        case InstructionCode.PLAN:
-          this.performPlan(instruction);
-          break;
-        case InstructionCode.TRANSFORM:
-          this.performTransform(instruction);
-          break;
-        case InstructionCode.BUILD:
-          this.performBuild(instruction);
-          break;
-        case InstructionCode.ASYNC_BUILD:
-          await this.performAsyncBuild(instruction);
-          break;
-        case InstructionCode.ASYNC_INTERCEPT:
-          await this.performIntercept(instruction);
-          break;
-      }
-    }
-  }
-
-  invoke<T extends Constructor, K extends keyof InstanceType<T>>(
-    target: T,
-    key: K,
-  ): InvokeResult<T, K> {
+  invoke<T extends Constructor, K extends keyof InstanceType<T>>(target: T, key: K): InvokeResult<T, K> {
     const proxy = ensureMethodInvokeProxy(target.prototype, key);
     inject(target)(proxy, undefined, 0);
     this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy});
-    for (; ;) {
-      const instruction = this.instructions.pop();
-      if (!instruction) {
-        const proxyInstance = this.stack[0] as InstanceType<typeof proxy>;
-        return proxyInstance.call();
-      }
-
-      switch (instruction.code) {
-        case InstructionCode.PLAN:
-          this.performPlan(instruction);
-          break;
-        case InstructionCode.TRANSFORM:
-          this.performTransform(instruction);
-            break;
-          case InstructionCode.BUILD:
-            this.performBuild(instruction);
-            break;
-      }
-    }
+    const proxyInstance = this.evalInstructions() as InstanceType<typeof proxy>;
+    return proxyInstance.call();
   }
 
   resolve<T>(target: ServiceId<T>): T {
@@ -210,11 +149,10 @@ export class ResolveContext {
   private dependentsCleanedUp: (e?: Error) => void = () => {};
 
   private evalInstructions() {
-    for (; ;) {
+    for (;;) {
       const instruction = this.instructions.pop();
       if (!instruction) {
         return this.stack.pop();
-        // return this.stack[0];
       }
 
       switch (instruction.code) {
@@ -227,10 +165,6 @@ export class ResolveContext {
         case InstructionCode.BUILD:
           this.performBuild(instruction);
           break;
-        case InstructionCode.ASYNC_BUILD:
-          throw new AsyncUnsupportedError(instruction.serviceId);
-        case InstructionCode.ASYNC_INTERCEPT:
-          throw new AsyncUnsupportedError();
       }
     }
   }
@@ -243,7 +177,7 @@ export class ResolveContext {
   private internalGetBinding(target: ServiceId) {
     let binding;
     const resolvingSet = new Set();
-    for (; ;) {
+    for (;;) {
       binding = this.bindingMap.get(target);
       if (!binding) {
         return;
@@ -361,18 +295,6 @@ export class ResolveContext {
     }
   }
 
-  private async performAsyncBuild(instruction: AsyncBuildInstruction) {
-    const {paramCount, factory, cacheScope, serviceId} = instruction;
-    this.checkCache(cacheScope, serviceId);
-    const args = this.stack.splice(this.stack.length - paramCount);
-    const result = await factory(...args);
-    if (cacheScope === Scope.REQUEST) {
-      this.requestSingletonCache.set(serviceId, result);
-    }
-    this.stack.push(result);
-    this.planingSet.delete(serviceId);
-  }
-
   private checkCache(cacheScope: Scope, serviceId: ServiceId) {
     if (cacheScope === Scope.SINGLETON) {
       if (this.globalSingletonCache.has(serviceId)) {
@@ -391,38 +313,7 @@ export class ResolveContext {
     this.requestSingletonCache.set(serviceId, value);
     return this;
   }
-
-  private async performIntercept(instruction: AsyncInterceptInstruction) {
-    const {paramCount, interceptorBuilder} = instruction;
-
-    const args = this.stack.splice(this.stack.length - paramCount);
-    const interceptor = interceptorBuilder(...args);
-    const cleanUp = this.dependentsCleanedUp;
-    const allResolved = this.allResolved;
-    this.allResolved = interceptor(
-      () =>
-        new Promise<void>((resolve, reject) => {
-          this.dependentsCleanedUp = (e) => {
-            if (e) return reject(e);
-            return resolve();
-          };
-        }),
-    ).finally(() => {
-      if (cleanUp) {
-        cleanUp();
-      }
-      return allResolved;
-    });
-  }
 }
-
-export type InvokeResult<T extends Constructor, K extends keyof InstanceType<T>> = Promise<
-  InstanceType<T>[K] extends (...args: any[]) => Promise<infer R>
-    ? R
-    : InstanceType<T>[K] extends (...args: any[]) => infer R
-    ? R
-    : never
->;
 
 export class Container {
   private bindingMap: Map<ServiceId, Binding<any>> = new Map();
@@ -456,18 +347,12 @@ export class Container {
       this.compileInstanceBinding(binding);
     } else if (binding.type === BindingType.FACTORY) {
       this.compileFactoryBinding(binding);
-    } else if (binding.type === BindingType.ASYNC_FACTORY) {
-      this.compileProviderBinding(binding);
     }
     return this;
   }
 
   resolve<T>(serviceId: ServiceId<T>): T {
     return this.createResolveContext().resolve(serviceId);
-  }
-
-  resolveAsync<T>(serviceId: ServiceId<T>): Promise<T> {
-    return this.createResolveContext().resolveAsync(serviceId);
   }
 
   private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
@@ -493,20 +378,6 @@ export class Container {
         factory: (...params: any[]) => Reflect.construct(constructor, params),
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
-      },
-      ...compileParamInjectInstruction(paramInjectionMetadata),
-    ]);
-  }
-
-  private compileProviderBinding<T>(binding: AsyncFactoryBinding<T>) {
-    const {scope, paramInjectionMetadata, factory, id} = binding;
-    this.compiledInstructionMap.set(id, [
-      {
-        cacheScope: scope,
-        code: InstructionCode.ASYNC_BUILD,
-        paramCount: paramInjectionMetadata.length,
-        serviceId: id,
-        factory,
       },
       ...compileParamInjectInstruction(paramInjectionMetadata),
     ]);

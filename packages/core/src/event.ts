@@ -16,7 +16,7 @@ export interface EventChannelSubscription {
 interface EventMessenger {
   payload: unknown;
 
-  resolveContext: ResolveContext;
+  bindingsMap: Map<ServiceIdentifier, any>;
 }
 
 interface AcknowledgeAwareEventMessenger extends EventMessenger {
@@ -44,14 +44,16 @@ class EventBusImplement {
 
   async announceEvent<T extends {}, Context>(
     channel: ServiceIdentifier,
-    resolveContext: ResolveContext,
+    bindingsMap: Map<ServiceIdentifier, any>,
+    // resolveContext: ResolveContext,
     payload?: unknown,
   ): Promise<void> {
     const subject = this.ensureEventChannel(channel);
     const consumePromises: Promise<void>[] = [];
     subject.next({
       payload,
-      resolveContext,
+      bindingsMap,
+      // resolveContext,
       acknowledge: (p: Promise<void>) => consumePromises.push(p),
     });
     await Promise.all(consumePromises);
@@ -183,8 +185,9 @@ export abstract class EventPublisher {
 @Component({scope: ComponentScope.SINGLETON})
 class EventPublisherFactory extends ComponentFactory<EventPublisher> {
   private static EventPublishPreparation = class extends EventPublishPreparation {
+    bindingsMap: Map<ServiceIdentifier, any> = new Map();
     constructor(
-      private readonly resolveContext: ResolveContext,
+      // private readonly resolveContext: ResolveContext,
       private readonly eventBus: EventBusImplement,
       private readonly channel: ServiceIdentifier,
     ) {
@@ -192,16 +195,16 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
     }
 
     bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this {
-      this.resolveContext.addTemporaryConstantBinding(serviceIdentifier, value);
+      this.bindingsMap.set(serviceIdentifier, value);
       return this;
     }
 
     async publish<T>(...args: [undefined] | [ServiceIdentifier<T>, T]): Promise<void> {
       if (args[0] !== undefined) {
-        this.resolveContext.addTemporaryConstantBinding(args[0], args[1]);
-        return this.eventBus.announceEvent(this.channel, this.resolveContext, args[1]);
+        this.bindingsMap.set(args[0], args[1]);
+        return this.eventBus.announceEvent(this.channel, this.bindingsMap, args[1]);
       }
-      return this.eventBus.announceEvent(this.channel, this.resolveContext);
+      return this.eventBus.announceEvent(this.channel, this.bindingsMap);
     }
   };
 
@@ -212,7 +215,6 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
 
     prepare(channel: ServiceIdentifier): EventPublishPreparation {
       return new EventPublisherFactory.EventPublishPreparation(
-        this.container.createResolveContext(),
         this.eventBus,
         channel,
       );
@@ -300,7 +302,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(
         this.eventBus.subscribe(identifier, (messenger) => {
-          const {acknowledge, resolveContext, payload} = messenger;
+          const {acknowledge, bindingsMap, payload} = messenger;
           try {
             if (!subscribeEventMetadata.filter(payload)) {
               return;
@@ -309,6 +311,8 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
             acknowledge(Promise.reject(e));
             return;
           }
+          const resolveContext = this.container.createResolveContext();
+          bindingsMap.forEach((v, k)=> resolveContext.addTemporaryConstantBinding(k, v));
           acknowledge(
             methodInvokerBuilder
               .setResolveContext(resolveContext)

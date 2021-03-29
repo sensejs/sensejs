@@ -1,4 +1,4 @@
-import {Container, inject, injectable, ResolveContext, ServiceId} from '@sensejs/container';
+import {Container, inject, injectable, InvokeResult, ResolveContext, ServiceId} from '@sensejs/container';
 import {Constructor, ServiceIdentifier, Transformer} from './interfaces';
 import {RequestContext, RequestInterceptor} from './interceptor';
 
@@ -121,44 +121,37 @@ export function invokeMethod<T extends {}, K extends keyof T>(
   constructor: Constructor<T>,
   methodKey: keyof T,
   // target?: T,
-): T[K] extends (...args: any[]) => infer R ? R : never {
-  const metadata = ensureMethodInjectMetadata(constructor.prototype, methodKey);
-  inject(constructor)(metadata.proxy, undefined, 0);
-  const targetMethod = constructor.prototype[methodKey];
-  if (typeof targetMethod !== 'function') {
-    throw new TypeError(
-      `${
-        constructor.name
-      }.${methodKey} is not a function, typeof targetMethod is ${typeof targetMethod}, typeof method is ${typeof methodKey}`,
-    );
-  }
-  const invoker = resolveContext.setAllowUnbound(true).resolve(metadata.proxy) as MethodInjectProxy;
-  return invoker.call(metadata, targetMethod);
+): InvokeResult<Constructor<T>, K> {
+  // const metadata = ensureMethodInjectMetadata(constructor.prototype, methodKey);
+  // inject(constructor)(metadata.proxy, undefined, 0);
+  // const targetMethod = constructor.prototype[methodKey];
+  // if (typeof targetMethod !== 'function') {
+  //   throw new TypeError(
+  //     `${
+  //       constructor.name
+  //     }.${methodKey} is not a function, typeof targetMethod is ${typeof targetMethod}, typeof method is ${typeof methodKey}`,
+  //   );
+  // }
+  // const invoker = resolveContext.setAllowUnbound(true).resolve(metadata.proxy) as MethodInjectProxy;
+  // return invoker.call(metadata, targetMethod);
+  resolveContext.setAllowUnbound(true);
+  return resolveContext.invoke(constructor, methodKey);
 }
 
 /**
  * Invoke method with arguments from container
  */
-export async function invokeMethodAsync<T extends {}, K extends keyof T>(
+export async function invokeMethodAsync<T extends Constructor, K extends keyof InstanceType<T>>(
   resolveContext: ResolveContext,
-  constructor: Constructor<T>,
-  methodKey: keyof T,
+  constructor: T,
+  methodKey: K,
   interceptors: Constructor<RequestInterceptor>[],
   contextIdentifier?: ServiceId<any>,
-): Promise<T[K] extends (...args: any[]) => Promise<infer R> ? R : never> {
-  const metadata = ensureMethodInjectMetadata(constructor.prototype, methodKey);
-  inject(constructor)(metadata.proxy, undefined, 0);
-  const targetMethod = constructor.prototype[methodKey];
-  if (typeof targetMethod !== 'function') {
-    throw new TypeError(
-      `${
-        constructor.name
-      }.${methodKey} is not a function, typeof targetMethod is ${typeof targetMethod}, typeof method is ${typeof methodKey}`,
-    );
-  }
-  const invoker = (await resolveContext.setAllowUnbound(true).resolveAsync(metadata.proxy, {
-    interceptors: interceptors.map((interceptor) => {
-      return {
+): Promise<InvokeResult<T, K>> {
+  resolveContext.setAllowUnbound(true);
+  try {
+    for (const i of interceptors) {
+      await resolveContext.intercept({
         interceptorBuilder: (context: RequestContext, interceptor: RequestInterceptor) => {
           return async (next) => {
             return interceptor.intercept(context, next);
@@ -171,31 +164,24 @@ export async function invokeMethodAsync<T extends {}, K extends keyof T>(
             index: 0,
           },
           {
-            id: interceptor,
+            id: i,
             optional: false,
             index: 1,
           },
         ],
-      };
-    }),
-  })) as MethodInjectProxy;
-  return invoker.call(metadata, targetMethod);
+      });
+    }
+    return resolveContext.invoke(constructor, methodKey);
+  } finally {
+    await resolveContext.cleanUp();
+  }
 }
 
 export function MethodInject<T extends {}, R = T>(
   target: ServiceIdentifier<T>,
   option: MethodParameterInjectOption<T, R> = {},
 ) {
-  return <P extends {}, K extends keyof P>(prototype: P, methodKey: K, paramIndex: number): void => {
-    const metadata = ensureMethodInjectMetadata(prototype, methodKey);
-    if (metadata.paramsMetadata[paramIndex]) {
-      throw new MethodParamDecorateError();
-    }
-    const parameterDecorator = inject(target, option.transform);
-    parameterDecorator(metadata.proxy as Constructor, undefined, paramIndex + 1);
-
-    metadata.paramsMetadata[paramIndex] = Object.assign({target});
-  };
+  return inject(target, option?.transform);
 }
 
 export type ContextFactory<X> = (

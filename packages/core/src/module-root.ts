@@ -1,4 +1,4 @@
-import {BindingType, Container} from '@sensejs/container';
+import {BindingType, Container, InvokeResult} from '@sensejs/container';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 import {BackgroundTaskQueue, ProcessManager} from './builtins';
@@ -100,7 +100,7 @@ export class ModuleRoot<T extends {} = {}> {
     await this.backgroundTaskQueue.waitAllTaskFinished();
   }
 
-  public run<K extends keyof T>(method: K): T[K] extends (...args: any[]) => infer R ? R : never {
+  public run<K extends keyof T>(method: K): InvokeResult<Constructor<T>, K> {
     return invokeMethod(this.container.createResolveContext(), this.entryModuleInstance.moduleClass, method);
   }
 }
