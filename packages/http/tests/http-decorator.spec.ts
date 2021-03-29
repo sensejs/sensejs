@@ -28,23 +28,6 @@ describe('Http decorators', () => {
     expect(getHttpControllerMetadata(FooController)).not.toBeUndefined();
   });
 
-  test('throw error when lack of param mapping', () => {
-    expect(() => {
-      @Controller('/foo')
-      class MyController {
-        @GET('/')
-        handleRequest(body: object) {}
-      }
-    }).toThrow();
-
-    expect(() => {
-      class MyController {
-        @GET('/:id')
-        handleRequest(body: object, @Path('id') path: string) {}
-      }
-    }).toThrow();
-  });
-
   test('throw error when apply decorator multiple times', () => {
     expect(() => {
       @Controller('/foo')
@@ -60,21 +43,6 @@ describe('Http decorators', () => {
         @GET('/')
         @PATCH('/')
         handleRequest() {}
-      }
-    }).toThrow();
-
-    expect(() => {
-      class MyController {
-        handleRequest(@Body() @Path('id') data: any) {}
-      }
-    }).toThrow();
-  });
-
-  test('throw error when misapplied', () => {
-    expect(() => {
-      class MyController {
-        @GET('/')
-        field: any;
       }
     }).toThrow();
   });

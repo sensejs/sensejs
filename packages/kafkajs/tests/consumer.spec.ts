@@ -15,15 +15,6 @@ import {Subject} from 'rxjs';
 import {ApplicationRunner} from '@sensejs/core/lib/entry-point';
 
 describe('Subscribe decorators', () => {
-  test('Missing param binding', () => {
-    expect(() => {
-      class Controller {
-        @SubscribeTopic({option: {topic: 'foo'}})
-        foo(value: any) {}
-      }
-    }).toThrow();
-  });
-
   test('Duplicated @SubscribeTopic', () => {
     expect(() => {
       class Controller {

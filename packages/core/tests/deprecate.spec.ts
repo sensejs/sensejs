@@ -1,6 +1,6 @@
 import {Deprecated} from '../src/utils';
 import {BindingType, Container, inject, injectable} from '@sensejs/container';
-import {getMethodInjectMetadata, Inject, invokeMethod} from '../src';
+import {Inject, invokeMethod} from '../src';
 
 const awaitWarningCalled = (stub: jest.SpyInstance) =>
   new Promise<void>((done) => {
@@ -181,7 +181,6 @@ describe('Deprecate instance method', () => {
     try {
       expect(invokeMethod(container.createResolveContext(), X, 'foo')).toBe(result);
     } catch (e) {
-
       console.error(e);
       throw e;
     }

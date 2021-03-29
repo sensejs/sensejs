@@ -1,5 +1,6 @@
 import {Component, Constructor, Inject, InjectionDecorator, Transformer} from '@sensejs/core';
 import {HttpContext, HttpInterceptor} from './http-abstract';
+import {InstanceMethodDecorator} from '@sensejs/utility';
 
 export enum HttpMethod {
   GET = 'get',
@@ -93,9 +94,7 @@ export function getRequestMappingMetadata(targetMethod: object, key: keyof any):
   return store.get(key);
 }
 
-export interface RequestMappingDecorator {
-  <T extends {}>(prototype: T, method: keyof T & string): void;
-}
+export type RequestMappingDecorator = InstanceMethodDecorator;
 
 /**
  * RequestMapping decorator, mapping HTTP request into target method
@@ -110,7 +109,7 @@ export function RequestMapping(
   path: string,
   option: RequestMappingOption = {},
 ): RequestMappingDecorator {
-  return <T extends {}>(prototype: T, method: keyof T & string): void => {
+  return <T extends {}>(prototype: T, method: keyof T, pd: TypedPropertyDescriptor<any>): void => {
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,
