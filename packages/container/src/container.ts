@@ -73,26 +73,24 @@ export class ResolveContext {
       ...compileParamInjectInstruction(paramInjectionMetadata),
     );
     const interceptorInstance = this.evalInstructions() as AsyncResolveInterceptor;
-    const cleanUp = this.dependentsCleanedUp;
-    const successorsFinished = new Promise<void>((resolve, reject) => {
-      this.dependentsCleanedUp = (e?: Error) => {
-        if (e) {
-          return reject(e);
-        }
-        return resolve();
-      };
-    }).then(
-      () => cleanUp(),
-      (e) => cleanUp(e),
-    );
     return new Promise<void>((resolve, reject) => {
-      const allFinished = this.allFinished;
+      const cleanUp = this.dependentsCleanedUp;
+      let errorHandler = reject;
       this.allFinished = interceptorInstance(async () => {
+        errorHandler = cleanUp;
         resolve();
-        return successorsFinished;
-      });
-      this.allFinished.catch(reject);
-      this.allFinished.finally(() => allFinished);
+        return new Promise<void>((resolve, reject) => {
+          this.dependentsCleanedUp = (e?: Error) => {
+            if (e) {
+              return reject(e);
+            }
+            return resolve();
+          };
+        });
+      }).then(
+        () => cleanUp(),
+        errorHandler
+      );
     });
   }
 
