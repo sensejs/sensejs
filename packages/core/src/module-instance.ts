@@ -1,6 +1,6 @@
 import {BindingType, Container, Scope, ServiceId} from '@sensejs/container';
 import {getModuleMetadata, ModuleMetadata} from './module';
-import {invokeMethodAsync} from './method-inject';
+import {invokeMethod} from './method-inject';
 import {ComponentFactory, ComponentMetadata, Constructor, FactoryProvider} from './interfaces';
 import {getComponentMetadata} from './component';
 
@@ -58,7 +58,7 @@ export class ModuleInstance<T extends {} = {}> {
     container: Container,
     method: keyof T,
   ) {
-    return invokeMethodAsync(container.createResolveContext(), this.moduleClass, method, []);
+    return invokeMethod(container.createResolveContext(), this.moduleClass, method);
   }
 
   async onDestroy(): Promise<void> {
@@ -103,14 +103,14 @@ export class ModuleInstance<T extends {} = {}> {
     this.bindComponents(this.moduleMetadata);
     this.moduleInstance = this.container.resolve<object>(this.moduleClass);
     for (const method of this.moduleMetadata.onModuleCreate) {
-      await invokeMethodAsync(this.container.createResolveContext(), this.moduleClass, method, []);
+      await invokeMethod(this.container.createResolveContext(), this.moduleClass, method);
     }
   }
 
   private async performDestroy() {
     if (this.moduleInstance) {
       for (const method of this.moduleMetadata.onModuleDestroy.reverse()) {
-        await invokeMethodAsync(this.container.createResolveContext(), this.moduleClass, method, []);
+        await invokeMethod(this.container.createResolveContext(), this.moduleClass, method);
       }
     }
   }
