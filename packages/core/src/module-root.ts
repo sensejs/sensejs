@@ -2,7 +2,7 @@ import {BindingType, Container, InvokeResult} from '@sensejs/container';
 import {ModuleInstance} from './module-instance';
 import {Constructor} from './interfaces';
 import {BackgroundTaskQueue, ProcessManager} from './builtins';
-import {invokeMethod} from './method-inject';
+import {invokeMethod} from './method-invoker';
 import {ModuleScanner} from './module-scanner';
 
 export class ModuleShutdownError extends Error {

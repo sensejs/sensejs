@@ -5,7 +5,7 @@ import {RequestContext, RequestInterceptor} from './interceptor';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
 import {Container, ResolveContext} from '@sensejs/container';
 import {Inject} from './decorators';
-import {MethodInvokerBuilder} from './method-inject';
+import {MethodInvokerBuilder} from './method-invoker';
 import {ModuleScanner} from './module-scanner';
 import {matchLabels} from './utils';
 
@@ -214,10 +214,7 @@ class EventPublisherFactory extends ComponentFactory<EventPublisher> {
     }
 
     prepare(channel: ServiceIdentifier): EventPublishPreparation {
-      return new EventPublisherFactory.EventPublishPreparation(
-        this.eventBus,
-        channel,
-      );
+      return new EventPublisherFactory.EventPublishPreparation(this.eventBus, channel);
     }
   };
 
@@ -312,7 +309,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
             return;
           }
           const resolveContext = this.container.createResolveContext();
-          bindingsMap.forEach((v, k)=> resolveContext.addTemporaryConstantBinding(k, v));
+          bindingsMap.forEach((v, k) => resolveContext.addTemporaryConstantBinding(k, v));
           acknowledge(
             methodInvokerBuilder
               .setResolveContext(resolveContext)

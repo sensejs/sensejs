@@ -1,6 +1,6 @@
 import {BindingType, Container, Scope, ServiceId} from '@sensejs/container';
 import {getModuleMetadata, ModuleMetadata} from './module';
-import {invokeMethod} from './method-inject';
+import {invokeMethod} from './method-invoker';
 import {ComponentFactory, ComponentMetadata, Constructor, FactoryProvider} from './interfaces';
 import {getComponentMetadata} from './component';
 
