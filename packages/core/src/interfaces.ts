@@ -10,11 +10,6 @@ export abstract class ComponentFactory<T> {
 
 export interface BindingSpec {
   scope?: Scope;
-  name?: string | symbol;
-  tags?: {
-    key: symbol | string | number;
-    value: unknown;
-  }[];
 }
 
 /**
@@ -40,6 +35,6 @@ export interface ConstantProvider<T> {
  */
 export interface ComponentMetadata<T extends {} = {}> extends BindingSpec {
   target: Constructor<T>;
+  bindParentConstructor: boolean;
   id?: ServiceIdentifier<T>;
-  cache: WeakMap<{}, T>;
 }

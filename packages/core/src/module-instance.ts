@@ -5,10 +5,14 @@ import {ComponentFactory, ComponentMetadata, Constructor, FactoryProvider} from 
 import {getComponentMetadata} from './component';
 
 function bindComponent(container: Container, constructor: Constructor, metadata: ComponentMetadata) {
-  const {target, id} = metadata;
+  const {target, id, bindParentConstructor} = metadata;
   container.add(constructor);
   if (id !== target) {
     container.addBinding({type: BindingType.ALIAS, id: id as ServiceId<any>, canonicalId: constructor});
+  }
+
+  if (!bindParentConstructor) {
+    return;
   }
 
   let parentConstructor = Object.getPrototypeOf(target);
@@ -54,10 +58,7 @@ export class ModuleInstance<T extends {} = {}> {
     return this.setupPromise;
   }
 
-  invokeMethod<K extends keyof T>(
-    container: Container,
-    method: keyof T,
-  ) {
+  invokeMethod<K extends keyof T>(container: Container, method: keyof T) {
     return invokeMethod(container.createResolveContext(), this.moduleClass, method);
   }
 
@@ -75,7 +76,7 @@ export class ModuleInstance<T extends {} = {}> {
       this.container.addBinding({
         type: BindingType.CONSTANT,
         value: constantProvider.value,
-        id: constantProvider.provide
+        id: constantProvider.provide,
       });
     });
 
@@ -89,11 +90,11 @@ export class ModuleInstance<T extends {} = {}> {
       this.container.addBinding({
         type: BindingType.FACTORY,
         id: provide,
-        factory: (factory: ComponentFactory<any>)=> {
+        factory: (factory: ComponentFactory<any>) => {
           return factory.build();
         },
         paramInjectionMetadata: [{index: 0, id: factory, optional: false}],
-        scope ,
+        scope,
       });
     });
   }
