@@ -7,7 +7,6 @@ import {
   MethodParamDecorator,
   ParamDecorator,
 } from '@sensejs/utility';
-import {decorateInjectedConstructorParam} from './constructor-inject';
 
 export interface InjectionDecorator extends ConstructorParamDecorator, InstanceMethodParamDecorator {}
 
@@ -28,26 +27,27 @@ export function Inject<T>(target: ServiceIdentifier<T>, option?: InjectOption<T,
       return inject(target, option?.transform)(prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      decorateInjectedConstructorParam(constructor, index, option?.transform);
       return inject(target, option?.transform)(constructor, undefined, index);
     })
     .build<ParamDecorator>();
 }
 
 export function Optional(): InjectionDecorator {
-  const decorator = optional() as ConstructorParamDecorator;
   return new DecoratorBuilder('Optional')
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {
       return optional()(prototype, name, index);
     })
     .whenApplyToConstructorParam((constructor, index) => {
-      return decorator(constructor, undefined, index);
+      return optional()(constructor, undefined, index);
     })
     .build<ParamDecorator>();
 }
 
 export interface InjectionConstraintDecorator extends ConstructorParamDecorator, MethodParamDecorator {}
 
+/**
+ * @deprecated
+ */
 export function Tagged(key: string | number | symbol, value: unknown): InjectionDecorator {
   return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {})
@@ -55,6 +55,9 @@ export function Tagged(key: string | number | symbol, value: unknown): Injection
     .build<InjectionConstraintDecorator>();
 }
 
+/**
+ * @deprecated
+ */
 export function Named(name: string | symbol): InjectionDecorator {
   return new DecoratorBuilder(`Named(name="${name.toString()}")`)
     .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {})
