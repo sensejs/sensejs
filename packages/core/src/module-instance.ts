@@ -8,7 +8,7 @@ function bindComponent(container: Container, constructor: Constructor, metadata:
   const {target, id, bindParentConstructor} = metadata;
   container.add(constructor);
   if (id !== target) {
-    container.addBinding({type: BindingType.ALIAS, id: id as ServiceId<any>, canonicalId: constructor});
+    container.addBinding({type: BindingType.ALIAS, id: id as ServiceId, canonicalId: constructor});
   }
 
   if (!bindParentConstructor) {
@@ -17,7 +17,9 @@ function bindComponent(container: Container, constructor: Constructor, metadata:
 
   let parentConstructor = Object.getPrototypeOf(target);
   while (parentConstructor.prototype) {
-    container.addBinding({type: BindingType.ALIAS, id: parentConstructor, canonicalId: constructor});
+    if (parentConstructor !== id) {
+      container.addBinding({type: BindingType.ALIAS, id: parentConstructor, canonicalId: constructor});
+    }
     parentConstructor = Object.getPrototypeOf(parentConstructor);
   }
 }

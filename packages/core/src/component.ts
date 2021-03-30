@@ -33,7 +33,7 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
   if (Reflect.hasOwnMetadata(COMPONENT_METADATA_KEY, target)) {
     throw new Error(`Decorator @${Component.name} cannot applied multiple times to "${target.name}`);
   }
-  const {id = target, scope = Scope.TRANSIENT, bindParentConstructor = true} = option;
+  const {id = target, scope = Scope.TRANSIENT, bindParentConstructor = false} = option;
   const metadata: ComponentMetadata<T> = {
     target,
     id,
