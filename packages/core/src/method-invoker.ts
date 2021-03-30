@@ -10,7 +10,6 @@ export function invokeMethod<T extends {}, K extends keyof T>(
   constructor: Constructor<T>,
   methodKey: keyof T,
 ): InvokeResult<T, K> {
-  resolveContext.setAllowUnbound(true);
   return resolveContext.invoke(constructor, methodKey);
 }
 
@@ -48,27 +47,16 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
     const contextIdentifier = option.contextIdentifier ?? Symbol();
     const context = option.contextFactory(this.resolveContext, this.targetConstructor, this.targetMethodKey);
     this.bind(contextIdentifier, context);
-    this.resolveContext.setAllowUnbound(true);
     try {
-      for (const i of this.interceptors) {
+      for (const interceptor of this.interceptors) {
         await this.resolveContext.intercept({
-          interceptorBuilder: (context: RequestContext, interceptor: RequestInterceptor) => {
+          interceptorBuilder: () => {
             return async (next) => {
-              return interceptor.intercept(context, next);
+              const instance = this.resolveContext.construct(interceptor);
+              return instance.intercept(context, next);
             };
           },
-          paramInjectionMetadata: [
-            {
-              id: contextIdentifier ?? Symbol(),
-              optional: !contextIdentifier,
-              index: 0,
-            },
-            {
-              id: i,
-              optional: false,
-              index: 1,
-            },
-          ],
+          paramInjectionMetadata: [],
         });
       }
       return invokeMethod(this.resolveContext, this.targetConstructor, this.targetMethodKey);

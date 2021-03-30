@@ -42,7 +42,6 @@ export class ResolveContext {
   private readonly requestSingletonCache: Map<any, any> = new Map();
   private readonly stack: any[] = [];
   private allFinished: Promise<void>;
-  private allowUnbound = false;
 
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
@@ -87,10 +86,7 @@ export class ResolveContext {
             return resolve();
           };
         });
-      }).then(
-        () => cleanUp(),
-        errorHandler
-      );
+      }).then(() => cleanUp(), errorHandler);
     });
   }
 
@@ -101,22 +97,21 @@ export class ResolveContext {
     return this.allFinished;
   }
 
-  setAllowUnbound(value: boolean): this {
-    this.allowUnbound = value;
-    return this;
-  }
-
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
     const self = this.evalInstructions() as T;
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy});
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy}, true);
     const proxyInstance = this.evalInstructions() as InstanceType<typeof proxy>;
     return proxyInstance.call(fn, self);
   }
 
   resolve<T>(target: ServiceId<T>): T {
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
+    return this.evalInstructions();
+  }
+  construct<T>(target: Constructor<T>): T {
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target}, true);
     return this.evalInstructions();
   }
 
@@ -178,7 +173,7 @@ export class ResolveContext {
     return false;
   }
 
-  private getBindingForPlan(target: ServiceId, optionalInject: boolean) {
+  private getBindingForPlan(target: ServiceId, optionalInject: boolean, allowUnbound: boolean) {
     const binding = this.internalGetBinding(target);
     if (binding) {
       return binding;
@@ -186,7 +181,7 @@ export class ResolveContext {
     if (optionalInject) {
       this.stack.push(undefined);
       return;
-    } else if (this.allowUnbound && typeof target === 'function') {
+    } else if (allowUnbound && typeof target === 'function') {
       const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(target));
       this.instructions.push(
         {
@@ -203,7 +198,7 @@ export class ResolveContext {
     throw new BindingNotFoundError(target);
   }
 
-  private performPlan(instruction: PlanInstruction) {
+  private performPlan(instruction: PlanInstruction, allowUnbound = false) {
     const {target, optional} = instruction;
     if (this.planingSet.has(target)) {
       throw new CircularDependencyError(target);
@@ -215,7 +210,7 @@ export class ResolveContext {
     if (this.resolveFromCache(target)) {
       return;
     }
-    const binding = this.getBindingForPlan(target, optional);
+    const binding = this.getBindingForPlan(target, optional, allowUnbound);
     if (!binding) {
       return;
     }

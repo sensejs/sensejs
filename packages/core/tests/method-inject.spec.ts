@@ -10,6 +10,7 @@ describe('@Inject', () => {
     class Test {}
 
     const container = new Container();
+    container.add(Test);
     container.addBinding({
       type: BindingType.CONSTANT,
       id: a,

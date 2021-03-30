@@ -165,8 +165,8 @@ describe('Module resolve', () => {
       @OnModuleCreate()
       onCreate(
         @Inject(unnamedTarget) unnamed: unknown,
-        @Inject(namedTarget)  named: unknown,
-        @Inject(taggedTarget)  tagged: unknown,
+        @Inject(namedTarget) named: unknown,
+        @Inject(taggedTarget) tagged: unknown,
       ) {}
 
       @OnModuleDestroy()
@@ -202,7 +202,7 @@ describe('Module resolve', () => {
       }
     }
 
-    @Component()
+    @Component({bindParentConstructor: true})
     class Child extends Parent {}
 
     @ModuleClass({
@@ -269,7 +269,6 @@ describe('Module resolve', () => {
       new Container(),
     );
     try {
-
       await instance.onSetup();
       await instance.onDestroy();
     } catch (e) {

@@ -253,7 +253,7 @@ describe('Kernel', () => {
       id: 'const2',
       value: value2,
     });
-    const context = await kernel.createResolveContext().setAllowUnbound(true);
+    const context = await kernel.createResolveContext();
     await context.intercept({
       interceptorBuilder: (param1: number) => {
         return async (next) => {
@@ -289,9 +289,7 @@ describe('Kernel', () => {
       method(@inject('const2') param1: number, param2: number) {}
     }
 
-    expect(() => kernel.createResolveContext().setAllowUnbound(true).invoke(Foo, 'method')).toThrow(
-      NoEnoughInjectMetadataError,
-    );
+    expect(() => kernel.createResolveContext().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
 
   test('scope', () => {
