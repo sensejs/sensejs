@@ -1,6 +1,5 @@
-import {loggerBuilder} from './mock-logger-builder';
-
 jest.mock('@sensejs/kafkajs-standalone');
+import '@sensejs/testing-utility/lib/mock-console';
 import {Component, createModule, Inject, LoggerBuilder, ProcessManager, RequestInterceptor} from '@sensejs/core';
 import {MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
@@ -110,7 +109,6 @@ describe('Subscriber', () => {
 
     const module = createMessageConsumerModule({
       requires: [ConfigModule, createModule({components: [Controller]})],
-      constants: [{provide: LoggerBuilder, value: loggerBuilder}],
       messageConsumerOption: {
         connectOption: {
           brokers: 'any-host',

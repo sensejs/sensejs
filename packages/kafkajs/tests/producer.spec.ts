@@ -1,7 +1,7 @@
 jest.mock('@sensejs/kafkajs-standalone');
-import {loggerBuilder} from './mock-logger-builder';
+import '@sensejs/testing-utility/lib/mock-console';
 import {MessageProducer} from '@sensejs/kafkajs-standalone';
-import {createModule, Inject, LoggerBuilder, ModuleClass, ModuleRoot} from '@sensejs/core';
+import {createModule, Inject, ModuleClass, ModuleRoot} from '@sensejs/core';
 import {createMessageProducerModule} from '../src';
 import {Subject} from 'rxjs';
 
@@ -18,7 +18,6 @@ describe('MessageProducerModule', () => {
     });
 
     const kafkaProducerModule = createMessageProducerModule({
-      constants: [{provide: LoggerBuilder, value: loggerBuilder}],
       messageProducerOption: {connectOption: {brokers: ['']}},
     });
 
@@ -49,7 +48,6 @@ describe('MessageProducerModule', () => {
     const moduleRoot = new ModuleRoot(
       createMessageProducerModule({
         requires: [ConfigModule],
-        constants: [{provide: LoggerBuilder, value: loggerBuilder}],
         messageProducerOption: {
           producerOption: {
             transactionTimeout: 1000,
