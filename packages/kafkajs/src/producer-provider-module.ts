@@ -48,29 +48,23 @@ export function createPooledProducerModule(option: PooledProducerModuleOption): 
     (fallback, injected) => _.merge({}, fallback, injected),
   );
 
-  @ModuleClass({
-    requires: [createModule(option)],
-    factories: [connectionFactory, configurationFactory],
-  })
+  @ModuleClass({requires: [createModule(option)], factories: [connectionFactory, configurationFactory]})
   class PooledProducerModule {
-    constructor(@InjectLogger() private logger: Logger) {}
+    constructor(
+      @InjectLogger() private logger: Logger,
+      @Inject(configurationFactory.provide) private option: MessageProducerOption,
+      @Inject(connectionFactory.factory)
+      private factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
+    ) {}
 
     @OnModuleCreate()
-    async onModuleCreate(
-      @Inject(connectionFactory.factory)
-      factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
-      @Inject(configurationFactory.provide)
-      option: MessageProducerOption,
-    ) {
-      await factory.connect({...option, logger: this.logger});
+    async onModuleCreate() {
+      await this.factory.connect({...this.option, logger: this.logger});
     }
 
     @OnModuleDestroy()
-    async onModuleDestroy(
-      @Inject(connectionFactory.factory)
-      factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
-    ) {
-      await factory.disconnect();
+    async onModuleDestroy() {
+      await this.factory.disconnect();
     }
   }
   return PooledProducerModule;
@@ -89,29 +83,23 @@ export function createSimpleProducerModule(option: SimpleProducerModuleOption): 
     (fallback, injected) => _.merge({}, fallback, injected),
   );
 
-  @ModuleClass({
-    requires: [createModule(option)],
-    factories: [connectionFactory, configurationFactory],
-  })
+  @ModuleClass({requires: [createModule(option)], factories: [connectionFactory, configurationFactory]})
   class SimpleProducerModule {
-    constructor(@InjectLogger() private logger: Logger) {}
+    constructor(
+      @InjectLogger() private logger: Logger,
+      @Inject(configurationFactory.provide) private option: MessageProducerOption,
+      @Inject(connectionFactory.factory)
+      private factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
+    ) {}
 
     @OnModuleCreate()
-    async onModuleCreate(
-      @Inject(connectionFactory.factory)
-      factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
-      @Inject(configurationFactory.provide)
-      option: MessageProducerOption,
-    ) {
-      await factory.connect({...option, logger: this.logger});
+    async onModuleCreate() {
+      await this.factory.connect({...this.option, logger: this.logger});
     }
 
     @OnModuleDestroy()
-    async onModuleDestroy(
-      @Inject(connectionFactory.factory)
-      factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
-    ) {
-      await factory.disconnect();
+    async onModuleDestroy() {
+      await this.factory.disconnect();
     }
   }
   return SimpleProducerModule;
