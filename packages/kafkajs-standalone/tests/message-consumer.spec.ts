@@ -21,6 +21,8 @@ jest.mock('kafkajs', () => {
   return {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     'Kafka': MockKafka,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    logLevel: { NOTHING: 0, ERROR: 1, WARN: 2, INFO: 4, DEBUG: 5, }
   };
 });
 

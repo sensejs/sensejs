@@ -1,15 +1,15 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, MessageProducer} from '../src';
 import {Subject} from 'rxjs';
-import {logLevel} from 'kafkajs';
+import config from 'config';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
 const BATCH_TOPIC = 'e2e-batch-topic' + Date.now();
 
-test('KafkaJS', async () => {
+test('Legacy message producer', async () => {
   const producerA = new MessageProducer({
-    connectOption: {brokers: ['kafka-1:9092'], clientId: 'kafkajs-1'},
+    connectOption: config.get('kafka.connectOption'),
     producerOption: {
       transactionalId: 'txid' + Date.now(),
       messageKeyProvider: () => 'key',
@@ -52,7 +52,7 @@ test('KafkaJS', async () => {
       groupId: 'e2etest-latest',
     },
     logOption: {
-      level: logLevel.NOTHING,
+      level: 'NOTHING',
     },
   });
 

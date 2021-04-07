@@ -21,6 +21,8 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
+    "@sensejs/utility": "workspace:*",
+    "lightning-pool": "^3.1.1",
     "long": "^4.0.0",
     "rxjs": "^6.6.7",
     "tslib": "^2.1.0"
@@ -29,6 +31,7 @@
     "kafkajs": "^1.14.0"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:*"
+    "@sensejs/testing-utility": "workspace:*",
+    "config": "^3.3.6"
   }
 }

@@ -3,7 +3,8 @@ import {
   Constructor,
   createModule,
   Inject,
-  LoggerBuilder,
+  Logger,
+  InjectLogger,
   ModuleClass,
   ModuleOption,
   OnModuleCreate,
@@ -13,7 +14,7 @@ import {
   ServiceIdentifier,
 } from '@sensejs/core';
 import {MessageProducer, MessageProducerOption} from '@sensejs/kafkajs-standalone';
-import {createLogOption, KafkaLogAdapterOption} from './logging';
+import {KafkaLogAdapterOption} from './logging';
 
 export interface ConfigurableMessageProducerOption extends Omit<MessageProducerOption, 'logOption'> {
   logOption?: KafkaLogAdapterOption;
@@ -53,10 +54,10 @@ export function createMessageProducerModule(option: MessageProducerModuleOption)
     requires: [createModule(option)],
     factories: [optionFactory, connectionFactory],
   })
-  class KafkaPublishModule {
+  class KafkaProducerModule {
     constructor(
-      @Inject(LoggerBuilder)
-      private loggerBuilder: LoggerBuilder,
+      @InjectLogger()
+      private logger: Logger,
       @Inject(connectionFactory.factory)
       private factory: AbstractConnectionFactory<MessageProducer, MessageProducerOption>,
       @Inject(optionFactory.provide)
@@ -65,8 +66,7 @@ export function createMessageProducerModule(option: MessageProducerModuleOption)
 
     @OnModuleCreate()
     async onCreate(): Promise<void> {
-      const {logOption, ...rest} = this.config;
-      await this.factory.connect({logOption: createLogOption(this.loggerBuilder, logOption), ...rest});
+      await this.factory.connect({...this.config, logger: this.logger});
     }
 
     @OnModuleDestroy()
@@ -75,5 +75,5 @@ export function createMessageProducerModule(option: MessageProducerModuleOption)
     }
   }
 
-  return KafkaPublishModule;
+  return KafkaProducerModule;
 }

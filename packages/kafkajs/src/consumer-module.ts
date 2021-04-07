@@ -2,6 +2,8 @@ import {
   Constructor,
   createModule,
   Inject,
+  InjectLogger,
+  Logger,
   LoggerBuilder,
   MethodInvokerBuilder,
   ModuleClass,
@@ -177,17 +179,17 @@ function KafkaConsumerHelperModule(option: MessageConsumerModuleOption, exportSy
   })
   class KafkaConsumerGroupModule {
     constructor(
-      @Inject(LoggerBuilder) private loggerBuilder: LoggerBuilder,
+      @InjectLogger() private logger: Logger,
       @Inject(factoryProvider.factory) private consumerGroupFactory: InstanceType<typeof factoryProvider.factory>,
       @Inject(optionProvider.provide) private config: ConfigurableMessageConsumerOption,
     ) {}
 
     @OnModuleCreate()
     async onCreate(): Promise<void> {
-      const {logOption, ...rest} = this.config;
+      const {...rest} = this.config;
       await this.consumerGroupFactory.connect({
-        logOption: createLogOption(this.loggerBuilder, logOption),
-        ...rest,
+        ...this.config,
+        logger: this.logger,
       });
     }
 

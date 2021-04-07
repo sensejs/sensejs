@@ -1,10 +1,16 @@
 import {Kafka, Offsets, Partitioners, Producer, ProducerConfig, RecordMetadata, TopicMessages} from 'kafkajs';
-import {KafkaClientOption, KafkaMessage, KafkaProducerOption, KafkaSendOption, MessageKeyProvider} from './types';
+import {KafkaClientOption, KafkaMessage, KafkaSendOption} from './types';
 import {createKafkaClient} from './create-client';
 
-export interface MessageProducerOption extends KafkaClientOption {
-  producerOption?: KafkaProducerOption;
+export interface LegacyMessageProducerOption extends KafkaClientOption {
+  producerOption?: LegacyKafkaProducerOption;
   sendOption?: KafkaSendOption;
+}
+export interface MessageKeyProvider {
+  (value: Buffer | string | null, topic: string): Buffer | string | null;
+}
+export interface LegacyKafkaProducerOption extends ProducerConfig {
+  messageKeyProvider?: MessageKeyProvider;
 }
 
 export interface BatchSendOption {
@@ -25,6 +31,9 @@ function defaultKeyPolicy() {
   return null;
 }
 
+/**
+ * @deprecated
+ */
 export class MessageProducer {
   private readonly client: Kafka;
   private producer?: Producer;
@@ -34,7 +43,7 @@ export class MessageProducer {
   private readonly messageKeyProvider: MessageKeyProvider;
   private readonly producerConfig: ProducerConfig;
 
-  constructor(private option: MessageProducerOption) {
+  constructor(private option: LegacyMessageProducerOption) {
     const {producerOption: {messageKeyProvider = defaultKeyPolicy, ...producerConfig} = {}} = option;
     this.client = createKafkaClient(option);
     this.messageKeyProvider = messageKeyProvider;
