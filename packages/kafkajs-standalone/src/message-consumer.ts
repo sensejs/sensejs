@@ -115,7 +115,7 @@ export class MessageConsumer {
         autoCommit: true,
         autoCommitInterval: this.commitOption?.commitInterval,
         eachBatchAutoResolve: false,
-        partitionsConsumedConcurrently: totalPartitions,
+        // partitionsConsumedConcurrently: totalPartitions,
         eachBatch: async (payload) => this.eachBatch(payload),
       });
     } finally {
