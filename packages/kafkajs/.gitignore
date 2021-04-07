@@ -1,0 +1,3 @@
+tests/config/*
+!tests/config/default.yaml
+!tests/config/custom-environment-variables.*
