@@ -14,7 +14,7 @@ import {
   ServiceIdentifier,
 } from '@sensejs/core';
 import {MessageProducer, MessageProducerOption} from '@sensejs/kafkajs-standalone';
-import {KafkaLogAdapterOption} from './logging';
+import {KafkaLogAdapterOption} from '@sensejs/kafkajs-standalone/src/logging';
 
 export interface ConfigurableMessageProducerOption extends Omit<MessageProducerOption, 'logOption'> {
   logOption?: KafkaLogAdapterOption;
@@ -25,6 +25,9 @@ export interface MessageProducerModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<ConfigurableMessageProducerOption>;
 }
 
+/**
+ * @deprecated
+ */
 export function createMessageProducerModule(option: MessageProducerModuleOption): Constructor {
   const optionFactory = provideOptionInjector(
     option.messageProducerOption,

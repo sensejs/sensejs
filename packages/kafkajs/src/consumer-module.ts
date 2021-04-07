@@ -4,7 +4,6 @@ import {
   Inject,
   InjectLogger,
   Logger,
-  LoggerBuilder,
   MethodInvokerBuilder,
   ModuleClass,
   ModuleOption,
@@ -17,8 +16,17 @@ import {
   ServiceIdentifier,
 } from '@sensejs/core';
 import {Container} from '@sensejs/container';
-import {KafkaReceivedMessage, MessageConsumer, MessageConsumerOption} from '@sensejs/kafkajs-standalone';
-import {MessageConsumeContext} from './message-consume-context';
+import {
+  KafkaBatchConsumeMessageParam,
+  KafkaReceivedMessage,
+  MessageConsumer,
+  MessageConsumerOption,
+} from '@sensejs/kafkajs-standalone';
+import {
+  BatchedMessageConsumeContext,
+  MessageConsumeContext,
+  SimpleMessageConsumeContext,
+} from './message-consume-context';
 import lodash from 'lodash';
 import {
   getSubscribeControllerMetadata,
@@ -26,7 +34,7 @@ import {
   SubscribeControllerMetadata,
   SubscribeTopicOption,
 } from './consumer-decorators';
-import {createLogOption, KafkaLogAdapterOption} from './logging';
+import {KafkaLogAdapterOption} from '@sensejs/kafkajs-standalone/src/logging';
 
 export interface ConfigurableMessageConsumerOption extends Omit<MessageConsumerOption, 'logOption'> {
   logOption?: KafkaLogAdapterOption;
@@ -123,13 +131,27 @@ function scanSubscriber(
         if (typeof subscribeOption.topic !== 'string') {
           throw new TypeError('subscribe topic must be a string');
         }
-
-        const consumeCallback = this.getConsumeCallback(
-          methodInvokerBuilder.clone().addInterceptor(...subscribeMetadata.interceptors),
-          controllerMetadata.target,
-          methodKey,
-        );
-        this.messageConsumer.subscribe(subscribeOption.topic, consumeCallback, subscribeOption.fromBeginning);
+        const {topic, fromBeginning} = subscribeOption;
+        switch (subscribeMetadata.type) {
+          case 'simple':
+            {
+              const consumeCallback = this.getConsumeCallback(
+                methodInvokerBuilder.clone().addInterceptor(...subscribeMetadata.interceptors),
+                controllerMetadata.target,
+                methodKey,
+              );
+              this.messageConsumer.subscribe(topic, consumeCallback, fromBeginning);
+            }
+            break;
+          case 'batched': {
+            const consumer = this.getBatchConsumerCallback(
+              methodInvokerBuilder.clone().addInterceptor(...subscribeMetadata.interceptors),
+              controllerMetadata.target,
+              methodKey,
+            );
+            this.messageConsumer.subscribeBatched({topic, consumer, fromBeginning, autoResolve: false});
+          }
+        }
       }
     }
 
@@ -141,15 +163,35 @@ function scanSubscriber(
       return async (message: KafkaReceivedMessage) => {
         await methodInvokerBuilder.build(target, method).invoke({
           contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
-            return new MessageConsumeContext(
+            return new SimpleMessageConsumeContext(
               resolveContext,
-              message,
-              this.messageConsumer.consumerGroupId,
               targetConstructor,
               targetMethodKey,
+              this.messageConsumer.consumerGroupId,
+              message,
             );
           },
           contextIdentifier: MessageConsumeContext,
+        });
+      };
+    }
+    private getBatchConsumerCallback<T>(
+      methodInvokerBuilder: MethodInvokerBuilder<BatchedMessageConsumeContext>,
+      target: Constructor<T>,
+      method: keyof T,
+    ) {
+      return async (batch: KafkaBatchConsumeMessageParam) => {
+        await methodInvokerBuilder.build(target, method).invoke({
+          contextFactory: (container, targetConstructor, targetMethodKey) => {
+            return new BatchedMessageConsumeContext(
+              container,
+              targetConstructor,
+              targetMethodKey,
+              this.messageConsumer.consumerGroupId,
+              batch,
+            );
+          },
+          contextIdentifier: BatchedMessageConsumeContext,
         });
       };
     }

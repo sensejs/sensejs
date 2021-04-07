@@ -1,11 +1,21 @@
 import {Component, Constructor, RequestInterceptor, ServiceIdentifier} from '@sensejs/core';
-import {MessageConsumeContext} from './message-consume-context';
+import {BatchedMessageConsumeContext, MessageConsumeContext} from './message-consume-context';
 
-export interface SubscribeTopicMetadata {
+export interface BatchedSubscribeTopicMetadata {
+  type: 'batched';
+  fallbackOption?: SubscribeTopicOption;
+  interceptors: Constructor<RequestInterceptor<BatchedMessageConsumeContext>>[];
+  injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
+}
+
+export interface SimpleSubscribeTopicMetadata {
+  type: 'simple';
   fallbackOption?: SubscribeTopicOption;
   interceptors: Constructor<RequestInterceptor<MessageConsumeContext>>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
+
+export type SubscribeTopicMetadata = SimpleSubscribeTopicMetadata | BatchedSubscribeTopicMetadata;
 
 export interface SubscribeTopicOption {
   topic?: string;
@@ -48,20 +58,43 @@ export function getSubscribeControllerMetadata(constructor: {}): SubscribeContro
   return Reflect.getMetadata(SUBSCRIBE_CONTROLLER_METADATA_KEY, constructor);
 }
 
-interface InjectedSubscribeTopicDecoratorOption {
+export interface SimpleSubscribeTopicDecoratorOption {
   option?: SubscribeTopicOption;
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
   interceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
 }
+export interface BatchedSubscribeTopicDecoratorOption {
+  option?: SubscribeTopicOption;
+  injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
+  interceptors?: Constructor<RequestInterceptor<BatchedMessageConsumeContext>>[];
+}
 
-export function SubscribeTopic(option: InjectedSubscribeTopicDecoratorOption) {
+export function SubscribeTopic(option: SimpleSubscribeTopicDecoratorOption) {
   return <T extends {}>(prototype: T, method: keyof T): void => {
     const targetMethod = prototype[method];
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
     const {option: fallbackOption, injectOptionFrom, interceptors = []} = option;
-    const metadata: SubscribeTopicMetadata = {
+    const metadata: SimpleSubscribeTopicMetadata = {
+      type: 'simple',
+      fallbackOption,
+      interceptors,
+      injectOptionFrom,
+    };
+    setSubscribeTopicMetadata(targetMethod, metadata);
+  };
+}
+
+export function BatchedSubscribeTopic(option: BatchedSubscribeTopicDecoratorOption) {
+  return <T extends {}>(prototype: T, method: keyof T): void => {
+    const targetMethod = prototype[method];
+    if (typeof targetMethod !== 'function') {
+      throw new Error('Request mapping decorator must be applied to a function');
+    }
+    const {option: fallbackOption, injectOptionFrom, interceptors = []} = option;
+    const metadata: BatchedSubscribeTopicMetadata = {
+      type: 'batched',
       fallbackOption,
       interceptors,
       injectOptionFrom,
