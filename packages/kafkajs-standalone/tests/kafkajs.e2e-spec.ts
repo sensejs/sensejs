@@ -8,9 +8,11 @@ const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
 const BATCH_TOPIC = 'e2e-batch-topic' + Date.now();
 
 test('Legacy message producer', async () => {
+  const transactionalId = 'transactionalId' + Date.now();
   const producerA = new MessageProducer({
     connectOption: config.get('kafka.connectOption'),
     producerOption: {
+      transactionalId,
       messageKeyProvider: () => 'key',
     },
   });
@@ -46,7 +48,7 @@ test('Legacy message producer', async () => {
   const batchedConsumerStubA = jest.fn().mockImplementationOnce(() => observableBatchA.complete());
   const consumerStubB = jest.fn().mockImplementationOnce(() => observableB.complete());
   const messageConsumerA = new MessageConsumer({
-    connectOption: {brokers: ['kafka-2:9092'], clientId: 'kafkajs-2'},
+    connectOption: config.get('kafka.connectOption'),
     fetchOption: {
       groupId: 'e2etest-latest',
       retry: {
@@ -73,7 +75,7 @@ test('Legacy message producer', async () => {
   });
 
   const messageConsumerB = new MessageConsumer({
-    connectOption: {brokers: ['kafka-3:9092'], clientId: 'kafkajs-3'},
+    connectOption: config.get('kafka.connectOption'),
     fetchOption: {
       groupId: 'e2etest-earliest',
     },
