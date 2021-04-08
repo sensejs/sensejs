@@ -1,9 +1,12 @@
-import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage as KafkaJsMessage} from 'kafkajs';
+import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage as KafkaJsMessage, RetryOptions} from 'kafkajs';
 import {WorkerController} from './worker-synchronizer';
 import {createKafkaClient} from './create-client';
 import {KafkaBatchConsumeMessageParam, KafkaClientOption, KafkaReceivedMessage} from './types';
+import {Observable} from 'rxjs';
 
-export type KafkaFetchOption = ConsumerConfig;
+export interface KafkaFetchOption extends Exclude<ConsumerConfig, 'retry'> {
+  retry?: RetryOptions;
+}
 
 export interface KafkaCommitOption {
   commitInterval: number;
@@ -12,6 +15,7 @@ export interface KafkaCommitOption {
 export interface MessageConsumerOption extends KafkaClientOption {
   fetchOption: KafkaFetchOption;
   commitOption?: KafkaCommitOption;
+  onCrash?: (e?: Error) => Promise<boolean>;
 }
 
 export interface MessageConsumeCallback {
@@ -48,6 +52,7 @@ export class MessageConsumer {
   private client: Kafka;
   private consumer: Consumer;
   private consumeOptions: Map<string, ConsumeOption> = new Map();
+  private crashPromise?: Promise<void>;
   private runPromise?: Promise<unknown>;
   private workerController = new WorkerController<boolean>();
   private startedPromise?: Promise<void>;
@@ -57,7 +62,22 @@ export class MessageConsumer {
 
   constructor(option: MessageConsumerOption) {
     this.client = createKafkaClient(option);
-    this.consumer = this.client.consumer(option.fetchOption);
+    const {retry, ...rest} = option.fetchOption;
+    let crashed!: (e: Error) => void;
+    this.crashPromise = new Promise<void>((resolve, reject) => {
+      crashed = reject;
+    });
+
+    this.consumer = this.client.consumer({
+      retry: {
+        ...retry,
+        restartOnFailure: async (e) => {
+          crashed(e);
+          return false;
+        },
+      },
+      ...rest,
+    });
     this.commitOption = option.commitOption;
     this.consumerGroupId = option.fetchOption.groupId;
   }
@@ -71,6 +91,13 @@ export class MessageConsumer {
     const {topic, ...rest} = option;
     this.consumeOptions.set(topic, {type: 'batch', ...rest});
     return this;
+  }
+
+  async wait(): Promise<void> {
+    if (!this.runPromise) {
+      throw new Error('The message consumer is not started');
+    }
+    await Promise.race([this.runPromise, this.crashPromise]);
   }
 
   async start(): Promise<void> {
