@@ -1,6 +1,5 @@
-import {loggerBuilder} from './mock-logger-builder';
-
 jest.mock('@sensejs/kafkajs-standalone');
+import {loggerBuilder} from './mock-logger-builder';
 import {Component, createModule, Inject, LoggerBuilder, ProcessManager, RequestInterceptor} from '@sensejs/core';
 import {MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
@@ -79,6 +78,7 @@ describe('Subscriber', () => {
   test('consume message', async () => {
     const startSpy = jest.spyOn(MessageConsumer.prototype, 'start').mockResolvedValue();
     const stopSpy = jest.spyOn(MessageConsumer.prototype, 'stop').mockResolvedValue();
+    jest.spyOn(MessageConsumer.prototype, 'wait').mockResolvedValue();
 
     function mockSubscribe(this: MessageConsumer, topic: string, callback: Function) {
       expect(startSpy).not.toHaveBeenCalled();
