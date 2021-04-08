@@ -13,7 +13,7 @@ script:
   - docker-compose run -T test
 
 install:
-  - bash scripts/build-docker.sh
+  - docker build .
 
 before_install:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
