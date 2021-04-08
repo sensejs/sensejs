@@ -6,9 +6,7 @@ async function prepareConsumeAndTopic(groupId: string, topic: string, message?: 
     brokers: ['kafka-1:9092'],
   };
   const producer = new MessageProducer({
-    connectOption: {
-      brokers: ['kafka-1:9092'],
-    },
+    connectOption,
   });
 
   const firstMessage = new Date().toString();
@@ -23,6 +21,11 @@ async function prepareConsumeAndTopic(groupId: string, topic: string, message?: 
     connectOption,
     fetchOption: {
       groupId,
+      retry: {
+        retries: 1,
+        initialRetryTime: 0,
+        maxRetryTime: 0,
+      },
     },
   });
   return consumer;
@@ -39,4 +42,6 @@ test('Handle crash', async () => {
   await expect(consumer.wait()).rejects.toThrowError();
   await started;
   await consumer.stop();
+  // Workaround bug of kafkajs teardown bug
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 }, 30000);
