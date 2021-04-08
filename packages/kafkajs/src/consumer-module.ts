@@ -8,6 +8,7 @@ import {
   ModuleScanner,
   OnModuleCreate,
   OnModuleDestroy,
+  ProcessManager,
   provideConnectionFactory,
   provideOptionInjector,
   RequestInterceptor,
@@ -65,6 +66,7 @@ function scanSubscriber(
     constructor(
       @Inject(Container) private container: Container,
       @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
+      @Inject(ProcessManager) private pm: ProcessManager,
     ) {
       if (option.globalInterceptors) {
         this.methodInvokerBuilder.addInterceptor(...option.globalInterceptors);
@@ -94,7 +96,9 @@ function scanSubscriber(
         });
       });
 
-      return this.messageConsumer.start();
+      const promise = this.messageConsumer.start();
+      this.messageConsumer.wait().catch((e) => this.pm.shutdown(e));
+      return promise;
     }
 
     @OnModuleDestroy()
