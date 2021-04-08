@@ -11,7 +11,6 @@ test('Legacy message producer', async () => {
   const producerA = new MessageProducer({
     connectOption: config.get('kafka.connectOption'),
     producerOption: {
-      transactionalId: 'txid' + Date.now(),
       messageKeyProvider: () => 'key',
     },
   });
@@ -50,6 +49,10 @@ test('Legacy message producer', async () => {
     connectOption: {brokers: ['kafka-2:9092'], clientId: 'kafkajs-2'},
     fetchOption: {
       groupId: 'e2etest-latest',
+      retry: {
+        retries: 1,
+        initialRetryTime: 100,
+      },
     },
     logOption: {
       level: 'NOTHING',
@@ -115,4 +118,4 @@ test('Legacy message producer', async () => {
   await messageConsumerB.stop();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));
   expect(consumerStubB).toHaveBeenCalledWith(firstMessage);
-}, 30000);
+}, 60000);
