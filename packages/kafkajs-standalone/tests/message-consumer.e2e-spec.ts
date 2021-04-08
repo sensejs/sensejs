@@ -1,8 +1,6 @@
 import '@sensejs/testing-utility/lib/mock-console';
-import {MessageConsumer, MessageProducer, SimpleKafkaJsProducerProvider} from '../src';
-import {Subject} from 'rxjs';
+import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src';
 import config from 'config';
-import {SimpleKafkaJsMessageProducer} from '../src/simple-message-producer';
 
 async function prepareConsumeAndTopic(groupId: string, topic: string, message?: string) {
   const connectOption = config.get('kafka.connectOption') as any;
@@ -23,6 +21,11 @@ async function prepareConsumeAndTopic(groupId: string, topic: string, message?: 
     connectOption,
     fetchOption: {
       groupId,
+      retry: {
+        retries: 1,
+        initialRetryTime: 0,
+        maxRetryTime: 0,
+      },
     },
     logOption: {
       level: 'NOTHING',
@@ -42,4 +45,6 @@ test('Handle crash', async () => {
   await expect(consumer.wait()).rejects.toThrowError();
   await started;
   await consumer.stop();
+  // Workaround bug of kafkajs teardown bug
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 }, 30000);
