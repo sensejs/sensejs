@@ -76,7 +76,8 @@ services:
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
   test:
-    image: sensejs
+    build:
+      context: .
     depends_on:
       - kafka-1
       - kafka-2
