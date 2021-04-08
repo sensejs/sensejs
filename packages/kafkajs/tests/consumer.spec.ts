@@ -69,6 +69,7 @@ describe('Subscriber', () => {
   test('consume message', async () => {
     const startSpy = jest.spyOn(MessageConsumer.prototype, 'start').mockResolvedValue();
     const stopSpy = jest.spyOn(MessageConsumer.prototype, 'stop').mockResolvedValue();
+    jest.spyOn(MessageConsumer.prototype, 'wait').mockResolvedValue();
 
     function mockSubscribe(this: MessageConsumer, topic: string, callback: Function) {
       expect(startSpy).not.toHaveBeenCalled();
