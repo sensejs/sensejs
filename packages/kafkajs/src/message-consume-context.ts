@@ -62,6 +62,9 @@ export class BatchedMessageConsumeContext extends MessageConsumeContext {
   }
 }
 
+/**
+ * @deprecated
+ */
 export function InjectSubscribeContext(transform: Transformer = (x) => x): InjectionDecorator {
   return Inject(MessageConsumeContext, {transform});
 }

@@ -1,17 +1,21 @@
-jest.mock('@sensejs/kafkajs-standalone');
+import {Batch, EachBatchPayload} from 'kafkajs';
 import '@sensejs/testing-utility/lib/mock-console';
-import {Component, createModule, Inject, LoggerBuilder, ProcessManager, RequestInterceptor} from '@sensejs/core';
-import {MessageConsumer} from '@sensejs/kafkajs-standalone';
+import {Component, createModule, Inject, ProcessManager, RequestInterceptor} from '@sensejs/core';
+import {BatchSubscribeOption, MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
-  MessageConsumeContext,
+  BatchedMessageConsumeContext,
+  BatchedSubscribeTopic,
   createMessageConsumerModule,
-  InjectSubscribeContext,
   Message,
+  MessageConsumeContext,
+  SimpleMessageConsumeContext,
   SubscribeController,
   SubscribeTopic,
 } from '../src';
 import {Subject} from 'rxjs';
 import {ApplicationRunner} from '@sensejs/core/lib/entry-point';
+
+jest.mock('@sensejs/kafkajs-standalone');
 
 describe('Subscribe decorators', () => {
   test('Duplicated @SubscribeTopic', () => {
@@ -37,6 +41,7 @@ describe('Subscriber', () => {
   const brokers = `host_${Date.now()}`; // for random string
   const groupId = `group_${Date.now()}`;
   const topic = `topic_${Date.now()}`;
+  const batchedTopic = `topic_${Date.now()}`;
   const ConfigModule = createModule({
     constants: [
       {
@@ -70,18 +75,48 @@ describe('Subscriber', () => {
     const startSpy = jest.spyOn(MessageConsumer.prototype, 'start').mockResolvedValue();
     const stopSpy = jest.spyOn(MessageConsumer.prototype, 'stop').mockResolvedValue();
     jest.spyOn(MessageConsumer.prototype, 'wait').mockResolvedValue();
+    const emitBatchMessage = jest.fn();
 
     function mockSubscribe(this: MessageConsumer, topic: string, callback: Function) {
       expect(startSpy).not.toHaveBeenCalled();
       startSpy.mockImplementation(async () => {
         setImmediate(() => {
-          callback({topic: 'foo', value: 'value', key: 'key', partition: 0, offset: '0'});
+          callback({topic, value: 'value', key: 'key', partition: 0, offset: '0'});
+        });
+      });
+      return this;
+    }
+
+    function mockSubscribeBatched(this: MessageConsumer, option: BatchSubscribeOption) {
+      expect(emitBatchMessage).not.toHaveBeenCalled();
+      emitBatchMessage.mockImplementation(async () => {
+        setImmediate(() => {
+          option.consumer(({
+            batch: {
+              topic: option.topic,
+              messages: [
+                {
+                  value: Buffer.from('value'),
+                  key: Buffer.from('key'),
+                  timestamp: new Date().toISOString(),
+                  size: 0,
+                  attributes: 0,
+                  headers: {},
+                  offset: '0',
+                },
+              ],
+              partition: 0,
+            } as Batch,
+            heartbeat: jest.fn(),
+            resolveOffset: jest.fn(),
+          } as unknown) as EachBatchPayload);
         });
       });
       return this;
     }
 
     const subscribeSpy = jest.spyOn(MessageConsumer.prototype, 'subscribe').mockImplementation(mockSubscribe);
+    jest.spyOn(MessageConsumer.prototype, 'subscribeBatched').mockImplementation(mockSubscribeBatched);
     const symbolA = Symbol(),
       symbolB = Symbol(),
       symbolC = Symbol();
@@ -96,14 +131,30 @@ describe('Subscriber', () => {
         option: {fromBeginning: true},
         interceptors: [interceptorC],
       })
-      foo(
-        @InjectSubscribeContext() ctx: MessageConsumeContext,
+      simple(
+        @Inject(SimpleMessageConsumeContext) ctx: MessageConsumeContext,
         @Inject(symbolA) global: any,
         @Inject(symbolB) controller: any,
         @Inject(symbolC) fromTopic: any,
         @Message() message: string | Buffer,
         @Inject(ProcessManager) processManager: ProcessManager,
       ) {
+        // TODO: Perform e2e test to make following assert possible
+        // expect(ctx.consumerGroup).toBe(groupId);
+        emitBatchMessage();
+      }
+
+      @BatchedSubscribeTopic({
+        option: {fromBeginning: true, topic: batchedTopic},
+        interceptors: [interceptorC],
+      })
+      batched(
+        @Inject(BatchedMessageConsumeContext) ctx: BatchedMessageConsumeContext,
+        @Inject(ProcessManager) processManager: ProcessManager,
+      ) {
+        // TODO: Perform e2e test to make following assert possible
+        // expect(ctx.consumerGroup).toBe(groupId);
+        // expect(ctx.partition);
         processManager.shutdown();
       }
     }
