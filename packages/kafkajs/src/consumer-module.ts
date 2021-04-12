@@ -167,15 +167,17 @@ function scanSubscriber(
       return async (message: KafkaReceivedMessage) => {
         await methodInvokerBuilder.build(target, method).invoke({
           contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
-            return new SimpleMessageConsumeContext(
+            const context = new SimpleMessageConsumeContext(
               resolveContext,
               targetConstructor,
               targetMethodKey,
               this.messageConsumer.consumerGroupId,
               message,
             );
+            resolveContext.addTemporaryConstantBinding(MessageConsumeContext, context);
+            resolveContext.addTemporaryConstantBinding(SimpleMessageConsumeContext, context);
+            return context;
           },
-          contextIdentifier: MessageConsumeContext,
         });
       };
     }
@@ -186,16 +188,18 @@ function scanSubscriber(
     ) {
       return async (batch: KafkaBatchConsumeMessageParam) => {
         await methodInvokerBuilder.build(target, method).invoke({
-          contextFactory: (container, targetConstructor, targetMethodKey) => {
-            return new BatchedMessageConsumeContext(
-              container,
+          contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
+            const context = new BatchedMessageConsumeContext(
+              resolveContext,
               targetConstructor,
               targetMethodKey,
               this.messageConsumer.consumerGroupId,
               batch,
             );
+            resolveContext.addTemporaryConstantBinding(MessageConsumeContext, context);
+            resolveContext.addTemporaryConstantBinding(BatchedMessageConsumeContext, context);
+            return context;
           },
-          contextIdentifier: BatchedMessageConsumeContext,
         });
       };
     }
