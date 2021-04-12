@@ -208,6 +208,7 @@ fabric.properties
 packages/**/lib/
 examples/**/lib/
 tools/**/lib/
+**/config/local.*
 temp/
 # typeorm test use temp.db for sqlite3 driver
 temp.*

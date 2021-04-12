@@ -75,8 +75,11 @@ services:
       # suppress verbosity
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
-  test:
-    image: sensejs
+  workspace-test:
+    build:
+      context: .
+      args:
+        NODE_VERSION: ${NODE_VERSION-14}
     depends_on:
       - kafka-1
       - kafka-2
