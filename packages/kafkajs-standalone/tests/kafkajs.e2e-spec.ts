@@ -1,5 +1,5 @@
 import '@sensejs/testing-utility/lib/mock-console';
-import {MessageConsumer, MessageProducer} from '../src';
+import {MessageConsumer, MessageProducer, SimpleKafkaJsProducerProvider} from '../src';
 import {Subject} from 'rxjs';
 import config from 'config';
 
@@ -7,25 +7,41 @@ const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
 const BATCH_TOPIC = 'e2e-batch-topic' + Date.now();
 
-test('Legacy message producer', async () => {
+test('message producer e2e test', async () => {
   const transactionalId = 'transactionalId' + Date.now();
-  const producerA = new MessageProducer({
+  const legacyTransactionalId = 'legacyTransactionalId' + Date.now();
+  const provider = new SimpleKafkaJsProducerProvider({
+    connectOption: config.get('kafka.connectOption'),
+  });
+  const legacyProducer = new MessageProducer({
     connectOption: config.get('kafka.connectOption'),
     producerOption: {
-      transactionalId,
+      transactionalId: legacyTransactionalId,
       messageKeyProvider: () => 'key',
     },
   });
+  await legacyProducer.connect();
 
   const firstMessage = new Date().toString();
   let stopped = false;
-  await producerA.connect();
-  await producerA.send(TOPIC, {value: firstMessage});
 
   async function sendBatch() {
+    const producerA = await provider.create();
+    await producerA.sendMessage(TOPIC, {value: firstMessage});
+    await legacyProducer.send(TOPIC, {value: firstMessage});
     while (!stopped) {
       await new Promise((done) => setTimeout(done, 1000));
-      await producerA.sendBatch([
+      await producerA.sendMessageBatch([
+        {
+          topic: TOPIC,
+          messages: [{value: new Date().toString()}],
+        },
+        {
+          topic: BATCH_TOPIC,
+          messages: [{value: new Date().toString()}],
+        },
+      ]);
+      await legacyProducer.sendBatch([
         {
           topic: TOPIC,
           messages: [{value: new Date().toString()}],
@@ -36,7 +52,7 @@ test('Legacy message producer', async () => {
         },
       ]);
     }
-    await producerA.disconnect();
+    await producerA.release();
   }
 
   const producingPromise = sendBatch();
@@ -89,7 +105,17 @@ test('Legacy message producer', async () => {
       }
       stopped = true;
       const {topic, partition, offset} = message;
-      await producerA.sendBatch(
+      const producer = await provider.createTransactional(transactionalId);
+      await producer.sendMessageBatch([
+        {
+          topic: TX_TOPIC,
+          messages: [{key: new Date().toString(), value: new Date().toString()}],
+        },
+      ]);
+      await producer.sendOffset('e2etest-earliest', {topics: [{topic, partitions: [{partition, offset}]}]});
+      await producer.commit();
+      await producer.release();
+      await legacyProducer.sendBatch(
         [
           {
             topic: TX_TOPIC,
@@ -118,6 +144,8 @@ test('Legacy message producer', async () => {
   await messageConsumerA.stop();
   await messageConsumerA.stop(); // safe to call stop multiple times
   await messageConsumerB.stop();
+  await legacyProducer.disconnect();
+  await provider.destroy();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));
   expect(consumerStubB).toHaveBeenCalledWith(firstMessage);
 }, 60000);
