@@ -9,7 +9,10 @@ export abstract class MessageConsumeContext extends RequestContext {
   abstract readonly consumerGroup: string;
   abstract readonly topic: string;
   abstract readonly partition: number;
+  /** @deprecated */
   abstract readonly offset: string;
+  abstract readonly firstOffset: string | null;
+  abstract readonly lastOffset: string;
   protected constructor() {
     super();
   }
@@ -18,6 +21,8 @@ export class SimpleMessageConsumeContext extends MessageConsumeContext {
   readonly topic: string;
   readonly partition: number;
   readonly offset: string;
+  readonly firstOffset: string;
+  readonly lastOffset: string;
   constructor(
     readonly resolveContext: ResolveContext,
     readonly targetConstructor: Constructor,
@@ -29,6 +34,8 @@ export class SimpleMessageConsumeContext extends MessageConsumeContext {
     this.topic = message.topic;
     this.partition = message.partition;
     this.offset = message.offset;
+    this.firstOffset = message.offset;
+    this.lastOffset = message.offset;
   }
 }
 
@@ -36,6 +43,8 @@ export class BatchedMessageConsumeContext extends MessageConsumeContext {
   readonly topic: string;
   readonly partition: number;
   readonly offset: string;
+  readonly firstOffset: string | null;
+  readonly lastOffset: string;
   constructor(
     readonly resolveContext: ResolveContext,
     readonly targetConstructor: Constructor,
@@ -47,6 +56,8 @@ export class BatchedMessageConsumeContext extends MessageConsumeContext {
     this.topic = this.batchedConsumeParam.batch.topic;
     this.partition = this.batchedConsumeParam.batch.partition;
     this.offset = this.batchedConsumeParam.batch.lastOffset();
+    this.firstOffset = this.batchedConsumeParam.batch.firstOffset() ?? null;
+    this.lastOffset = this.batchedConsumeParam.batch.lastOffset();
   }
 
   heartbeat() {

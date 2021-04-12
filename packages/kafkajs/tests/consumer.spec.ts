@@ -109,6 +109,8 @@ describe('Subscriber', () => {
             } as Batch,
             heartbeat: jest.fn(),
             resolveOffset: jest.fn(),
+            firstOffset: () => '0',
+            lastOffset: () => '1',
           } as unknown) as EachBatchPayload);
         });
       });
