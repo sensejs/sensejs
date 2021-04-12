@@ -106,11 +106,11 @@ describe('Subscriber', () => {
                 },
               ],
               partition: 0,
+              firstOffset: () => '0',
+              lastOffset: () => '1',
             } as Batch,
             heartbeat: jest.fn(),
             resolveOffset: jest.fn(),
-            firstOffset: () => '0',
-            lastOffset: () => '1',
           } as unknown) as EachBatchPayload);
         });
       });
