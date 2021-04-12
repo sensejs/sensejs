@@ -21,6 +21,9 @@ export type ContextFactory<X> = (
 
 export interface MethodInvokeOption<X> {
   contextFactory: ContextFactory<X>;
+  /**
+   * @deprecated Bind components through resolveContext instead, which is the 1st param of contextFactory
+   */
   contextIdentifier?: ServiceIdentifier<X>;
 }
 
@@ -44,9 +47,11 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
   }
 
   async invoke(option: MethodInvokeOption<X>) {
-    const contextIdentifier = option.contextIdentifier ?? Symbol();
+    const contextIdentifier = option.contextIdentifier;
     const context = option.contextFactory(this.resolveContext, this.targetConstructor, this.targetMethodKey);
-    this.bind(contextIdentifier, context);
+    if (contextIdentifier) {
+      this.bind(contextIdentifier, context);
+    }
     try {
       for (const interceptor of this.interceptors) {
         await this.resolveContext.intercept({
