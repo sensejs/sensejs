@@ -34,7 +34,7 @@ async function prepareConsumeAndTopic(groupId: string, topic: string, message?: 
   return consumer;
 }
 
-test('Handle crash', async () => {
+test.skip('Handle crash', async () => {
   const topic = 'handle-crash-e2e-topic-' + Date.now();
   const groupId = 'handle-crash-consumer-A' + Date.now();
   const consumer = await prepareConsumeAndTopic(groupId, topic, 'foobar');
