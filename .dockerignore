@@ -221,3 +221,4 @@ docker-compose.yml
 commitlint.config.js
 .git/
 scripts/
+**/config/local.yaml
