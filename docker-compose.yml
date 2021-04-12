@@ -88,4 +88,4 @@ services:
       END_TO_END_TEST: 'true'
     volumes:
       - ./coverage:/opt/sensejs/coverage
-    command: ['pnpm', 'run', 'test', '--', '--coverage']
+    command: ['pnpm', 'run', 'test', '--', '--coverage', '--runInBand', '--detectOpenHandles']
