@@ -109,10 +109,10 @@ importers:
     specifiers:
       '@sensejs/core': workspace:*
       traverse: ^0.6.6
-      tslib: 2.0.0
+      tslib: ^2.1.0
     dependencies:
       traverse: 0.6.6
-      tslib: 2.0.0
+      tslib: 2.2.0
     devDependencies:
       '@sensejs/core': link:../core
 
@@ -6056,10 +6056,6 @@ packages:
 
   /tslib/1.14.1:
     resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
-
-  /tslib/2.0.0:
-    resolution: {integrity: sha512-lTqkx847PI7xEDYJntxZH89L2/aXInsyF2luSafe/+0fHOMjlBNXdH6th7f70qxLDhul7KZK0zC8V5ZIyHl0/g==}
-    dev: false
 
   /tslib/2.2.0:
     resolution: {integrity: sha512-gS9GVHRU+RGn5KQM2rllAlR3dU6m7AcpJKdtH8gFvQiC4Otgk98XnmMU+nZenHt/+VhnBPWwgrJsyrdcw6i23w==}
