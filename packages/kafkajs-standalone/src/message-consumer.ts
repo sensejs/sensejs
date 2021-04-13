@@ -62,6 +62,10 @@ export class MessageConsumer {
   }
 
   async wait(): Promise<void> {
+    if (!this.startedPromise) {
+      throw new Error('The message consumer is not started');
+    }
+    await this.startedPromise;
     if (!this.runPromise) {
       throw new Error('The message consumer is not started');
     }
