@@ -64,7 +64,7 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
           paramInjectionMetadata: [],
         });
       }
-      return invokeMethod(this.resolveContext, this.targetConstructor, this.targetMethodKey);
+      return await invokeMethod(this.resolveContext, this.targetConstructor, this.targetMethodKey);
     } finally {
       await this.resolveContext.cleanUp();
     }
