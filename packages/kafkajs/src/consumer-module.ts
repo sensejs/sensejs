@@ -86,7 +86,7 @@ function scanSubscriber(
     @OnModuleCreate()
     async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
       moduleScanner.scanModule((moduleMetadata) => {
-        moduleMetadata.components.forEach((component) => {
+        [...moduleMetadata.components, ...(moduleMetadata.dynamicComponents ?? [])].forEach((component) => {
           const controllerMetadata = getSubscribeControllerMetadata(component);
           if (!controllerMetadata) {
             return;
