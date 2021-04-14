@@ -1,7 +1,7 @@
 import {BindingType, Container, Scope, ServiceId} from '@sensejs/container';
 import {getModuleMetadata, ModuleMetadata} from './module';
 import {invokeMethod} from './method-invoker';
-import {ComponentFactory, ComponentMetadata, Constructor, FactoryProvider} from './interfaces';
+import {ComponentFactory, ComponentMetadata, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
 import {getComponentMetadata} from './component';
 
 function bindComponent(container: Container, constructor: Constructor, metadata: ComponentMetadata) {
@@ -21,6 +21,39 @@ function bindComponent(container: Container, constructor: Constructor, metadata:
       container.addBinding({type: BindingType.ALIAS, id: parentConstructor, canonicalId: constructor});
     }
     parentConstructor = Object.getPrototypeOf(parentConstructor);
+  }
+}
+
+export class DynamicModuleLoader {
+  components: Constructor[] = [];
+  factories: FactoryProvider<any>[] = [];
+  constants: ConstantProvider<any>[] = [];
+
+  addComponent(constructor: Constructor): this {
+    this.components.push(constructor);
+    return this;
+  }
+
+  addFactory(provider: FactoryProvider<any>): this {
+    this.factories.push(provider);
+    return this;
+  }
+
+  addConstant(provider: ConstantProvider<any>): this {
+    this.constants.push(provider);
+    return this;
+  }
+
+  getComponents(): Constructor[] {
+    return this.components;
+  }
+
+  getConstants(): ConstantProvider<any>[] {
+    return this.constants;
+  }
+
+  getFactories(): FactoryProvider<any>[] {
+    return this.factories;
   }
 }
 
@@ -72,20 +105,40 @@ export class ModuleInstance<T extends {} = {}> {
     return this.destroyPromise;
   }
 
-  private bindComponents(option: ModuleMetadata<any>) {
-    const {components, factories, constants} = option;
-    constants.forEach((constantProvider) => {
-      this.container.addBinding({
-        type: BindingType.CONSTANT,
-        value: constantProvider.value,
-        id: constantProvider.provide,
-      });
-    });
+  private bindDynamicComponents(components: Constructor[]) {
+    if (components.length <= 0) {
+      return;
+    }
 
+    this.moduleMetadata.dynamicComponents = components;
+    this.bindComponents(components);
+  }
+
+  private bindDynamicFactories(providers: FactoryProvider<any>[]) {
+    if (providers.length <= 0) {
+      return;
+    }
+
+    this.moduleMetadata.dynamicFactories = providers;
+    this.bindFactories(providers);
+  }
+
+  private bindDynamicConstants(providers: ConstantProvider<any>[]) {
+    if (providers.length <= 0) {
+      return;
+    }
+
+    this.moduleMetadata.dynamicConstants = providers;
+    this.bindConstants(providers);
+  }
+
+  private bindComponents(components: Constructor[]) {
     components.forEach((component) => {
       bindComponent(this.container, component, getComponentMetadata(component));
     });
+  }
 
+  private bindFactories(factories: FactoryProvider<unknown>[]) {
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
       const {provide, factory, scope = Scope.REQUEST, ...rest} = factoryProvider;
       this.container.add(factory);
@@ -101,13 +154,33 @@ export class ModuleInstance<T extends {} = {}> {
     });
   }
 
+  private bindConstants(constants: ConstantProvider<unknown>[]) {
+    constants.forEach((constantProvider) => {
+      this.container.addBinding({
+        type: BindingType.CONSTANT,
+        value: constantProvider.value,
+        id: constantProvider.provide,
+      });
+    });
+  }
+
   private async performSetup() {
     this.container.add(this.moduleClass);
-    this.bindComponents(this.moduleMetadata);
+    this.bindComponents(this.moduleMetadata.components);
+    this.bindConstants(this.moduleMetadata.constants);
+    this.bindFactories(this.moduleMetadata.factories);
     this.moduleInstance = this.container.resolve<object>(this.moduleClass);
+    const dynamicComponentLoader = new DynamicModuleLoader();
     for (const method of this.moduleMetadata.onModuleCreate) {
-      await invokeMethod(this.container.createResolveContext(), this.moduleClass, method);
+      await invokeMethod(
+        this.container.createResolveContext().addTemporaryConstantBinding(DynamicModuleLoader, dynamicComponentLoader),
+        this.moduleClass,
+        method,
+      );
     }
+    this.bindDynamicComponents(dynamicComponentLoader.getComponents());
+    this.bindDynamicConstants(dynamicComponentLoader.getConstants());
+    this.bindDynamicFactories(dynamicComponentLoader.getFactories());
   }
 
   private async performDestroy() {

@@ -1,8 +1,10 @@
-import {BindingType, Container} from '@sensejs/container';
+import {BindingType, Container, Scope} from '@sensejs/container';
 import {
   Component,
   ComponentFactory,
+  ConstantProvider,
   createModule,
+  FactoryProvider,
   getModuleMetadata,
   Inject,
   ModuleClass,
@@ -15,7 +17,7 @@ import {
   ServiceIdentifier,
   Tagged,
 } from '../src';
-import {ModuleInstance} from '../src/module-instance';
+import {DynamicModuleLoader, ModuleInstance} from '../src/module-instance';
 
 describe('@ModuleClass', () => {
   test('created module metadata', () => {
@@ -290,6 +292,41 @@ describe('Module resolve', () => {
     );
     await instance.onSetup();
     await instance.onDestroy();
+  });
+
+  test('dynamic resolve', async () => {
+    @Component()
+    class X {}
+
+    const dynamicConstant: ConstantProvider<any> = {provide: 'constant', value: 'value'};
+    @Component()
+    class Factory extends ComponentFactory<void> {
+      build() {
+        return 'factory';
+      }
+    }
+    const dynamicFactory: FactoryProvider<any> = {provide: 'factory', factory: Factory, scope: Scope.SINGLETON};
+
+    const stub = jest.fn();
+
+    @ModuleClass()
+    class DynamicModule {
+      @OnModuleCreate()
+      onModuleCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
+        loader.addComponent(X);
+        loader.addConstant(dynamicConstant);
+        loader.addFactory(dynamicFactory);
+        stub();
+      }
+
+      entryPoint(@Inject(X) x: X, @Inject('constant') constantValue: string, @Inject('factory') producedValue: string) {
+        expect(x).toBeInstanceOf(X);
+        expect(constantValue).toBe(dynamicConstant.value);
+        expect(producedValue).toBe('factory');
+      }
+    }
+    await ModuleRoot.run(DynamicModule, 'entryPoint');
+    expect(stub).toHaveBeenCalled();
   });
 });
 

@@ -33,6 +33,9 @@ export interface ModuleOption {
 
 export interface ModuleMetadata<T = {}> extends Required<ModuleOption> {
   requires: Constructor[];
+  dynamicComponents?: Constructor[];
+  dynamicFactories?: FactoryProvider<any>[];
+  dynamicConstants?: ConstantProvider<any>[];
   onModuleCreate: (keyof T)[];
   onModuleDestroy: (keyof T)[];
 }
