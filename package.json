@@ -45,6 +45,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint --",
+    "postinstall": "husky install",
     "lint-all": "eslint '**/*.ts'",
     "build": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",
