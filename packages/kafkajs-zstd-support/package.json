@@ -21,8 +21,8 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "zstd-napi": "^0.0.6",
-    "tslib": "^2.1.0"
+    "tslib": "^2.2.0",
+    "zstd-napi": "^0.0.6"
   },
   "devDependencies": {
     "kafkajs": "^1.15.0"

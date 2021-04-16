@@ -25,7 +25,7 @@
     "lightning-pool": "^3.1.1",
     "long": "^4.0.0",
     "rxjs": "^6.6.7",
-    "tslib": "^2.1.0"
+    "tslib": "^2.2.0"
   },
   "peerDependencies": {
     "kafkajs": "^1.14.0"
