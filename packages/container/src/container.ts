@@ -90,9 +90,9 @@ export class ResolveContext {
     });
   }
 
-  async cleanUp(): Promise<void> {
+  async cleanUp(e?: Error): Promise<void> {
     if (this.dependentsCleanedUp) {
-      this.dependentsCleanedUp();
+      this.dependentsCleanedUp(e);
     }
     return this.allFinished;
   }
