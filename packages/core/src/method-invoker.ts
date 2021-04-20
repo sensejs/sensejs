@@ -53,6 +53,7 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
       this.bind(contextIdentifier, context);
     }
     let error;
+    let returnValue: any;
     try {
       for (const interceptor of this.interceptors) {
         await this.resolveContext.intercept({
@@ -65,12 +66,12 @@ const MethodInvoker = class<X extends RequestContext, T extends {}, K extends ke
           paramInjectionMetadata: [],
         });
       }
-      return await invokeMethod(this.resolveContext, this.targetConstructor, this.targetMethodKey);
+      returnValue = await invokeMethod(this.resolveContext, this.targetConstructor, this.targetMethodKey);
     } catch (e) {
       error = e;
-    } finally {
-      await this.resolveContext.cleanUp(error);
     }
+    await this.resolveContext.cleanUp(error);
+    return returnValue;
   }
 };
 
