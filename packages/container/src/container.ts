@@ -75,6 +75,7 @@ export class ResolveContext {
     return new Promise<void>((resolve, reject) => {
       const cleanUp = this.dependentsCleanedUp;
       let errorHandler = reject;
+      const previousFinished = this.allFinished;
       this.allFinished = interceptorInstance(async () => {
         errorHandler = cleanUp;
         resolve();
@@ -86,7 +87,14 @@ export class ResolveContext {
             return resolve();
           };
         });
-      }).then(() => cleanUp(), errorHandler);
+      })
+        .then(
+          () => cleanUp(),
+          (e) => {
+            errorHandler(e);
+          },
+        )
+        .finally(() => previousFinished);
     });
   }
 

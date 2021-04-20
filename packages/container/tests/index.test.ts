@@ -292,6 +292,30 @@ describe('Kernel', () => {
     expect(() => kernel.createResolveContext().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
 
+  test('interceptor throw', async () => {
+    const kernel = new Container();
+
+    class Foo {
+      constructor() {}
+
+      method() {}
+    }
+
+    kernel.add(Foo);
+    const context = kernel.createResolveContext();
+    await context.intercept({
+      interceptorBuilder: () => {
+        return async (next) => {
+          await next();
+          throw new Error();
+        };
+      },
+      paramInjectionMetadata: [],
+    });
+    context.invoke(Foo, 'method');
+    await expect(context.cleanUp()).rejects.toBeInstanceOf(Error);
+  });
+
   test('scope', () => {
     const kernel = new Container();
 
