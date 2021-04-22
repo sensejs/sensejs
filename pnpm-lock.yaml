@@ -129,7 +129,7 @@ importers:
     specifiers:
       '@sensejs/container': workspace:*
       '@sensejs/testing-utility': workspace:*
-      '@sensejs/utility': workspace:^0.8.0-alpha.2
+      '@sensejs/utility': workspace:>=0.8.0 <0.9.0
       rxjs: ^6.6.7
       tslib: ^2.2.0
       uuid: ^8.3.2
@@ -149,7 +149,7 @@ importers:
       '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
       '@sensejs/testing-utility': workspace:*
-      '@sensejs/utility': workspace:^0.8.0-alpha.2
+      '@sensejs/utility': workspace:>=0.8.0 <0.9.0
       koa: ^2.13.1
       koa-bodyparser: ^4.3.0
       koa-qs: ^3.0.0
@@ -173,9 +173,9 @@ importers:
     specifiers:
       '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
-      '@sensejs/kafkajs-standalone': workspace:^0.8.0-alpha.4
+      '@sensejs/kafkajs-standalone': workspace:>=0.8.0 <0.9.0
       '@sensejs/testing-utility': workspace:*
-      '@sensejs/utility': workspace:^0.8.0-alpha.2
+      '@sensejs/utility': workspace:>=0.8.0 <0.9.0
       lodash: ^4.17.21
       tslib: ^2.2.0
     dependencies:
@@ -191,7 +191,7 @@ importers:
   packages/kafkajs-standalone:
     specifiers:
       '@sensejs/testing-utility': workspace:*
-      '@sensejs/utility': workspace:*
+      '@sensejs/utility': workspace:>=0.8.0 <0.9.0
       config: ^3.3.6
       lightning-pool: ^3.1.1
       long: ^4.0.0
@@ -236,7 +236,7 @@ importers:
       '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
       '@sensejs/testing-utility': workspace:*
-      '@sensejs/utility': workspace:^0.8.0-alpha.2
+      '@sensejs/utility': workspace:>=0.8.0 <0.9.0
       tslib: ^2.2.0
     dependencies:
       '@sensejs/utility': link:../utility

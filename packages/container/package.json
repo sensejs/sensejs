@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/container",
-  "version": "0.8.0-alpha.6",
+  "version": "0.8.0",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
