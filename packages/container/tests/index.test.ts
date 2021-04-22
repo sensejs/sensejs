@@ -5,12 +5,12 @@ import {
   CircularDependencyError,
   Container,
   DuplicatedBindingError,
-  injectable,
   inject,
+  injectable,
   InvalidParamBindingError,
-  Scope,
-  optional,
   NoEnoughInjectMetadataError,
+  optional,
+  Scope,
 } from '../src';
 
 function untransformed(input: any) {
@@ -401,5 +401,49 @@ describe('Kernel', () => {
     const y = container.resolve(X);
     expect(x.foo).toBeInstanceOf(Foo);
     expect(y.foo).toBe(y.foo);
+  });
+
+  test('temporary binding cannot be used by global component', () => {
+    @injectable({scope: Scope.SINGLETON})
+    class Global {
+      constructor(@inject('1') param: any) {}
+    }
+
+    @injectable({scope: Scope.TRANSIENT})
+    class A {
+      constructor(@inject(Global) global: Global) {}
+    }
+
+    @injectable({scope: Scope.REQUEST})
+    class B {
+      constructor(@inject(A) a: A) {}
+    }
+
+    @injectable({scope: Scope.REQUEST})
+    class C {
+      constructor(@inject('1') param: any) {}
+    }
+
+    @injectable({scope: Scope.TRANSIENT})
+    class D {
+      constructor(@inject(C) a: C) {}
+    }
+
+    const container = new Container();
+    container.add(Global);
+    container.add(A);
+    container.add(B);
+    container.add(C);
+    container.add(D);
+
+    const getResolveContext = () => {
+      return container.createResolveContext().addTemporaryConstantBinding('1', '1');
+    };
+
+    expect(() => getResolveContext().resolve(Global)).toThrow(BindingNotFoundError);
+    expect(() => getResolveContext().resolve(A)).toThrow(BindingNotFoundError);
+    expect(() => getResolveContext().resolve(B)).toThrow(BindingNotFoundError);
+    expect(getResolveContext().resolve(C)).toBeInstanceOf(C);
+    expect(getResolveContext().resolve(D)).toBeInstanceOf(D);
   });
 });

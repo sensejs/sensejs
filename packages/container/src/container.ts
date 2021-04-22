@@ -41,6 +41,7 @@ export class ResolveContext {
   private readonly instructions: Instruction[] = [];
   private readonly requestSingletonCache: Map<any, any> = new Map();
   private readonly stack: any[] = [];
+  private stateAllowTemporary = true;
   private allFinished: Promise<void>;
 
   constructor(
@@ -59,6 +60,7 @@ export class ResolveContext {
   }
 
   async intercept(interceptor: AsyncResolveInterceptorFactory): Promise<void> {
+    this.resetState();
     const {interceptorBuilder, paramInjectionMetadata} = interceptor;
     const serviceId = Symbol();
     this.instructions.push(
@@ -106,6 +108,7 @@ export class ResolveContext {
   }
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
+    this.resetState();
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
     const self = this.evalInstructions() as T;
@@ -115,15 +118,23 @@ export class ResolveContext {
   }
 
   resolve<T>(target: ServiceId<T>): T {
+    this.resetState();
     this.performPlan({code: InstructionCode.PLAN, optional: false, target});
     return this.evalInstructions();
   }
   construct<T>(target: Constructor<T>): T {
+    this.resetState();
     this.performPlan({code: InstructionCode.PLAN, optional: false, target}, true);
     return this.evalInstructions();
   }
 
   private dependentsCleanedUp: (e?: Error) => void = () => {};
+
+  private resetState() {
+    /** Clear stack */
+    this.stack.splice(0);
+    this.stateAllowTemporary = true;
+  }
 
   private evalInstructions() {
     for (;;) {
@@ -134,13 +145,19 @@ export class ResolveContext {
 
       switch (instruction.code) {
         case InstructionCode.PLAN:
-          this.performPlan(instruction);
+          this.performPlan(instruction, false);
           break;
         case InstructionCode.TRANSFORM:
           this.performTransform(instruction);
           break;
         case InstructionCode.BUILD:
           this.performBuild(instruction);
+          break;
+        case InstructionCode.ENABLE_TEMPORARY:
+          this.stateAllowTemporary = true;
+          break;
+        case InstructionCode.DISABLE_TEMPORARY:
+          this.stateAllowTemporary = false;
           break;
       }
     }
@@ -174,7 +191,7 @@ export class ResolveContext {
     if (this.globalSingletonCache.has(target)) {
       this.stack.push(this.globalSingletonCache.get(target));
       return true;
-    } else if (this.requestSingletonCache.has(target)) {
+    } else if (this.stateAllowTemporary && this.requestSingletonCache.has(target)) {
       this.stack.push(this.requestSingletonCache.get(target));
       return true;
     }
@@ -222,6 +239,10 @@ export class ResolveContext {
     if (!binding) {
       return;
     }
+    const disableTemporary = binding.type !== BindingType.CONSTANT && binding.scope === Scope.SINGLETON;
+    if (disableTemporary) {
+      this.instructions.push({code: InstructionCode.ENABLE_TEMPORARY});
+    }
     if (this.resolveFromCache(binding.id)) {
       return;
     }
@@ -241,6 +262,9 @@ export class ResolveContext {
           this.instructions.push(...instructions);
         }
         break;
+    }
+    if (disableTemporary) {
+      this.instructions.push({code: InstructionCode.DISABLE_TEMPORARY});
     }
   }
 

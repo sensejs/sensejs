@@ -6,6 +6,8 @@ export enum InstructionCode {
   BUILD = 'BUILD',
   INVOKE = 'INVOKE',
   ASYNC_BUILD = 'ASYNC_BUILD',
+  ENABLE_TEMPORARY = 'SET_ENABLE_TEMPORARY',
+  DISABLE_TEMPORARY = 'DISABLE_ENABLE_TEMPORARY',
 }
 
 export interface PlanInstruction {
@@ -33,4 +35,18 @@ export interface TransformInstruction {
   transformer: (input: any) => any;
 }
 
-export type Instruction = PlanInstruction | BuildInstruction | InvokeInstruction | TransformInstruction;
+export interface EnableTemporaryInstruction {
+  code: InstructionCode.ENABLE_TEMPORARY;
+}
+
+export interface DisableTemporaryInstruction {
+  code: InstructionCode.DISABLE_TEMPORARY;
+}
+
+export type Instruction =
+  | PlanInstruction
+  | BuildInstruction
+  | InvokeInstruction
+  | TransformInstruction
+  | EnableTemporaryInstruction
+  | DisableTemporaryInstruction;
