@@ -10,7 +10,6 @@ jobs:
           - NODE_VERSION=10
           - NODE_VERSION=12
           - NODE_VERSION=14
-          - NODE_VERSION=16
 
     steps:
       - uses: actions/checkout@v2
