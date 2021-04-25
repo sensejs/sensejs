@@ -23,7 +23,12 @@ jobs:
         run: |-
           docker-compose up -d zookeeper kafka-1 kafka-2 kafka-3
 
-      - name: 'Building & test'
+      - name: Build
+        run: |-
+          echo "Building docker image for workspace with NODE_VERSION=${NODE_VERSION}"
+          docker-compose build workspace-test
+
+      - name: Test
         run: |-
           docker-compose run workspace-test
 
