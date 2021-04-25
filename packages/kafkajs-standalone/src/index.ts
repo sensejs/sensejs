@@ -1,4 +1,5 @@
 export * from './types';
+export * from './create-client';
 export * from './message-consumer';
 export * from './worker-synchronizer';
 export * from './message-producer';

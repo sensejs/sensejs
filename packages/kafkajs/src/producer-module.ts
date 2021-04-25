@@ -16,13 +16,13 @@ import {
 import {MessageProducer, MessageProducerOption} from '@sensejs/kafkajs-standalone';
 import {KafkaLogAdapterOption} from '@sensejs/kafkajs-standalone/src/logging';
 
-export interface ConfigurableMessageProducerOption extends Omit<MessageProducerOption, 'logOption'> {
+export interface LegacyConfigurableMessageProducerOption extends Omit<MessageProducerOption, 'logOption'> {
   logOption?: KafkaLogAdapterOption;
 }
 
 export interface MessageProducerModuleOption extends ModuleOption {
-  messageProducerOption?: Partial<ConfigurableMessageProducerOption>;
-  injectOptionFrom?: ServiceIdentifier<ConfigurableMessageProducerOption>;
+  messageProducerOption?: Partial<LegacyConfigurableMessageProducerOption>;
+  injectOptionFrom?: ServiceIdentifier<LegacyConfigurableMessageProducerOption>;
 }
 
 /**
@@ -32,7 +32,7 @@ export function createMessageProducerModule(option: MessageProducerModuleOption)
   const optionFactory = provideOptionInjector(
     option.messageProducerOption,
     option.injectOptionFrom,
-    (fallback, injected): ConfigurableMessageProducerOption => {
+    (fallback, injected): LegacyConfigurableMessageProducerOption => {
       const {connectOption, logOption, ...rest} = Object.assign({}, fallback, injected);
       if (typeof connectOption?.brokers === 'undefined') {
         throw new TypeError('brokers not provided');
@@ -64,7 +64,7 @@ export function createMessageProducerModule(option: MessageProducerModuleOption)
       @Inject(connectionFactory.factory)
       private factory: AbstractConnectionFactory<MessageProducer, MessageProducerOption>,
       @Inject(optionFactory.provide)
-      private config: ConfigurableMessageProducerOption,
+      private config: LegacyConfigurableMessageProducerOption,
     ) {}
 
     @OnModuleCreate()
