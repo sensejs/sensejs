@@ -7,3 +7,5 @@ export * from './simple-provider';
 export * from './pooled-provider';
 export * from './simple-message-producer';
 export * from './transactional-message-producer';
+export * from './logging';
+export * from './base-message-producer';
