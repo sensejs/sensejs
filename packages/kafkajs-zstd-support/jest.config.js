@@ -1,2 +1,4 @@
-
-module.exports = {...require('../../jest.base-config')};
+module.exports = {
+  ...require('../../jest.base-config'),
+  setupFiles: ['<rootDir>/jest-setup.js'],
+};

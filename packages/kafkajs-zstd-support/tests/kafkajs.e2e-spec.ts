@@ -1,6 +1,7 @@
 import '../src';
 import {CompressionTypes, Kafka} from 'kafkajs';
 import config from 'config';
+console.log('node env', process.env.NODE_ENV);
 
 test('ZSTD E2E test', async () => {
   const topic = 'test-zstd.' + Date.now();
@@ -10,7 +11,7 @@ test('ZSTD E2E test', async () => {
   await producer.connect();
   await producer.send({topic, messages: [{value: topic}], compression: CompressionTypes.ZSTD});
   await producer.disconnect();
-  const consumer = kafka.consumer();
+  const consumer = kafka.consumer({groupId: 'zstd-test-group.' + Date.now()});
   await consumer.subscribe({topic});
   await new Promise((resolve, reject) => {
     consumer
