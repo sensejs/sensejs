@@ -41,7 +41,7 @@ export class ResolveContext {
   private readonly instructions: Instruction[] = [];
   private readonly requestSingletonCache: Map<any, any> = new Map();
   private readonly stack: any[] = [];
-  private stateAllowTemporary = true;
+  private singletonDepth = 0;
   private allFinished: Promise<void>;
 
   constructor(
@@ -133,7 +133,7 @@ export class ResolveContext {
   private resetState() {
     /** Clear stack */
     this.stack.splice(0);
-    this.stateAllowTemporary = true;
+    this.singletonDepth = 0;
   }
 
   private evalInstructions() {
@@ -154,10 +154,10 @@ export class ResolveContext {
           this.performBuild(instruction);
           break;
         case InstructionCode.ENABLE_TEMPORARY:
-          this.stateAllowTemporary = true;
+          this.singletonDepth++;
           break;
         case InstructionCode.DISABLE_TEMPORARY:
-          this.stateAllowTemporary = false;
+          this.singletonDepth--;
           break;
       }
     }
@@ -191,7 +191,7 @@ export class ResolveContext {
     if (this.globalSingletonCache.has(target)) {
       this.stack.push(this.globalSingletonCache.get(target));
       return true;
-    } else if (this.stateAllowTemporary && this.requestSingletonCache.has(target)) {
+    } else if (this.singletonDepth == 0 && this.requestSingletonCache.has(target)) {
       this.stack.push(this.requestSingletonCache.get(target));
       return true;
     }

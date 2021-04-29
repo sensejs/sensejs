@@ -484,13 +484,17 @@ describe('Kernel', () => {
 
   test('temporary binding cannot be used by global component', () => {
     @injectable({scope: Scope.SINGLETON})
-    class Global {
+    class GlobalA {
       constructor(@inject('1') param: any) {}
+    }
+    @injectable({scope: Scope.SINGLETON})
+    class GlobalB {
+      constructor() {}
     }
 
     @injectable({scope: Scope.TRANSIENT})
     class A {
-      constructor(@inject(Global) global: Global) {}
+      constructor(@inject(GlobalA) global: GlobalA) {}
     }
 
     @injectable({scope: Scope.REQUEST})
@@ -508,20 +512,40 @@ describe('Kernel', () => {
       constructor(@inject(C) a: C) {}
     }
 
+    @injectable({scope: Scope.TRANSIENT})
+    class E {
+      constructor(@inject(GlobalB) param: any) {}
+    }
+
+    @injectable({scope: Scope.SINGLETON})
+    class GlobalC {
+      constructor(@inject(E) b: any, @inject('1') param: any) {}
+    }
+    @injectable({scope: Scope.SINGLETON})
+    class GlobalD {
+      constructor(@inject('1') param: any, @inject(E) b: any) {}
+    }
+
     const container = new Container();
-    container.add(Global);
+    container.add(GlobalA);
+    container.add(GlobalB);
+    container.add(GlobalC);
+    container.add(GlobalD);
     container.add(A);
     container.add(B);
     container.add(C);
     container.add(D);
+    container.add(E);
 
     const getResolveContext = () => {
       return container.createResolveContext().addTemporaryConstantBinding('1', '1');
     };
 
-    expect(() => getResolveContext().resolve(Global)).toThrow(BindingNotFoundError);
+    expect(() => getResolveContext().resolve(GlobalA)).toThrow(BindingNotFoundError);
     expect(() => getResolveContext().resolve(A)).toThrow(BindingNotFoundError);
     expect(() => getResolveContext().resolve(B)).toThrow(BindingNotFoundError);
+    expect(() => getResolveContext().resolve(GlobalC)).toThrow(BindingNotFoundError);
+    expect(() => getResolveContext().resolve(GlobalD)).toThrow(BindingNotFoundError);
     expect(getResolveContext().resolve(C)).toBeInstanceOf(C);
     expect(getResolveContext().resolve(D)).toBeInstanceOf(D);
   });
