@@ -4,6 +4,7 @@ import {
   Binding,
   BindingType,
   Class,
+  ConstantBinding,
   Constructor,
   FactoryBinding,
   InstanceBinding,
@@ -21,14 +22,17 @@ import {
   ensureValidatedParamInjectMetadata,
 } from './metadata';
 
-function compileParamInjectInstruction(paramInjectionMetadata: ParamInjectionMetadata[]): Instruction[] {
+function compileParamInjectInstruction(
+  paramInjectionMetadata: ParamInjectionMetadata[],
+  allowTemporary: boolean,
+): Instruction[] {
   const sortedMetadata = ensureValidatedParamInjectMetadata(paramInjectionMetadata);
   return sortedMetadata.reduceRight((instructions, m): Instruction[] => {
     const {id, transform, optional} = m;
     if (typeof transform === 'function') {
       instructions.push({code: InstructionCode.TRANSFORM, transformer: transform});
     }
-    instructions.push({code: InstructionCode.PLAN, target: id, optional});
+    instructions.push({code: InstructionCode.PLAN, target: id, optional, allowTemporary});
     return instructions;
   }, [] as Instruction[]);
 }
@@ -40,8 +44,8 @@ export class ResolveContext {
   private readonly planingSet: Set<ServiceId> = new Set();
   private readonly instructions: Instruction[] = [];
   private readonly requestSingletonCache: Map<any, any> = new Map();
+  private readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
   private readonly stack: any[] = [];
-  private singletonDepth = 0;
   private allFinished: Promise<void>;
 
   constructor(
@@ -71,7 +75,7 @@ export class ResolveContext {
         paramCount: paramInjectionMetadata.length,
         serviceId,
       },
-      ...compileParamInjectInstruction(paramInjectionMetadata),
+      ...compileParamInjectInstruction(paramInjectionMetadata, true),
     );
     const interceptorInstance = this.evalInstructions() as AsyncResolveInterceptor;
     return new Promise<void>((resolve, reject) => {
@@ -110,21 +114,21 @@ export class ResolveContext {
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
     this.resetState();
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target});
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true});
     const self = this.evalInstructions() as T;
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy}, true);
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target: proxy, allowTemporary: true}, true);
     const proxyInstance = this.evalInstructions() as InstanceType<typeof proxy>;
     return proxyInstance.call(fn, self);
   }
 
   resolve<T>(target: ServiceId<T>): T {
     this.resetState();
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target});
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true});
     return this.evalInstructions();
   }
   construct<T>(target: Constructor<T>): T {
     this.resetState();
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target}, true);
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true}, true);
     return this.evalInstructions();
   }
 
@@ -133,7 +137,6 @@ export class ResolveContext {
   private resetState() {
     /** Clear stack */
     this.stack.splice(0);
-    this.singletonDepth = 0;
   }
 
   private evalInstructions() {
@@ -153,12 +156,6 @@ export class ResolveContext {
         case InstructionCode.BUILD:
           this.performBuild(instruction);
           break;
-        case InstructionCode.ENABLE_TEMPORARY:
-          this.singletonDepth++;
-          break;
-        case InstructionCode.DISABLE_TEMPORARY:
-          this.singletonDepth--;
-          break;
       }
     }
   }
@@ -166,12 +163,16 @@ export class ResolveContext {
   /**
    * Get binding and resolve alias
    * @param target
+   * @param allowTemporary
    * @private
    */
-  private internalGetBinding(target: ServiceId) {
+  private internalGetBinding(target: ServiceId, allowTemporary: boolean) {
     let binding;
     const resolvingSet = new Set();
     for (;;) {
+      if (allowTemporary && this.temporaryBinding.has(target)) {
+        return this.temporaryBinding.get(target);
+      }
       binding = this.bindingMap.get(target);
       if (!binding) {
         return;
@@ -191,15 +192,20 @@ export class ResolveContext {
     if (this.globalSingletonCache.has(target)) {
       this.stack.push(this.globalSingletonCache.get(target));
       return true;
-    } else if (this.singletonDepth == 0 && this.requestSingletonCache.has(target)) {
+    } else if (this.requestSingletonCache.has(target)) {
       this.stack.push(this.requestSingletonCache.get(target));
       return true;
     }
     return false;
   }
 
-  private getBindingForPlan(target: ServiceId, optionalInject: boolean, allowUnbound: boolean) {
-    const binding = this.internalGetBinding(target);
+  private getBindingForPlan(
+    target: ServiceId,
+    optionalInject: boolean,
+    allowUnbound: boolean,
+    allowTemporary: boolean,
+  ) {
+    const binding = this.internalGetBinding(target, allowTemporary);
     if (binding) {
       return binding;
     }
@@ -216,7 +222,7 @@ export class ResolveContext {
           paramCount: cm.length,
           serviceId: target,
         },
-        ...compileParamInjectInstruction(cm),
+        ...compileParamInjectInstruction(cm, true),
       );
       return;
     }
@@ -224,7 +230,7 @@ export class ResolveContext {
   }
 
   private performPlan(instruction: PlanInstruction, allowUnbound = false) {
-    const {target, optional} = instruction;
+    const {target, optional, allowTemporary} = instruction;
     if (this.planingSet.has(target)) {
       throw new CircularDependencyError(target);
     }
@@ -235,17 +241,14 @@ export class ResolveContext {
     if (this.resolveFromCache(target)) {
       return;
     }
-    const binding = this.getBindingForPlan(target, optional, allowUnbound);
+    const binding = this.getBindingForPlan(target, optional, allowUnbound, allowTemporary);
     if (!binding) {
       return;
-    }
-    const disableTemporary = binding.type !== BindingType.CONSTANT && binding.scope === Scope.SINGLETON;
-    if (disableTemporary) {
-      this.instructions.push({code: InstructionCode.ENABLE_TEMPORARY});
     }
     if (this.resolveFromCache(binding.id)) {
       return;
     }
+    const disableTemporary = binding.type !== BindingType.CONSTANT && binding.scope === Scope.SINGLETON;
     switch (binding.type) {
       case BindingType.CONSTANT:
         this.stack.push(binding.value);
@@ -262,9 +265,6 @@ export class ResolveContext {
           this.instructions.push(...instructions);
         }
         break;
-    }
-    if (disableTemporary) {
-      this.instructions.push({code: InstructionCode.DISABLE_TEMPORARY});
     }
   }
 
@@ -284,11 +284,7 @@ export class ResolveContext {
     this.planingSet.delete(serviceId);
   }
 
-  private cacheIfNecessary(
-    cacheScope: Scope | Scope.SINGLETON | Scope.TRANSIENT,
-    serviceId: Class<any> | string | symbol,
-    result: any,
-  ) {
+  private cacheIfNecessary(cacheScope: Scope, serviceId: Class<any> | string | symbol, result: any) {
     if (cacheScope === Scope.REQUEST) {
       this.requestSingletonCache.set(serviceId, result);
     } else if (cacheScope === Scope.SINGLETON) {
@@ -311,7 +307,11 @@ export class ResolveContext {
   }
 
   public addTemporaryConstantBinding<T>(serviceId: ServiceId<T>, value: T): this {
-    this.requestSingletonCache.set(serviceId, value);
+    this.temporaryBinding.set(serviceId, {
+      type: BindingType.CONSTANT,
+      id: serviceId,
+      value,
+    });
     return this;
   }
 }
@@ -366,7 +366,7 @@ export class Container {
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
       },
-      ...compileParamInjectInstruction(paramInjectionMetadata),
+      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== Scope.SINGLETON),
     ]);
   }
 
@@ -380,7 +380,7 @@ export class Container {
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
       },
-      ...compileParamInjectInstruction(paramInjectionMetadata),
+      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== Scope.SINGLETON),
     ]);
   }
 }
