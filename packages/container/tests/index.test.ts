@@ -305,6 +305,50 @@ describe('Kernel', () => {
     kernel.createResolveContext().invoke(Foo, 'method');
   });
 
+  test('error occurred when invoke', async () => {
+    const kernel = new Container();
+
+    class FooError extends Error {}
+
+    class Foo {
+      constructor() {}
+
+      method() {
+        throw new FooError();
+      }
+    }
+
+    kernel.add(Foo);
+    const stub = jest.fn();
+    const context = kernel.createResolveContext();
+    await context.intercept({
+      interceptorBuilder: () => {
+        return async (next) => {
+          try {
+            await next();
+          } catch (e) {
+            stub(e);
+            throw e;
+          }
+        };
+      },
+      paramInjectionMetadata: [],
+    });
+    let err;
+    expect(() => {
+      try {
+        context.invoke(Foo, 'method');
+      } catch (e) {
+        err = e;
+        throw e;
+      }
+    }).toThrow(FooError);
+
+    expect(stub).not.toHaveBeenCalled();
+    await expect(context.cleanUp(err)).rejects.toBeInstanceOf(FooError);
+    expect(stub).toHaveBeenCalled();
+  });
+
   test('interceptor throw', async () => {
     const kernel = new Container();
 
