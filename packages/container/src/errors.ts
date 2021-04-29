@@ -39,10 +39,3 @@ export class BindingNotFoundError extends Error {
     Error.captureStackTrace(this, BindingNotFoundError);
   }
 }
-
-export class AsyncUnsupportedError extends Error {
-  constructor(readonly serviceId?: ServiceId) {
-    super();
-    Error.captureStackTrace(this, AsyncUnsupportedError);
-  }
-}
