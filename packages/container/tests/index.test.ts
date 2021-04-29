@@ -46,6 +46,28 @@ describe('Kernel', () => {
     expect(transformer).toHaveBeenCalledWith(value);
   });
 
+  test('construct', () => {
+    const kernel = new Container();
+    const value = '1';
+    kernel.addBinding({
+      type: BindingType.CONSTANT,
+      value,
+      id: '1',
+    });
+
+    class Foo {
+      constructor(@inject('1') readonly param: number) {}
+    }
+
+    class Bar {
+      constructor(@inject('2') readonly param: number) {}
+    }
+
+    expect(kernel.createResolveContext().construct(Foo)).toEqual(expect.objectContaining({param: value}));
+
+    expect(() => kernel.createResolveContext().construct(Bar)).toThrow(BindingNotFoundError);
+  });
+
   test('factory', () => {
     const kernel = new Container();
     const value = 1;
