@@ -134,12 +134,11 @@ describe('TypeOrmModule', () => {
         const now = Date.now();
         const vid = `v${now}`;
         const pid = `p${now}`;
-        const baseId = Date.now();
-        const url = `url_${Date.now()}`;
-        const videoName = `video_${Date.now()}}`;
-        const photoName = `photo_${Date.now()}}`;
-        await controller.createVideo('v' + baseId, videoName, url);
-        await controller.createPhoto('p' + baseId, photoName, url);
+        const url = `url_${now}`;
+        const videoName = `video_${now}`;
+        const photoName = `photo_${now}`;
+        await controller.createVideo(vid, videoName, url);
+        await controller.createPhoto(pid, photoName, url);
         const result = await controller.findBook();
         expect(result).toEqual(
           expect.arrayContaining([
