@@ -288,7 +288,7 @@ describe('Kernel', () => {
 
       method(@inject('const2') param1: number, param2: number) {}
     }
-
+    kernel.add(Foo);
     expect(() => kernel.createResolveContext().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
 
