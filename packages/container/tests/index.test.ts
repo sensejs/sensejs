@@ -292,6 +292,19 @@ describe('Kernel', () => {
     expect(() => kernel.createResolveContext().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
 
+  test('invoke with optional', () => {
+    const kernel = new Container();
+
+    class Foo {
+      constructor() {}
+
+      method(@optional() @inject('const') param1?: number) {}
+    }
+    kernel.add(Foo);
+
+    kernel.createResolveContext().invoke(Foo, 'method');
+  });
+
   test('interceptor throw', async () => {
     const kernel = new Container();
 
