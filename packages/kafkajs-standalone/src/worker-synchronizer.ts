@@ -1,4 +1,4 @@
-import {from, Observable, Subject, Subscriber, Subscription, zip} from 'rxjs';
+import {firstValueFrom, from, Observable, Subject, Subscriber, Subscription, zip} from 'rxjs';
 
 export class WorkerSynchronizer<T = void> {
   private subscription: Subscription;
@@ -12,11 +12,13 @@ export class WorkerSynchronizer<T = void> {
     this.subscription = cancellationSubject.subscribe({
       next: (acknowledgeCallback: (cancellationObservable: Observable<void>) => Observable<T>) => {
         this.subscription.unsubscribe();
-        this.synchronizer = acknowledgeCallback(
-          new Observable<void>((subscriber) => {
-            this.cancellationSubscriber = subscriber;
-          }),
-        ).toPromise();
+        this.synchronizer = firstValueFrom(
+          acknowledgeCallback(
+            new Observable<void>((subscriber) => {
+              this.cancellationSubscriber = subscriber;
+            }),
+          ),
+        );
       },
     });
     this.synchronizer = Promise.resolve(defaultValue);

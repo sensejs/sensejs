@@ -1,10 +1,11 @@
 import {ModuleRoot} from './module-root';
 import {consoleLogger, Logger} from './logger';
 import {Constructor} from './interfaces';
-import {concat, from, fromEvent, merge, Observable, of, Subject} from 'rxjs';
+import {concat, firstValueFrom, from, fromEvent, merge, Observable, of, Subject} from 'rxjs';
 import {ModuleClass} from './module';
 import {catchError, first, mapTo, mergeMap, skip, timeout} from 'rxjs/operators';
 import {ProcessManager} from './builtins';
+import {EventEmitter} from 'events';
 
 interface NormalExitOption {
   exitCode: number;
@@ -77,7 +78,8 @@ export class ApplicationRunner {
 
   private exitSignalObservables = Object.entries(this.runOption.exitSignals).map(([signal, partialExitOption]) => {
     const exitOption: ExitOption = Object.assign({}, this.runOption.normalExitOption, partialExitOption);
-    return fromEvent(this.process, signal, {once: true}).pipe(
+    return fromEvent(this.process, signal).pipe(
+      first(),
       mergeMap(() => this.createForcedExitObservable(signal, exitOption)),
     );
   });
@@ -147,13 +149,13 @@ export class ApplicationRunner {
   }
 
   private createApplicationRunnerModule(): Constructor<EntryPointModule> {
-    const stoppedPromise = this.stoppedSubject.toPromise();
+    const stoppedPromise = firstValueFrom(this.stoppedSubject);
 
     @ModuleClass({
       requires: [this.module],
     })
     class ApplicationRunnerModule implements EntryPointModule {
-      main() {
+      async main() {
         return stoppedPromise;
       }
     }
@@ -180,7 +182,7 @@ export class ApplicationRunner {
     );
 
     try {
-      const exitCode = await merge(shutdownObservable, this.forcedExitSignalObservable).pipe(first()).toPromise();
+      const exitCode = await firstValueFrom(merge(shutdownObservable, this.forcedExitSignalObservable).pipe(first()));
       this.runOption.onExit(exitCode);
     } finally {
       uncaughtErrorSubscriber.unsubscribe();
@@ -257,7 +259,7 @@ export class ApplicationRunner {
     if (!exitOption.forcedExitWhenRepeated) {
       return result;
     }
-    return concat(result, fromEvent(this.process as NodeJS.EventEmitter, signal, {once: true}).pipe(mapTo(exitOption)));
+    return concat(result, fromEvent(this.process as NodeJS.EventEmitter, signal).pipe(first(), mapTo(exitOption)));
   }
 }
 
