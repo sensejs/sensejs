@@ -22,7 +22,7 @@
     "@sensejs/typeorm": "workspace:*",
     "@sensejs/utility": "workspace:*",
     "config": "^3.3.6",
-    "fp-ts": "^2.10.2",
+    "fp-ts": "^2.10.5",
     "io-ts": "^2.2.16",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.2",
