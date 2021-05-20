@@ -26,8 +26,8 @@ const FeatureList = [
     // Svg: require('../../static/img/undraw_docusaurus_mountain.svg').default,
     description: (
       <>
-        SenseJS currently provides integrations of <a href="https://koajs.com">koa</a>,
-        <a href="https://kafka.js.org">kafkajs</a> and <a href="https://typeorm.io">TypeORM</a> out of box.
+        SenseJS currently provides integrations of <a href="https://koajs.com">koa</a>, <a href="https://kafka.js.org">
+        kafkajs</a> and <a href="https://typeorm.io">TypeORM</a> out of box.
       </>
     ),
   },
