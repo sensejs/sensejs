@@ -6,6 +6,8 @@
       <excludeFolder url="file://$MODULE_DIR$/coverage" />
       <excludeFolder url="file://$MODULE_DIR$/temp" />
       <excludeFolder url="file://$MODULE_DIR$/tmp" />
+      <excludeFolder url="file://$MODULE_DIR$/website/.docusaurus" />
+      <excludeFolder url="file://$MODULE_DIR$/website/build" />
       <excludePattern pattern="lib" />
     </content>
     <orderEntry type="inheritedJdk" />
