@@ -1,1 +1,0 @@
-(self.webpackChunksensejs_doc=self.webpackChunksensejs_doc||[]).push([[53],{9054:function(e){"use strict";e.exports=JSON.parse('{"pluginId":"default","version":"current","label":"Next","isLast":true,"docsSidebars":{"tutorialSidebar":[{"type":"link","label":"Introduction","href":"/docs/introduction"}]},"permalinkToSidebar":{"/docs/introduction":"tutorialSidebar"}}')}}]);
