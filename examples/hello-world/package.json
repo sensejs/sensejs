@@ -1,0 +1,22 @@
+{
+  "name": "@sensejs/hello-world",
+  "version": "0.0.8",
+  "description": "Hello world demo of SenseJS",
+  "files": [
+    "src"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "prepare": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf ./lib"
+  },
+  "author": "Xingcan LAN <thynson@live.com>",
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "@sensejs/core": "workspace:*",
+    "@sensejs/http": "workspace:*",
+    "reflect-metadata": "^0.1.13"
+  }
+}
