@@ -47,7 +47,7 @@ class HelloWorldController {
     })
   ]
 })
-class MyApp {
+class HelloWorldApp {
 
   @OnModuleCreate()
   onModuleCreate() {
