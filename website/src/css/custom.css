@@ -23,3 +23,15 @@
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
 }
+
+html[data-theme="dark"] .hero--primary {
+  --ifm-hero-background-color: var(--ifm-color-primary-dark);
+}
+
+html[data-theme="dark"] .button--secondary {
+  --ifm-button-border-color: var(--ifm-color-secondary-dark);
+}
+
+html[data-theme="dark"] .button--secondary:not(.button--outline) {
+  --ifm-button-background-color: var(--ifm-color-secondary-dark);
+}
