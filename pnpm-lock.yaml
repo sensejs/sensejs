@@ -115,6 +115,16 @@ importers:
       '@sensejs/http': link:../../packages/http
       reflect-metadata: 0.1.13
 
+  examples/injection:
+    specifiers:
+      '@sensejs/core': workspace:*
+      '@sensejs/http': workspace:*
+      reflect-metadata: ^0.1.13
+    dependencies:
+      '@sensejs/core': link:../../packages/core
+      '@sensejs/http': link:../../packages/http
+      reflect-metadata: 0.1.13
+
   packages/config:
     specifiers:
       '@sensejs/core': workspace:*
