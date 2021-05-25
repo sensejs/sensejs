@@ -32,11 +32,12 @@ class Timer {
 
 ```
 
-This component will return the duration since application start up, or the time it's reset. Note that this component
-is marked as singleton, it'll be ensured that only one instance will be created by the IoC container of SenseJS (of
-course, that does not prevent your from instantiate it manually).
+In addition to the `SINGLETON` scope, a component can also be marked as`REQUEST` scope or `TRANSIENT` scope (which is
+the default). The differences between them are explained below:
 
-In addition to `SINGLETON`, a component can also be marked as `REQUEST` or `TRANSIENT` (which is the default).
+- `SINGLETON`: Only instantiated once during the application lifetime.
+- `REQUEST`: Only instantiated once each time when the IoC Container is requested to instantiate it or its dependents.
+- `TRANSIENT`:  Create instances each time for each param that needs such a component.
 
 To make `Timer` injectable, it's necessary to list it in `components` of a module.
 
@@ -51,8 +52,8 @@ const TimerModule = createModule({
 
 ## Using the `Timer` Component
 
-The instance of `Timer` can be injected as a parameter to any class that instantiated by SenseJS. It can also
-be injected to method of class when the method is invoked by SenseJS.
+The instance of `Timer` can be injected as a parameter to any class instantiated by SenseJS. It can also
+be injected to the params of a class method when invoked by SenseJS.
 
 ### Inject to the `HelloWorldController`
 

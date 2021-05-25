@@ -13,10 +13,10 @@ that your code will be highly testable, loosely coupled, and easily maintainable
 
 ### Modularized IoC system
 
-The core of the SenseJS is built upon a modularized IoC system.
+The core of the SenseJS is based on a modularized IoC system.
 
-A module provides injectable components and is responsible for initializing and tearing down them. Some modules can
-handle requests, like HTTP, and dispatch them to appropriate components.
+A module provides injectable components and is responsible for initializing and tearing them down. Some modules can
+handle requests, like HTTP, and dispatch them to an appropriate handler.
 
 Your application will be a collection of modules, and the framework will take care of the graceful setup and shutdown
 based on the dependency graph among modules.
