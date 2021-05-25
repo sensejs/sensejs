@@ -9,7 +9,7 @@ id: introduction
 SenseJS is Typescript framework that helps you build efficient and scalable Node.js applications in a SOLID[^1] way so
 that your code will be highly testable, loosely coupled, and easily maintainable.
 
-## Philosophy
+## Features
 
 ### Modularized IoC system
 
