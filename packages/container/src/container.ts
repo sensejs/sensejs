@@ -7,10 +7,10 @@ import {
   ConstantBinding,
   Constructor,
   FactoryBinding,
+  InjectScope,
   InstanceBinding,
   InvokeResult,
   ParamInjectionMetadata,
-  InjectScope,
   ServiceId,
 } from './types';
 import {BindingNotFoundError, CircularAliasError, CircularDependencyError, DuplicatedBindingError} from './errors';
@@ -43,7 +43,7 @@ function constructorToFactory(constructor: Class) {
 export class ResolveContext {
   private readonly planingSet: Set<ServiceId> = new Set();
   private readonly instructions: Instruction[] = [];
-  private readonly requestSingletonCache: Map<any, any> = new Map();
+  private readonly sessionCache: Map<any, any> = new Map();
   private readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
   private readonly stack: any[] = [];
   private allFinished: Promise<void>;
@@ -51,7 +51,7 @@ export class ResolveContext {
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
     readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
-    readonly globalSingletonCache: Map<any, any>,
+    readonly globalCache: Map<any, any>,
   ) {
     this.allFinished = new Promise<void>((resolve, reject) => {
       this.dependentsCleanedUp = (e?: Error) => {
@@ -189,11 +189,11 @@ export class ResolveContext {
   }
 
   private resolveFromCache(target: ServiceId) {
-    if (this.globalSingletonCache.has(target)) {
-      this.stack.push(this.globalSingletonCache.get(target));
+    if (this.globalCache.has(target)) {
+      this.stack.push(this.globalCache.get(target));
       return true;
-    } else if (this.requestSingletonCache.has(target)) {
-      this.stack.push(this.requestSingletonCache.get(target));
+    } else if (this.sessionCache.has(target)) {
+      this.stack.push(this.sessionCache.get(target));
       return true;
     }
     return false;
@@ -235,7 +235,7 @@ export class ResolveContext {
       throw new CircularDependencyError(target);
     }
     /**
-     * Interceptor may directly put something into request cache, we need to
+     * Interceptor may directly put something into session cache, we need to
      * check the cache first, otherwise a BindingNotFoundError may be thrown
      */
     if (this.resolveFromCache(target)) {
@@ -285,23 +285,23 @@ export class ResolveContext {
   }
 
   private cacheIfNecessary(cacheScope: InjectScope, serviceId: Class<any> | string | symbol, result: any) {
-    if (cacheScope === InjectScope.REQUEST) {
-      this.requestSingletonCache.set(serviceId, result);
+    if (cacheScope === InjectScope.REQUEST || cacheScope === InjectScope.SESSION) {
+      this.sessionCache.set(serviceId, result);
     } else if (cacheScope === InjectScope.SINGLETON) {
-      this.globalSingletonCache.set(serviceId, result);
+      this.globalCache.set(serviceId, result);
     }
   }
 
   private checkCache(cacheScope: InjectScope, serviceId: ServiceId) {
     if (cacheScope === InjectScope.SINGLETON) {
-      if (this.globalSingletonCache.has(serviceId)) {
+      if (this.globalCache.has(serviceId)) {
         throw new Error('BUG: Reconstruct a global singleton');
       }
     }
 
-    if (cacheScope === InjectScope.REQUEST) {
-      if (this.requestSingletonCache.has(serviceId)) {
-        throw new Error('BUG: Reconstruct a request-scope singleton');
+    if (cacheScope === InjectScope.REQUEST || cacheScope === InjectScope.SESSION) {
+      if (this.sessionCache.has(serviceId)) {
+        throw new Error('BUG: Reconstruct an injectable that already exists in session cache');
       }
     }
   }

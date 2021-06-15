@@ -419,7 +419,7 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: RequestSingleton,
       paramInjectionMetadata: [{id: GlobalSingleton, index: 0, optional: false, transform: untransformed}],
-      scope: InjectScope.REQUEST,
+      scope: InjectScope.SESSION,
     });
 
     class Transient {
@@ -449,7 +449,7 @@ describe('Kernel', () => {
         {id: Transient, index: 0, optional: false, transform: untransformed},
         {id: Transient, index: 1, optional: false, transform: untransformed},
       ],
-      scope: InjectScope.REQUEST,
+      scope: InjectScope.SESSION,
     });
 
     const root = kernel.resolve(Root);
@@ -497,12 +497,12 @@ describe('Kernel', () => {
       constructor(@inject(GlobalA) global: GlobalA) {}
     }
 
-    @injectable({scope: InjectScope.REQUEST})
+    @injectable({scope: InjectScope.SESSION})
     class B {
       constructor(@inject(A) a: A) {}
     }
 
-    @injectable({scope: InjectScope.REQUEST})
+    @injectable({scope: InjectScope.SESSION})
     class C {
       constructor(@inject('1') param: any) {}
     }

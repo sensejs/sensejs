@@ -23,7 +23,9 @@ export type ServiceId<T = any> = Class<T> | string | symbol;
 
 export enum InjectScope {
   SINGLETON = 'SINGLETON',
+  /** @deprecated */
   REQUEST = 'REQUEST',
+  SESSION = 'SESSION',
   TRANSIENT = 'TRANSIENT',
 }
 
