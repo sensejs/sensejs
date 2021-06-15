@@ -5,7 +5,6 @@ export enum InstructionCode {
   TRANSFORM = 'TRANSFORM',
   BUILD = 'BUILD',
   INVOKE = 'INVOKE',
-  ASYNC_BUILD = 'ASYNC_BUILD',
 }
 
 export interface PlanInstruction {
