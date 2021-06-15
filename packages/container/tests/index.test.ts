@@ -63,9 +63,9 @@ describe('Kernel', () => {
       constructor(@inject('2') readonly param: number) {}
     }
 
-    expect(kernel.createResolveContext().construct(Foo)).toEqual(expect.objectContaining({param: value}));
+    expect(kernel.createResolveSession().construct(Foo)).toEqual(expect.objectContaining({param: value}));
 
-    expect(() => kernel.createResolveContext().construct(Bar)).toThrow(BindingNotFoundError);
+    expect(() => kernel.createResolveSession().construct(Bar)).toThrow(BindingNotFoundError);
   });
 
   test('factory', () => {
@@ -275,7 +275,7 @@ describe('Kernel', () => {
       id: 'const2',
       value: value2,
     });
-    const context = await kernel.createResolveContext();
+    const context = await kernel.createResolveSession();
     await context.intercept({
       interceptorBuilder: (param1: number) => {
         return async (next) => {
@@ -311,7 +311,7 @@ describe('Kernel', () => {
       method(@inject('const2') param1: number, param2: number) {}
     }
     kernel.add(Foo);
-    expect(() => kernel.createResolveContext().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
+    expect(() => kernel.createResolveSession().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
 
   test('invoke with optional', () => {
@@ -324,7 +324,7 @@ describe('Kernel', () => {
     }
     kernel.add(Foo);
 
-    kernel.createResolveContext().invoke(Foo, 'method');
+    kernel.createResolveSession().invoke(Foo, 'method');
   });
 
   test('error occurred when invoke', async () => {
@@ -342,7 +342,7 @@ describe('Kernel', () => {
 
     kernel.add(Foo);
     const stub = jest.fn();
-    const context = kernel.createResolveContext();
+    const context = kernel.createResolveSession();
     await context.intercept({
       interceptorBuilder: () => {
         return async (next) => {
@@ -381,7 +381,7 @@ describe('Kernel', () => {
     }
 
     kernel.add(Foo);
-    const context = kernel.createResolveContext();
+    const context = kernel.createResolveSession();
     await context.intercept({
       interceptorBuilder: () => {
         return async (next) => {
@@ -538,7 +538,7 @@ describe('Kernel', () => {
     container.add(E);
 
     const getResolveContext = () => {
-      return container.createResolveContext().addTemporaryConstantBinding('1', '1');
+      return container.createResolveSession().addTemporaryConstantBinding('1', '1');
     };
 
     expect(() => getResolveContext().resolve(GlobalA)).toThrow(BindingNotFoundError);
@@ -548,5 +548,19 @@ describe('Kernel', () => {
     expect(() => getResolveContext().resolve(GlobalD)).toThrow(BindingNotFoundError);
     expect(getResolveContext().resolve(C)).toBeInstanceOf(C);
     expect(getResolveContext().resolve(D)).toBeInstanceOf(D);
+  });
+
+  test('deprecated createResolveContext works', () => {
+    @injectable()
+    class A {}
+    @injectable({scope: InjectScope.REQUEST})
+    class B {}
+
+    const container = new Container();
+    expect(container.add(A).createResolveContext().resolve(A)).toBeInstanceOf(A);
+    container.add(B);
+    expect(container.resolve(B)).not.toBe(container.resolve(B));
+    const resolveContext = container.createResolveContext();
+    expect(resolveContext.resolve(B)).toBe(resolveContext.resolve(B));
   });
 });

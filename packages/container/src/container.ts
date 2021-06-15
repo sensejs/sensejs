@@ -40,7 +40,7 @@ function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);
 }
 
-export class ResolveContext {
+export class ResolveSession {
   private readonly planingSet: Set<ServiceId> = new Set();
   private readonly instructions: Instruction[] = [];
   private readonly sessionCache: Map<any, any> = new Map();
@@ -316,13 +316,23 @@ export class ResolveContext {
   }
 }
 
+/**
+ * @deprecated
+ */
+export class ResolveContext extends ResolveSession {}
+
 export class Container {
   private bindingMap: Map<ServiceId, Binding<any>> = new Map();
   private compiledInstructionMap: Map<ServiceId, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId, any> = new Map();
 
+  /** @deprecated */
   createResolveContext(): ResolveContext {
     return new ResolveContext(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
+  }
+
+  createResolveSession(): ResolveSession {
+    return new ResolveSession(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
   }
 
   add(ctor: Constructor): this {
@@ -353,7 +363,7 @@ export class Container {
   }
 
   resolve<T>(serviceId: ServiceId<T>): T {
-    return this.createResolveContext().resolve(serviceId);
+    return this.createResolveSession().resolve(serviceId);
   }
 
   private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
