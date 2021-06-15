@@ -1,4 +1,4 @@
-import {Class, Constructor, ParamInjectionMetadata, Scope} from './types';
+import {Class, Constructor, ParamInjectionMetadata, InjectScope} from './types';
 import {InvalidParamBindingError, NoEnoughInjectMetadataError} from './errors';
 
 export interface MethodInvokeMetadata {
@@ -13,7 +13,7 @@ const METHOD_INVOKE_METADATA = Symbol();
 
 export interface DecoratorMetadata {
   params: Map<number, Partial<ParamInjectionMetadata>>;
-  scope: Scope;
+  scope: InjectScope;
 }
 
 export function ensureConstructorParamInjectMetadata(ctor: Class): DecoratorMetadata {
@@ -25,7 +25,7 @@ export function ensureConstructorParamInjectMetadata(ctor: Class): DecoratorMeta
 
   metadata = {
     params: new Map(),
-    scope: Scope.TRANSIENT,
+    scope: InjectScope.TRANSIENT,
   };
   Reflect.defineMetadata(PARAM_INJECT_METADATA_KEY, metadata, ctor);
   return metadata;
@@ -110,13 +110,11 @@ export function ensureValidatedParamInjectMetadata(
 }
 
 export function convertParamInjectionMetadata(cm: DecoratorMetadata): ParamInjectionMetadata[] {
-  return Array.from(cm.params.entries()).map(
-    ([index, value]): ParamInjectionMetadata => {
-      const {id, transform, optional = false} = value;
-      if (typeof id === 'undefined') {
-        throw new TypeError('param inject id is undefined');
-      }
-      return {index, id, transform, optional};
-    },
-  );
+  return Array.from(cm.params.entries()).map(([index, value]): ParamInjectionMetadata => {
+    const {id, transform, optional = false} = value;
+    if (typeof id === 'undefined') {
+      throw new TypeError('param inject id is undefined');
+    }
+    return {index, id, transform, optional};
+  });
 }

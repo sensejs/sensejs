@@ -1,4 +1,4 @@
-import {BindingType, Container, Scope, ServiceId} from '@sensejs/container';
+import {BindingType, Container, InjectScope, ServiceId} from '@sensejs/container';
 import {getModuleMetadata, ModuleMetadata} from './module';
 import {invokeMethod} from './method-invoker';
 import {ComponentFactory, ComponentMetadata, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
@@ -140,7 +140,7 @@ export class ModuleInstance<T extends {} = {}> {
 
   private bindFactories(factories: FactoryProvider<unknown>[]) {
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, factory, scope = Scope.REQUEST, ...rest} = factoryProvider;
+      const {provide, factory, scope = InjectScope.REQUEST, ...rest} = factoryProvider;
       this.container.add(factory);
       this.container.addBinding({
         type: BindingType.FACTORY,

@@ -1,7 +1,7 @@
 import {ComponentFactory, Constructor, FactoryProvider, ServiceIdentifier} from './interfaces';
 import {Component} from './component';
 import {Inject} from './decorators';
-import {Scope} from '@sensejs/container';
+import {InjectScope} from '@sensejs/container';
 
 export interface ConnectionFactoryProvider<T, Option> extends FactoryProvider<T> {
   factory: Constructor<AbstractConnectionFactory<T, Option>>;
@@ -17,7 +17,7 @@ export function createConnectionFactory<T, Option>(
   init: (option: Option) => Promise<T>,
   destroy: (conn: T) => Promise<void>,
 ): Constructor<AbstractConnectionFactory<T, Option>> {
-  @Component({scope: Scope.SINGLETON})
+  @Component({scope: InjectScope.SINGLETON})
   class ConnectionFactory extends AbstractConnectionFactory<T, Option> {
     private connection?: T;
 
@@ -57,7 +57,7 @@ export function provideConnectionFactory<T, Option>(
   return {
     provide: exportSymbol,
     factory: createConnectionFactory<T, Option>(init, destroy),
-    scope: Scope.SINGLETON,
+    scope: InjectScope.SINGLETON,
   };
 }
 
@@ -66,7 +66,7 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
   injectedSymbol: ServiceIdentifier | undefined,
   configMerger: (fallback?: Fallback, injected?: Injected) => Result,
 ): Constructor<ComponentFactory<Result>> {
-  @Component({scope: Scope.SINGLETON})
+  @Component({scope: InjectScope.SINGLETON})
   class ConfigFactory extends ComponentFactory<Result> {
     private readonly injectedConfig?: Injected;
 
@@ -95,6 +95,6 @@ export function provideOptionInjector<Result, Fallback = Partial<Result>, Inject
   return {
     provide: exportSymbol,
     factory: createConfigHelperFactory(fallback, injectOptionFrom, configMerger),
-    scope: Scope.SINGLETON,
+    scope: InjectScope.SINGLETON,
   };
 }

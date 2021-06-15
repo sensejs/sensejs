@@ -10,7 +10,7 @@ import {
   InstanceBinding,
   InvokeResult,
   ParamInjectionMetadata,
-  Scope,
+  InjectScope,
   ServiceId,
 } from './types';
 import {BindingNotFoundError, CircularAliasError, CircularDependencyError, DuplicatedBindingError} from './errors';
@@ -70,7 +70,7 @@ export class ResolveContext {
     this.instructions.push(
       {
         code: InstructionCode.BUILD,
-        cacheScope: Scope.TRANSIENT,
+        cacheScope: InjectScope.TRANSIENT,
         factory: interceptorBuilder,
         paramCount: paramInjectionMetadata.length,
         serviceId,
@@ -217,7 +217,7 @@ export class ResolveContext {
       this.instructions.push(
         {
           code: InstructionCode.BUILD,
-          cacheScope: Scope.TRANSIENT,
+          cacheScope: InjectScope.TRANSIENT,
           factory: constructorToFactory(target),
           paramCount: cm.length,
           serviceId: target,
@@ -248,7 +248,7 @@ export class ResolveContext {
     if (this.resolveFromCache(binding.id)) {
       return;
     }
-    const disableTemporary = binding.type !== BindingType.CONSTANT && binding.scope === Scope.SINGLETON;
+    const disableTemporary = binding.type !== BindingType.CONSTANT && binding.scope === InjectScope.SINGLETON;
     switch (binding.type) {
       case BindingType.CONSTANT:
         this.stack.push(binding.value);
@@ -284,22 +284,22 @@ export class ResolveContext {
     this.planingSet.delete(serviceId);
   }
 
-  private cacheIfNecessary(cacheScope: Scope, serviceId: Class<any> | string | symbol, result: any) {
-    if (cacheScope === Scope.REQUEST) {
+  private cacheIfNecessary(cacheScope: InjectScope, serviceId: Class<any> | string | symbol, result: any) {
+    if (cacheScope === InjectScope.REQUEST) {
       this.requestSingletonCache.set(serviceId, result);
-    } else if (cacheScope === Scope.SINGLETON) {
+    } else if (cacheScope === InjectScope.SINGLETON) {
       this.globalSingletonCache.set(serviceId, result);
     }
   }
 
-  private checkCache(cacheScope: Scope, serviceId: ServiceId) {
-    if (cacheScope === Scope.SINGLETON) {
+  private checkCache(cacheScope: InjectScope, serviceId: ServiceId) {
+    if (cacheScope === InjectScope.SINGLETON) {
       if (this.globalSingletonCache.has(serviceId)) {
         throw new Error('BUG: Reconstruct a global singleton');
       }
     }
 
-    if (cacheScope === Scope.REQUEST) {
+    if (cacheScope === InjectScope.REQUEST) {
       if (this.requestSingletonCache.has(serviceId)) {
         throw new Error('BUG: Reconstruct a request-scope singleton');
       }
@@ -366,7 +366,7 @@ export class Container {
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
       },
-      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== Scope.SINGLETON),
+      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== InjectScope.SINGLETON),
     ]);
   }
 
@@ -380,7 +380,7 @@ export class Container {
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
       },
-      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== Scope.SINGLETON),
+      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== InjectScope.SINGLETON),
     ]);
   }
 }

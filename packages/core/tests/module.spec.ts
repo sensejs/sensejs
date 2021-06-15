@@ -1,4 +1,4 @@
-import {BindingType, Container, Scope} from '@sensejs/container';
+import {BindingType, Container, InjectScope} from '@sensejs/container';
 import {
   Component,
   ComponentFactory,
@@ -305,7 +305,7 @@ describe('Module resolve', () => {
         return 'factory';
       }
     }
-    const dynamicFactory: FactoryProvider<any> = {provide: 'factory', factory: Factory, scope: Scope.SINGLETON};
+    const dynamicFactory: FactoryProvider<any> = {provide: 'factory', factory: Factory, scope: InjectScope.SINGLETON};
 
     const stub = jest.fn();
 

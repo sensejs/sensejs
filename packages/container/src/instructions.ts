@@ -1,4 +1,4 @@
-import {Class, Scope, ServiceId} from './types';
+import {Class, InjectScope, ServiceId} from './types';
 
 export enum InstructionCode {
   PLAN = 'PLAN',
@@ -26,7 +26,7 @@ export interface BuildInstruction {
   serviceId: ServiceId;
   factory: (...args: any[]) => any;
   paramCount: number;
-  cacheScope: Scope;
+  cacheScope: InjectScope;
 }
 
 export interface TransformInstruction {

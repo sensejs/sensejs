@@ -10,7 +10,7 @@ import {
   InvalidParamBindingError,
   NoEnoughInjectMetadataError,
   optional,
-  Scope,
+  InjectScope,
 } from '../src';
 
 function untransformed(input: any) {
@@ -37,7 +37,7 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: Foo,
       paramInjectionMetadata: [{id: '1', index: 0, optional: false, transform: transformer}],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
 
     const result = kernel.resolve(Foo);
@@ -87,7 +87,7 @@ describe('Kernel', () => {
       type: BindingType.FACTORY,
       factory: (param: number) => new Foo(param),
       paramInjectionMetadata: [{id: '1', index: 0, optional: false, transform: untransformed}],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
 
     const result = kernel.resolve(Foo);
@@ -117,7 +117,7 @@ describe('Kernel', () => {
         {id: '1', index: 0, optional: false},
         {id: 'optional', index: 1, optional: true},
       ],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
 
     const result = kernel.resolve(Foo);
@@ -142,7 +142,7 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: Foo,
       paramInjectionMetadata: [],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
 
     kernel.addBinding({
@@ -159,7 +159,7 @@ describe('Kernel', () => {
         {id: Foo, index: 0, optional: false},
         {id: 'alias', index: 1, optional: false},
       ],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
 
     const result = kernel.resolve(Bar);
@@ -203,7 +203,7 @@ describe('Kernel', () => {
             optional: true,
           },
         ],
-        scope: Scope.TRANSIENT,
+        scope: InjectScope.TRANSIENT,
         constructor: Foo,
       }),
     ).toThrow(InvalidParamBindingError);
@@ -221,14 +221,14 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: Foo,
       paramInjectionMetadata: [{id: Bar, index: 0, optional: false}],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
     kernel.addBinding({
       id: Bar,
       type: BindingType.INSTANCE,
       constructor: Bar,
       paramInjectionMetadata: [{id: Foo, index: 0, optional: false}],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
 
     expect(() => kernel.resolve(Foo)).toThrow(CircularDependencyError);
@@ -407,7 +407,7 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: GlobalSingleton,
       paramInjectionMetadata: [],
-      scope: Scope.SINGLETON,
+      scope: InjectScope.SINGLETON,
     });
 
     class RequestSingleton {
@@ -419,7 +419,7 @@ describe('Kernel', () => {
       type: BindingType.INSTANCE,
       constructor: RequestSingleton,
       paramInjectionMetadata: [{id: GlobalSingleton, index: 0, optional: false, transform: untransformed}],
-      scope: Scope.REQUEST,
+      scope: InjectScope.REQUEST,
     });
 
     class Transient {
@@ -434,7 +434,7 @@ describe('Kernel', () => {
         {id: GlobalSingleton, index: 0, optional: false, transform: untransformed},
         {id: RequestSingleton, index: 1, optional: false, transform: untransformed},
       ],
-      scope: Scope.TRANSIENT,
+      scope: InjectScope.TRANSIENT,
     });
 
     class Root {
@@ -449,7 +449,7 @@ describe('Kernel', () => {
         {id: Transient, index: 0, optional: false, transform: untransformed},
         {id: Transient, index: 1, optional: false, transform: untransformed},
       ],
-      scope: Scope.REQUEST,
+      scope: InjectScope.REQUEST,
     });
 
     const root = kernel.resolve(Root);
@@ -463,7 +463,7 @@ describe('Kernel', () => {
   });
 
   test('decorator', () => {
-    @injectable({scope: Scope.SINGLETON})
+    @injectable({scope: InjectScope.SINGLETON})
     class Foo {
       constructor() {}
     }
@@ -483,45 +483,45 @@ describe('Kernel', () => {
   });
 
   test('temporary binding cannot be used by global component', () => {
-    @injectable({scope: Scope.SINGLETON})
+    @injectable({scope: InjectScope.SINGLETON})
     class GlobalA {
       constructor(@inject('1') param: any) {}
     }
-    @injectable({scope: Scope.SINGLETON})
+    @injectable({scope: InjectScope.SINGLETON})
     class GlobalB {
       constructor() {}
     }
 
-    @injectable({scope: Scope.TRANSIENT})
+    @injectable({scope: InjectScope.TRANSIENT})
     class A {
       constructor(@inject(GlobalA) global: GlobalA) {}
     }
 
-    @injectable({scope: Scope.REQUEST})
+    @injectable({scope: InjectScope.REQUEST})
     class B {
       constructor(@inject(A) a: A) {}
     }
 
-    @injectable({scope: Scope.REQUEST})
+    @injectable({scope: InjectScope.REQUEST})
     class C {
       constructor(@inject('1') param: any) {}
     }
 
-    @injectable({scope: Scope.TRANSIENT})
+    @injectable({scope: InjectScope.TRANSIENT})
     class D {
       constructor(@inject(C) a: C) {}
     }
 
-    @injectable({scope: Scope.TRANSIENT})
+    @injectable({scope: InjectScope.TRANSIENT})
     class E {
       constructor(@inject(GlobalB) param: any) {}
     }
 
-    @injectable({scope: Scope.SINGLETON})
+    @injectable({scope: InjectScope.SINGLETON})
     class GlobalC {
       constructor(@inject(E) b: any, @inject('1') param: any) {}
     }
-    @injectable({scope: Scope.SINGLETON})
+    @injectable({scope: InjectScope.SINGLETON})
     class GlobalD {
       constructor(@inject('1') param: any, @inject(E) b: any) {}
     }

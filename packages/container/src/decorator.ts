@@ -1,4 +1,4 @@
-import {Class, Scope, ServiceId, Transformer} from './types';
+import {Class, InjectScope, ServiceId, Transformer} from './types';
 import {assignParamInjectMetadata, ensureConstructorParamInjectMetadata, ensureMethodInvokeProxy} from './metadata';
 
 export function inject<T, R = T>(serviceId: ServiceId<T>, transformer?: Transformer<T, R>) {
@@ -24,7 +24,7 @@ export function optional(value = true) {
 }
 
 export interface InjectableOption {
-  scope?: Scope;
+  scope?: InjectScope;
 }
 
 export function injectable(option: InjectableOption = {}) {

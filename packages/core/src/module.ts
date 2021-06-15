@@ -1,5 +1,5 @@
 import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
-import {injectable, Scope} from '@sensejs/container';
+import {injectable, InjectScope} from '@sensejs/container';
 
 /**
  * Options to define a module
@@ -105,7 +105,7 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
       onModuleCreate,
       onModuleDestroy,
     });
-    injectable({scope: Scope.SINGLETON})(constructor);
+    injectable({scope: InjectScope.SINGLETON})(constructor);
     return constructor;
   };
 }

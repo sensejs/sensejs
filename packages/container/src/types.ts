@@ -21,7 +21,7 @@ export enum BindingType {
 
 export type ServiceId<T = any> = Class<T> | string | symbol;
 
-export enum Scope {
+export enum InjectScope {
   SINGLETON = 'SINGLETON',
   REQUEST = 'REQUEST',
   TRANSIENT = 'TRANSIENT',
@@ -45,13 +45,13 @@ export interface InstanceBinding<T> {
   id: ServiceId<T>;
   constructor: Constructor<T>;
   paramInjectionMetadata: ParamInjectionMetadata[];
-  scope: Scope;
+  scope: InjectScope;
 }
 
 export interface FactoryBinding<T> {
   type: BindingType.FACTORY;
   id: ServiceId<T>;
-  scope: Scope;
+  scope: InjectScope;
   factory: (...args: any[]) => T;
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
@@ -59,7 +59,7 @@ export interface FactoryBinding<T> {
 export interface AsyncFactoryBinding<T> {
   type: BindingType.ASYNC_FACTORY;
   id: ServiceId<T>;
-  scope: Scope.REQUEST | Scope.TRANSIENT;
+  scope: InjectScope.REQUEST | InjectScope.TRANSIENT;
   factory: (...args: any[]) => Promise<T>;
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
