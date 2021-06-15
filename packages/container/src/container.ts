@@ -20,6 +20,7 @@ import {
   ensureConstructorParamInjectMetadata,
   ensureValidatedMethodInvokeProxy,
   ensureValidatedParamInjectMetadata,
+  getInjectScope,
 } from './metadata';
 
 function compileParamInjectInstruction(
@@ -337,11 +338,12 @@ export class Container {
 
   add(ctor: Constructor): this {
     const cm = ensureConstructorParamInjectMetadata(ctor);
+    const scope = getInjectScope(ctor) ?? InjectScope.SESSION;
     this.addBinding({
       type: BindingType.INSTANCE,
       id: ctor,
       constructor: ctor,
-      scope: cm.scope,
+      scope,
       paramInjectionMetadata: convertParamInjectionMetadata(cm),
     });
     return this;

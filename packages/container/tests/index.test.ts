@@ -7,10 +7,11 @@ import {
   DuplicatedBindingError,
   inject,
   injectable,
+  InjectScope,
   InvalidParamBindingError,
   NoEnoughInjectMetadataError,
   optional,
-  InjectScope,
+  scope,
 } from '../src';
 
 function untransformed(input: any) {
@@ -483,45 +484,54 @@ describe('Kernel', () => {
   });
 
   test('temporary binding cannot be used by global component', () => {
-    @injectable({scope: InjectScope.SINGLETON})
+    @injectable()
+    @scope(InjectScope.SINGLETON)
     class GlobalA {
       constructor(@inject('1') param: any) {}
     }
-    @injectable({scope: InjectScope.SINGLETON})
+    @injectable()
+    @scope(InjectScope.SINGLETON)
     class GlobalB {
       constructor() {}
     }
 
-    @injectable({scope: InjectScope.TRANSIENT})
+    @injectable()
+    @scope(InjectScope.TRANSIENT)
     class A {
       constructor(@inject(GlobalA) global: GlobalA) {}
     }
 
-    @injectable({scope: InjectScope.SESSION})
+    @injectable()
+    @scope(InjectScope.SESSION)
     class B {
       constructor(@inject(A) a: A) {}
     }
 
-    @injectable({scope: InjectScope.SESSION})
+    @injectable()
+    @scope(InjectScope.SESSION)
     class C {
       constructor(@inject('1') param: any) {}
     }
 
-    @injectable({scope: InjectScope.TRANSIENT})
+    @injectable()
+    @scope(InjectScope.TRANSIENT)
     class D {
       constructor(@inject(C) a: C) {}
     }
 
-    @injectable({scope: InjectScope.TRANSIENT})
+    @injectable()
+    @scope(InjectScope.TRANSIENT)
     class E {
       constructor(@inject(GlobalB) param: any) {}
     }
 
-    @injectable({scope: InjectScope.SINGLETON})
+    @injectable()
+    @scope(InjectScope.SINGLETON)
     class GlobalC {
       constructor(@inject(E) b: any, @inject('1') param: any) {}
     }
-    @injectable({scope: InjectScope.SINGLETON})
+    @injectable()
+    @scope(InjectScope.SINGLETON)
     class GlobalD {
       constructor(@inject('1') param: any, @inject(E) b: any) {}
     }
@@ -562,5 +572,19 @@ describe('Kernel', () => {
     expect(container.resolve(B)).not.toBe(container.resolve(B));
     const resolveContext = container.createResolveContext();
     expect(resolveContext.resolve(B)).toBe(resolveContext.resolve(B));
+  });
+
+  test('@injectable deprecated scope option', () => {
+    @injectable({scope: InjectScope.SINGLETON})
+    class SingletonA {}
+    @injectable({scope: InjectScope.REQUEST})
+    @scope(InjectScope.SINGLETON)
+    class SingletonB {}
+
+    const container = new Container();
+    container.add(SingletonA).add(SingletonB);
+
+    expect(container.resolve(SingletonA)).toBe(container.resolve(SingletonA));
+    expect(container.resolve(SingletonB)).toBe(container.resolve(SingletonB));
   });
 });

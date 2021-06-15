@@ -10,10 +10,18 @@ interface MethodInvokeProxy {
 }
 const PARAM_INJECT_METADATA_KEY = Symbol();
 const METHOD_INVOKE_METADATA = Symbol();
+const SCOPE_METADATA_KEY = Symbol('SCOPE');
 
 export interface DecoratorMetadata {
   params: Map<number, Partial<ParamInjectionMetadata>>;
-  scope: InjectScope;
+}
+
+export function getInjectScope(ctor: Class): InjectScope | undefined {
+  return Reflect.getOwnMetadata(SCOPE_METADATA_KEY, ctor) as InjectScope | undefined;
+}
+
+export function setInjectScope(ctor: Class, scope: InjectScope): void {
+  Reflect.defineMetadata(SCOPE_METADATA_KEY, scope, ctor);
 }
 
 export function ensureConstructorParamInjectMetadata(ctor: Class): DecoratorMetadata {
@@ -25,7 +33,6 @@ export function ensureConstructorParamInjectMetadata(ctor: Class): DecoratorMeta
 
   metadata = {
     params: new Map(),
-    scope: InjectScope.TRANSIENT,
   };
   Reflect.defineMetadata(PARAM_INJECT_METADATA_KEY, metadata, ctor);
   return metadata;
