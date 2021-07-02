@@ -5,10 +5,17 @@ sidebar_position: 3
 
 # Module
 
-The concept of module takes an important roles in SenseJS. It's designed to do the following job for your apps
+In this article, we'll discuss more details about SenseJS modules.
 
-- Pack injectables to make them to be available to be injected.
-- Initialize and de-initialize injectables.
+In the previous article, you've learned to export injectables through modules. You might note that to start an HTTP
+server, `createHttpModule` is called, which manages HTTP traffics for you. You might also note that the application
+entry point is also a module.
+
+The concept of the module takes an important roles in SenseJS. It's designed to do the following job for your
+application:
+
+- Export injectables to make them injectable to others
+- Initialize and de-initialize injectables and its underlying I/O system.
 
 ## Creating a module
 
@@ -97,6 +104,12 @@ Note that once a module is initialized, anything provided by it will be injectab
 other modules that do not list it as a dependency. In other words, the inter-module dependency graph only affects the
 order of initialization and de-initialization but does not restrict you from injecting anything from any other module.
 However, it is still a good practice to carefully consider the relationship between modules.
+
+## Conclusion
+
+From a global perspective, a typical SenseJS application is composed of modules. Some modules are organizing
+injectables, while some modules are also managing I/O. Based on the dependency graph of all the modules, SenseJS can
+gracefully startup and shut down your application.
 
 
 
