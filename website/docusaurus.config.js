@@ -12,6 +12,7 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName,
   projectName,
+  trailingSlash: false,
   themeConfig: {
     navbar: {
       title: 'SenseJS',
