@@ -21,7 +21,7 @@ application:
 
 You can create a module by decorating a class with `@ModuleClass`
 
-```
+```typescript
 @ModuleClass({
     requires: [],   // Other modules that required by this module
     components: [], // Component injectable provided by this module
