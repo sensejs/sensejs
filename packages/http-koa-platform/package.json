@@ -1,5 +1,5 @@
 {
-  "name": "@sensejs/http",
+  "name": "@sensejs/http-koa-platform",
   "version": "0.8.0",
   "description": "",
   "files": [

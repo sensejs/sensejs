@@ -16,7 +16,8 @@
   "private": true,
   "dependencies": {
     "@sensejs/core": "workspace:*",
-    "@sensejs/http": "workspace:*",
+    "@sensejs/http-common": "workspace:*",
+    "@sensejs/http-koa-platform": "workspace:*",
     "reflect-metadata": "^0.1.13"
   }
 }

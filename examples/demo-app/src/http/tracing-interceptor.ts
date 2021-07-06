@@ -1,5 +1,5 @@
 import {Component, Inject, LoggerBuilder, uuidV1} from '@sensejs/core';
-import {HttpContext, HttpInterceptor} from '@sensejs/http';
+import {HttpContext, HttpInterceptor} from '@sensejs/http-common';
 import {SenseLoggerBuilder} from '@sensejs/logger';
 
 @Component()

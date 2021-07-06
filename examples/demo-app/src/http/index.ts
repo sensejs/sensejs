@@ -1,4 +1,4 @@
-import {createHttpModule} from '@sensejs/http';
+import {createHttpModule} from '@sensejs/http-koa-platform';
 import {ExampleController} from './example.controller';
 import {RequestTimingInterceptor} from './request-timing.interceptor';
 import PublishingModule from '../example';
@@ -12,10 +12,6 @@ export default createHttpModule({
   },
   requires: [PublishingModule],
   components: [ExampleController],
-  globalInterceptors: [
-    TracingInterceptor,
-    ErrorHandlerInterceptor,
-    RequestTimingInterceptor,
-  ],
+  globalInterceptors: [TracingInterceptor, ErrorHandlerInterceptor, RequestTimingInterceptor],
   injectOptionFrom: 'config.http',
 });

@@ -11,7 +11,7 @@ import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
 import {Controller, GET, HttpContext, HttpInterceptor, Query} from '@sensejs/http-common';
-import {createHttpModule, KoaHttpApplicationBuilder} from '@sensejs/http';
+import {createHttpModule, KoaHttpApplicationBuilder} from '../src';
 
 test('HttpModule', async () => {
   const serverIdentifier = Symbol();
