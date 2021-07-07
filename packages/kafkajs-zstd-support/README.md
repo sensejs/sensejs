@@ -1,6 +1,6 @@
-# KafkaJS integrations for SENSE.JS
+# KafkaJS integrations for SenseJS
 
-This package integrates ZSTD compression codec to kafkajs
+This package integrates ZSTD compression codec to [kafkajs].
 
 
 ## Usage
@@ -17,5 +17,7 @@ Be careful that import this package multiple times will result in error:
 import '@sensejs/kafkajs-zstd-support';
 import '@sensejs/kafkajs-zstd-support'; // An error will be thrown
 ```
+
+[kafkajs]: https://kafka.js.org
 
 

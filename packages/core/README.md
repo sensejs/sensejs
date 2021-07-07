@@ -1,5 +1,5 @@
 
-# Core of SENSE.js Framework
+# Core of SenseJS Framework
 
-This package is the core of the Sense.js Framework, providing
+This package is the core of the SenseJS Framework, providing
 the modularized IoC system.

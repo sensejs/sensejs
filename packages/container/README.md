@@ -1,11 +1,9 @@
 
 ## `@sensejs/container`
 
-
-
 This package was created with the mission to replace [inversify].
 
-By supporting **asynchronous resolve**, **aliasing**, and **resolve interceptor** natively, which required by
+By supporting **resolve session**, **aliasing**, and **resolve interceptor** natively, which required by
 `@sensejs/core` but had to be emulated inefficiently when [inversify] was in used, huge performance improvement was
 gained.
 

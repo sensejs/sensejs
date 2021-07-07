@@ -1,4 +1,4 @@
-# TypeORM integration for SENSE.js
+# TypeORM integration for SenseJS
 
-This package integrate TypeORM as a module and make `Connection`,
-`EntityManager`, repositories for each components be injectable.
+This package integrates TypeORM as a module and make `Connection`,
+`EntityManager`, repositories for each component be injectable.

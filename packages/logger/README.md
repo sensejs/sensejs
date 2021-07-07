@@ -1,4 +1,4 @@
-# Recommended logger for SENSE.JS
+# Recommended logger for SenseJS
 
-This provide a recommended logger for application use sense.js.
+This package provides a recommended logger for application use sense.js.
 
