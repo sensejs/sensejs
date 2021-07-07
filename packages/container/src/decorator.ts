@@ -86,6 +86,12 @@ export function Scope(scope: InjectScope) {
   };
 }
 
+Scope.SESSION = InjectScope.SESSION;
+Scope.TRANSIENT = InjectScope.TRANSIENT;
+Scope.SINGLETON = InjectScope.SINGLETON;
+/** @deprecated */
+Scope.REQUEST = InjectScope.REQUEST;
+
 /**
  * @deprecated
  */
