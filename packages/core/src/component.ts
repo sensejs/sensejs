@@ -8,7 +8,7 @@ export interface ComponentOption<T extends {} = {}> {
   /** @deprecated */
   scope?: InjectScope;
   id?: string | symbol | Class<T>;
-  /** @deprecated */
+  /** @deprecated Use of this option is not recommended, decorate base with `@Injectable()` instead */
   bindParentConstructor?: boolean;
 }
 
