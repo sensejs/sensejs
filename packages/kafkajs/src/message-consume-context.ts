@@ -72,18 +72,3 @@ export class BatchedMessageConsumeContext extends MessageConsumeContext {
     return this.batchedConsumeParam.resolveOffset(offset);
   }
 }
-
-/**
- * @deprecated
- */
-export function InjectSubscribeContext(transform: Transformer = (x) => x): InjectionDecorator {
-  return Inject(MessageConsumeContext, {transform});
-}
-
-/**
- *
- * @deprecated
- */
-export function Message(transform: Transformer = (x) => x): InjectionDecorator {
-  return InjectSubscribeContext((x: SimpleMessageConsumeContext) => transform(x.message));
-}
