@@ -7,10 +7,10 @@ import {
   ConstantBinding,
   Constructor,
   FactoryBinding,
+  InjectScope,
   InstanceBinding,
   InvokeResult,
   ParamInjectionMetadata,
-  Scope,
   ServiceId,
 } from './types';
 import {BindingNotFoundError, CircularAliasError, CircularDependencyError, DuplicatedBindingError} from './errors';
@@ -20,6 +20,7 @@ import {
   ensureConstructorParamInjectMetadata,
   ensureValidatedMethodInvokeProxy,
   ensureValidatedParamInjectMetadata,
+  getInjectScope,
 } from './metadata';
 
 function compileParamInjectInstruction(
@@ -40,10 +41,10 @@ function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);
 }
 
-export class ResolveContext {
+export class ResolveSession {
   private readonly planingSet: Set<ServiceId> = new Set();
   private readonly instructions: Instruction[] = [];
-  private readonly requestSingletonCache: Map<any, any> = new Map();
+  private readonly sessionCache: Map<any, any> = new Map();
   private readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
   private readonly stack: any[] = [];
   private allFinished: Promise<void>;
@@ -51,7 +52,7 @@ export class ResolveContext {
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
     readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
-    readonly globalSingletonCache: Map<any, any>,
+    readonly globalCache: Map<any, any>,
   ) {
     this.allFinished = new Promise<void>((resolve, reject) => {
       this.dependentsCleanedUp = (e?: Error) => {
@@ -70,7 +71,7 @@ export class ResolveContext {
     this.instructions.push(
       {
         code: InstructionCode.BUILD,
-        cacheScope: Scope.TRANSIENT,
+        cacheScope: InjectScope.TRANSIENT,
         factory: interceptorBuilder,
         paramCount: paramInjectionMetadata.length,
         serviceId,
@@ -189,11 +190,11 @@ export class ResolveContext {
   }
 
   private resolveFromCache(target: ServiceId) {
-    if (this.globalSingletonCache.has(target)) {
-      this.stack.push(this.globalSingletonCache.get(target));
+    if (this.globalCache.has(target)) {
+      this.stack.push(this.globalCache.get(target));
       return true;
-    } else if (this.requestSingletonCache.has(target)) {
-      this.stack.push(this.requestSingletonCache.get(target));
+    } else if (this.sessionCache.has(target)) {
+      this.stack.push(this.sessionCache.get(target));
       return true;
     }
     return false;
@@ -217,7 +218,7 @@ export class ResolveContext {
       this.instructions.push(
         {
           code: InstructionCode.BUILD,
-          cacheScope: Scope.TRANSIENT,
+          cacheScope: InjectScope.TRANSIENT,
           factory: constructorToFactory(target),
           paramCount: cm.length,
           serviceId: target,
@@ -235,7 +236,7 @@ export class ResolveContext {
       throw new CircularDependencyError(target);
     }
     /**
-     * Interceptor may directly put something into request cache, we need to
+     * Interceptor may directly put something into session cache, we need to
      * check the cache first, otherwise a BindingNotFoundError may be thrown
      */
     if (this.resolveFromCache(target)) {
@@ -248,7 +249,7 @@ export class ResolveContext {
     if (this.resolveFromCache(binding.id)) {
       return;
     }
-    const disableTemporary = binding.type !== BindingType.CONSTANT && binding.scope === Scope.SINGLETON;
+    const disableTemporary = binding.type !== BindingType.CONSTANT && binding.scope === InjectScope.SINGLETON;
     switch (binding.type) {
       case BindingType.CONSTANT:
         this.stack.push(binding.value);
@@ -284,24 +285,24 @@ export class ResolveContext {
     this.planingSet.delete(serviceId);
   }
 
-  private cacheIfNecessary(cacheScope: Scope, serviceId: Class<any> | string | symbol, result: any) {
-    if (cacheScope === Scope.REQUEST) {
-      this.requestSingletonCache.set(serviceId, result);
-    } else if (cacheScope === Scope.SINGLETON) {
-      this.globalSingletonCache.set(serviceId, result);
+  private cacheIfNecessary(cacheScope: InjectScope, serviceId: Class<any> | string | symbol, result: any) {
+    if (cacheScope === InjectScope.REQUEST || cacheScope === InjectScope.SESSION) {
+      this.sessionCache.set(serviceId, result);
+    } else if (cacheScope === InjectScope.SINGLETON) {
+      this.globalCache.set(serviceId, result);
     }
   }
 
-  private checkCache(cacheScope: Scope, serviceId: ServiceId) {
-    if (cacheScope === Scope.SINGLETON) {
-      if (this.globalSingletonCache.has(serviceId)) {
+  private checkCache(cacheScope: InjectScope, serviceId: ServiceId) {
+    if (cacheScope === InjectScope.SINGLETON) {
+      if (this.globalCache.has(serviceId)) {
         throw new Error('BUG: Reconstruct a global singleton');
       }
     }
 
-    if (cacheScope === Scope.REQUEST) {
-      if (this.requestSingletonCache.has(serviceId)) {
-        throw new Error('BUG: Reconstruct a request-scope singleton');
+    if (cacheScope === InjectScope.REQUEST || cacheScope === InjectScope.SESSION) {
+      if (this.sessionCache.has(serviceId)) {
+        throw new Error('BUG: Reconstruct an injectable that already exists in session cache');
       }
     }
   }
@@ -316,22 +317,33 @@ export class ResolveContext {
   }
 }
 
+/**
+ * @deprecated
+ */
+export class ResolveContext extends ResolveSession {}
+
 export class Container {
   private bindingMap: Map<ServiceId, Binding<any>> = new Map();
   private compiledInstructionMap: Map<ServiceId, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId, any> = new Map();
 
+  /** @deprecated */
   createResolveContext(): ResolveContext {
     return new ResolveContext(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
   }
 
+  createResolveSession(): ResolveSession {
+    return new ResolveSession(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
+  }
+
   add(ctor: Constructor): this {
     const cm = ensureConstructorParamInjectMetadata(ctor);
+    const scope = getInjectScope(ctor) ?? InjectScope.SESSION;
     this.addBinding({
       type: BindingType.INSTANCE,
       id: ctor,
       constructor: ctor,
-      scope: cm.scope,
+      scope,
       paramInjectionMetadata: convertParamInjectionMetadata(cm),
     });
     return this;
@@ -353,7 +365,7 @@ export class Container {
   }
 
   resolve<T>(serviceId: ServiceId<T>): T {
-    return this.createResolveContext().resolve(serviceId);
+    return this.createResolveSession().resolve(serviceId);
   }
 
   private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
@@ -366,7 +378,7 @@ export class Container {
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
       },
-      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== Scope.SINGLETON),
+      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== InjectScope.SINGLETON),
     ]);
   }
 
@@ -380,7 +392,7 @@ export class Container {
         paramCount: paramInjectionMetadata.length,
         serviceId: id,
       },
-      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== Scope.SINGLETON),
+      ...compileParamInjectInstruction(paramInjectionMetadata, scope !== InjectScope.SINGLETON),
     ]);
   }
 }

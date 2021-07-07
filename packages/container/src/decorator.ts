@@ -1,5 +1,11 @@
-import {Class, Scope, ServiceId, Transformer} from './types';
-import {assignParamInjectMetadata, ensureConstructorParamInjectMetadata, ensureMethodInvokeProxy} from './metadata';
+import {Class, Constructor, InjectScope, ServiceId, Transformer} from './types';
+import {
+  assignParamInjectMetadata,
+  ensureConstructorParamInjectMetadata,
+  ensureMethodInvokeProxy,
+  getInjectScope,
+  setInjectScope,
+} from './metadata';
 
 export function inject<T, R = T>(serviceId: ServiceId<T>, transformer?: Transformer<T, R>) {
   return (ctor: Class | {}, name: any, index: number): void => {
@@ -23,15 +29,31 @@ export function optional(value = true) {
   };
 }
 
+/**
+ * @deprecated
+ */
 export interface InjectableOption {
-  scope?: Scope;
+  scope?: InjectScope;
 }
+
+export function injectable(): (ctor: Class) => void;
+/**
+ * @deprecated
+ */
+export function injectable(option: InjectableOption): (ctor: Class) => void;
 
 export function injectable(option: InjectableOption = {}) {
   return (ctor: Class): void => {
-    const m = ensureConstructorParamInjectMetadata(ctor);
-    if (typeof option.scope !== 'undefined') {
-      m.scope = option.scope;
+    ensureConstructorParamInjectMetadata(ctor);
+
+    if (typeof option.scope !== 'undefined' && !getInjectScope(ctor)) {
+      setInjectScope(ctor, option.scope);
     }
+  };
+}
+
+export function scope(scope: InjectScope) {
+  return (ctor: Constructor): void => {
+    setInjectScope(ctor, scope);
   };
 }

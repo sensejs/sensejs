@@ -1,4 +1,4 @@
-import {injectable, Scope, Class, Constructor, ServiceId as ServiceIdentifier} from '@sensejs/container';
+import {injectable, InjectScope, Class, Constructor, ServiceId as ServiceIdentifier} from '@sensejs/container';
 export {Class, Constructor, Transformer, ServiceId as ServiceIdentifier} from '@sensejs/container';
 
 @injectable()
@@ -9,7 +9,7 @@ export abstract class ComponentFactory<T> {
 // export type ServiceIdentifier<T extends {} = {}> = string | symbol | Class<T>;
 
 export interface BindingSpec {
-  scope?: Scope;
+  scope?: InjectScope;
 }
 
 /**
