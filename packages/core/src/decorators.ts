@@ -44,23 +44,3 @@ export function Optional(): InjectionDecorator {
 }
 
 export interface InjectionConstraintDecorator extends ConstructorParamDecorator, MethodParamDecorator {}
-
-/**
- * @deprecated
- */
-export function Tagged(key: string | number | symbol, value: unknown): InjectionDecorator {
-  return new DecoratorBuilder(`Tagged(key=${String(key)}, value=${String(value)})`)
-    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {})
-    .whenApplyToConstructorParam((constructor, index) => {})
-    .build<InjectionConstraintDecorator>();
-}
-
-/**
- * @deprecated
- */
-export function Named(name: string | symbol): InjectionDecorator {
-  return new DecoratorBuilder(`Named(name="${name.toString()}")`)
-    .whenApplyToInstanceMethodParam(<K extends keyof P, P extends {}>(prototype: P, name: K, index: number) => {})
-    .whenApplyToConstructorParam((constructor, index) => {})
-    .build<InjectionConstraintDecorator>();
-}

@@ -8,7 +8,7 @@ import {
 } from './metadata';
 
 export function inject<T, R = T>(serviceId: ServiceId<T>, transformer?: Transformer<T, R>) {
-  return (ctor: Class | {}, name: any, index: number): void => {
+  return (ctor: Class | {}, name: keyof any, index: number): void => {
     if (typeof ctor !== 'function') {
       const x = ensureMethodInvokeProxy(ctor, name);
       assignParamInjectMetadata(x, index, {id: serviceId, transform: transformer});
@@ -19,7 +19,7 @@ export function inject<T, R = T>(serviceId: ServiceId<T>, transformer?: Transfor
 }
 
 export function optional(value = true) {
-  return (ctor: Class | {}, name: any, index: number): void => {
+  return (ctor: Class | {}, name: keyof any, index: number): void => {
     if (typeof ctor !== 'function') {
       const x = ensureMethodInvokeProxy(ctor, name);
       assignParamInjectMetadata(x, index, {optional: value});
