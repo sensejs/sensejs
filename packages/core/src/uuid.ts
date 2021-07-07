@@ -16,6 +16,9 @@ const uuidV1Suffixes =
 const processStartupTime = Date.now();
 const processStartupClock = process.hrtime();
 
+/**
+ * @deprecated UUID V1 leaks the hardware address which is considered harmful
+ */
 export function uuidV1() {
   const [second, nano] = process.hrtime(processStartupClock);
   const milliParts = Math.trunc(nano / 1000000);
