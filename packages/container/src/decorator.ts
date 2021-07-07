@@ -86,11 +86,14 @@ export function Scope(scope: InjectScope) {
   };
 }
 
-Scope.SESSION = InjectScope.SESSION;
-Scope.TRANSIENT = InjectScope.TRANSIENT;
-Scope.SINGLETON = InjectScope.SINGLETON;
-/** @deprecated */
-Scope.REQUEST = InjectScope.REQUEST;
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace Scope {
+  export const SESSION = InjectScope.SESSION;
+  export const TRANSIENT = InjectScope.TRANSIENT;
+  export const SINGLETON = InjectScope.SINGLETON;
+  /** @deprecated */
+  export const REQUEST = InjectScope.REQUEST;
+}
 
 /**
  * @deprecated
