@@ -1,4 +1,4 @@
-# KafkaJS integrations for SENSE.JS
+# KafkaJS integrations for SenseJS
 
 This package integrates [kafkajs] to sense.js.
 
