@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {createHttpModule, Controller, GET} from '@sensejs/http';
+import {createHttpModule, Controller, GET} from '@sensejs/http-koa-platform';
 import {
   EntryPoint,
   ModuleClass,

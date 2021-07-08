@@ -1,5 +1,5 @@
 import {Component, InjectLogger, Logger} from '@sensejs/core';
-import {HttpContext, HttpInterceptor} from '@sensejs/http';
+import {HttpContext, HttpInterceptor} from '@sensejs/http-common';
 import {HttpError} from './http-error';
 
 @Component()

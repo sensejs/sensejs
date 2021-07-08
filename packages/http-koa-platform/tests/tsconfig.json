@@ -1,0 +1,9 @@
+{
+  "extends": "../../../tsconfig.test",
+  "include": [
+    "../src/**/*.ts",
+    "../src/**/*.ts",
+    "**/*.ts",
+    "**/*.ts"
+  ]
+}

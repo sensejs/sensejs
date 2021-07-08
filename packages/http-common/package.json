@@ -1,40 +1,31 @@
 {
-  "name": "@sensejs/http",
-  "version": "0.8.0",
+  "name": "@sensejs/http-common",
+  "version": "0.1.1",
   "description": "",
   "files": [
     "lib/**/*.d.ts",
     "lib/**/*.js",
     "lib/**/*.js.map",
-    "src/**/*.ts",
     "README.md"
   ],
   "types": "lib/index.d.ts",
   "main": "lib/index.js",
   "scripts": {
     "prepare": "tsc -p tsconfig.build.json",
-    "clean": "rm -rf ./lib"
+    "cleanup": "rm -rf ./lib"
   },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@koa/cors": "^3.1.0",
-    "@koa/router": "^10.0.0",
-    "@sensejs/utility": "workspace:^0.8.0",
-    "koa": "^2.13.1",
-    "koa-bodyparser": "^4.3.0",
-    "koa-qs": "^3.0.0",
-    "lodash": "^4.17.21",
-    "tslib": "^2.3.0"
+    "tslib": "^1.10.0",
+    "@sensejs/utility": "workspace:*"
   },
   "devDependencies": {
-    "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
-    "@sensejs/testing-utility": "workspace:*"
+    "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:>=0.8.0 <0.9.0",
     "@sensejs/core": "workspace:>=0.8.0 <0.9.0",
     "reflect-metadata": "^0.1.13"
   },

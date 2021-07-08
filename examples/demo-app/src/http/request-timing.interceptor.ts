@@ -1,4 +1,4 @@
-import {HttpContext, HttpInterceptor} from '@sensejs/http';
+import {HttpContext, HttpInterceptor} from '@sensejs/http-common';
 import {Component, InjectLogger, Logger} from '@sensejs/core';
 
 @Component()

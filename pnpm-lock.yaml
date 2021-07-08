@@ -78,7 +78,8 @@ importers:
     specifiers:
       '@sensejs/config': workspace:*
       '@sensejs/core': workspace:*
-      '@sensejs/http': workspace:*
+      '@sensejs/http-common': workspace:*
+      '@sensejs/http-koa-platform': workspace:*
       '@sensejs/logger': workspace:*
       '@sensejs/typeorm': workspace:*
       '@sensejs/utility': workspace:*
@@ -92,7 +93,8 @@ importers:
     dependencies:
       '@sensejs/config': link:../../packages/config
       '@sensejs/core': link:../../packages/core
-      '@sensejs/http': link:../../packages/http
+      '@sensejs/http-common': link:../../packages/http-common
+      '@sensejs/http-koa-platform': link:../../packages/http-koa-platform
       '@sensejs/logger': link:../../packages/logger
       '@sensejs/typeorm': link:../../packages/typeorm
       '@sensejs/utility': link:../../packages/utility
@@ -108,21 +110,25 @@ importers:
   examples/hello-world:
     specifiers:
       '@sensejs/core': workspace:*
-      '@sensejs/http': workspace:*
+      '@sensejs/http-common': workspace:*
+      '@sensejs/http-koa-platform': workspace:*
       reflect-metadata: ^0.1.13
     dependencies:
       '@sensejs/core': link:../../packages/core
-      '@sensejs/http': link:../../packages/http
+      '@sensejs/http-common': link:../../packages/http-common
+      '@sensejs/http-koa-platform': link:../../packages/http-koa-platform
       reflect-metadata: 0.1.13
 
   examples/injection:
     specifiers:
       '@sensejs/core': workspace:*
-      '@sensejs/http': workspace:*
+      '@sensejs/http-common': workspace:*
+      '@sensejs/http-koa-platform': workspace:*
       reflect-metadata: ^0.1.13
     dependencies:
       '@sensejs/core': link:../../packages/core
-      '@sensejs/http': link:../../packages/http
+      '@sensejs/http-common': link:../../packages/http-common
+      '@sensejs/http-koa-platform': link:../../packages/http-koa-platform
       reflect-metadata: 0.1.13
 
   packages/config:
@@ -162,12 +168,26 @@ importers:
       '@sensejs/container': link:../container
       '@sensejs/testing-utility': link:../../tools/testing-utility
 
-  packages/http:
+  packages/http-common:
+    specifiers:
+      '@sensejs/core': workspace:*
+      '@sensejs/utility': workspace:*
+      reflect-metadata: ^0.1.13
+      tslib: ^1.10.0
+    dependencies:
+      '@sensejs/utility': link:../utility
+      tslib: 1.14.1
+    devDependencies:
+      '@sensejs/core': link:../core
+      reflect-metadata: 0.1.13
+
+  packages/http-koa-platform:
     specifiers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^10.0.0
       '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
+      '@sensejs/http-common': workspace:*
       '@sensejs/testing-utility': workspace:*
       '@sensejs/utility': workspace:^0.8.0
       koa: ^2.13.1
@@ -187,6 +207,7 @@ importers:
     devDependencies:
       '@sensejs/container': link:../container
       '@sensejs/core': link:../core
+      '@sensejs/http-common': link:../http-common
       '@sensejs/testing-utility': link:../../tools/testing-utility
 
   packages/kafkajs:
