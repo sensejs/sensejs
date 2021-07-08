@@ -11,11 +11,9 @@ import {
   ModuleOption,
   ModuleRoot,
   ModuleShutdownError,
-  Named,
   OnModuleCreate,
   OnModuleDestroy,
   ServiceIdentifier,
-  Tagged,
 } from '../src';
 import {DynamicModuleLoader, ModuleInstance} from '../src/module-instance';
 
@@ -141,56 +139,26 @@ describe('ModuleInstance', () => {
 });
 
 describe('Module resolve', () => {
-  const name = 'name' + Math.random();
-  const key = Symbol();
-  const value = Symbol();
   const id = Symbol();
 
-  const unnamedId = Symbol();
-  const namedId = Symbol();
-  const taggedId = Symbol();
-
-  function createStubModule(
-    option: ModuleOption,
-    unnamedTarget: ServiceIdentifier = unnamedId,
-    namedTarget: ServiceIdentifier = namedId,
-    taggedTarget: ServiceIdentifier = taggedId,
-  ) {
+  function createStubModule(option: ModuleOption, injectId: ServiceIdentifier = id) {
     @ModuleClass(option)
     class StubModule {
-      constructor(
-        @Inject(unnamedTarget) unnamed: unknown,
-        @Inject(namedTarget) @Named(name) named: unknown,
-        @Inject(taggedTarget) @Tagged(key, value) tagged: unknown,
-      ) {}
+      constructor(@Inject(injectId) unnamed: unknown) {}
 
       @OnModuleCreate()
-      onCreate(
-        @Inject(unnamedTarget) unnamed: unknown,
-        @Inject(namedTarget) named: unknown,
-        @Inject(taggedTarget) tagged: unknown,
-      ) {}
+      onCreate(@Inject(injectId) unnamed: unknown) {}
 
       @OnModuleDestroy()
-      onDestroy(
-        @Inject(unnamedTarget) unnamed: unknown,
-        @Inject(namedTarget) @Named(name) named: unknown,
-        @Inject(taggedTarget) @Tagged(key, value) tagged: unknown,
-      ) {}
+      onDestroy(@Inject(injectId) unnamed: unknown) {}
     }
 
     return StubModule;
   }
 
   test('Component resolve', async () => {
-    @Component({id: unnamedId})
-    class UnnamedComponent {}
-
-    @Component({id: namedId, name})
-    class NamedComponent {}
-
-    @Component({id: taggedId, tags: [{key, value}]})
-    class TaggedComponent {}
+    @Component({id})
+    class StubComponent {}
 
     abstract class GrantParent {
       bar() {
@@ -228,11 +196,9 @@ describe('Module resolve', () => {
       createStubModule(
         {
           requires: [MyModule],
-          components: [UnnamedComponent, NamedComponent, TaggedComponent],
+          components: [StubComponent],
         },
-        UnnamedComponent,
-        NamedComponent,
-        TaggedComponent,
+        StubComponent,
       ),
     );
     try {
@@ -246,27 +212,13 @@ describe('Module resolve', () => {
 
   test('Factory resolve', async () => {
     @Component()
-    class UnnamedComponent extends ComponentFactory<void> {
-      build() {}
-    }
-
-    @Component()
-    class NamedComponent extends ComponentFactory<void> {
-      build() {}
-    }
-
-    @Component()
-    class TaggedComponent extends ComponentFactory<void> {
+    class Factory extends ComponentFactory<void> {
       build() {}
     }
 
     const instance = new ModuleInstance(
       createStubModule({
-        factories: [
-          {provide: unnamedId, factory: UnnamedComponent},
-          {provide: namedId, factory: NamedComponent},
-          {provide: taggedId, factory: TaggedComponent},
-        ],
+        factories: [{provide: id, factory: Factory}],
       }),
       new Container(),
     );
@@ -282,11 +234,7 @@ describe('Module resolve', () => {
   test('Constants resolve', async () => {
     const instance = new ModuleInstance(
       createStubModule({
-        constants: [
-          {provide: unnamedId, value: Symbol()},
-          {provide: namedId, value: Symbol()},
-          {provide: taggedId, value: Symbol()},
-        ],
+        constants: [{provide: id, value: Symbol()}],
       }),
       new Container(),
     );

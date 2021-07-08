@@ -45,8 +45,6 @@ export class ModuleRoot<T extends {} = {}> {
       id: ModuleScanner,
     });
 
-    // this.container.bind(BackgroundTaskQueue).toConstantValue(this.backgroundTaskQueue);
-    // this.container.bind(ModuleScanner).toConstantValue(this.moduleScanner);
     this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, this.moduleInstanceMap);
   }
 

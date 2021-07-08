@@ -1,5 +1,5 @@
 import '@sensejs/testing-utility/lib/mock-console';
-import {MessageConsumer, MessageProducer, SimpleKafkaJsProducerProvider} from '../src';
+import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src';
 import {Subject} from 'rxjs';
 import config from 'config';
 
@@ -13,14 +13,6 @@ test('message producer e2e test', async () => {
   const provider = new SimpleKafkaJsProducerProvider({
     connectOption: config.get('kafka.connectOption'),
   });
-  const legacyProducer = new MessageProducer({
-    connectOption: config.get('kafka.connectOption'),
-    producerOption: {
-      transactionalId: legacyTransactionalId,
-      messageKeyProvider: () => 'key',
-    },
-  });
-  await legacyProducer.connect();
 
   const firstMessage = new Date().toString();
   let stopped = false;
@@ -28,20 +20,9 @@ test('message producer e2e test', async () => {
   async function sendBatch() {
     const producerA = await provider.create();
     await producerA.sendMessage(TOPIC, {value: firstMessage});
-    await legacyProducer.send(TOPIC, {value: firstMessage});
     while (!stopped) {
       await new Promise((done) => setTimeout(done, 1000));
       await producerA.sendMessageBatch([
-        {
-          topic: TOPIC,
-          messages: [{value: new Date().toString()}],
-        },
-        {
-          topic: BATCH_TOPIC,
-          messages: [{value: new Date().toString()}],
-        },
-      ]);
-      await legacyProducer.sendBatch([
         {
           topic: TOPIC,
           messages: [{value: new Date().toString()}],
@@ -115,21 +96,6 @@ test('message producer e2e test', async () => {
       await producer.sendOffset('e2etest-earliest', {topics: [{topic, partitions: [{partition, offset}]}]});
       await producer.commit();
       await producer.release();
-      await legacyProducer.sendBatch(
-        [
-          {
-            topic: TX_TOPIC,
-            messages: [{key: new Date().toString(), value: new Date().toString()}],
-          },
-        ],
-        {
-          transactional: true,
-          transactionalCommit: {
-            consumerGroupId: 'e2etest-earliest',
-            offsets: {topics: [{topic, partitions: [{partition, offset}]}]},
-          },
-        },
-      );
       consumerStubB(message.value?.toString());
     },
     true,
@@ -144,7 +110,6 @@ test('message producer e2e test', async () => {
   await messageConsumerA.stop();
   await messageConsumerA.stop(); // safe to call stop multiple times
   await messageConsumerB.stop();
-  await legacyProducer.disconnect();
   await provider.destroy();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));
   expect(consumerStubB).toHaveBeenCalledWith(firstMessage);

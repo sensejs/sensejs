@@ -6,8 +6,6 @@ export abstract class ComponentFactory<T> {
   abstract build(): T;
 }
 
-// export type ServiceIdentifier<T extends {} = {}> = string | symbol | Class<T>;
-
 export interface BindingSpec {
   scope?: InjectScope;
 }
@@ -35,6 +33,7 @@ export interface ConstantProvider<T> {
  */
 export interface ComponentMetadata<T extends {} = {}> extends BindingSpec {
   target: Constructor<T>;
+  /** @deprecated */
   bindParentConstructor: boolean;
   id?: ServiceIdentifier<T>;
 }

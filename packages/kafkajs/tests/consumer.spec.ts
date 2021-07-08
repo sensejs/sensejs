@@ -6,7 +6,6 @@ import {
   BatchedMessageConsumeContext,
   BatchedSubscribeTopic,
   createMessageConsumerModule,
-  Message,
   MessageConsumeContext,
   SimpleMessageConsumeContext,
   SubscribeController,
@@ -91,7 +90,7 @@ describe('Subscriber', () => {
       expect(emitBatchMessage).not.toHaveBeenCalled();
       emitBatchMessage.mockImplementation(async () => {
         setImmediate(() => {
-          option.consumer(({
+          option.consumer({
             batch: {
               topic: option.topic,
               messages: [
@@ -111,7 +110,7 @@ describe('Subscriber', () => {
             } as Batch,
             heartbeat: jest.fn(),
             resolveOffset: jest.fn(),
-          } as unknown) as EachBatchPayload);
+          } as unknown as EachBatchPayload);
         });
       });
       return this;
@@ -138,11 +137,9 @@ describe('Subscriber', () => {
         @Inject(symbolA) global: any,
         @Inject(symbolB) controller: any,
         @Inject(symbolC) fromTopic: any,
-        @Message() message: string | Buffer,
         @Inject(ProcessManager) processManager: ProcessManager,
       ) {
         // TODO: Perform e2e test to make following assert possible
-        // expect(ctx.consumerGroup).toBe(groupId);
         emitBatchMessage();
       }
 
