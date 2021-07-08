@@ -20,6 +20,7 @@ import {
   ensureConstructorParamInjectMetadata,
   ensureValidatedMethodInvokeProxy,
   ensureValidatedParamInjectMetadata,
+  getConstructorParamInjectMetadata,
   getInjectScope,
 } from './metadata';
 
@@ -346,6 +347,18 @@ export class Container {
       scope,
       paramInjectionMetadata: convertParamInjectionMetadata(cm),
     });
+    let parent = Object.getPrototypeOf(ctor);
+    while (parent) {
+      const metadata = getConstructorParamInjectMetadata(parent);
+      if (metadata) {
+        this.addBinding({
+          type: BindingType.ALIAS,
+          id: parent,
+          canonicalId: ctor,
+        });
+      }
+      parent = Object.getPrototypeOf(parent);
+    }
     return this;
   }
 
