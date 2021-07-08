@@ -47,6 +47,7 @@ export interface InstanceBinding<T> {
   constructor: Constructor<T>;
   paramInjectionMetadata: ParamInjectionMetadata[];
   scope: InjectScope;
+  aliasedByInjectableParent?: boolean;
 }
 
 export interface FactoryBinding<T> {

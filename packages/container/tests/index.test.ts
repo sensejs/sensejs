@@ -6,6 +6,7 @@ import {
   Container,
   DuplicatedBindingError,
   inject,
+  Injectable,
   injectable,
   InjectScope,
   InvalidParamBindingError,
@@ -586,5 +587,24 @@ describe('Kernel', () => {
 
     expect(container.resolve(SingletonA)).toBe(container.resolve(SingletonA));
     expect(container.resolve(SingletonB)).toBe(container.resolve(SingletonB));
+  });
+
+  test('aliased by injectable parent', () => {
+    @Injectable()
+    class ParentA {}
+
+    class ParentB {}
+
+    class ChildA extends ParentA {}
+    class ChildB extends ParentB {}
+
+    const container = new Container();
+    container.add(ChildA).add(ChildB);
+    expect(container.resolve(ChildA)).toBeInstanceOf(ChildA);
+    expect(container.resolve(ChildA)).toBeInstanceOf(ParentA);
+    expect(container.resolve(ParentA)).toBeInstanceOf(ParentA);
+    expect(container.resolve(ChildB)).toBeInstanceOf(ChildB);
+    expect(container.resolve(ChildB)).toBeInstanceOf(ParentB);
+    expect(() => container.resolve(ParentB)).toThrow(BindingNotFoundError);
   });
 });

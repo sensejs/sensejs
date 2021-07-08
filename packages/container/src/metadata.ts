@@ -38,6 +38,10 @@ export function ensureConstructorParamInjectMetadata(ctor: Class): DecoratorMeta
   return metadata;
 }
 
+export function getConstructorParamInjectMetadata(ctor: Class): DecoratorMetadata | undefined {
+  return Reflect.getOwnMetadata(PARAM_INJECT_METADATA_KEY, ctor);
+}
+
 export function ensureMethodInvokeMetadata(prototype: {}): MethodInvokeMetadata {
   let metadata = Reflect.getOwnMetadata(METHOD_INVOKE_METADATA, prototype) as MethodInvokeMetadata | undefined;
 
