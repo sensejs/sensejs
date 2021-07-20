@@ -15,6 +15,7 @@
     "importHelpers": true,
     "sourceMap": true,
     "declaration": true,
+    "declarationMap": true,
     "lib": ["es2018"],
     "types": ["node", "reflect-metadata"],
     "skipLibCheck": true,

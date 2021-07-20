@@ -3,6 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "outDir": "lib",
+    "declarationDir": "lib",
     "baseUrl": ".",
     "paths": {}
   }
