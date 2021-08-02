@@ -295,6 +295,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       subscribeEventMetadata: SubscribeEventMetadata,
     ) {
       methodInvokerBuilder = methodInvokerBuilder.clone().addInterceptor(...subscribeEventMetadata.interceptors);
+      const invoker = methodInvokerBuilder.build(constructor, subscribeEventMetadata.name);
 
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(
@@ -308,23 +309,21 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
             acknowledge(Promise.reject(e));
             return;
           }
-          const resolveContext = this.container.createResolveContext();
-          bindingsMap.forEach((v, k) => resolveContext.addTemporaryConstantBinding(k, v));
+          const resolveSession = this.container.createResolveSession();
+          bindingsMap.forEach((v, k) => resolveSession.addTemporaryConstantBinding(k, v));
           acknowledge(
-            methodInvokerBuilder
-              .setResolveContext(resolveContext)
-              .build(constructor, subscribeEventMetadata.name)
-              .invoke({
-                contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
-                  return new EventSubscriptionContext(
-                    resolveContext,
-                    identifier,
-                    targetConstructor,
-                    targetMethodKey,
-                    payload,
-                  );
-                },
-              }),
+            invoker.invoke({
+              resolveSession,
+              contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
+                return new EventSubscriptionContext(
+                  resolveContext,
+                  identifier,
+                  targetConstructor,
+                  targetMethodKey,
+                  payload,
+                );
+              },
+            }),
           );
         }),
       );

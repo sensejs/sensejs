@@ -225,18 +225,18 @@ export class KoaHttpApplicationBuilder {
     container: Container,
   ): void {
     const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
+    const invoker = MethodInvokerBuilder.create(container)
+      .addInterceptor(...interceptors)
+      .build(targetConstructor, targetMethod);
 
     controllerRouter[httpMethod](path, async (ctx) => {
-      const resolveContext = container.createResolveContext();
-      const context = new KoaHttpContext(resolveContext, ctx, targetConstructor, targetMethod);
-      resolveContext.addTemporaryConstantBinding(HttpContext, context);
-      const result = await MethodInvokerBuilder.create(container)
-        .setResolveContext(resolveContext)
-        .addInterceptor(...interceptors)
-        .build(targetConstructor, targetMethod)
-        .invoke({
-          contextFactory: () => context,
-        });
+      const resolveSession = container.createResolveSession();
+      const context = new KoaHttpContext(resolveSession, ctx, targetConstructor, targetMethod);
+      resolveSession.addTemporaryConstantBinding(HttpContext, context);
+      const result = await invoker.invoke({
+        resolveSession,
+        contextFactory: () => context,
+      });
       ctx.response.body = context.response.data ?? result;
       if (typeof context.response.statusCode === 'number') {
         ctx.response.status = context.response.statusCode;

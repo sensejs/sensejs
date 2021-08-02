@@ -1,17 +1,17 @@
 import {Component, Constructor, MethodInvokerBuilder, RequestContext, RequestInterceptor} from '../src/';
-import {Container, ResolveContext} from '@sensejs/container';
+import {Container, ResolveSession} from '@sensejs/container';
 import {Subject} from 'rxjs';
 
 describe('MethodInvoker', () => {
   const contextFactory = (
-    resolveContext: ResolveContext,
+    resolveContext: ResolveSession,
     targetConstructor: Constructor,
     targetMethodKey: keyof any,
   ) => {
     return new (class extends RequestContext {
       readonly targetConstructor: Constructor = targetConstructor;
       readonly targetMethodKey: keyof any = targetMethodKey;
-      protected resolveContext: ResolveContext = resolveContext;
+      protected resolveContext: ResolveSession = resolveContext;
     })();
   };
   test('invoke', async () => {
@@ -53,6 +53,7 @@ describe('MethodInvoker', () => {
       .addInterceptor(TestInterceptor1)
       .addInterceptor(TestInterceptor2);
     const promise = invokerBuilder.build(Target, 'foo').invoke({
+      resolveSession: container.createResolveSession(),
       contextFactory,
     });
     await targetCalledSubject.toPromise();
@@ -100,6 +101,7 @@ describe('MethodInvoker', () => {
       .addInterceptor(TestInterceptor1)
       .addInterceptor(TestInterceptor2);
     const promise = invokerBuilder.build(Target, 'foo').invoke({
+      resolveSession: container.createResolveSession(),
       contextFactory,
     });
 
@@ -111,8 +113,6 @@ describe('MethodInvoker', () => {
 
   test('uncaught exception', async () => {
     const container = new Container();
-
-    const errorCatcher = jest.fn();
 
     @Component()
     class Target {
@@ -128,6 +128,7 @@ describe('MethodInvoker', () => {
     }
     const invokerBuilder = MethodInvokerBuilder.create(container).addInterceptor(TestInterceptor1);
     const promise = invokerBuilder.build(Target, 'foo').invoke({
+      resolveSession: container.createResolveSession(),
       contextFactory,
     });
 

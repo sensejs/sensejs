@@ -20,49 +20,43 @@ export type ContextFactory<X> = (
 ) => X;
 
 export interface MethodInvokeOption<X> {
+  resolveSession: ResolveSession;
   contextFactory: ContextFactory<X>;
 }
 
 export interface MethodInvoker<X extends RequestContext> {
-  bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U): this;
-
   invoke(option: MethodInvokeOption<X>): Promise<any>;
 }
 
 const MethodInvoker = class<X extends RequestContext, T extends {}, K extends keyof T> implements MethodInvoker<X> {
   constructor(
-    private readonly resolveContext: ResolveSession,
     private readonly interceptors: Constructor<RequestInterceptor<X>>[],
     private readonly targetConstructor: Constructor<T>,
     private readonly targetMethodKey: K,
   ) {}
 
-  bind<U>(serviceIdentifier: ServiceIdentifier<U>, x: U) {
-    this.resolveContext.addTemporaryConstantBinding(serviceIdentifier, x);
-    return this;
-  }
-
   async invoke(option: MethodInvokeOption<X>) {
-    const context = option.contextFactory(this.resolveContext, this.targetConstructor, this.targetMethodKey);
+    const {contextFactory, resolveSession} = option;
+    const context = contextFactory(resolveSession, this.targetConstructor, this.targetMethodKey);
     let error;
     let returnValue: any;
     try {
       for (const interceptor of this.interceptors) {
-        await this.resolveContext.intercept({
+        await resolveSession.intercept({
           interceptorBuilder: () => {
             return async (next) => {
-              const instance = this.resolveContext.construct(interceptor);
+              const instance = resolveSession.construct(interceptor);
               return instance.intercept(context, next);
             };
           },
           paramInjectionMetadata: [],
         });
       }
-      returnValue = await invokeMethod(this.resolveContext, this.targetConstructor, this.targetMethodKey);
+      returnValue = await invokeMethod(resolveSession, this.targetConstructor, this.targetMethodKey);
     } catch (e) {
       error = e;
     }
-    await this.resolveContext.cleanUp(error);
+    await resolveSession.cleanUp(error);
     return returnValue;
   }
 };
@@ -94,11 +88,6 @@ export class MethodInvokerBuilder<X extends RequestContext> {
   }
 
   build<T extends {}, K extends keyof T>(targetConstructor: Constructor<T>, methodKey: K): MethodInvoker<X> {
-    return new MethodInvoker(
-      this.resolveContext ?? this.container.createResolveSession(),
-      this.interceptors,
-      targetConstructor,
-      methodKey,
-    );
+    return new MethodInvoker(this.interceptors, targetConstructor, methodKey);
   }
 }

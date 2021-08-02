@@ -90,16 +90,17 @@ describe('@Inject', () => {
         this.resolveContext.addTemporaryConstantBinding(key, value);
       }
     }
+    const invoker = MethodInvokerBuilder.create(container)
+      .addInterceptor(...interceptors)
+      .build(Foo, 'bar');
 
     while (N--) {
-      await MethodInvokerBuilder.create(container)
-        .addInterceptor(...interceptors)
-        .build(Foo, 'bar')
-        .invoke({
-          contextFactory: (resolveContext, targetConstructor, targetKey) => {
-            return new CustomContext(resolveContext, targetConstructor, targetKey);
-          },
-        });
+      await invoker.invoke({
+        resolveSession: container.createResolveSession(),
+        contextFactory: (resolveContext, targetConstructor, targetKey) => {
+          return new CustomContext(resolveContext, targetConstructor, targetKey);
+        },
+      });
     }
   }, 10000);
 });

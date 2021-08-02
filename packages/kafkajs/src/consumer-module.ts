@@ -164,8 +164,10 @@ function scanSubscriber(
       target: Constructor<T>,
       method: keyof T,
     ) {
+      const invoker = methodInvokerBuilder.build(target, method);
       return async (message: KafkaReceivedMessage) => {
-        await methodInvokerBuilder.build(target, method).invoke({
+        await invoker.invoke({
+          resolveSession: this.container.createResolveSession(),
           contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
             const context = new SimpleMessageConsumeContext(
               resolveContext,
@@ -186,8 +188,10 @@ function scanSubscriber(
       target: Constructor<T>,
       method: keyof T,
     ) {
+      const invoker = methodInvokerBuilder.build(target, method);
       return async (batch: KafkaBatchConsumeMessageParam) => {
-        await methodInvokerBuilder.build(target, method).invoke({
+        await invoker.invoke({
+          resolveSession: this.container.createResolveSession(),
           contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
             const context = new BatchedMessageConsumeContext(
               resolveContext,
