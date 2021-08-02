@@ -1,4 +1,4 @@
-import {Container, InvokeResult, ResolveContext} from '@sensejs/container';
+import {Container, InvokeResult, ResolveContext, ResolveSession} from '@sensejs/container';
 import {Constructor, ServiceIdentifier} from './interfaces';
 import {RequestContext, RequestInterceptor} from './interceptor';
 
@@ -6,7 +6,7 @@ import {RequestContext, RequestInterceptor} from './interceptor';
  * Invoke method with arguments from container
  */
 export function invokeMethod<T extends {}, K extends keyof T>(
-  resolveContext: ResolveContext,
+  resolveContext: ResolveSession,
   constructor: Constructor<T>,
   methodKey: keyof T,
 ): InvokeResult<T, K> {
@@ -14,7 +14,7 @@ export function invokeMethod<T extends {}, K extends keyof T>(
 }
 
 export type ContextFactory<X> = (
-  resolveContext: ResolveContext,
+  resolveContext: ResolveSession,
   targetConstructor: Constructor,
   targetMethodKey: keyof any,
 ) => X;
@@ -31,7 +31,7 @@ export interface MethodInvoker<X extends RequestContext> {
 
 const MethodInvoker = class<X extends RequestContext, T extends {}, K extends keyof T> implements MethodInvoker<X> {
   constructor(
-    private readonly resolveContext: ResolveContext,
+    private readonly resolveContext: ResolveSession,
     private readonly interceptors: Constructor<RequestInterceptor<X>>[],
     private readonly targetConstructor: Constructor<T>,
     private readonly targetMethodKey: K,
@@ -95,7 +95,7 @@ export class MethodInvokerBuilder<X extends RequestContext> {
 
   build<T extends {}, K extends keyof T>(targetConstructor: Constructor<T>, methodKey: K): MethodInvoker<X> {
     return new MethodInvoker(
-      this.resolveContext ?? this.container.createResolveContext(),
+      this.resolveContext ?? this.container.createResolveSession(),
       this.interceptors,
       targetConstructor,
       methodKey,

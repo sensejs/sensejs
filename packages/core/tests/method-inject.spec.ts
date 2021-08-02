@@ -1,4 +1,4 @@
-import {BindingType, Container, injectable, ResolveContext, ServiceId} from '@sensejs/container';
+import {BindingType, Container, Injectable, ResolveSession, ServiceId} from '@sensejs/container';
 import {Component, Constructor, Inject, MethodInvokerBuilder, RequestContext, RequestInterceptor} from '../src';
 
 describe('@Inject', () => {
@@ -32,7 +32,7 @@ describe('@Inject', () => {
         continue;
       }
       if (constructor) {
-        @injectable()
+        @Injectable()
         class X {
           constructor(@Inject(constructor) private empty: any) {}
         }
@@ -40,7 +40,7 @@ describe('@Inject', () => {
         container.add(X);
         constructor = X;
       } else {
-        @injectable()
+        @Injectable()
         class X {
           constructor() {}
         }
@@ -79,7 +79,7 @@ describe('@Inject', () => {
 
     class CustomContext extends RequestContext {
       constructor(
-        readonly resolveContext: ResolveContext,
+        readonly resolveContext: ResolveSession,
         readonly targetConstructor: Constructor,
         readonly targetMethodKey: keyof any,
       ) {
