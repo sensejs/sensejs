@@ -33,33 +33,46 @@ interface ControllerRouteSpec {
 export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
 
 class KoaHttpRequest implements HttpRequest {
-  query;
-  body;
-  rawBody;
-  protocol;
-  url;
-  path;
-  search;
-  method;
-  address;
-  params;
-  headers;
-  hostname;
-
-  constructor(context: KoaHttpContext) {
-    this.query = context.nativeContext.query;
-    this.body = context.nativeContext.request.body;
-    this.rawBody = context.nativeContext.request.rawBody;
-    this.protocol = context.nativeContext.request.protocol;
-    this.path = context.nativeContext.request.path;
-    this.url = context.nativeContext.request.url;
-    this.search = context.nativeContext.request.search;
-    this.method = context.nativeContext.request.method;
-    this.address = context.nativeContext.request.ip;
-    this.headers = context.nativeContext.request.headers;
-    this.params = context.nativeContext.params;
-    this.hostname = context.nativeContext.hostname;
+  get query() {
+    return this.context.nativeContext.query;
   }
+
+  get body() {
+    return this.context.nativeContext.request.body;
+  }
+
+  get rawBody() {
+    return this.context.nativeContext.request.rawBody;
+  }
+  get protocol() {
+    return this.context.nativeContext.protocol;
+  }
+  get url() {
+    return this.context.nativeContext.url;
+  }
+  get path() {
+    return this.context.nativeContext.request.path;
+  }
+  get search() {
+    return this.context.nativeContext.request.search;
+  }
+  get method() {
+    return this.context.nativeContext.request.method;
+  }
+  get address() {
+    return this.context.nativeContext.request.ip;
+  }
+  get params() {
+    return this.context.nativeContext.params;
+  }
+  get headers() {
+    return this.context.nativeContext.headers;
+  }
+  get hostname() {
+    return this.context.nativeContext.hostname;
+  }
+
+  constructor(private context: KoaHttpContext) {}
 }
 
 class KoaHttpResponse implements HttpResponse {
