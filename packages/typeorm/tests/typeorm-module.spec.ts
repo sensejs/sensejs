@@ -8,7 +8,7 @@ import {
   RequestContext,
   RequestInterceptor,
 } from '@sensejs/core';
-import {Container, ResolveContext} from '@sensejs/container';
+import {Container, ResolveSession} from '@sensejs/container';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
 import {
   createTypeOrmModule,
@@ -29,7 +29,7 @@ class MockRequestContext extends RequestContext {
     throw new Error('mock');
   }
 
-  constructor(protected resolveContext: ResolveContext) {
+  constructor(protected resolveSession: ResolveSession) {
     super();
   }
 }

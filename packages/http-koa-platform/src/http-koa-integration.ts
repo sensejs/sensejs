@@ -1,6 +1,6 @@
 import {Constructor, MethodInvokerBuilder} from '@sensejs/core';
 import {RequestListener} from 'http';
-import {Container, ResolveContext} from '@sensejs/container';
+import {Container, ResolveSession} from '@sensejs/container';
 import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
@@ -99,7 +99,7 @@ export class KoaHttpContext extends HttpContext {
   readonly response: KoaHttpResponse;
 
   constructor(
-    protected readonly resolveContext: ResolveContext,
+    protected readonly resolveSession: ResolveSession,
     readonly nativeContext: KoaRouter.RouterContext,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,

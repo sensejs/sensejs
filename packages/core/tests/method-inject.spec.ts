@@ -79,7 +79,7 @@ describe('@Inject', () => {
 
     class CustomContext extends RequestContext {
       constructor(
-        readonly resolveContext: ResolveSession,
+        readonly resolveSession: ResolveSession,
         readonly targetConstructor: Constructor,
         readonly targetMethodKey: keyof any,
       ) {
@@ -87,7 +87,7 @@ describe('@Inject', () => {
       }
 
       bindContextValue<T>(key: ServiceId<T>, value: T): void {
-        this.resolveContext.addTemporaryConstantBinding(key, value);
+        this.resolveSession.addTemporaryConstantBinding(key, value);
       }
     }
     const invoker = MethodInvokerBuilder.create(container)

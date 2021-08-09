@@ -11,7 +11,7 @@ describe('MethodInvoker', () => {
     return new (class extends RequestContext {
       readonly targetConstructor: Constructor = targetConstructor;
       readonly targetMethodKey: keyof any = targetMethodKey;
-      protected resolveContext: ResolveSession = resolveContext;
+      protected resolveSession: ResolveSession = resolveContext;
     })();
   };
   test('invoke', async () => {

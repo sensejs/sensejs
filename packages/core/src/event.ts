@@ -3,7 +3,7 @@ import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces';
 import {Subject} from 'rxjs';
 import {RequestContext, RequestInterceptor} from './interceptor';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
-import {Container, ResolveContext} from '@sensejs/container';
+import {Container, ResolveSession} from '@sensejs/container';
 import {Inject} from './decorators';
 import {MethodInvokerBuilder} from './method-invoker';
 import {ModuleScanner} from './module-scanner';
@@ -160,7 +160,7 @@ export interface EventSubscriptionModuleOption extends ModuleOption {
 
 export class EventSubscriptionContext extends RequestContext {
   constructor(
-    protected resolveContext: ResolveContext,
+    protected resolveSession: ResolveSession,
     public readonly identifier: ServiceIdentifier,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,

@@ -58,6 +58,9 @@ export interface FactoryBinding<T> {
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
+/**
+ * @deprecated
+ */
 export interface AsyncFactoryBinding<T> {
   type: BindingType.ASYNC_FACTORY;
   id: ServiceId<T>;
