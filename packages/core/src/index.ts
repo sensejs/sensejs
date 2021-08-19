@@ -13,3 +13,4 @@ export * from './module-scanner';
 export * from './utils';
 export * from './method-invoker';
 export * from './uuid';
+export * from './config';
