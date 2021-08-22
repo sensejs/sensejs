@@ -1,4 +1,4 @@
-import {Class, Constructor, ParamInjectionMetadata, InjectScope} from './types';
+import {Class, Constructor, ParamInjectionMetadata, InjectScope, ServiceId} from './types';
 import {InvalidParamBindingError, NoEnoughInjectMetadataError} from './errors';
 
 export interface MethodInvokeMetadata {
@@ -86,8 +86,7 @@ export function ensureValidatedMethodInvokeProxy<T extends {}, K extends keyof T
   methodKey: K,
 ): [Constructor<MethodInvokeProxy>, Function] {
   const proxy = ensureMethodInvokeProxy(constructor.prototype, methodKey) as Constructor<MethodInvokeProxy>;
-  const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(proxy));
-  ensureValidatedParamInjectMetadata(cm);
+  const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(proxy), proxy);
   const fn = constructor.prototype[methodKey];
   if (typeof fn !== 'function') {
     throw new TypeError(`${constructor.name}.${String(methodKey)} is not a function`);
@@ -120,12 +119,31 @@ export function ensureValidatedParamInjectMetadata(
   return sortedMetadata;
 }
 
-export function convertParamInjectionMetadata(cm: DecoratorMetadata): ParamInjectionMetadata[] {
-  return Array.from(cm.params.entries()).map(([index, value]): ParamInjectionMetadata => {
-    const {id, transform, optional = false} = value;
-    if (typeof id === 'undefined') {
+export function convertParamInjectionMetadata(
+  cm: DecoratorMetadata,
+  constructor: Constructor,
+): ParamInjectionMetadata[] {
+  const result: ParamInjectionMetadata[] = Array(constructor.length);
+  const designedParamType: ServiceId[] = Reflect.getOwnMetadata('design:paramtypes', constructor);
+  const fallbackToDesignType = (index: number): ServiceId => {
+    const designedType = designedParamType[index];
+    if (typeof designedType !== 'function' || !getConstructorParamInjectMetadata(designedType)) {
       throw new TypeError('param inject id is undefined');
     }
-    return {index, id, transform, optional};
+    return designedType;
+  };
+  cm.params.forEach((value, index) => {
+    const {transform, optional = false} = value;
+    let id = value.id;
+    if (typeof id === 'undefined') {
+      id = fallbackToDesignType(index);
+    }
+    result[index] = {index, id, transform, optional};
   });
+  for (let index = 0; index < result.length; index++) {
+    if (typeof result[index] === 'undefined') {
+      result[index] = {id: fallbackToDesignType(index), index, optional: false};
+    }
+  }
+  return result;
 }
