@@ -472,7 +472,7 @@ describe('Kernel', () => {
 
     @injectable()
     class X {
-      constructor(@inject(Foo) readonly foo: Foo, @optional() @inject('optional') optionalParam?: any) {}
+      constructor(readonly foo: Foo, @optional() @inject('optional') optionalParam?: any) {}
     }
 
     const container = new Container();

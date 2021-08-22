@@ -215,7 +215,7 @@ export class ResolveSession {
       this.stack.push(undefined);
       return;
     } else if (allowUnbound && typeof target === 'function') {
-      const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(target));
+      const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(target), target as Constructor);
       this.instructions.push(
         {
           code: InstructionCode.BUILD,
@@ -345,7 +345,7 @@ export class Container {
       id: ctor,
       constructor: ctor,
       scope,
-      paramInjectionMetadata: convertParamInjectionMetadata(cm),
+      paramInjectionMetadata: convertParamInjectionMetadata(cm, ctor),
     });
     let parent = Object.getPrototypeOf(ctor);
     while (parent) {
