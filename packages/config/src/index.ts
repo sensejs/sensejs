@@ -7,7 +7,7 @@ export interface ConfigModuleOption {
 }
 
 function escape(x: string) {
-  return x.replace('\\', '\\\\').replace('.', '\\.');
+  return x.replace(/\\/g, '\\\\').replace(/\./g, '\\.');
 }
 
 function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[] {
@@ -20,14 +20,12 @@ function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[]
       throw new Error('circular detected');
     }
     acc.push({
-      provide: [option.prefix]
-        .concat(this.path)
-        .map(escape)
-        .join('.'),
+      provide: [option.prefix].concat(this.path).map(escape).join('.'),
       value,
     });
     return acc;
-  }, []);
+  },
+  []);
 }
 
 export function createConfigModule(option: ConfigModuleOption) {
