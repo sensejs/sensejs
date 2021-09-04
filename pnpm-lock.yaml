@@ -173,10 +173,10 @@ importers:
       '@sensejs/core': workspace:*
       '@sensejs/utility': workspace:^0.9.0-alpha.0
       reflect-metadata: ^0.1.13
-      tslib: ^1.10.0
+      tslib: ^2.0.0
     dependencies:
       '@sensejs/utility': link:../utility
-      tslib: 1.14.1
+      tslib: 2.3.1
     devDependencies:
       '@sensejs/core': link:../core
       reflect-metadata: 0.1.13
