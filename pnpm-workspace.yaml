@@ -1,6 +1,6 @@
 workspaces:
-    - './tools/**'
-    - './website/**'
-    - './packages/**'
-    - './examples/**'
+    - 'tools/**'
+    - 'website/**'
+    - 'packages/**'
+    - 'examples/**'
     - '.'
