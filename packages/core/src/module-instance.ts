@@ -94,7 +94,7 @@ export class ModuleInstance<T extends {} = {}> {
   }
 
   invokeMethod<K extends keyof T>(container: Container, method: keyof T) {
-    return invokeMethod(container.createResolveContext(), this.moduleClass, method);
+    return invokeMethod(container.createResolveSession(), this.moduleClass, method);
   }
 
   async onDestroy(): Promise<void> {
@@ -173,7 +173,7 @@ export class ModuleInstance<T extends {} = {}> {
     const dynamicComponentLoader = new DynamicModuleLoader();
     for (const method of this.moduleMetadata.onModuleCreate) {
       await invokeMethod(
-        this.container.createResolveContext().addTemporaryConstantBinding(DynamicModuleLoader, dynamicComponentLoader),
+        this.container.createResolveSession().addTemporaryConstantBinding(DynamicModuleLoader, dynamicComponentLoader),
         this.moduleClass,
         method,
       );
@@ -186,7 +186,7 @@ export class ModuleInstance<T extends {} = {}> {
   private async performDestroy() {
     if (this.moduleInstance) {
       for (const method of this.moduleMetadata.onModuleDestroy.reverse()) {
-        await invokeMethod(this.container.createResolveContext(), this.moduleClass, method);
+        await invokeMethod(this.container.createResolveSession(), this.moduleClass, method);
       }
     }
   }

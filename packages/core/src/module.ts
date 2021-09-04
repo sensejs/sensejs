@@ -1,5 +1,6 @@
 import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
-import {injectable, InjectScope} from '@sensejs/container';
+import {Injectable, InjectScope, Scope} from '@sensejs/container';
+import _ from 'lodash';
 
 /**
  * Options to define a module
@@ -46,7 +47,7 @@ const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
  * @private
  */
 export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> {
-  const result = Reflect.getMetadata(MODULE_REFLECT_SYMBOL, target);
+  const result = Reflect.getOwnMetadata(MODULE_REFLECT_SYMBOL, target);
   if (!result) {
     throw new Error(`"${target.name}"is not decorated with @Module annotation`);
   }
@@ -57,7 +58,7 @@ export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> 
  * @private
  */
 export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMetadata<T>): void {
-  injectable()(module);
+  Injectable()(module);
 
   for (const dependency of metadata.requires) {
     if (!Reflect.getMetadata(MODULE_REFLECT_SYMBOL, dependency)) {
@@ -76,7 +77,7 @@ const ON_MODULE_DESTROY = Symbol();
  * @param metadataKey Metadata key of lifecycle function, must be ON_MODULE_CREATE or ON_MODULE_CREATE
  */
 function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: symbol): (keyof T)[] {
-  const lifecycleMethods = Reflect.getMetadata(metadataKey, constructor.prototype);
+  const lifecycleMethods = Reflect.getOwnMetadata(metadataKey, constructor.prototype);
   return Array.isArray(lifecycleMethods) ? lifecycleMethods : [];
 }
 
@@ -91,21 +92,33 @@ export interface ModuleClassDecorator {
  * @decorator
  */
 export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
-  const {requires = [], constants = [], components = [], factories = [], properties = null} = option;
+  // let {requires = [], constants = [], components = [], factories = [], properties = null} = option;
 
   return <T extends {}>(constructor: Constructor<T>): Constructor<T> => {
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
+    const parentConstructor = Object.getPrototypeOf(constructor);
+    const {
+      requires = [],
+      constants = [],
+      factories = [],
+      components = [],
+      properties = {},
+      onModuleCreate: parentOnModuleCreate = [],
+      onModuleDestroy: parentOnModuleDestroy = [],
+    } = _.cloneDeep(Reflect.getMetadata(MODULE_REFLECT_SYMBOL, parentConstructor) ?? {}) as Partial<ModuleMetadata<T>>;
+
     setModuleMetadata(constructor, {
-      requires,
-      constants,
-      factories,
-      components,
-      properties,
-      onModuleCreate,
-      onModuleDestroy,
+      requires: requires.concat(option.requires ?? []),
+      constants: constants.concat(option.constants ?? []),
+      factories: factories.concat(option.factories ?? []),
+      components: components.concat(option.components ?? []),
+      properties: Object.assign({}, properties, option.properties),
+      onModuleCreate: parentOnModuleCreate.concat(onModuleCreate),
+      onModuleDestroy: parentOnModuleDestroy.concat(onModuleDestroy),
     });
-    injectable({scope: InjectScope.SINGLETON})(constructor);
+    Injectable()(constructor);
+    Scope(InjectScope.SINGLETON)(constructor);
     return constructor;
   };
 }
@@ -118,7 +131,7 @@ function defineModuleLifecycleMetadata(metadataKey: symbol): ModuleLifecycleMeth
   return <T extends {}>(prototype: T, name: keyof T, propertyDescriptor: PropertyDescriptor): void => {
     const value = propertyDescriptor.value;
     if (typeof value === 'function') {
-      let lifecycleMethods = Reflect.getMetadata(metadataKey, prototype);
+      let lifecycleMethods = Reflect.getOwnMetadata(metadataKey, prototype);
       if (!Array.isArray(lifecycleMethods)) {
         lifecycleMethods = [];
         Reflect.defineMetadata(metadataKey, lifecycleMethods, prototype);
