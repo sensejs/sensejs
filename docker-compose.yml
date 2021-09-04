@@ -13,7 +13,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka-1:
-    image: confluentinc/cp-kafka:5.5.4
+    image: confluentinc/cp-kafka:5.5.5
     hostname: kafka-1
     container_name: kafka-1
     labels:
@@ -33,7 +33,7 @@ services:
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
   kafka-2:
-    image: confluentinc/cp-kafka:5.5.4
+    image: confluentinc/cp-kafka:5.5.5
     hostname: kafka-2
     container_name: kafka-2
     labels:
@@ -53,7 +53,7 @@ services:
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
   kafka-3:
-    image: confluentinc/cp-kafka:5.5.4
+    image: confluentinc/cp-kafka:5.5.5
     hostname: kafka-3
     container_name: kafka-3
     labels:
