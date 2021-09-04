@@ -56,7 +56,7 @@ export class ResolveSession {
     readonly globalCache: Map<any, any>,
   ) {
     this.allFinished = new Promise<void>((resolve, reject) => {
-      this.dependentsCleanedUp = (e?: Error) => {
+      this.dependentsCleanedUp = (e?: unknown) => {
         if (e) {
           return reject(e);
         }
@@ -88,7 +88,7 @@ export class ResolveSession {
         errorHandler = cleanUp;
         resolve();
         return new Promise<void>((resolve, reject) => {
-          this.dependentsCleanedUp = (e?: Error) => {
+          this.dependentsCleanedUp = (e?: unknown) => {
             if (e) {
               return reject(e);
             }
@@ -106,7 +106,7 @@ export class ResolveSession {
     });
   }
 
-  async cleanUp(e?: Error): Promise<void> {
+  async cleanUp(e?: unknown): Promise<void> {
     if (this.dependentsCleanedUp) {
       this.dependentsCleanedUp(e);
     }
@@ -134,7 +134,7 @@ export class ResolveSession {
     return this.evalInstructions();
   }
 
-  private dependentsCleanedUp: (e?: Error) => void = () => {};
+  private dependentsCleanedUp: (e?: unknown) => void = () => {};
 
   private resetState() {
     /** Clear stack */

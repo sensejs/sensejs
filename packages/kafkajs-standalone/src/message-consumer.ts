@@ -1,4 +1,12 @@
-import {Consumer, ConsumerConfig, EachBatchPayload, Kafka, KafkaMessage as KafkaJsMessage, RetryOptions} from 'kafkajs';
+import {
+  Consumer,
+  ConsumerConfig,
+  EachBatchPayload,
+  Kafka,
+  KafkaJSError,
+  KafkaMessage as KafkaJsMessage,
+  RetryOptions,
+} from 'kafkajs';
 import {WorkerController} from './worker-synchronizer';
 import {createKafkaClient} from './create-client';
 import {KafkaBatchConsumeMessageParam, KafkaClientOption, KafkaReceivedMessage} from './types';
@@ -175,7 +183,7 @@ export class MessageConsumer {
     const heartbeat = async () => {
       try {
         await payload.heartbeat();
-      } catch (e) {
+      } catch (e: any) {
         if (e.type === 'REBALANCE_IN_PROGRESS' || e.type === 'NOT_COORDINATOR_FOR_GROUP') {
           this.workerController.synchronize(async () => true);
         }

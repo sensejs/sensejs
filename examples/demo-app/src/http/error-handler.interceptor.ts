@@ -24,7 +24,7 @@ export class ErrorHandlerInterceptor extends HttpInterceptor {
 
       this.logger.warn('Unrecognized exception raised: ', e);
       context.response.statusCode = 500;
-      context.response.data = e instanceof Error ? e.stack : e.toString();
+      context.response.data = e instanceof Error ? e.stack : 'unknown error';
     }
   }
 }
