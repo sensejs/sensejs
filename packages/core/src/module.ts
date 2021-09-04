@@ -1,5 +1,5 @@
 import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
-import {injectable, InjectScope} from '@sensejs/container';
+import {Injectable, InjectScope, Scope} from '@sensejs/container';
 
 /**
  * Options to define a module
@@ -57,7 +57,7 @@ export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> 
  * @private
  */
 export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMetadata<T>): void {
-  injectable()(module);
+  Injectable()(module);
 
   for (const dependency of metadata.requires) {
     if (!Reflect.getMetadata(MODULE_REFLECT_SYMBOL, dependency)) {
@@ -105,7 +105,8 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
       onModuleCreate,
       onModuleDestroy,
     });
-    injectable({scope: InjectScope.SINGLETON})(constructor);
+    Injectable()(constructor);
+    Scope(InjectScope.SINGLETON)(constructor);
     return constructor;
   };
 }
