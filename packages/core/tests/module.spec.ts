@@ -111,30 +111,42 @@ describe('ModuleInstance', () => {
     const onCreateStub = jest.fn(),
       onDestroyStub = jest.fn();
 
-    @ModuleClass()
+    const provide = Symbol();
+    @ModuleClass({
+      constants: [{provide, value: 0}],
+    })
     class Parent {
       @OnModuleCreate()
       onModuleCreate(@Inject(injectToken) param: any) {
-        onCreateStub();
+        onCreateStub(Parent);
       }
 
       @OnModuleDestroy()
-      async onModuleDestroy() {}
+      async onModuleDestroy() {
+        onDestroyStub(Parent);
+      }
     }
 
     @ModuleClass()
     class Child extends Parent {
+      @OnModuleCreate()
+      async onChildModuleCreate(@Inject(provide) parentProvidedConstant: any) {
+        onCreateStub(Child);
+      }
       @OnModuleDestroy()
       async onChildModuleDestroy() {
-        onDestroyStub();
+        onDestroyStub(Child);
       }
     }
 
     const moduleInstance = new ModuleInstance(Child, container);
     await moduleInstance.onSetup();
-    expect(onCreateStub).toHaveBeenCalled();
+    expect(onCreateStub).toHaveBeenNthCalledWith(1, Parent);
+    expect(onCreateStub).toHaveBeenNthCalledWith(2, Child);
     await moduleInstance.onDestroy();
     expect(onDestroyStub).toHaveBeenCalled();
+    expect(onDestroyStub).toHaveBeenNthCalledWith(1, Child);
+    expect(onDestroyStub).toHaveBeenNthCalledWith(2, Parent);
   });
 });
 
