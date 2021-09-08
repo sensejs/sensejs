@@ -5,7 +5,7 @@ export interface MethodInvokeMetadata {
   proxy: Map<keyof any, Constructor<MethodInvokeProxy>>;
 }
 
-interface MethodInvokeProxy {
+export interface MethodInvokeProxy {
   call(method: Function, self: object): any;
 }
 const PARAM_INJECT_METADATA_KEY = Symbol();

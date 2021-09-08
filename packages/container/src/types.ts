@@ -75,6 +75,9 @@ export interface AsyncResolveInterceptorFactory {
   interceptorBuilder: (...args: any[]) => AsyncResolveInterceptor;
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
+export abstract class AsyncInterceptProvider<Context, T extends any[]> {
+  abstract intercept(context: Context, next: (...values: T) => Promise<void>): Promise<void>;
+}
 
 export interface AliasBinding<T> {
   type: BindingType.ALIAS;
