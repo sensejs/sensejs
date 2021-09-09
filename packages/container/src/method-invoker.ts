@@ -1,7 +1,6 @@
 import {
   AsyncInterceptProvider,
   Binding,
-  BindingType,
   Class,
   Constructor,
   InjectScope,
@@ -146,62 +145,6 @@ export class MethodInvoker<Context, T extends {}, K extends keyof T> {
       },
       ...compileParamInjectInstruction(contextProvider.paramInjectionMetadata, true),
     ];
-  }
-
-  /**
-   * Validate all dependencies between components are met and there is no circular
-   */
-  validate() {
-    const validatedSet: Set<ServiceId> = new Set();
-    this.bindingMap.forEach((binding) => this.internalValidateDependencies(binding, [], validatedSet));
-  }
-
-  private internalValidateDependencies(binding: Binding<unknown>, visitPath: ServiceId[], set: Set<ServiceId>) {
-    if (set.has(binding.id)) {
-      return;
-    }
-    set.add(binding.id);
-    switch (binding.type) {
-      case BindingType.CONSTANT:
-        return;
-      // visitPath.forEach((x)=> )
-      case BindingType.ASYNC_FACTORY:
-      case BindingType.FACTORY:
-      case BindingType.INSTANCE:
-        {
-          for (const m of binding.paramInjectionMetadata) {
-            if (visitPath.indexOf(m.id) >= 0) {
-              throw new Error('Circular dependencies');
-            }
-
-            const binding = this.bindingMap.get(m.id);
-            if (typeof binding === 'undefined') {
-              if (!m.optional) {
-                // TODO:
-                throw new Error('Unmet dependencies: ' + m.id.toString());
-              }
-              return;
-            }
-            this.internalValidateDependencies(binding, [...visitPath, m.id], set);
-          }
-        }
-        break;
-      case BindingType.ALIAS: {
-        if (visitPath.indexOf(binding.canonicalId) >= 0) {
-          throw new Error('Circular dependencies');
-        }
-        if (this.bindingMap.has(binding.canonicalId)) {
-          throw new Error('Unmet dependencies: ' + binding.canonicalId.toString());
-        }
-        this.internalValidateDependencies(binding, [...visitPath, binding.canonicalId], set);
-      }
-    }
-  }
-
-  private getBindingForValidate(id: ServiceId) {
-    if (this.bindingMap.has(id)) {
-      throw new Error('Unmet dependencies: ' + id.toString());
-    }
   }
 
   invoke() {

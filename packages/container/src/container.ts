@@ -22,7 +22,8 @@ import {
   getInjectScope,
 } from './metadata';
 import {MethodInvoker} from './method-invoker';
-import {compileParamInjectInstruction, Resolver} from './resolver';
+import {Resolver} from './resolver';
+import {compileParamInjectInstruction} from './utils';
 
 export class ResolveSession extends Resolver {
   private allFinished: Promise<void>;

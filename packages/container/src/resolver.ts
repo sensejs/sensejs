@@ -1,35 +1,8 @@
-import {
-  Binding,
-  BindingType,
-  Class,
-  ConstantBinding,
-  Constructor,
-  InjectScope,
-  ParamInjectionMetadata,
-  ServiceId,
-} from './types';
+import {Binding, BindingType, Class, ConstantBinding, Constructor, InjectScope, ServiceId} from './types';
 import {BuildInstruction, Instruction, InstructionCode, PlanInstruction, TransformInstruction} from './instructions';
-import {
-  convertParamInjectionMetadata,
-  ensureConstructorParamInjectMetadata,
-  ensureValidatedParamInjectMetadata,
-} from './metadata';
+import {convertParamInjectionMetadata, ensureConstructorParamInjectMetadata} from './metadata';
 import {BindingNotFoundError, CircularAliasError, CircularDependencyError} from './errors';
-
-export function compileParamInjectInstruction(
-  paramInjectionMetadata: ParamInjectionMetadata[],
-  allowTemporary: boolean,
-): Instruction[] {
-  const sortedMetadata = ensureValidatedParamInjectMetadata(paramInjectionMetadata);
-  return sortedMetadata.reduceRight((instructions, m): Instruction[] => {
-    const {id, transform, optional} = m;
-    if (typeof transform === 'function') {
-      instructions.push({code: InstructionCode.TRANSFORM, transformer: transform});
-    }
-    instructions.push({code: InstructionCode.PLAN, target: id, optional, allowTemporary});
-    return instructions;
-  }, [] as Instruction[]);
-}
+import {compileParamInjectInstruction, validateBindings} from './utils';
 
 function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);
@@ -52,8 +25,7 @@ export class Resolver {
    * Validate all dependencies between components are met and there is no circular
    */
   validate() {
-    const set = new Set<ServiceId>();
-    this.bindingMap.forEach((binding) => this.internalValidateDependencies(binding, [], set));
+    validateBindings(this.bindingMap);
   }
 
   public addTemporaryConstantBinding<T>(serviceId: ServiceId<T>, value: T): this {
@@ -135,49 +107,6 @@ export class Resolver {
           this.instructions.push(...instructions);
         }
         break;
-    }
-  }
-
-  private internalValidateDependencies(binding: Binding<unknown>, visitPath: ServiceId[], set: Set<ServiceId>) {
-    if (set.has(binding.id)) {
-      return;
-    }
-    set.add(binding.id);
-    switch (binding.type) {
-      case BindingType.CONSTANT:
-        return;
-      // visitPath.forEach((x)=> )
-      case BindingType.ASYNC_FACTORY:
-      case BindingType.FACTORY:
-      case BindingType.INSTANCE:
-        {
-          for (const m of binding.paramInjectionMetadata) {
-            if (visitPath.indexOf(m.id) >= 0) {
-              throw new Error('Circular dependencies');
-            }
-
-            const binding = this.bindingMap.get(m.id);
-            if (typeof binding === 'undefined') {
-              if (!m.optional) {
-                // TODO:
-                throw new Error('Unmet dependencies: ' + m.id.toString());
-              }
-              return;
-            }
-            this.internalValidateDependencies(binding, [...visitPath, m.id], set);
-          }
-        }
-        break;
-      case BindingType.ALIAS: {
-        if (visitPath.indexOf(binding.canonicalId) >= 0) {
-          throw new Error('Circular dependencies');
-        }
-        this.bindingMap.has(binding.canonicalId);
-        if (this.bindingMap.has(binding.canonicalId)) {
-          throw new Error('Unmet dependencies: ' + binding.canonicalId.toString());
-        }
-        this.internalValidateDependencies(binding, [...visitPath, binding.canonicalId], set);
-      }
     }
   }
 
