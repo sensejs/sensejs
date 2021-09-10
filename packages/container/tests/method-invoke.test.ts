@@ -1,4 +1,4 @@
-import {AsyncInterceptProvider, BindingType, Constructor, Container, Inject, Injectable} from '../src';
+import {BindingType, Constructor, Container, Inject, Injectable} from '../src';
 import {InterceptProviderClass} from '../src/method-invoker';
 
 class CustomContext<T extends {} = any, K extends keyof T = any> {
@@ -22,19 +22,7 @@ describe('MethodInvoker', () => {
       }
     }
 
-    await container
-      .add(MyComponent)
-      .add(MyFoo)
-      .createMethodInvoker(
-        MyFoo,
-        'foo',
-        {
-          factory: () => new CustomContext(MyFoo, 'foo'),
-          paramInjectionMetadata: [],
-        },
-        [],
-      )
-      .invoke();
+    await container.add(MyComponent).add(MyFoo).createMethodInvoker(MyFoo, 'foo', []).invoke();
 
     expect(f).toHaveBeenCalled();
   });
@@ -47,8 +35,8 @@ describe('MethodInvoker', () => {
     const f = jest.fn();
 
     @InterceptProviderClass(MyComponent)
-    class MyInterceptor extends AsyncInterceptProvider<CustomContext, [MyComponent]> {
-      async intercept(ctx: CustomContext, next: (value: MyComponent) => Promise<void>): Promise<void> {
+    class MyInterceptor {
+      async intercept(next: (value: MyComponent) => Promise<void>): Promise<void> {
         f(1);
         await next(new MyComponent());
         f(3);
@@ -67,10 +55,8 @@ describe('MethodInvoker', () => {
     await container
       .add(MyInterceptor)
       .add(MyFoo)
-      .createMethodInvoker(MyFoo, 'foo', {factory: () => new CustomContext(MyFoo, 'foo'), paramInjectionMetadata: []}, [
-        MyInterceptor,
-      ])
-      .invoke();
+      .createMethodInvoker(MyFoo, 'foo', [MyInterceptor], CustomContext)
+      .invoke(new CustomContext(MyFoo, 'foo'));
 
     expect(f).toHaveBeenNthCalledWith(1, 1);
     expect(f).toHaveBeenNthCalledWith(2, 2);
@@ -145,15 +131,15 @@ test('Performance test', async () => {
   let symbol = a;
   const interceptors = Array(100)
     .fill(null)
-    .map((value) => {
+    .map((value, index) => {
       const deps = symbol;
-      symbol = Symbol();
+      symbol = Symbol(`${index}`);
+
       @InterceptProviderClass(symbol)
-      class Interceptor extends AsyncInterceptProvider<CustomContext, any> {
-        constructor(@Inject(deps) dep: any) {
-          super();
-        }
-        async intercept(context: CustomContext, next: (value: any) => Promise<void>): Promise<void> {
+      class Interceptor {
+        constructor(@Inject(deps) dep: any, @Inject(CustomContext) context: CustomContext) {}
+
+        async intercept(next: (value: any) => Promise<void>): Promise<void> {
           await next(value);
         }
       }
@@ -161,21 +147,17 @@ test('Performance test', async () => {
       return Interceptor;
     });
 
-  container.compile();
+  try {
+    container.compile();
 
-  const methodInvoker = container.createMethodInvoker(
-    Foo,
-    'bar',
-    {
-      factory: () => new CustomContext(Foo, 'bar'),
-      paramInjectionMetadata: [],
-    },
-    interceptors,
-  );
-
-  const t = process.hrtime();
-  while (N--) {
-    await methodInvoker.invoke();
+    const methodInvoker = container.createMethodInvoker(Foo, 'bar', interceptors, CustomContext);
+    const t = process.hrtime();
+    while (N--) {
+      await methodInvoker.createInvokeSession().invoke(new CustomContext(Foo, 'bar'));
+    }
+    console.log(process.hrtime(t));
+  } catch (e) {
+    console.error(e);
+    throw e;
   }
-  console.log(process.hrtime(t));
 }, 10000);

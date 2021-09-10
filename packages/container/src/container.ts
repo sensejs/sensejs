@@ -9,7 +9,6 @@ import {
   InjectScope,
   InstanceBinding,
   InvokeResult,
-  ParamInjectionMetadata,
   ServiceId,
 } from './types';
 import {DuplicatedBindingError} from './errors';
@@ -121,15 +120,23 @@ export class Container {
     return new ResolveSession(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
   }
 
-  createMethodInvoker<T extends {}, K extends keyof T, Context>(
+  createMethodInvoker<T extends {}, K extends keyof T>(
     targetConstructor: Constructor<T>,
     targetMethod: K,
-    contextFactory: {
-      factory: (...args: any[]) => Context;
-      paramInjectionMetadata: ParamInjectionMetadata[];
-    },
-    asyncInterceptProviders: Constructor<AsyncInterceptProvider<Context, any>>[],
-  ): MethodInvoker<any, T, K> {
+    asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
+  ): MethodInvoker<T, K>;
+  createMethodInvoker<Context, T extends {}, K extends keyof T>(
+    targetConstructor: Constructor<T>,
+    targetMethod: K,
+    asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
+    contextId?: ServiceId<Context>,
+  ): MethodInvoker<T, K, Context>;
+  createMethodInvoker<Context, T extends {}, K extends keyof T>(
+    targetConstructor: Constructor<T>,
+    targetMethod: K,
+    asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
+    contextId?: ServiceId<Context>,
+  ): MethodInvoker<T, K, Context> {
     this.compile();
     return new MethodInvoker(
       this.bindingMap,
@@ -137,8 +144,8 @@ export class Container {
       this.singletonCache,
       targetConstructor,
       targetMethod,
-      contextFactory,
       asyncInterceptProviders,
+      contextId,
     );
   }
 

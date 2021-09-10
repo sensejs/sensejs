@@ -121,11 +121,13 @@ export function ensureValidatedParamInjectMetadata(
 }
 
 export function convertParamInjectionMetadata(cm: DecoratorMetadata): ParamInjectionMetadata[] {
-  return Array.from(cm.params.entries()).map(([index, value]): ParamInjectionMetadata => {
-    const {id, transform, optional = false} = value;
-    if (typeof id === 'undefined') {
-      throw new TypeError('param inject id is undefined');
-    }
-    return {index, id, transform, optional};
-  });
+  return Array.from(cm.params.entries())
+    .map(([index, value]): ParamInjectionMetadata => {
+      const {id, transform, optional = false} = value;
+      if (typeof id === 'undefined') {
+        throw new TypeError('param inject id is undefined');
+      }
+      return {index, id, transform, optional};
+    })
+    .sort((lhs, rhs) => lhs.index - rhs.index);
 }
