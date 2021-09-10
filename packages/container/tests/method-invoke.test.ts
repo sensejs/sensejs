@@ -22,7 +22,12 @@ describe('MethodInvoker', () => {
       }
     }
 
-    await container.add(MyComponent).add(MyFoo).createMethodInvoker(MyFoo, 'foo', []).invoke();
+    await container
+      .add(MyComponent)
+      .add(MyFoo)
+      .createMethodInvoker(MyFoo, 'foo', [])
+      .createInvokeSession()
+      .invokeTargetMethod();
 
     expect(f).toHaveBeenCalled();
   });
@@ -56,7 +61,8 @@ describe('MethodInvoker', () => {
       .add(MyInterceptor)
       .add(MyFoo)
       .createMethodInvoker(MyFoo, 'foo', [MyInterceptor], CustomContext)
-      .invoke(new CustomContext(MyFoo, 'foo'));
+      .createInvokeSession()
+      .invokeTargetMethod(new CustomContext(MyFoo, 'foo'));
 
     expect(f).toHaveBeenNthCalledWith(1, 1);
     expect(f).toHaveBeenNthCalledWith(2, 2);
@@ -153,7 +159,7 @@ test('Performance test', async () => {
     const methodInvoker = container.createMethodInvoker(Foo, 'bar', interceptors, CustomContext);
     const t = process.hrtime();
     while (N--) {
-      await methodInvoker.createInvokeSession().invoke(new CustomContext(Foo, 'bar'));
+      await methodInvoker.createInvokeSession().invokeTargetMethod(new CustomContext(Foo, 'bar'));
     }
     console.log(process.hrtime(t));
   } catch (e) {

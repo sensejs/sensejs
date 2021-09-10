@@ -1,6 +1,21 @@
-import {Binding, BindingType, Class, ConstantBinding, Constructor, InjectScope, ServiceId} from './types';
+import {
+  AsyncResolveInterceptor,
+  AsyncResolveInterceptorFactory,
+  Binding,
+  BindingType,
+  Class,
+  ConstantBinding,
+  Constructor,
+  InjectScope,
+  InvokeResult,
+  ServiceId,
+} from './types';
 import {BuildInstruction, Instruction, InstructionCode, PlanInstruction, TransformInstruction} from './instructions';
-import {convertParamInjectionMetadata, ensureConstructorParamInjectMetadata} from './metadata';
+import {
+  convertParamInjectionMetadata,
+  ensureConstructorParamInjectMetadata,
+  ensureValidatedMethodInvokeProxy,
+} from './metadata';
 import {BindingNotFoundError} from './errors';
 import {compileParamInjectInstruction, validateBindings} from './utils';
 
@@ -8,17 +23,84 @@ function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);
 }
 
-export class Resolver {
+export class ResolveSession {
   protected readonly instructions: Instruction[] = [];
   protected readonly sessionCache: Map<any, any> = new Map();
   protected readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
   protected readonly stack: any[] = [];
 
+  private allFinished: Promise<void>;
+
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
     readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
     readonly globalCache: Map<any, any>,
-  ) {}
+  ) {
+    this.allFinished = new Promise<void>((resolve, reject) => {
+      this.dependentsCleanedUp = (e?: unknown) => {
+        if (e) {
+          return reject(e);
+        }
+        return resolve();
+      };
+    });
+  }
+
+  async intercept(interceptor: AsyncResolveInterceptorFactory): Promise<void> {
+    const {interceptorBuilder, paramInjectionMetadata} = interceptor;
+    const serviceId = Symbol();
+    this.instructions.push(
+      {
+        code: InstructionCode.BUILD,
+        cacheScope: InjectScope.TRANSIENT,
+        factory: interceptorBuilder,
+        paramCount: paramInjectionMetadata.length,
+        serviceId,
+      },
+      ...compileParamInjectInstruction(paramInjectionMetadata, true),
+    );
+    const interceptorInstance = this.evalInstructions() as AsyncResolveInterceptor;
+    return new Promise<void>((resolve, reject) => {
+      const cleanUp = this.dependentsCleanedUp;
+      let errorHandler = reject;
+      const previousFinished = this.allFinished;
+      this.allFinished = interceptorInstance(async () => {
+        errorHandler = cleanUp;
+        resolve();
+        return new Promise<void>((resolve, reject) => {
+          this.dependentsCleanedUp = (e?: unknown) => {
+            if (e) {
+              return reject(e);
+            }
+            return resolve();
+          };
+        });
+      })
+        .then(
+          () => cleanUp(),
+          (e) => {
+            errorHandler(e);
+          },
+        )
+        .finally(() => previousFinished);
+    });
+  }
+
+  async cleanUp(e?: unknown): Promise<void> {
+    if (this.dependentsCleanedUp) {
+      this.dependentsCleanedUp(e);
+    }
+    return this.allFinished;
+  }
+
+  invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
+    const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
+    const self = this.resolve(target) as T;
+    const proxyInstance = this.construct(proxy);
+    return proxyInstance.call(fn, self);
+  }
+
+  private dependentsCleanedUp: (e?: unknown) => void = () => {};
 
   /**
    * Validate all dependencies between components are met and there is no circular

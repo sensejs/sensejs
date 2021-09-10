@@ -17,7 +17,7 @@ import {
   MethodInvokeProxy,
 } from './metadata';
 import {Injectable, Scope} from './decorator';
-import {Resolver} from './resolver';
+import {ResolveSession} from './resolve-session';
 import {BindingNotFoundError} from './errors';
 
 const METADATA_KEY = Symbol();
@@ -51,7 +51,7 @@ function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);
 }
 
-export class AsyncMethodInvokeSession<T extends {}, K extends keyof T, Context = void> extends Resolver {
+export class AsyncMethodInvokeSession<T extends {}, K extends keyof T, Context = void> extends ResolveSession {
   private result?: InvokeResult<T, K>;
 
   constructor(
@@ -67,7 +67,7 @@ export class AsyncMethodInvokeSession<T extends {}, K extends keyof T, Context =
     super(bindingMap, compiledInstructionMap, globalCache);
   }
 
-  async invoke(ctx: Context): Promise<InvokeResult<T, K>> {
+  async invokeTargetMethod(ctx: Context): Promise<InvokeResult<T, K>> {
     if (this.contextId) {
       this.addTemporaryConstantBinding(this.contextId, ctx);
     }
@@ -148,19 +148,6 @@ export class MethodInvoker<T extends {}, K extends keyof T, Context = void> {
       this.targetFunction,
       this.contextId,
     );
-  }
-
-  invoke(context: Context) {
-    return new AsyncMethodInvokeSession(
-      this.bindingMap,
-      this.compiledInstructionMap,
-      this.globalCache,
-      this.interceptorProviderAndMetadata,
-      this.proxyConstructInstructions,
-      this.targetConstructor,
-      this.targetFunction,
-      this.contextId,
-    ).invoke(context);
   }
 
   private validate() {

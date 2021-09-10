@@ -1,14 +1,11 @@
 import {
   AsyncInterceptProvider,
-  AsyncResolveInterceptor,
-  AsyncResolveInterceptorFactory,
   Binding,
   BindingType,
   Constructor,
   FactoryBinding,
   InjectScope,
   InstanceBinding,
-  InvokeResult,
   ServiceId,
 } from './types';
 import {DuplicatedBindingError} from './errors';
@@ -16,89 +13,12 @@ import {Instruction, InstructionCode} from './instructions';
 import {
   convertParamInjectionMetadata,
   ensureConstructorParamInjectMetadata,
-  ensureValidatedMethodInvokeProxy,
   getConstructorParamInjectMetadata,
   getInjectScope,
 } from './metadata';
 import {MethodInvoker} from './method-invoker';
-import {Resolver} from './resolver';
+import {ResolveSession} from './resolve-session';
 import {compileParamInjectInstruction, internalValidateDependencies} from './utils';
-
-export class ResolveSession extends Resolver {
-  private allFinished: Promise<void>;
-
-  constructor(
-    bindingMap: Map<ServiceId, Binding<any>>,
-    compiledInstructionMap: Map<ServiceId, Instruction[]>,
-    globalCache: Map<any, any>,
-  ) {
-    super(bindingMap, compiledInstructionMap, globalCache);
-    this.allFinished = new Promise<void>((resolve, reject) => {
-      this.dependentsCleanedUp = (e?: unknown) => {
-        if (e) {
-          return reject(e);
-        }
-        return resolve();
-      };
-    });
-  }
-
-  async intercept(interceptor: AsyncResolveInterceptorFactory): Promise<void> {
-    const {interceptorBuilder, paramInjectionMetadata} = interceptor;
-    const serviceId = Symbol();
-    this.instructions.push(
-      {
-        code: InstructionCode.BUILD,
-        cacheScope: InjectScope.TRANSIENT,
-        factory: interceptorBuilder,
-        paramCount: paramInjectionMetadata.length,
-        serviceId,
-      },
-      ...compileParamInjectInstruction(paramInjectionMetadata, true),
-    );
-    const interceptorInstance = this.evalInstructions() as AsyncResolveInterceptor;
-    return new Promise<void>((resolve, reject) => {
-      const cleanUp = this.dependentsCleanedUp;
-      let errorHandler = reject;
-      const previousFinished = this.allFinished;
-      this.allFinished = interceptorInstance(async () => {
-        errorHandler = cleanUp;
-        resolve();
-        return new Promise<void>((resolve, reject) => {
-          this.dependentsCleanedUp = (e?: unknown) => {
-            if (e) {
-              return reject(e);
-            }
-            return resolve();
-          };
-        });
-      })
-        .then(
-          () => cleanUp(),
-          (e) => {
-            errorHandler(e);
-          },
-        )
-        .finally(() => previousFinished);
-    });
-  }
-
-  async cleanUp(e?: unknown): Promise<void> {
-    if (this.dependentsCleanedUp) {
-      this.dependentsCleanedUp(e);
-    }
-    return this.allFinished;
-  }
-
-  invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
-    const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
-    const self = this.resolve(target) as T;
-    const proxyInstance = this.construct(proxy);
-    return proxyInstance.call(fn, self);
-  }
-
-  private dependentsCleanedUp: (e?: unknown) => void = () => {};
-}
 
 /**
  * @deprecated
@@ -153,7 +73,7 @@ export class Container {
    * Validate all dependencies between components are met and there is no circular
    */
   validate() {
-    new Resolver(this.bindingMap, this.compiledInstructionMap, this.singletonCache).validate();
+    new ResolveSession(this.bindingMap, this.compiledInstructionMap, this.singletonCache).validate();
   }
 
   add(ctor: Constructor): this {
