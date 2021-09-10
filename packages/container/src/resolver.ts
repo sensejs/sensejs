@@ -1,7 +1,7 @@
 import {Binding, BindingType, Class, ConstantBinding, Constructor, InjectScope, ServiceId} from './types';
 import {BuildInstruction, Instruction, InstructionCode, PlanInstruction, TransformInstruction} from './instructions';
 import {convertParamInjectionMetadata, ensureConstructorParamInjectMetadata} from './metadata';
-import {BindingNotFoundError, CircularAliasError, CircularDependencyError} from './errors';
+import {BindingNotFoundError} from './errors';
 import {compileParamInjectInstruction, validateBindings} from './utils';
 
 function constructorToFactory(constructor: Class) {
@@ -10,7 +10,6 @@ function constructorToFactory(constructor: Class) {
 
 export class Resolver {
   protected readonly instructions: Instruction[] = [];
-  protected readonly planingSet: Set<ServiceId> = new Set();
   protected readonly sessionCache: Map<any, any> = new Map();
   protected readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
   protected readonly stack: any[] = [];
@@ -47,11 +46,6 @@ export class Resolver {
     return this.evalInstructions();
   }
 
-  protected resetState() {
-    /** Clear stack */
-    this.stack.splice(0);
-  }
-
   protected evalInstructions() {
     for (;;) {
       const instruction = this.instructions.pop();
@@ -73,11 +67,8 @@ export class Resolver {
     }
   }
 
-  protected performPlan(instruction: PlanInstruction, allowUnbound = false, allowAsync = false) {
+  protected performPlan(instruction: PlanInstruction, allowUnbound = false) {
     const {target, optional, allowTemporary} = instruction;
-    if (this.planingSet.has(target)) {
-      throw new CircularDependencyError(target);
-    }
     /**
      * Interceptor may directly put something into session cache, we need to
      * check the cache first, otherwise a BindingNotFoundError may be thrown
@@ -99,7 +90,6 @@ export class Resolver {
       case BindingType.INSTANCE:
       case BindingType.FACTORY:
         {
-          this.planingSet.add(binding.id);
           const instructions = this.compiledInstructionMap.get(binding.id);
           if (!instructions) {
             throw new Error('BUG: No compiled instruction found');
@@ -117,13 +107,14 @@ export class Resolver {
    * @private
    */
   private internalGetBinding(target: ServiceId, allowTemporary: boolean) {
-    let binding;
-    const resolvingSet = new Set();
     for (;;) {
-      if (allowTemporary && this.temporaryBinding.has(target)) {
-        return this.temporaryBinding.get(target);
+      if (allowTemporary) {
+        const temporaryBinding = this.temporaryBinding.get(target);
+        if (temporaryBinding) {
+          return temporaryBinding;
+        }
       }
-      binding = this.bindingMap.get(target);
+      const binding = this.bindingMap.get(target);
       if (!binding) {
         return;
       }
@@ -131,10 +122,6 @@ export class Resolver {
         return binding;
       }
       target = binding.canonicalId;
-      if (resolvingSet.has(target)) {
-        throw new CircularAliasError(target);
-      }
-      resolvingSet.add(target);
     }
   }
 
@@ -172,7 +159,7 @@ export class Resolver {
           paramCount: cm.length,
           serviceId: target,
         },
-        ...compileParamInjectInstruction(cm, true),
+        ...compileParamInjectInstruction(cm, allowTemporary),
       );
       return;
     }
@@ -190,10 +177,9 @@ export class Resolver {
     const result = factory(...args);
     this.cacheIfNecessary(cacheScope, serviceId, result);
     this.stack.push(result);
-    this.planingSet.delete(serviceId);
   }
 
-  private cacheIfNecessary(cacheScope: InjectScope, serviceId: Class<any> | string | symbol, result: any) {
+  private cacheIfNecessary(cacheScope: InjectScope, serviceId: ServiceId, result: any) {
     if (cacheScope === InjectScope.REQUEST || cacheScope === InjectScope.SESSION) {
       this.sessionCache.set(serviceId, result);
     } else if (cacheScope === InjectScope.SINGLETON) {

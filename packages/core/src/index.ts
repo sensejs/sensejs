@@ -8,6 +8,7 @@ export * from './logger';
 export * from './decorators';
 export * from './interceptor';
 export * from './entry-point';
+export * from './module-instance';
 export * from './module-utility';
 export * from './module-scanner';
 export * from './utils';

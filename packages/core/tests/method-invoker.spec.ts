@@ -28,7 +28,7 @@ describe('MethodInvoker', () => {
       }
     }
 
-    container.add(Target);
+    container.add(Target).compile();
 
     const before = jest.fn();
     const after = jest.fn();
@@ -118,7 +118,7 @@ describe('MethodInvoker', () => {
     class Target {
       async foo() {}
     }
-    container.add(Target);
+    container.add(Target).compile();
     class MyError extends Error {}
     class TestInterceptor1 extends RequestInterceptor {
       async intercept(context: RequestContext, next: () => Promise<void>): Promise<void> {

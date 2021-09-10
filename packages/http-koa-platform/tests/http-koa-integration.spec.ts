@@ -72,7 +72,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.add(FooController);
+    container.add(FooController).compile();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build(
@@ -104,7 +104,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.add(FooController);
+    container.add(FooController).compile();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build(
@@ -181,7 +181,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.add(FooController);
+    container.add(FooController).compile();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addGlobalInspector(InterceptorA);
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
@@ -242,7 +242,7 @@ describe('KoaHttpApplicationBuilder', () => {
     }
 
     const container = new Container();
-    container.add(FooController);
+    container.add(FooController).compile();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     const middlewareSpy = jest.fn();
     koaHttpApplicationBuilder.clearMiddleware();

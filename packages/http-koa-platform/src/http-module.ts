@@ -5,6 +5,7 @@ import {KoaHttpApplicationBuilder} from './http-koa-integration';
 import {
   Constructor,
   createModule,
+  DynamicModuleLoader,
   Inject,
   InjectLogger,
   Logger,
@@ -43,6 +44,7 @@ export interface HttpModuleOption extends ModuleOption {
 
   /**
    * If specified, http server instance will be bound to container with this as service identifier
+   * @deprecated
    */
   serverIdentifier?: ServiceIdentifier;
 
@@ -95,7 +97,10 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
     ) {}
 
     @OnModuleCreate()
-    async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
+    async onCreate(
+      @Inject(ModuleScanner) moduleScanner: ModuleScanner,
+      @Inject(DynamicModuleLoader) dynamicLoader: DynamicModuleLoader,
+    ) {
       const httpAdaptor = httpAdaptorFactory().setErrorHandler((e) => {
         this.logger.error('Error occurred when handling http request: ', e);
       });
@@ -108,10 +113,9 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
       this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);
 
       if (option.serverIdentifier) {
-        this.container.addBinding({
-          type: BindingType.CONSTANT,
+        dynamicLoader.addConstant({
+          provide: option.serverIdentifier,
           value: this.httpServer,
-          id: option.serverIdentifier,
         });
       }
     }

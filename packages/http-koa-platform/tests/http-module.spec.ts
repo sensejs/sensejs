@@ -24,13 +24,9 @@ test('HttpModule', async () => {
 
   @Component()
   class MyComponent {
-    constructor(
-      @Inject(ProcessManager) private processManager: ProcessManager,
-      @Inject(serverIdentifier) private httpServer: unknown,
-    ) {}
+    constructor(@Inject(ProcessManager) private processManager: ProcessManager) {}
 
     foo() {
-      expect(this.httpServer).toBeInstanceOf(Server);
       this.processManager.shutdown();
       return 'foo';
     }

@@ -45,7 +45,6 @@ export class ResolveSession extends Resolver {
   }
 
   async intercept(interceptor: AsyncResolveInterceptorFactory): Promise<void> {
-    this.resetState();
     const {interceptorBuilder, paramInjectionMetadata} = interceptor;
     const serviceId = Symbol();
     this.instructions.push(
@@ -93,7 +92,6 @@ export class ResolveSession extends Resolver {
   }
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
-    this.resetState();
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
     const self = this.resolve(target) as T;
     const proxyInstance = this.construct(proxy);

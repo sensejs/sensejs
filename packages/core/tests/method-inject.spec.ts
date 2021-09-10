@@ -63,6 +63,7 @@ describe('@Inject', () => {
     }
 
     container.add(Foo);
+    container.compile();
 
     let N = 10000;
     // 10000 method invoking should be done within 30s
@@ -90,6 +91,7 @@ describe('@Inject', () => {
         this.resolveSession.addTemporaryConstantBinding(key, value);
       }
     }
+
     const invoker = MethodInvokerBuilder.create(container)
       .addInterceptor(...interceptors)
       .build(Foo, 'bar');
