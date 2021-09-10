@@ -6,13 +6,13 @@ import {ensureValidatedParamInjectMetadata} from './metadata';
 /**
  * Find cyclic and unmet dependencies through DFS
  */
-function internalValidateDependencies(
+export function internalValidateDependencies(
   binding: Binding<unknown>,
   bindingMap: Map<ServiceId, Binding<any>>,
   visitPath: ServiceId[],
-  set: Set<ServiceId>,
+  validatedSet: Set<ServiceId>,
 ) {
-  if (set.has(binding.id)) {
+  if (validatedSet.has(binding.id)) {
     return;
   }
   switch (binding.type) {
@@ -34,7 +34,7 @@ function internalValidateDependencies(
             }
             break;
           }
-          internalValidateDependencies(binding, bindingMap, [...visitPath, m.id], set);
+          internalValidateDependencies(binding, bindingMap, [...visitPath, m.id], validatedSet);
         }
       }
       break;
@@ -42,13 +42,14 @@ function internalValidateDependencies(
       if (visitPath.indexOf(binding.canonicalId) >= 0) {
         throw new CircularAliasError('Circular dependencies');
       }
-      if (!bindingMap.has(binding.canonicalId)) {
+      const aliased = bindingMap.get(binding.canonicalId);
+      if (!aliased) {
         throw new BindingNotFoundError('Unmet dependencies: ' + binding.canonicalId.toString());
       }
-      internalValidateDependencies(binding, bindingMap, [...visitPath, binding.canonicalId], set);
+      internalValidateDependencies(aliased, bindingMap, [...visitPath, binding.canonicalId], validatedSet);
     }
   }
-  set.add(binding.id);
+  validatedSet.add(binding.id);
 }
 
 export function validateBindings(bindingMap: Map<ServiceId, Binding<any>>): void {

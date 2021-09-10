@@ -23,7 +23,7 @@ import {
 } from './metadata';
 import {MethodInvoker} from './method-invoker';
 import {Resolver} from './resolver';
-import {compileParamInjectInstruction} from './utils';
+import {compileParamInjectInstruction, internalValidateDependencies} from './utils';
 
 export class ResolveSession extends Resolver {
   private allFinished: Promise<void>;
@@ -109,6 +109,7 @@ export class ResolveSession extends Resolver {
 export class ResolveContext extends ResolveSession {}
 
 export class Container {
+  private pendingBindingMap: Map<ServiceId, Binding<any>> = new Map();
   private bindingMap: Map<ServiceId, Binding<any>> = new Map();
   private compiledInstructionMap: Map<ServiceId, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId, any> = new Map();
@@ -176,21 +177,41 @@ export class Container {
 
   addBinding<T>(binding: Binding<T>): this {
     const id = binding.id;
-    if (this.bindingMap.has(id)) {
+    if (this.bindingMap.has(id) || this.pendingBindingMap.has(id)) {
       throw new DuplicatedBindingError(id);
     }
-    this.bindingMap.set(id, binding);
-
-    if (binding.type === BindingType.INSTANCE) {
-      this.compileInstanceBinding(binding);
-    } else if (binding.type === BindingType.FACTORY) {
-      this.compileFactoryBinding(binding);
-    }
+    this.pendingBindingMap.set(id, binding);
     return this;
   }
 
   resolve<T>(serviceId: ServiceId<T>): T {
     return this.createResolveSession().resolve(serviceId);
+  }
+
+  compile() {
+    const validatedSet = new Set(this.bindingMap.keys());
+    const mergedBindingMap = new Map([...this.bindingMap.entries()]);
+    this.pendingBindingMap.forEach((value, key) => mergedBindingMap.set(key, value));
+
+    for (const [, binding] of this.pendingBindingMap) {
+      internalValidateDependencies(binding, mergedBindingMap, [], validatedSet);
+    }
+
+    // Pending bindings are now validated, merge and compile them
+
+    this.pendingBindingMap.forEach((value, key) => {
+      this.bindingMap.set(key, value);
+      switch (value.type) {
+        case BindingType.FACTORY:
+          this.compileFactoryBinding(value);
+          break;
+        case BindingType.INSTANCE:
+          this.compileInstanceBinding(value);
+          break;
+      }
+    });
+    this.pendingBindingMap.clear();
+    return this;
   }
 
   private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
