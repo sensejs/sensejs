@@ -16,8 +16,9 @@ import {
   ensureValidatedParamInjectMetadata,
   MethodInvokeProxy,
 } from './metadata';
-import {Injectable} from './decorator';
+import {Injectable, Scope} from './decorator';
 import {Resolver} from './resolver';
+import {BindingNotFoundError} from './errors';
 
 const METADATA_KEY = Symbol();
 
@@ -58,7 +59,7 @@ class AsyncMethodInvokeSession<Context, T extends {}, K extends keyof T> extends
     bindingMap: Map<ServiceId, Binding<any>>,
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
     globalCache: Map<any, any>,
-    readonly interceptProviderAndMetadata: [Constructor<AsyncInterceptProvider<Context, any[]>>, ServiceId[]][],
+    readonly interceptProviderAndMetadata: [Instruction[], ServiceId[]][],
     private readonly proxyConstructInstructions: Instruction[],
     private readonly targetConstructor: Constructor,
     private readonly targetFunction: Function,
@@ -88,9 +89,11 @@ class AsyncMethodInvokeSession<Context, T extends {}, K extends keyof T> extends
           this.result = await performInvoke();
           return;
         }
-        const [interceptResolver, metadata] = this.interceptProviderAndMetadata[index];
+        const [instructions, metadata] = this.interceptProviderAndMetadata[index];
+        this.instructions.push(...instructions);
+        const instance = this.evalInstructions() as AsyncInterceptProvider<any, any>;
 
-        return this.resolve(interceptResolver).intercept(this.context, async (...args: any[]) => {
+        return instance.intercept(this.context, async (...args: any[]) => {
           for (let i = 0; i < metadata.length; i++) {
             this.addTemporaryConstantBinding(metadata[i], args[i]);
           }
@@ -106,8 +109,9 @@ class AsyncMethodInvokeSession<Context, T extends {}, K extends keyof T> extends
 export class MethodInvoker<Context, T extends {}, K extends keyof T> {
   private readonly proxyConstructInstructions: Instruction[];
   private readonly targetFunction: Function;
-  private readonly interceptorProviderAndMetadata: [Constructor<AsyncInterceptProvider<Context, any>>, ServiceId[]][];
+  private readonly interceptorProviderAndMetadata: [Instruction[], ServiceId[]][] = [];
   private readonly contextProviderInstructions: Instruction[];
+  private readonly proxyConstructorInjectionMetadata;
 
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
@@ -119,22 +123,22 @@ export class MethodInvoker<Context, T extends {}, K extends keyof T> {
       factory: (...args: any[]) => Context;
       paramInjectionMetadata: ParamInjectionMetadata[];
     },
-    interceptors: Constructor<AsyncInterceptProvider<any, any>>[],
+    private interceptors: Constructor<AsyncInterceptProvider<any, any>>[],
   ) {
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(targetConstructor, targetMethod);
-    const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(proxy));
+    this.proxyConstructorInjectionMetadata = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(proxy));
+    this.validate();
     this.proxyConstructInstructions = [
       {
         code: InstructionCode.BUILD,
         cacheScope: InjectScope.TRANSIENT,
         factory: constructorToFactory(proxy),
-        paramCount: cm.length,
+        paramCount: this.proxyConstructorInjectionMetadata.length,
         serviceId: proxy,
       },
-      ...compileParamInjectInstruction(cm, true),
+      ...compileParamInjectInstruction(this.proxyConstructorInjectionMetadata, true),
     ];
     this.targetFunction = fn;
-    this.interceptorProviderAndMetadata = interceptors.map((x) => [x, Reflect.getOwnMetadata(METADATA_KEY, x)]);
     this.contextProviderInstructions = [
       {
         code: InstructionCode.BUILD,
@@ -145,6 +149,48 @@ export class MethodInvoker<Context, T extends {}, K extends keyof T> {
       },
       ...compileParamInjectInstruction(contextProvider.paramInjectionMetadata, true),
     ];
+  }
+
+  private validate() {
+    const validatedSet = new Set(new Map(this.bindingMap).keys());
+    const validateParamInjectMetadata = (metadata: ParamInjectionMetadata[]) => {
+      for (const v of metadata) {
+        const {id, optional = false} = v;
+        if (typeof id === 'undefined') {
+          throw new TypeError('param inject id is undefined');
+        }
+        if (!validatedSet.has(id)) {
+          if (optional) {
+            break;
+          }
+          // TODO: message
+          throw new BindingNotFoundError('');
+        }
+      }
+    };
+    for (const interceptor of this.interceptors) {
+      const pim = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(interceptor));
+      validateParamInjectMetadata(pim);
+      const metadata = Reflect.getOwnMetadata(METADATA_KEY, interceptor);
+      if (!Array.isArray(metadata)) {
+        throw new Error('missing metadata');
+      }
+      metadata.forEach((x) => validatedSet.add(x));
+      this.interceptorProviderAndMetadata.push([
+        [
+          {
+            code: InstructionCode.BUILD,
+            paramCount: pim.length,
+            factory: (...args) => Reflect.construct(interceptor, args),
+            serviceId: Symbol(),
+            cacheScope: Scope.SINGLETON,
+          },
+          ...compileParamInjectInstruction(pim, true),
+        ],
+        metadata,
+      ]);
+    }
+    validateParamInjectMetadata(this.proxyConstructorInjectionMetadata);
   }
 
   invoke() {

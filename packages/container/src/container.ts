@@ -132,6 +132,7 @@ export class Container {
     },
     asyncInterceptProviders: Constructor<AsyncInterceptProvider<Context, any>>[],
   ): MethodInvoker<any, T, K> {
+    this.compile();
     return new MethodInvoker(
       this.bindingMap,
       this.compiledInstructionMap,

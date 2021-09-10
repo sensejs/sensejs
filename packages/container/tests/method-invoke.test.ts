@@ -5,7 +5,7 @@ class CustomContext<T extends {} = any, K extends keyof T = any> {
   constructor(readonly targetConstructor: Constructor<T>, readonly targetMethodKey: K) {}
 }
 
-describe.skip('MethodInvoker', () => {
+describe('MethodInvoker', () => {
   test('Without interceptor', async () => {
     const container = new Container();
 
@@ -78,7 +78,7 @@ describe.skip('MethodInvoker', () => {
   });
 });
 
-test.skip('Performance test', async () => {
+test('Performance test', async () => {
   const a = Symbol(),
     b = Symbol();
 
@@ -161,7 +161,6 @@ test.skip('Performance test', async () => {
       return Interceptor;
     });
 
-  interceptors.forEach((x) => container.add(x));
   container.compile();
 
   const methodInvoker = container.createMethodInvoker(
