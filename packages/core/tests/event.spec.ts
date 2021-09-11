@@ -9,6 +9,7 @@ import {
   SubscribeEvent,
   SubscribeEventController,
 } from '../src';
+import {InterceptProviderClass} from '@sensejs/container';
 
 describe('Event subscribe and announce', () => {
   test('Subscribe', async () => {
@@ -16,17 +17,38 @@ describe('Event subscribe and announce', () => {
     const spy2 = jest.fn();
     const spy3 = jest.fn();
     const filterSpy = jest.fn();
+    @InterceptProviderClass()
+    class MockInterceptor {
+      constructor(@Inject(EventSubscriptionContext) readonly context: EventSubscriptionContext) {}
+
+      intercept(next: () => Promise<void>): Promise<void> {
+        expect(this.context.targetConstructor).toBe(SubscribeController);
+        expect(typeof this.context.targetMethodKey).toBe('string');
+        return next();
+      }
+    }
+
+    @InterceptProviderClass('a', 'b')
+    class MockChannelInterceptor {
+      constructor(@Inject(EventSubscriptionContext) readonly context: EventSubscriptionContext) {}
+
+      intercept(next: (a: any, b: any) => Promise<void>): Promise<void> {
+        expect(this.context.targetConstructor).toBe(SubscribeController);
+        expect(typeof this.context.targetMethodKey).toBe('string');
+        return next(this.context.payload.a, this.context.payload.b);
+      }
+    }
 
     @SubscribeEventController()
     class SubscribeController {
       @SubscribeEvent('event', {filter: (payload: string) => payload === 'bar'})
-      bar(@Inject('event') param: string) {
-        spy(param);
+      bar(@Inject(EventSubscriptionContext) param: EventSubscriptionContext) {
+        spy(param.payload);
       }
 
       @SubscribeEvent('event')
-      bar2(@Inject('event') param: string) {
-        spy2(param);
+      bar2(@Inject(EventSubscriptionContext) param: EventSubscriptionContext) {
+        spy2(param.payload);
       }
 
       @SubscribeEvent('channel', {
@@ -34,50 +56,50 @@ describe('Event subscribe and announce', () => {
           filterSpy(x);
           return true;
         },
+        interceptProviders: [MockChannelInterceptor],
       })
       channel(@Inject('a') a: any, @Inject('b') b: any) {
         spy3(a, b);
       }
     }
 
-    class MockInterceptor extends RequestInterceptor<EventSubscriptionContext> {
-      intercept(context: EventSubscriptionContext, next: () => Promise<void>): Promise<void> {
-        expect(context.targetConstructor).toBe(SubscribeController);
-        expect(typeof context.targetMethodKey).toBe('string');
-        return next();
-      }
-    }
-
     @ModuleClass({
       requires: [
         createEventSubscriptionModule({
-          interceptors: [MockInterceptor],
+          interceptProviders: [MockInterceptor],
           components: [SubscribeController],
         }),
       ],
     })
     class EntryModule {
-      async onModuleCreate(
-        @Inject(EventPublisher) eventPublisher: EventPublisher,
-      ) {
-        await eventPublisher.prepare('event').publish('event', 'bar');
-        await eventPublisher.prepare('channel').bind('a', 1).bind('b', 2).publish();
-        await eventPublisher.prepare('channel').bind('a', 2).bind('b', 1).publish('channel', 'payload');
+      async onModuleCreate(@Inject(EventPublisher) eventPublisher: EventPublisher) {
+        await eventPublisher.publish('event', 'bar');
+        await eventPublisher.publish('channel', {
+          a: 1,
+          b: 2,
+          data: 'payload',
+        });
+        await eventPublisher.publish('channel', {
+          a: 2,
+          b: 1,
+        });
         expect(spy).toHaveBeenCalledWith('bar');
         expect(spy2).toHaveBeenLastCalledWith('bar');
-        expect(filterSpy).toHaveBeenNthCalledWith(1, undefined);
-        expect(filterSpy).toHaveBeenNthCalledWith(2, 'payload');
+        expect(spy3).toHaveBeenNthCalledWith(1, 1, 2);
         expect(spy3).toHaveBeenNthCalledWith(2, 2, 1);
 
         filterSpy.mockImplementationOnce(() => {
           throw new Error();
         });
-        await expect(() => eventPublisher.prepare('channel').bind('a', 2).bind('b', 1).publish('channel', 'payload'))
-          .rejects;
+        await expect(() =>
+          eventPublisher.publish('publish', {
+            a: 2,
+            b: 1,
+          }),
+        ).rejects;
       }
     }
 
     await ModuleRoot.run(EntryModule, 'onModuleCreate');
   });
 });
-
