@@ -3180,8 +3180,8 @@ packages:
   /@types/jest/27.0.1:
     resolution: {integrity: sha512-HTLpVXHrY69556ozYkcq47TtQJXpcWAWfkoqz+ZGz2JnmZhzlRjprCIyFnetSy8gpDWwTTGBcRVv1J1I1vBrHw==}
     dependencies:
-      jest-diff: 27.1.0
-      pretty-format: 27.1.0
+      jest-diff: 27.1.1
+      pretty-format: 27.1.1
     dev: true
 
   /@types/json-schema/7.0.9:
@@ -4177,6 +4177,7 @@ packages:
 
   /bindings/1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}
+    requiresBuild: true
     dependencies:
       file-uri-to-path: 1.0.0
     dev: false
@@ -6191,6 +6192,7 @@ packages:
 
   /file-uri-to-path/1.0.0:
     resolution: {integrity: sha512-0Zt+s3L7Vf1biwWZ29aARiVYLx7iMGnEUl9x33fbB/j3jR81u/O2LbqK+Bm1CDSNDKVtJ/YjwY7TUd5SkeLQLw==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -6407,6 +6409,7 @@ packages:
     resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
+    requiresBuild: true
     optional: true
 
   /fstream/1.0.12:
@@ -7809,16 +7812,6 @@ packages:
       - utf-8-validate
     dev: true
 
-  /jest-diff/27.1.0:
-    resolution: {integrity: sha512-rjfopEYl58g/SZTsQFmspBODvMSytL16I+cirnScWTLkQVXYVZfxm78DFfdIIXc05RCYuGjxJqrdyG4PIFzcJg==}
-    engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
-    dependencies:
-      chalk: 4.1.2
-      diff-sequences: 27.0.6
-      jest-get-type: 27.0.6
-      pretty-format: 27.1.1
-    dev: true
-
   /jest-diff/27.1.1:
     resolution: {integrity: sha512-m/6n5158rqEriTazqHtBpOa2B/gGgXJijX6nsEgZfbJ/3pxQcdpVXBe+FP39b1dxWHyLVVmuVXddmAwtqFO4Lg==}
     engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
@@ -9046,6 +9039,7 @@ packages:
 
   /nan/2.15.0:
     resolution: {integrity: sha512-8ZtvEnA2c5aYCZYd1cvgdnU6cqwixRoYg70xPLWUws5ORTa/lnw+u4amixRS/Ac5U5mQVgp9pnlSUnbNWFaWZQ==}
+    requiresBuild: true
     dev: false
     optional: true
 
@@ -9142,6 +9136,7 @@ packages:
     resolution: {integrity: sha512-3g8lYefrRRzvGeSowdJKAKyks8oUpLEd/DyPV4eMhVlhJ0aNaZqIrNUIPuEWWTAoPqyFkfGrM67MC69baqn6vA==}
     engines: {node: '>= 0.8.0'}
     hasBin: true
+    requiresBuild: true
     dependencies:
       fstream: 1.0.12
       glob: 7.1.7
@@ -10225,16 +10220,6 @@ packages:
       lodash: 4.17.21
       renderkid: 2.0.7
     dev: false
-
-  /pretty-format/27.1.0:
-    resolution: {integrity: sha512-4aGaud3w3rxAO6OXmK3fwBFQ0bctIOG3/if+jYEFGNGIs0EvuidQm3bZ9mlP2/t9epLNC/12czabfy7TZNSwVA==}
-    engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
-    dependencies:
-      '@jest/types': 27.1.1
-      ansi-regex: 5.0.0
-      ansi-styles: 5.2.0
-      react-is: 17.0.2
-    dev: true
 
   /pretty-format/27.1.1:
     resolution: {integrity: sha512-zdBi/xlstKJL42UH7goQti5Hip/B415w1Mfj+WWWYMBylAYtKESnXGUtVVcMVid9ReVjypCotUV6CEevYPHv2g==}
