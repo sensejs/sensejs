@@ -1,6 +1,6 @@
 import {Deprecated} from '../src/utils';
-import {BindingType, Container, inject, injectable} from '@sensejs/container';
-import {Inject, invokeMethod} from '../src';
+import {BindingType, Container, Inject, Injectable} from '@sensejs/container';
+import {invokeMethod} from '../src';
 
 const awaitWarningCalled = (stub: jest.SpyInstance) =>
   new Promise<void>((done) => {
@@ -57,27 +57,27 @@ describe('Deprecate on class', () => {
     const warningStub = jest.spyOn(process, 'emitWarning');
     const stub = jest.fn();
 
-    @injectable()
+    @Injectable()
     @Deprecated({replacedBy: 'unknown'})
     class X {
-      constructor(@inject('key') param: any) {
+      constructor(@Inject('key') param: any) {
         expect(param).not.toBeUndefined();
         stub(X);
       }
     }
 
     @Deprecated({replacedBy: X})
-    @injectable()
+    @Injectable()
     class Y {
-      constructor(@inject('key') param: any) {
+      constructor(@Inject('key') param: any) {
         expect(param).not.toBeUndefined();
         stub(Y);
       }
     }
 
-    @injectable()
+    @Injectable()
     class U {
-      constructor(@inject('key') param: any) {
+      constructor(@Inject('key') param: any) {
         expect(param).not.toBeUndefined();
         stub(U);
       }
@@ -85,7 +85,7 @@ describe('Deprecate on class', () => {
 
     @Deprecated()
     class V extends U {
-      constructor(@inject('key') param: any) {
+      constructor(@Inject('key') param: any) {
         super(param);
         stub(V);
       }
@@ -100,6 +100,7 @@ describe('Deprecate on class', () => {
     container.add(X);
     container.add(Y);
     container.add(V);
+    container.compile();
 
     expect(container.resolve(X)).toBeInstanceOf(X);
     expect(stub).lastCalledWith(X);
@@ -164,7 +165,7 @@ describe('Deprecate instance method', () => {
   test('method inject', () => {
     const result = Date.now().toString();
 
-    @injectable()
+    @Injectable()
     class X {
       foo(@Inject('key') param: string) {
         return param;
@@ -178,6 +179,7 @@ describe('Deprecate instance method', () => {
       value: result,
     });
     container.add(X);
+    container.compile();
     try {
       expect(invokeMethod(container.createResolveContext(), X, 'foo')).toBe(result);
     } catch (e) {

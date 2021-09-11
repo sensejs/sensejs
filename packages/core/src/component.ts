@@ -1,4 +1,4 @@
-import {injectable, Scope, InjectScope} from '@sensejs/container';
+import {Injectable, Scope, InjectScope} from '@sensejs/container';
 import {Class, ComponentMetadata, Constructor} from './interfaces';
 export {InjectScope as ComponentScope, Scope} from '@sensejs/container';
 
@@ -46,7 +46,7 @@ export function Component(option: ComponentOption = {}) {
     if (scope) {
       Scope(scope)(target);
     }
-    injectable({scope})(target);
+    Injectable()(target);
     if (typeof option.id === 'function') {
       if (!(target.prototype instanceof option.id) && option.id !== target) {
         throw new Error('Explicitly specified component id must be string, symbol, or any of its base class');

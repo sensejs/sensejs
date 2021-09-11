@@ -5,86 +5,87 @@ import {
   CircularDependencyError,
   Container,
   DuplicatedBindingError,
-  inject,
+  Inject,
   Injectable,
-  injectable,
   InjectScope,
   InvalidParamBindingError,
   NoEnoughInjectMetadataError,
-  optional,
-  scope,
+  Optional,
+  Scope,
 } from '../src';
 
 function untransformed(input: any) {
   return input;
 }
-describe('Kernel', () => {
+describe('Container', () => {
   test('simple resolve', () => {
-    const kernel = new Container();
+    const container = new Container();
     const value = 1;
 
     class Foo {
       constructor(readonly param: number) {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       type: BindingType.CONSTANT,
       value,
       id: '1',
     });
     const transformer = jest.fn((x) => x);
 
-    kernel.addBinding({
+    container.addBinding({
       id: Foo,
       type: BindingType.INSTANCE,
       constructor: Foo,
       paramInjectionMetadata: [{id: '1', index: 0, optional: false, transform: transformer}],
       scope: InjectScope.SINGLETON,
     });
+    container.compile();
 
-    const result = kernel.resolve(Foo);
+    const result = container.resolve(Foo);
     expect(result).toBeInstanceOf(Foo);
     expect(result.param).toBe(value);
     expect(transformer).toHaveBeenCalledWith(value);
   });
 
   test('construct', () => {
-    const kernel = new Container();
+    const container = new Container();
     const value = '1';
-    kernel.addBinding({
+    container.addBinding({
       type: BindingType.CONSTANT,
       value,
       id: '1',
     });
+    container.compile();
 
     class Foo {
-      constructor(@inject('1') readonly param: number) {}
+      constructor(@Inject('1') readonly param: number) {}
     }
 
     class Bar {
-      constructor(@inject('2') readonly param: number) {}
+      constructor(@Inject('2') readonly param: number) {}
     }
 
-    expect(kernel.createResolveSession().construct(Foo)).toEqual(expect.objectContaining({param: value}));
+    expect(container.createResolveSession().construct(Foo)).toEqual(expect.objectContaining({param: value}));
 
-    expect(() => kernel.createResolveSession().construct(Bar)).toThrow(BindingNotFoundError);
+    expect(() => container.createResolveSession().construct(Bar)).toThrow(BindingNotFoundError);
   });
 
   test('factory', () => {
-    const kernel = new Container();
+    const container = new Container();
     const value = 1;
 
     class Foo {
       constructor(readonly param: number) {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       type: BindingType.CONSTANT,
       value,
       id: '1',
     });
 
-    kernel.addBinding({
+    container.addBinding({
       id: Foo,
       type: BindingType.FACTORY,
       factory: (param: number) => new Foo(param),
@@ -92,26 +93,28 @@ describe('Kernel', () => {
       scope: InjectScope.SINGLETON,
     });
 
-    const result = kernel.resolve(Foo);
+    container.compile();
+
+    const result = container.resolve(Foo);
     expect(result).toBeInstanceOf(Foo);
     expect(result.param).toBe(value);
   });
 
   test('optional', () => {
-    const kernel = new Container();
+    const container = new Container();
     const value = 1;
 
     class Foo {
       constructor(readonly param: number, readonly optional?: any) {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       type: BindingType.CONSTANT,
       value,
       id: '1',
     });
 
-    kernel.addBinding({
+    container.addBinding({
       id: Foo,
       type: BindingType.INSTANCE,
       constructor: Foo,
@@ -121,15 +124,16 @@ describe('Kernel', () => {
       ],
       scope: InjectScope.SINGLETON,
     });
+    container.compile();
 
-    const result = kernel.resolve(Foo);
+    const result = container.resolve(Foo);
     expect(result).toBeInstanceOf(Foo);
     expect(result.param).toBe(value);
     expect(result.optional).toBe(undefined);
   });
 
   test('singleton alias', () => {
-    const kernel = new Container();
+    const container = new Container();
 
     class Foo {
       constructor() {}
@@ -139,7 +143,7 @@ describe('Kernel', () => {
       constructor(readonly param1: any, readonly param2: any) {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       id: Foo,
       type: BindingType.INSTANCE,
       constructor: Foo,
@@ -147,13 +151,13 @@ describe('Kernel', () => {
       scope: InjectScope.SINGLETON,
     });
 
-    kernel.addBinding({
+    container.addBinding({
       id: 'alias',
       type: BindingType.ALIAS,
       canonicalId: Foo,
     });
 
-    kernel.addBinding({
+    container.addBinding({
       id: Bar,
       type: BindingType.INSTANCE,
       constructor: Bar,
@@ -163,8 +167,9 @@ describe('Kernel', () => {
       ],
       scope: InjectScope.SINGLETON,
     });
+    container.compile();
 
-    const result = kernel.resolve(Bar);
+    const result = container.resolve(Bar);
     expect(result.param1).toBeInstanceOf(Foo);
     expect(result.param2).toBeInstanceOf(Foo);
     expect(result.param2).toBe(result.param1);
@@ -176,14 +181,22 @@ describe('Kernel', () => {
   });
 
   test('duplicated', () => {
-    const kernel = new Container();
-    kernel.addBinding({
-      type: BindingType.ALIAS,
+    const container = new Container();
+    container.addBinding({
+      type: BindingType.CONSTANT,
       id: 'duplicated',
-      canonicalId: 'canonicalId',
+      value: 'duplicated',
     });
     expect(() =>
-      kernel.addBinding({
+      container.addBinding({
+        type: BindingType.ALIAS,
+        id: 'duplicated',
+        canonicalId: 'canonicalId',
+      }),
+    ).toThrow(DuplicatedBindingError);
+    container.compile();
+    expect(() =>
+      container.addBinding({
         type: BindingType.ALIAS,
         id: 'duplicated',
         canonicalId: 'canonicalId',
@@ -192,22 +205,24 @@ describe('Kernel', () => {
   });
 
   test('invalid param injection metadata', () => {
-    const kernel = new Container();
+    const container = new Container();
     class Foo {}
     expect(() =>
-      kernel.addBinding({
-        type: BindingType.INSTANCE,
-        id: Foo,
-        paramInjectionMetadata: [
-          {
-            index: 1,
-            id: 'foo',
-            optional: true,
-          },
-        ],
-        scope: InjectScope.TRANSIENT,
-        constructor: Foo,
-      }),
+      container
+        .addBinding({
+          type: BindingType.INSTANCE,
+          id: Foo,
+          paramInjectionMetadata: [
+            {
+              index: 1,
+              id: 'foo',
+              optional: true,
+            },
+          ],
+          scope: InjectScope.TRANSIENT,
+          constructor: Foo,
+        })
+        .compile(),
     ).toThrow(InvalidParamBindingError);
   });
 
@@ -216,16 +231,16 @@ describe('Kernel', () => {
 
     class Bar {}
 
-    const kernel = new Container();
+    const container = new Container();
 
-    kernel.addBinding({
+    container.addBinding({
       id: Foo,
       type: BindingType.INSTANCE,
       constructor: Foo,
       paramInjectionMetadata: [{id: Bar, index: 0, optional: false}],
       scope: InjectScope.SINGLETON,
     });
-    kernel.addBinding({
+    container.addBinding({
       id: Bar,
       type: BindingType.INSTANCE,
       constructor: Bar,
@@ -233,104 +248,82 @@ describe('Kernel', () => {
       scope: InjectScope.SINGLETON,
     });
 
-    expect(() => kernel.resolve(Foo)).toThrow(CircularDependencyError);
+    expect(() => container.compile()).toThrow(CircularDependencyError);
   });
 
   test('circular alias', () => {
-    const kernel = new Container();
-    kernel.addBinding({
+    const container = new Container();
+    container.addBinding({
       type: BindingType.ALIAS,
       id: 'foo',
       canonicalId: 'foo',
     });
 
-    expect(() => kernel.resolve('foo')).toThrow(CircularAliasError);
+    expect(() => container.compile()).toThrow(CircularAliasError);
   });
 
   test('invoke', async () => {
-    const kernel = new Container();
+    const container = new Container();
     const value1 = Math.random();
     const value2 = Math.random();
 
     class Foo {
       bar;
 
-      constructor(@inject('const1') readonly param1: number) {
+      constructor(@Inject('const1') readonly param1: number) {
         this.bar = param1;
       }
 
-      method(@inject('const2') value: number, @inject('temp2') value2: number) {
-        expect(value + this.param1).toEqual(value2);
-      }
+      method(@Inject('const2') value: number, @Inject('temp2') value2: number) {}
     }
 
     const methodSpy = jest.spyOn(Foo.prototype, 'method');
 
-    kernel.add(Foo);
-    kernel.addBinding({
+    container.add(Foo);
+    container.addBinding({
       type: BindingType.CONSTANT,
       id: 'const1',
       value: value1,
     });
-    kernel.addBinding<number>({
+    container.addBinding<number>({
       type: BindingType.CONSTANT,
       id: 'const2',
       value: value2,
     });
-    const context = await kernel.createResolveSession();
-    await context.intercept({
-      interceptorBuilder: (param1: number) => {
-        return async (next) => {
-          context.addTemporaryConstantBinding('temp1', param1);
-          await next();
-        };
-      },
-      paramInjectionMetadata: [{id: 'const1', index: 0, optional: false}],
-    });
-    await context.intercept({
-      interceptorBuilder: (param1: number, param2: number) => {
-        return async (next) => {
-          context.addTemporaryConstantBinding('temp2', param1 + param2);
-          await next();
-        };
-      },
-      paramInjectionMetadata: [
-        {id: 'temp1', index: 0, optional: false},
-        {id: 'const2', index: 1, optional: false},
-      ],
-    });
-    await context.invoke(Foo, 'method');
+    container.compile();
+    const context = await container.createResolveSession().addTemporaryConstantBinding('temp2', 'temp2');
+    context.invoke(Foo, 'method');
     expect(methodSpy).toHaveBeenCalled();
-    await context.cleanUp();
   });
 
   test('invalid invoke', () => {
-    const kernel = new Container();
+    const container = new Container();
 
     class Foo {
       constructor() {}
 
-      method(@inject('const2') param1: number, param2: number) {}
+      method(@Inject('const2') param1: number, param2: number) {}
     }
-    kernel.add(Foo);
-    expect(() => kernel.createResolveSession().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
+    container.add(Foo);
+    container.compile();
+    expect(() => container.createResolveSession().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
 
   test('invoke with optional', () => {
-    const kernel = new Container();
+    const container = new Container();
 
     class Foo {
       constructor() {}
 
-      method(@optional() @inject('const') param1?: number) {}
+      method(@Optional() @Inject('const') param1?: number) {}
     }
-    kernel.add(Foo);
+    container.add(Foo).compile();
 
-    kernel.createResolveSession().invoke(Foo, 'method');
+    container.createResolveSession().invoke(Foo, 'method');
   });
 
   test('error occurred when invoke', async () => {
-    const kernel = new Container();
+    const container = new Container();
 
     class FooError extends Error {}
 
@@ -342,22 +335,9 @@ describe('Kernel', () => {
       }
     }
 
-    kernel.add(Foo);
-    const stub = jest.fn();
-    const context = kernel.createResolveSession();
-    await context.intercept({
-      interceptorBuilder: () => {
-        return async (next) => {
-          try {
-            await next();
-          } catch (e) {
-            stub(e);
-            throw e;
-          }
-        };
-      },
-      paramInjectionMetadata: [],
-    });
+    container.add(Foo);
+    container.compile();
+    const context = container.createResolveSession();
     let err;
     expect(() => {
       try {
@@ -367,44 +347,16 @@ describe('Kernel', () => {
         throw e;
       }
     }).toThrow(FooError);
-
-    expect(stub).not.toHaveBeenCalled();
-    await expect(context.cleanUp(err)).rejects.toBeInstanceOf(FooError);
-    expect(stub).toHaveBeenCalled();
-  });
-
-  test('interceptor throw', async () => {
-    const kernel = new Container();
-
-    class Foo {
-      constructor() {}
-
-      method() {}
-    }
-
-    kernel.add(Foo);
-    const context = kernel.createResolveSession();
-    await context.intercept({
-      interceptorBuilder: () => {
-        return async (next) => {
-          await next();
-          throw new Error();
-        };
-      },
-      paramInjectionMetadata: [],
-    });
-    context.invoke(Foo, 'method');
-    await expect(context.cleanUp()).rejects.toBeInstanceOf(Error);
   });
 
   test('scope', () => {
-    const kernel = new Container();
+    const container = new Container();
 
     class GlobalSingleton {
       constructor() {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       id: GlobalSingleton,
       type: BindingType.INSTANCE,
       constructor: GlobalSingleton,
@@ -416,7 +368,7 @@ describe('Kernel', () => {
       constructor(readonly param1: GlobalSingleton) {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       id: RequestSingleton,
       type: BindingType.INSTANCE,
       constructor: RequestSingleton,
@@ -428,7 +380,7 @@ describe('Kernel', () => {
       constructor(readonly param1: GlobalSingleton, readonly param2: RequestSingleton) {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       id: Transient,
       type: BindingType.INSTANCE,
       constructor: Transient,
@@ -443,7 +395,7 @@ describe('Kernel', () => {
       constructor(readonly param1: Transient, readonly param2: Transient) {}
     }
 
-    kernel.addBinding({
+    container.addBinding({
       id: Root,
       type: BindingType.FACTORY,
       factory: (a: Transient, b: Transient) => new Root(a, b),
@@ -453,8 +405,9 @@ describe('Kernel', () => {
       ],
       scope: InjectScope.SESSION,
     });
+    container.compile();
 
-    const root = kernel.resolve(Root);
+    const root = container.resolve(Root);
     expect(root.param1).toBeInstanceOf(Transient);
     expect(root.param2).toBeInstanceOf(Transient);
     expect(root.param1).not.toBe(root.param2);
@@ -465,19 +418,21 @@ describe('Kernel', () => {
   });
 
   test('decorator', () => {
-    @injectable({scope: InjectScope.SINGLETON})
+    @Injectable()
+    @Scope(InjectScope.SINGLETON)
     class Foo {
       constructor() {}
     }
 
-    @injectable()
+    @Injectable()
     class X {
-      constructor(@inject(Foo) readonly foo: Foo, @optional() @inject('optional') optionalParam?: any) {}
+      constructor(@Inject(Foo) readonly foo: Foo, @Optional() @Inject('optional') optionalParam?: any) {}
     }
 
     const container = new Container();
     container.add(Foo);
     container.add(X);
+    container.compile();
     const x = container.resolve(X);
     const y = container.resolve(X);
     expect(x.foo).toBeInstanceOf(Foo);
@@ -485,108 +440,57 @@ describe('Kernel', () => {
   });
 
   test('temporary binding cannot be used by global component', () => {
-    @injectable()
-    @scope(InjectScope.SINGLETON)
-    class GlobalA {
-      constructor(@inject('1') param: any) {}
-    }
-    @injectable()
-    @scope(InjectScope.SINGLETON)
+    const container = new Container();
+    const stub = jest.fn();
+
+    @Injectable()
+    @Scope(InjectScope.SINGLETON)
     class GlobalB {
       constructor() {}
     }
 
-    @injectable()
-    @scope(InjectScope.TRANSIENT)
+    @Injectable()
+    @Scope(InjectScope.SINGLETON)
+    class GlobalA {
+      constructor(@Inject(GlobalB) readonly param: any) {}
+    }
+
+    @Injectable()
+    @Scope(InjectScope.TRANSIENT)
     class A {
-      constructor(@inject(GlobalA) global: GlobalA) {}
+      constructor(@Inject(GlobalA) readonly global: GlobalA) {}
     }
 
-    @injectable()
-    @scope(InjectScope.SESSION)
+    const temporaryGlobalB = new GlobalB();
+    let singletonB: any;
+
+    @Injectable()
+    @Scope(InjectScope.SESSION)
     class B {
-      constructor(@inject(A) a: A) {}
+      foo(@Inject(A) a: A) {
+        expect(a.global.param).toBeInstanceOf(GlobalB);
+        if (singletonB) {
+          expect(a.global.param).toBe(singletonB);
+          expect(a.global.param).not.toBe(temporaryGlobalB);
+          stub(singletonB);
+        } else {
+          singletonB = a.global.param;
+          stub();
+        }
+      }
     }
-
-    @injectable()
-    @scope(InjectScope.SESSION)
-    class C {
-      constructor(@inject('1') param: any) {}
-    }
-
-    @injectable()
-    @scope(InjectScope.TRANSIENT)
-    class D {
-      constructor(@inject(C) a: C) {}
-    }
-
-    @injectable()
-    @scope(InjectScope.TRANSIENT)
-    class E {
-      constructor(@inject(GlobalB) param: any) {}
-    }
-
-    @injectable()
-    @scope(InjectScope.SINGLETON)
-    class GlobalC {
-      constructor(@inject(E) b: any, @inject('1') param: any) {}
-    }
-    @injectable()
-    @scope(InjectScope.SINGLETON)
-    class GlobalD {
-      constructor(@inject('1') param: any, @inject(E) b: any) {}
-    }
-
-    const container = new Container();
     container.add(GlobalA);
     container.add(GlobalB);
-    container.add(GlobalC);
-    container.add(GlobalD);
     container.add(A);
     container.add(B);
-    container.add(C);
-    container.add(D);
-    container.add(E);
-
-    const getResolveContext = () => {
-      return container.createResolveSession().addTemporaryConstantBinding('1', '1');
-    };
-
-    expect(() => getResolveContext().resolve(GlobalA)).toThrow(BindingNotFoundError);
-    expect(() => getResolveContext().resolve(A)).toThrow(BindingNotFoundError);
-    expect(() => getResolveContext().resolve(B)).toThrow(BindingNotFoundError);
-    expect(() => getResolveContext().resolve(GlobalC)).toThrow(BindingNotFoundError);
-    expect(() => getResolveContext().resolve(GlobalD)).toThrow(BindingNotFoundError);
-    expect(getResolveContext().resolve(C)).toBeInstanceOf(C);
-    expect(getResolveContext().resolve(D)).toBeInstanceOf(D);
-  });
-
-  test('deprecated createResolveContext works', () => {
-    @injectable()
-    class A {}
-    @injectable({scope: InjectScope.REQUEST})
-    class B {}
-
-    const container = new Container();
-    expect(container.add(A).createResolveContext().resolve(A)).toBeInstanceOf(A);
-    container.add(B);
-    expect(container.resolve(B)).not.toBe(container.resolve(B));
-    const resolveContext = container.createResolveContext();
-    expect(resolveContext.resolve(B)).toBe(resolveContext.resolve(B));
-  });
-
-  test('@injectable deprecated scope option', () => {
-    @injectable({scope: InjectScope.SINGLETON})
-    class SingletonA {}
-    @injectable({scope: InjectScope.REQUEST})
-    @scope(InjectScope.SINGLETON)
-    class SingletonB {}
-
-    const container = new Container();
-    container.add(SingletonA).add(SingletonB);
-
-    expect(container.resolve(SingletonA)).toBe(container.resolve(SingletonA));
-    expect(container.resolve(SingletonB)).toBe(container.resolve(SingletonB));
+    container.compile();
+    expect(container.resolve(A)).toBeInstanceOf(A);
+    container.createResolveSession().invoke(B, 'foo');
+    expect(stub).toHaveBeenCalledTimes(1);
+    expect(stub).toHaveBeenLastCalledWith();
+    container.createResolveSession().addTemporaryConstantBinding(GlobalB, temporaryGlobalB).invoke(B, 'foo');
+    expect(stub).toHaveBeenCalledTimes(2);
+    expect(stub).toHaveBeenLastCalledWith(singletonB);
   });
 
   test('aliased by injectable parent', () => {
@@ -599,7 +503,7 @@ describe('Kernel', () => {
     class ChildB extends ParentB {}
 
     const container = new Container();
-    container.add(ChildA).add(ChildB);
+    container.add(ChildA).add(ChildB).compile();
     expect(container.resolve(ChildA)).toBeInstanceOf(ChildA);
     expect(container.resolve(ChildA)).toBeInstanceOf(ParentA);
     expect(container.resolve(ParentA)).toBeInstanceOf(ParentA);

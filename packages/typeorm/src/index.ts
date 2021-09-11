@@ -2,6 +2,7 @@ import {
   Component,
   Constructor,
   createModule,
+  DynamicModuleLoader,
   Inject,
   InjectLogger,
   Logger,
@@ -11,11 +12,9 @@ import {
   OnModuleDestroy,
   provideConnectionFactory,
   provideOptionInjector,
-  RequestContext,
-  RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {BindingType, Container} from '@sensejs/container';
+import {AsyncInterceptProvider, BindingType, Container, InterceptProviderClass} from '@sensejs/container';
 import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
 import {attachLoggerToEntityManager, createTypeOrmLogger} from './logger';
 
@@ -75,21 +74,18 @@ export enum TransactionLevel {
   SERIALIZABLE = 'SERIALIZABLE',
 }
 
-export function Transactional(level?: TransactionLevel): Constructor<RequestInterceptor> {
-  @Component()
-  class TransactionInterceptor extends RequestInterceptor {
+export function Transactional(level?: TransactionLevel): Constructor<AsyncInterceptProvider> {
+  @InterceptProviderClass(EntityManagerInjectSymbol)
+  class TransactionInterceptor {
     private queryRunner = this.connection.createQueryRunner();
 
-    constructor(@Inject(Connection) private connection: Connection) {
-      super();
-    }
+    constructor(@Inject(Connection) private connection: Connection) {}
 
-    async intercept(context: RequestContext, next: () => Promise<void>) {
+    async intercept(next: (entityManager: EntityManager) => Promise<void>) {
       try {
         await this.queryRunner.connect();
         const runInTransaction = async (entityManager: EntityManager) => {
-          context.bindContextValue(EntityManagerInjectSymbol, entityManager);
-          return next();
+          return next(entityManager);
         };
 
         if (level) {
@@ -162,10 +158,9 @@ export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
     }
 
     @OnModuleCreate()
-    async onCreate() {
-      this.container.addBinding({
-        type: BindingType.CONSTANT,
-        id: EntityManagerInjectSymbol,
+    async onCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
+      loader.addConstant({
+        provide: EntityManagerInjectSymbol,
         value: this.entityManager,
       });
     }

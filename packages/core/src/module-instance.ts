@@ -65,6 +65,8 @@ export class ModuleInstance<T extends {} = {}> {
   public readonly moduleMetadata: ModuleMetadata<T>;
   public referencedCounter = 0;
   private setupPromise?: Promise<void>;
+  private bootstrapPromise?: Promise<void>;
+  private shutdownPromise?: Promise<void>;
   private destroyPromise?: Promise<void>;
   private moduleInstance?: any;
 
@@ -93,8 +95,20 @@ export class ModuleInstance<T extends {} = {}> {
     return this.setupPromise;
   }
 
-  invokeMethod<K extends keyof T>(container: Container, method: keyof T) {
-    return invokeMethod(container.createResolveSession(), this.moduleClass, method);
+  async onBootstrap(): Promise<void> {
+    if (this.bootstrapPromise) {
+      return this.bootstrapPromise;
+    }
+    this.bootstrapPromise = this.performBootstrap();
+    return this.bootstrapPromise;
+  }
+
+  async onShutdown(): Promise<void> {
+    if (this.shutdownPromise) {
+      return this.shutdownPromise;
+    }
+    this.shutdownPromise = this.performShutdown();
+    return this.shutdownPromise;
   }
 
   async onDestroy(): Promise<void> {
@@ -140,7 +154,7 @@ export class ModuleInstance<T extends {} = {}> {
 
   private bindFactories(factories: FactoryProvider<unknown>[]) {
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, factory, scope = InjectScope.REQUEST, ...rest} = factoryProvider;
+      const {provide, factory, scope = InjectScope.SESSION, ...rest} = factoryProvider;
       this.container.add(factory);
       this.container.addBinding({
         type: BindingType.FACTORY,
@@ -169,6 +183,7 @@ export class ModuleInstance<T extends {} = {}> {
     this.bindComponents(this.moduleMetadata.components);
     this.bindConstants(this.moduleMetadata.constants);
     this.bindFactories(this.moduleMetadata.factories);
+    this.container.compile();
     this.moduleInstance = this.container.resolve<object>(this.moduleClass);
     const dynamicComponentLoader = new DynamicModuleLoader();
     for (const method of this.moduleMetadata.onModuleCreate) {
@@ -181,6 +196,25 @@ export class ModuleInstance<T extends {} = {}> {
     this.bindDynamicComponents(dynamicComponentLoader.getComponents());
     this.bindDynamicConstants(dynamicComponentLoader.getConstants());
     this.bindDynamicFactories(dynamicComponentLoader.getFactories());
+    this.container.compile();
+  }
+
+  private async performBootstrap() {
+    await Promise.all(this.dependencies.map((x) => x.onBootstrap()));
+    await Promise.all(
+      this.moduleMetadata.onStart.map(async (method) => {
+        await invokeMethod(this.container.createResolveSession(), this.moduleClass, method);
+      }),
+    );
+  }
+
+  private async performShutdown() {
+    await Promise.all(this.dependencies.map((x) => x.onShutdown()));
+    await Promise.all(
+      this.moduleMetadata.onStop.map(async (method) => {
+        await invokeMethod(this.container.createResolveSession(), this.moduleClass, method);
+      }),
+    );
   }
 
   private async performDestroy() {

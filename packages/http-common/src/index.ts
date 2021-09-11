@@ -1,7 +1,8 @@
 import {InstanceMethodDecorator, InstanceMethodParamDecorator} from '@sensejs/utility';
 import {Component, Inject, InjectionDecorator, Transformer} from '@sensejs/core';
-import {Constructor, RequestContext, RequestInterceptor} from '@sensejs/core';
+import {Constructor} from '@sensejs/core';
 import {IncomingHttpHeaders} from 'http';
+import {AsyncInterceptProvider} from '@sensejs/container';
 
 export enum HttpMethod {
   GET = 'get',
@@ -53,10 +54,7 @@ export interface FunctionParamMappingMeta {
 type HttpMappingMetadata<T> = Map<keyof T, FunctionParamMappingMeta>;
 
 export interface ControllerOption {
-  /**
-   *
-   */
-  interceptors?: Constructor<HttpInterceptor>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
 
   /**
    * Label of controller
@@ -71,7 +69,8 @@ export interface ControllerMetadata<T extends {} = {}> {
   path: string;
   target: Constructor;
   prototype: object;
-  interceptors: Constructor<HttpInterceptor>[];
+  // interceptors: Constructor<HttpInterceptor>[];
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
   labels: Set<string | symbol>;
 }
 
@@ -91,13 +90,13 @@ export interface HttpApplicationOption {
 }
 
 export interface RequestMappingMetadata {
-  interceptors: Constructor<HttpInterceptor>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
   httpMethod: HttpMethod;
   path: string;
 }
 
 export interface RequestMappingOption {
-  interceptors?: Constructor<HttpInterceptor>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 
 export interface HttpRequest {
@@ -147,7 +146,11 @@ export interface HttpResponse {
   data?: any;
 }
 
-export abstract class HttpContext extends RequestContext {
+export abstract class HttpContext {
+  abstract readonly targetConstructor: Constructor;
+
+  abstract readonly targetMethodKey: keyof any;
+
   abstract readonly nativeRequest: unknown;
 
   abstract readonly nativeResponse: unknown;
@@ -158,8 +161,6 @@ export abstract class HttpContext extends RequestContext {
 
   abstract readonly response: HttpResponse;
 }
-
-export abstract class HttpInterceptor extends RequestInterceptor<HttpContext> {}
 
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
 
@@ -300,7 +301,7 @@ export function RequestMapping(
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,
-      interceptors: option.interceptors || [],
+      interceptProviders: option.interceptProviders ?? [],
     });
   };
 }
@@ -368,7 +369,7 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
       target,
       path,
       prototype: target.prototype,
-      interceptors: controllerOption.interceptors ?? [],
+      interceptProviders: controllerOption.interceptProviders ?? [],
       labels: labels instanceof Set ? labels : new Set(labels),
     });
   };

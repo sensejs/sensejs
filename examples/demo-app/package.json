@@ -16,6 +16,7 @@
   "private": true,
   "dependencies": {
     "@sensejs/config": "workspace:*",
+    "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
     "@sensejs/http-common": "workspace:*",
     "@sensejs/http-koa-platform": "workspace:*",

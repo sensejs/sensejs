@@ -1,5 +1,5 @@
 import {Component} from './component';
-import {InjectScope} from '@sensejs/container';
+import {Injectable, InjectScope} from '@sensejs/container';
 
 @Component({scope: InjectScope.SINGLETON})
 export class BackgroundTaskQueue {
@@ -18,6 +18,7 @@ export class BackgroundTaskQueue {
   }
 }
 
+@Injectable()
 export class ProcessManager {
   constructor(private shutdownRoutine: (e?: Error) => void) {}
 

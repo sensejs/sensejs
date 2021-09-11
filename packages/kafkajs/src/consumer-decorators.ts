@@ -1,17 +1,17 @@
-import {Component, Constructor, RequestInterceptor, ServiceIdentifier} from '@sensejs/core';
-import {BatchedMessageConsumeContext, MessageConsumeContext} from './message-consume-context';
+import {AsyncInterceptProvider} from '@sensejs/container';
+import {Component, Constructor, ServiceIdentifier} from '@sensejs/core';
 
 export interface BatchedSubscribeTopicMetadata {
   type: 'batched';
   fallbackOption?: SubscribeTopicOption;
-  interceptors: Constructor<RequestInterceptor<BatchedMessageConsumeContext>>[];
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
 export interface SimpleSubscribeTopicMetadata {
   type: 'simple';
   fallbackOption?: SubscribeTopicOption;
-  interceptors: Constructor<RequestInterceptor<MessageConsumeContext>>[];
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
@@ -23,13 +23,13 @@ export interface SubscribeTopicOption {
 }
 
 export interface SubscribeControllerMetadata<T = any> {
-  interceptors: Constructor<RequestInterceptor<MessageConsumeContext>>[];
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
   target: Constructor<T>;
   labels: Set<string | symbol>;
 }
 
 export interface SubscribeControllerOption {
-  interceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
   labels?: (string | symbol)[] | Set<string | symbol>;
 }
 
@@ -61,12 +61,12 @@ export function getSubscribeControllerMetadata(constructor: {}): SubscribeContro
 export interface SimpleSubscribeTopicDecoratorOption {
   option?: SubscribeTopicOption;
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
-  interceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 export interface BatchedSubscribeTopicDecoratorOption {
   option?: SubscribeTopicOption;
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
-  interceptors?: Constructor<RequestInterceptor<BatchedMessageConsumeContext>>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 
 export function SubscribeTopic(option: SimpleSubscribeTopicDecoratorOption) {
@@ -75,11 +75,11 @@ export function SubscribeTopic(option: SimpleSubscribeTopicDecoratorOption) {
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    const {option: fallbackOption, injectOptionFrom, interceptors = []} = option;
+    const {option: fallbackOption, injectOptionFrom, interceptProviders = []} = option;
     const metadata: SimpleSubscribeTopicMetadata = {
       type: 'simple',
       fallbackOption,
-      interceptors,
+      interceptProviders,
       injectOptionFrom,
     };
     setSubscribeTopicMetadata(targetMethod, metadata);
@@ -92,11 +92,11 @@ export function BatchedSubscribeTopic(option: BatchedSubscribeTopicDecoratorOpti
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    const {option: fallbackOption, injectOptionFrom, interceptors = []} = option;
+    const {option: fallbackOption, injectOptionFrom, interceptProviders = []} = option;
     const metadata: BatchedSubscribeTopicMetadata = {
       type: 'batched',
       fallbackOption,
-      interceptors,
+      interceptProviders,
       injectOptionFrom,
     };
     setSubscribeTopicMetadata(targetMethod, metadata);
@@ -105,10 +105,10 @@ export function BatchedSubscribeTopic(option: BatchedSubscribeTopicDecoratorOpti
 
 export function SubscribeController(option: SubscribeControllerOption = {}) {
   return (constructor: Constructor<{}>): void => {
-    const {interceptors = [], labels} = option;
+    const {interceptProviders = [], labels} = option;
     const metadata: SubscribeControllerMetadata = {
       target: constructor,
-      interceptors,
+      interceptProviders,
       labels: new Set(labels),
     };
     setSubscribeControllerMetadata(constructor, metadata);

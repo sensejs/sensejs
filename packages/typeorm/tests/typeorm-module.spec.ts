@@ -1,14 +1,5 @@
-import {
-  Component,
-  Constructor,
-  Inject,
-  ModuleClass,
-  ModuleRoot,
-  OnModuleCreate,
-  RequestContext,
-  RequestInterceptor,
-} from '@sensejs/core';
-import {Container, ResolveSession} from '@sensejs/container';
+import {Component, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
+import {Container} from '@sensejs/container';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
 import {
   createTypeOrmModule,
@@ -19,20 +10,6 @@ import {
   Transactional,
 } from '../src';
 import '@sensejs/testing-utility/lib/mock-console';
-
-class MockRequestContext extends RequestContext {
-  get targetConstructor(): Constructor {
-    throw new Error('mock');
-  }
-
-  get targetMethodKey(): keyof any {
-    throw new Error('mock');
-  }
-
-  constructor(protected resolveSession: ResolveSession) {
-    super();
-  }
-}
 
 describe('InjectRepository', () => {
   test('should throw error for invalid entity', () => {
@@ -99,6 +76,7 @@ describe('TypeOrmModule', () => {
       }
 
       async findBook() {
+        spy();
         return this.contentRepository.find();
       }
     }
@@ -117,19 +95,15 @@ describe('TypeOrmModule', () => {
     const transactionalSupportInterceptor = Transactional();
 
     @ModuleClass({
-      components: [ExampleHttpController, transactionalSupportInterceptor],
+      components: [ExampleHttpController],
       requires: [typeOrmModule],
     })
     class FooModule {
-      constructor(
-        @Inject(transactionalSupportInterceptor) private interceptor: RequestInterceptor,
-        @Inject(Container) private container: Container,
-      ) {}
+      constructor(@Inject(Container) private container: Container) {}
 
       @OnModuleCreate()
       async onCreate() {
-        const resolveContext = this.container.createResolveContext();
-        const context = new MockRequestContext(resolveContext);
+        const resolveContext = this.container.createResolveSession();
         const controller = this.container.resolve(ExampleHttpController);
         const now = Date.now();
         const vid = `v${now}`;
@@ -146,9 +120,15 @@ describe('TypeOrmModule', () => {
             expect.objectContaining({id: pid, description: photoName, imageUrl: url}),
           ]),
         );
-        await this.interceptor.intercept(context, () => Promise.resolve());
-        resolveContext.resolve(ExampleHttpController);
-        spy();
+        try {
+          await this.container
+            .createMethodInvoker(ExampleHttpController, 'findBook', [transactionalSupportInterceptor])
+            .createInvokeSession()
+            .invokeTargetMethod();
+        } catch (e) {
+          console.error(e);
+          throw e;
+        }
       }
     }
 

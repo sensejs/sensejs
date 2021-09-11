@@ -1,6 +1,6 @@
 import {Batch, EachBatchPayload} from 'kafkajs';
 import '@sensejs/testing-utility/lib/mock-console';
-import {Component, createModule, Inject, ProcessManager, RequestInterceptor} from '@sensejs/core';
+import {createModule, Inject, ProcessManager} from '@sensejs/core';
 import {BatchSubscribeOption, MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
   BatchedMessageConsumeContext,
@@ -13,6 +13,7 @@ import {
 } from '../src';
 import {Subject} from 'rxjs';
 import {ApplicationRunner} from '@sensejs/core/lib/entry-point';
+import {InterceptProviderClass} from '@sensejs/container';
 
 jest.mock('@sensejs/kafkajs-standalone');
 
@@ -59,11 +60,10 @@ describe('Subscriber', () => {
   });
 
   const makeInterceptor = (symbol: symbol) => {
-    @Component()
-    class Interceptor extends RequestInterceptor<MessageConsumeContext> {
-      async intercept(context: MessageConsumeContext, next: () => Promise<void>): Promise<void> {
-        context.bindContextValue(symbol, Math.random());
-        await next();
+    @InterceptProviderClass(symbol)
+    class Interceptor {
+      async intercept(next: (value: any) => Promise<void>): Promise<void> {
+        await next(Math.random());
       }
     }
 
@@ -125,12 +125,12 @@ describe('Subscriber', () => {
       interceptorB = makeInterceptor(symbolB),
       interceptorC = makeInterceptor(symbolC);
 
-    @SubscribeController({interceptors: [interceptorB]})
+    @SubscribeController({interceptProviders: [interceptorB]})
     class Controller {
       @SubscribeTopic({
         injectOptionFrom: 'config.consumer.topic',
         option: {fromBeginning: true},
-        interceptors: [interceptorC],
+        interceptProviders: [interceptorC],
       })
       simple(
         @Inject(SimpleMessageConsumeContext) ctx: MessageConsumeContext,
@@ -145,7 +145,7 @@ describe('Subscriber', () => {
 
       @BatchedSubscribeTopic({
         option: {fromBeginning: true, topic: batchedTopic},
-        interceptors: [interceptorC],
+        interceptProviders: [interceptorC],
       })
       batched(
         @Inject(BatchedMessageConsumeContext) ctx: BatchedMessageConsumeContext,
@@ -169,7 +169,7 @@ describe('Subscriber', () => {
         },
       },
       injectOptionFrom: 'config.consumer',
-      globalInterceptors: [interceptorA],
+      globalInterceptProviders: [interceptorA],
     });
     const exitSubject = new Subject();
 

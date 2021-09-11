@@ -1,13 +1,11 @@
-import {HttpContext, HttpInterceptor} from '@sensejs/http-common';
-import {Component, InjectLogger, Logger} from '@sensejs/core';
+import {InjectLogger, Logger} from '@sensejs/core';
+import {InterceptProviderClass} from '@sensejs/container';
 
-@Component()
-export class RequestTimingInterceptor extends HttpInterceptor {
-  constructor(@InjectLogger(RequestTimingInterceptor) private logger: Logger) {
-    super();
-  }
+@InterceptProviderClass()
+export class RequestTimingInterceptor {
+  constructor(@InjectLogger(RequestTimingInterceptor) private logger: Logger) {}
 
-  async intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
+  async intercept(next: () => Promise<void>): Promise<void> {
     const startDate = Date.now();
     this.logger.info('Request incoming');
     try {

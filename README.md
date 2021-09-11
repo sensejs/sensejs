@@ -12,6 +12,55 @@ to make end-user fit their own need.
 
 See [Documentation](https://sensejs.io)
 
+## BREAKING CHANGES
+-   0.9.x
+
+    This version introduces many breaking changes due to the IoC container has been rewritten.
+
+    -   IoC container now check missing dependencies and cyclic dependencies at application
+        start-up time, rather than check it on resolve. This greatly improve the overall
+        performance.
+
+    -   To make it possible to check dependencies at start-up time, the `RequestInterceptor`
+        is no-longer in replaced by `AsyncInterceptProvider`, this breaks the HTTP, kafka and
+        builtin event publishing.
+
+        Before:
+
+        ```typescript
+        class MyInterceptor extends HttpInterceptor {
+            async intercept(context: HttpContext, next: ()=> Promise<void>) {
+                context.bindContextValue(serviceId1, await getValue1());
+                context.bindContextValue(serviceId2, await getValue2());
+                await next();
+            }
+        }
+        ```
+
+        After:
+
+        ```typescript
+
+        // The `InterceptProviderClass` decorator accepts 0 to many service id to denote what
+        // injectables will be provided, it the type does not match the parameter of `next`,
+        // it will cause compile error
+        @InterceptProviderClass(serviceId1, serviceId2)
+        class MyInterceptor {
+            // In case you need context, inject it through constructor
+            construct(@Inject(HttpContext) context: HttpContext) {}
+
+            async intercept(next: (value: any)=> Promise<void>) {
+                const value1 = await getValue1();
+                const value2 = await getValue2();
+                await next(value1, value2); // The injectable is not provided through argument of next
+            }
+        }
+        ```
+
+
+
+
+
 # LICENSE:
 ```
 Copyright (C) 2021 LAN Xingcan and SenseJS contributors

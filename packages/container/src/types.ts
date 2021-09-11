@@ -22,8 +22,6 @@ export type ServiceId<T = any> = Class<T> | string | symbol;
 
 export enum InjectScope {
   SINGLETON = 'SINGLETON',
-  /** @deprecated */
-  REQUEST = 'REQUEST',
   SESSION = 'SESSION',
   TRANSIENT = 'TRANSIENT',
 }
@@ -58,22 +56,8 @@ export interface FactoryBinding<T> {
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
-/**
- * @deprecated
- */
-export interface AsyncFactoryBinding<T> {
-  type: BindingType.ASYNC_FACTORY;
-  id: ServiceId<T>;
-  scope: InjectScope.REQUEST | InjectScope.TRANSIENT;
-  factory: (...args: any[]) => Promise<T>;
-  paramInjectionMetadata: ParamInjectionMetadata[];
-}
-
-export type AsyncResolveInterceptor = (next: () => Promise<void>) => Promise<any>;
-
-export interface AsyncResolveInterceptorFactory {
-  interceptorBuilder: (...args: any[]) => AsyncResolveInterceptor;
-  paramInjectionMetadata: ParamInjectionMetadata[];
+export interface AsyncInterceptProvider<T extends any[] = any[]> {
+  intercept(next: (...values: T) => Promise<void>): Promise<void>;
 }
 
 export interface AliasBinding<T> {
@@ -82,16 +66,7 @@ export interface AliasBinding<T> {
   canonicalId: ServiceId;
 }
 
-export type Binding<T> =
-  | ConstantBinding<T>
-  | InstanceBinding<T>
-  | FactoryBinding<T>
-  | AsyncFactoryBinding<T>
-  | AliasBinding<T>;
-
-export interface AsyncResolveOption {
-  interceptors?: AsyncResolveInterceptorFactory[];
-}
+export type Binding<T> = ConstantBinding<T> | InstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>;
 
 export type InvokeResult<T extends {}, K extends keyof T> = T[K] extends (...args: any[]) => Promise<infer R>
   ? R
