@@ -1,6 +1,6 @@
-import {Constructor, MethodInvokerBuilder} from '@sensejs/core';
+import {Constructor} from '@sensejs/core';
 import {RequestListener} from 'http';
-import {Container, ResolveSession} from '@sensejs/container';
+import {AsyncInterceptProvider, Container} from '@sensejs/container';
 import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
@@ -9,10 +9,9 @@ import koaQs from 'koa-qs';
 import {
   ControllerMetadata,
   getRequestMappingMetadata,
-  HttpMethod,
   HttpApplicationOption,
   HttpContext,
-  HttpInterceptor,
+  HttpMethod,
   HttpRequest,
   HttpResponse,
 } from '@sensejs/http-common';
@@ -20,7 +19,7 @@ import {
 interface MethodRouteSpec<T = any> {
   path: string;
   httpMethod: HttpMethod;
-  interceptors: Constructor<HttpInterceptor>[];
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
   targetConstructor: Constructor<T>;
   targetMethod: keyof T;
 }
@@ -99,7 +98,6 @@ export class KoaHttpContext extends HttpContext {
   readonly response: KoaHttpResponse;
 
   constructor(
-    protected readonly resolveSession: ResolveSession,
     readonly nativeContext: KoaRouter.RouterContext,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
@@ -113,7 +111,8 @@ export class KoaHttpContext extends HttpContext {
 }
 
 export class KoaHttpApplicationBuilder {
-  private readonly globalInterceptors: Constructor<HttpInterceptor>[] = [];
+  // private readonly globalInterceptors: Constructor<HttpInterceptor>[] = [];
+  private readonly globalInterceptProviders: Constructor<AsyncInterceptProvider>[] = [];
   private readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   private errorHandler?: (e: unknown) => any;
   private middlewareList: Koa.Middleware[] = [];
@@ -157,8 +156,8 @@ export class KoaHttpApplicationBuilder {
     return this;
   }
 
-  addGlobalInspector(inspector: Constructor<HttpInterceptor>): this {
-    this.globalInterceptors.push(inspector);
+  addGlobalInterceptProvider(...interceptProvider: Constructor<AsyncInterceptProvider>[]): this {
+    this.globalInterceptProviders.push(...interceptProvider);
     return this;
   }
 
@@ -209,12 +208,17 @@ export class KoaHttpApplicationBuilder {
       return;
     }
 
-    const {httpMethod, path, interceptors} = requestMappingMetadata;
+    const {httpMethod, path, interceptProviders = []} = requestMappingMetadata;
 
     methodRoutSpecs.push({
       path,
       httpMethod,
-      interceptors: [...this.globalInterceptors, ...controllerMetadata.interceptors, ...interceptors],
+      // interceptors: [...this.globalInterceptors, ...controllerMetadata.interceptors, ...interceptors],
+      interceptProviders: [
+        ...this.globalInterceptProviders,
+        ...controllerMetadata.interceptProviders,
+        ...interceptProviders,
+      ],
       targetConstructor: controllerMetadata.target,
       targetMethod: method,
     });
@@ -237,19 +241,13 @@ export class KoaHttpApplicationBuilder {
     controllerRouter: KoaRouter,
     container: Container,
   ): void {
-    const {httpMethod, path, targetConstructor, targetMethod, interceptors} = methodRouteSpec;
-    const invoker = MethodInvokerBuilder.create(container)
-      .addInterceptor(...interceptors)
-      .build(targetConstructor, targetMethod);
+    const {httpMethod, path, targetConstructor, targetMethod, interceptProviders} = methodRouteSpec;
+    const invoker = container.createMethodInvoker(targetConstructor, targetMethod, interceptProviders, HttpContext);
 
     controllerRouter[httpMethod](path, async (ctx) => {
-      const resolveSession = container.createResolveSession();
-      const context = new KoaHttpContext(resolveSession, ctx, targetConstructor, targetMethod);
-      resolveSession.addTemporaryConstantBinding(HttpContext, context);
-      const result = await invoker.invoke({
-        resolveSession,
-        contextFactory: () => context,
-      });
+      const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
+      const result = await invoker.createInvokeSession().invokeTargetMethod(context);
+
       ctx.response.body = context.response.data ?? result;
       if (typeof context.response.statusCode === 'number') {
         ctx.response.status = context.response.statusCode;

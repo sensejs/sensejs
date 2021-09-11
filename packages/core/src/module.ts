@@ -38,6 +38,8 @@ export interface ModuleMetadata<T = {}> extends Required<ModuleOption> {
   dynamicFactories?: FactoryProvider<any>[];
   dynamicConstants?: ConstantProvider<any>[];
   onModuleCreate: (keyof T)[];
+  onStart: (keyof T)[];
+  onStop: (keyof T)[];
   onModuleDestroy: (keyof T)[];
 }
 
@@ -69,6 +71,8 @@ export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMet
 }
 
 const ON_MODULE_CREATE = Symbol();
+const ON_START = Symbol();
+const ON_STOP = Symbol();
 const ON_MODULE_DESTROY = Symbol();
 
 /**
@@ -92,10 +96,10 @@ export interface ModuleClassDecorator {
  * @decorator
  */
 export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
-  // let {requires = [], constants = [], components = [], factories = [], properties = null} = option;
-
   return <T extends {}>(constructor: Constructor<T>): Constructor<T> => {
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
+    const onStart = getModuleLifecycleMethod(constructor, ON_START);
+    const onStop = getModuleLifecycleMethod(constructor, ON_STOP);
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
     const parentConstructor = Object.getPrototypeOf(constructor);
     const {
@@ -106,6 +110,8 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
       properties = {},
       onModuleCreate: parentOnModuleCreate = [],
       onModuleDestroy: parentOnModuleDestroy = [],
+      onStart: parentOnStart = [],
+      onStop: parentOnStop = [],
     } = _.cloneDeep(Reflect.getMetadata(MODULE_REFLECT_SYMBOL, parentConstructor) ?? {}) as Partial<ModuleMetadata<T>>;
 
     setModuleMetadata(constructor, {
@@ -115,6 +121,8 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
       components: components.concat(option.components ?? []),
       properties: Object.assign({}, properties, option.properties),
       onModuleCreate: parentOnModuleCreate.concat(onModuleCreate),
+      onStart: parentOnStart.concat(onStart),
+      onStop: parentOnStop.concat(onStop),
       onModuleDestroy: parentOnModuleDestroy.concat(onModuleDestroy),
     });
     Injectable()(constructor);
@@ -146,6 +154,19 @@ function defineModuleLifecycleMetadata(metadataKey: symbol): ModuleLifecycleMeth
  */
 export function OnModuleCreate(): ModuleLifecycleMethodDecorator {
   return defineModuleLifecycleMetadata(ON_MODULE_CREATE);
+}
+/**
+ * Decorator for marking a method function to be called when all module has been loaded
+ */
+export function OnStart(): ModuleLifecycleMethodDecorator {
+  return defineModuleLifecycleMetadata(ON_START);
+}
+
+/**
+ * Decorator for marking a method function to be called when it's going to destroy all modules
+ */
+export function OnStop(): ModuleLifecycleMethodDecorator {
+  return defineModuleLifecycleMetadata(ON_STOP);
 }
 
 /**

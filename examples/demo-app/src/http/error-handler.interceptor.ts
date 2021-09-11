@@ -1,20 +1,19 @@
-import {Component, InjectLogger, Logger} from '@sensejs/core';
-import {HttpContext, HttpInterceptor} from '@sensejs/http-common';
+import {Component, Inject, InjectLogger, Logger} from '@sensejs/core';
+import {HttpContext} from '@sensejs/http-common';
 import {HttpError} from './http-error';
+import {InterceptProviderClass} from '@sensejs/container';
 
-@Component()
-export class ErrorHandlerInterceptor extends HttpInterceptor {
-  constructor(@InjectLogger() private logger: Logger) {
-    super();
-  }
+@InterceptProviderClass()
+export class ErrorHandlerInterceptor {
+  constructor(@InjectLogger() private logger: Logger, @Inject(HttpContext) private context: HttpContext) {}
 
-  async intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
+  async intercept(next: () => Promise<void>): Promise<void> {
     try {
       await next();
     } catch (e) {
       if (e instanceof HttpError) {
-        context.response.statusCode = e.statusCode;
-        context.response.data = {
+        this.context.response.statusCode = e.statusCode;
+        this.context.response.data = {
           errorCode: e.errorCode,
           errorDetail: e.errorDetail,
           errorMessage: e.errorMessage,
@@ -23,8 +22,8 @@ export class ErrorHandlerInterceptor extends HttpInterceptor {
       }
 
       this.logger.warn('Unrecognized exception raised: ', e);
-      context.response.statusCode = 500;
-      context.response.data = e instanceof Error ? e.stack : 'unknown error';
+      this.context.response.statusCode = 500;
+      this.context.response.data = e instanceof Error ? e.stack : 'unknown error';
     }
   }
 }

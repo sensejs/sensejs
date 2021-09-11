@@ -1,11 +1,9 @@
 import {Component, ComponentScope} from './component';
 import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces';
 import {Subject} from 'rxjs';
-import {RequestContext, RequestInterceptor} from './interceptor';
-import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy} from './module';
-import {Container, ResolveSession} from '@sensejs/container';
+import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy, OnStart, OnStop} from './module';
+import {AsyncInterceptProvider, Container} from '@sensejs/container';
 import {Inject} from './decorators';
-import {MethodInvokerBuilder} from './method-invoker';
 import {ModuleScanner} from './module-scanner';
 import {matchLabels} from './utils';
 
@@ -15,46 +13,22 @@ export interface EventChannelSubscription {
 
 interface EventMessenger {
   payload: unknown;
-
-  bindingsMap: Map<ServiceIdentifier, any>;
 }
 
 interface AcknowledgeAwareEventMessenger extends EventMessenger {
-  acknowledge: (processPromise: Promise<void>) => void;
-}
-
-/**
- * Describe how an event announcement will be performed
- */
-export interface AnnounceEventOption<T, Context> {
-  /**
-   * To which channel the event is announced
-   */
-  channel: ServiceIdentifier;
-
-  /**
-   * Using which symbol the payload can be injected, if not specified, default to `channel`
-   */
-  symbol?: ServiceIdentifier;
+  acknowledge: (processPromise: Promise<unknown>) => void;
 }
 
 @Component({scope: ComponentScope.SINGLETON})
 class EventBusImplement {
   private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger>> = new Map();
 
-  async announceEvent<T extends {}, Context>(
-    channel: ServiceIdentifier,
-    bindingsMap: Map<ServiceIdentifier, any>,
-    // resolveContext: ResolveContext,
-    payload?: unknown,
-  ): Promise<void> {
+  async announceEvent<T extends {}, Context>(channel: ServiceIdentifier, payload: any): Promise<void> {
     const subject = this.ensureEventChannel(channel);
-    const consumePromises: Promise<void>[] = [];
+    const consumePromises: Promise<unknown>[] = [];
     subject.next({
       payload,
-      bindingsMap,
-      // resolveContext,
-      acknowledge: (p: Promise<void>) => consumePromises.push(p),
+      acknowledge: (p: Promise<unknown>) => consumePromises.push(p),
     });
     await Promise.all(consumePromises);
   }
@@ -88,21 +62,21 @@ export interface SubscribeEventMetadata<P extends {} = {}> {
   name: keyof P & (string | symbol);
   identifier: ServiceIdentifier;
   filter: (message: any) => boolean;
-  interceptors: Constructor<RequestInterceptor>[];
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
 }
 
 export interface EventSubscriptionOption {
-  interceptors?: Constructor<RequestInterceptor>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
   filter?: (message: any) => boolean;
 }
 
 export interface SubscribeEventControllerMetadata {
-  interceptors: Constructor<RequestInterceptor>[];
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
   labels: Set<symbol | string>;
 }
 
 export interface SubscribeEventControllerOption {
-  interceptors?: Constructor<RequestInterceptor>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
   labels?: (string | symbol)[] | Set<symbol | string>;
 }
 
@@ -124,7 +98,7 @@ export function SubscribeEventController(option: SubscribeEventControllerOption 
   return (constructor: Constructor): void => {
     Component()(constructor);
     setSubscribeEventControllerMetadata(constructor, {
-      interceptors: option.interceptors ?? [],
+      interceptProviders: option.interceptProviders ?? [],
       labels: new Set(option.labels),
     });
   };
@@ -140,7 +114,7 @@ export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubsc
       prototype,
       name,
       identifier,
-      interceptors: option.interceptors ?? [],
+      interceptProviders: option.interceptProviders ?? [],
       filter: option.filter ?? (() => true),
     };
     Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, prototype[name]);
@@ -154,67 +128,41 @@ export function getEventSubscriptionMetadata<P extends {} = {}>(
 }
 
 export interface EventSubscriptionModuleOption extends ModuleOption {
-  interceptors?: Constructor<RequestInterceptor>[];
+  interceptProviders?: Constructor<AsyncInterceptProvider>[];
   matchLabels?: Set<string | symbol> | (string | symbol)[] | ((labels: Set<string | symbol>) => boolean);
 }
 
-export class EventSubscriptionContext extends RequestContext {
+export class EventSubscriptionContext {
   constructor(
-    protected resolveSession: ResolveSession,
     public readonly identifier: ServiceIdentifier,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
-    public readonly payload: unknown,
-  ) {
-    super();
-  }
+    public readonly payload: any,
+  ) {}
 }
 
 export abstract class EventPublishPreparation {
   abstract bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this;
 
-  abstract publish<T>(): Promise<void>;
-
-  abstract publish<T>(serviceIdentifier: ServiceIdentifier<T>, payload: T): Promise<void>;
+  // abstract publish<T>(): Promise<void>;
+  //
+  // abstract publish<T>(serviceIdentifier: ServiceIdentifier<T>, payload: T): Promise<void>;
 }
 
 export abstract class EventPublisher {
-  abstract prepare(channel: ServiceIdentifier): EventPublishPreparation;
+  abstract publish(channel: ServiceIdentifier, payload: any): Promise<void>;
 }
 
 @Component({scope: ComponentScope.SINGLETON})
 class EventPublisherFactory extends ComponentFactory<EventPublisher> {
-  private static EventPublishPreparation = class extends EventPublishPreparation {
-    bindingsMap: Map<ServiceIdentifier, any> = new Map();
-    constructor(
-      // private readonly resolveContext: ResolveContext,
-      private readonly eventBus: EventBusImplement,
-      private readonly channel: ServiceIdentifier,
-    ) {
-      super();
-    }
-
-    bind<T>(serviceIdentifier: ServiceIdentifier<T>, value: T): this {
-      this.bindingsMap.set(serviceIdentifier, value);
-      return this;
-    }
-
-    async publish<T>(...args: [undefined] | [ServiceIdentifier<T>, T]): Promise<void> {
-      if (args[0] !== undefined) {
-        this.bindingsMap.set(args[0], args[1]);
-        return this.eventBus.announceEvent(this.channel, this.bindingsMap, args[1]);
-      }
-      return this.eventBus.announceEvent(this.channel, this.bindingsMap);
-    }
-  };
-
   private static EventPublisher = class extends EventPublisher {
     constructor(private readonly container: Container, private readonly eventBus: EventBusImplement) {
       super();
     }
 
-    prepare(channel: ServiceIdentifier): EventPublishPreparation {
-      return new EventPublisherFactory.EventPublishPreparation(this.eventBus, channel);
+    publish(channel: ServiceIdentifier, payload: any) {
+      return this.eventBus.announceEvent(channel, payload);
+      // return new EventPublisherFactory.EventPublishPreparation(this.eventBus, channel).publish(payload);
     }
   };
 
@@ -238,20 +186,15 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
   @ModuleClass({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
     private subscriptions: EventChannelSubscription[] = [];
-    private methodInvokerBuilder = MethodInvokerBuilder.create<EventSubscriptionContext>(this.container);
 
     constructor(
       @Inject(Container) private container: Container,
       @Inject(ModuleScanner) private scanner: ModuleScanner,
       @Inject(EventBusImplement) private eventBus: EventBusImplement,
-    ) {
-      if (option.interceptors) {
-        this.methodInvokerBuilder.addInterceptor(...option.interceptors);
-      }
-    }
+    ) {}
 
-    @OnModuleCreate()
-    onModuleCreate() {
+    @OnStart()
+    onStart() {
       this.scanner.scanModule((moduleMetadata) => {
         moduleMetadata.components.forEach((component) => {
           const metadata = getSubscribeEventControllerMetadata(component);
@@ -268,8 +211,8 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       });
     }
 
-    @OnModuleDestroy()
-    onModuleDestroy() {
+    @OnStop()
+    onStop() {
       this.subscriptions.forEach((subscription) => subscription.unsubscribe());
     }
 
@@ -281,26 +224,31 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         .filter((value): value is SubscribeEventMetadata => typeof value !== 'undefined');
 
       subscribeEventMetadataList.forEach((subscribeEventMetadata) => {
-        this.setupEventSubscription(
-          constructor,
-          this.methodInvokerBuilder.clone().addInterceptor(...metadata.interceptors),
-          subscribeEventMetadata,
-        );
+        this.setupEventSubscription(constructor, metadata, subscribeEventMetadata);
       });
     }
 
     private setupEventSubscription(
       constructor: Constructor,
-      methodInvokerBuilder: MethodInvokerBuilder<EventSubscriptionContext>,
+      controllerMetadata: SubscribeEventControllerMetadata,
       subscribeEventMetadata: SubscribeEventMetadata,
     ) {
-      methodInvokerBuilder = methodInvokerBuilder.clone().addInterceptor(...subscribeEventMetadata.interceptors);
-      const invoker = methodInvokerBuilder.build(constructor, subscribeEventMetadata.name);
+      const {name} = subscribeEventMetadata;
+      const invoker = this.container.createMethodInvoker(
+        constructor,
+        name,
+        [
+          ...(option.interceptProviders ?? []),
+          ...controllerMetadata.interceptProviders,
+          ...subscribeEventMetadata.interceptProviders,
+        ],
+        EventSubscriptionContext,
+      );
 
       const identifier = subscribeEventMetadata.identifier;
       this.subscriptions.push(
         this.eventBus.subscribe(identifier, (messenger) => {
-          const {acknowledge, bindingsMap, payload} = messenger;
+          const {acknowledge, payload} = messenger;
           try {
             if (!subscribeEventMetadata.filter(payload)) {
               return;
@@ -309,21 +257,9 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
             acknowledge(Promise.reject(e));
             return;
           }
-          const resolveSession = this.container.createResolveSession();
-          bindingsMap.forEach((v, k) => resolveSession.addTemporaryConstantBinding(k, v));
+          const invokeSession = invoker.createInvokeSession();
           acknowledge(
-            invoker.invoke({
-              resolveSession,
-              contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
-                return new EventSubscriptionContext(
-                  resolveContext,
-                  identifier,
-                  targetConstructor,
-                  targetMethodKey,
-                  payload,
-                );
-              },
-            }),
+            invokeSession.invokeTargetMethod(new EventSubscriptionContext(identifier, constructor, name, payload)),
           );
         }),
       );

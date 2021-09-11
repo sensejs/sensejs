@@ -1,11 +1,9 @@
-import {BindingType, Container, InjectScope} from '@sensejs/container';
+import {Container, InjectScope} from '@sensejs/container';
 import {
   Component,
   ComponentFactory,
   ConstantProvider,
-  createModule,
   FactoryProvider,
-  getModuleMetadata,
   Inject,
   ModuleClass,
   ModuleOption,
@@ -13,142 +11,11 @@ import {
   ModuleShutdownError,
   OnModuleCreate,
   OnModuleDestroy,
+  OnStart,
+  OnStop,
   ServiceIdentifier,
 } from '../src';
 import {DynamicModuleLoader, ModuleInstance} from '../src/module-instance';
-
-describe('@ModuleClass', () => {
-  test('created module metadata', () => {
-    const dependency = createModule();
-    const key = Symbol();
-    expect(
-      getModuleMetadata(
-        createModule({
-          requires: [dependency],
-          properties: {
-            [key]: 'value',
-          },
-        }),
-      ),
-    ).toEqual(
-      expect.objectContaining({
-        requires: [dependency],
-        onModuleCreate: [],
-        onModuleDestroy: [],
-        properties: expect.objectContaining({
-          [key]: 'value',
-        }),
-      }),
-    );
-  });
-
-  test('decorated module metadata', () => {
-    @ModuleClass()
-    class Y {}
-
-    @ModuleClass({
-      requires: [Y],
-    })
-    class X {
-      @OnModuleCreate()
-      foo() {}
-
-      @OnModuleCreate()
-      onModuleCreate() {}
-
-      @OnModuleDestroy()
-      bar() {}
-
-      @OnModuleDestroy()
-      onModuleDestroy() {}
-    }
-
-    expect(getModuleMetadata(X)).toEqual(
-      expect.objectContaining({
-        requires: [Y],
-        onModuleCreate: ['foo', 'onModuleCreate'],
-        onModuleDestroy: ['bar', 'onModuleDestroy'],
-      }),
-    );
-  });
-});
-
-describe('ModuleInstance', () => {
-  const container = new Container();
-  const injectToken = Symbol();
-  container.addBinding({
-    type: BindingType.CONSTANT,
-    id: injectToken,
-    value: Symbol(),
-  });
-  test('Run Module lifecycle', async () => {
-    // For unknown reason jest.spy does not work here. Use stub pattern instead
-    const onCreateStub = jest.fn(),
-      onDestroyStub = jest.fn();
-
-    @ModuleClass()
-    class TestModule {
-      @OnModuleCreate()
-      onModuleCreate(@Inject(injectToken) param: any) {
-        onCreateStub();
-      }
-
-      @OnModuleDestroy()
-      async onModuleDestroy() {
-        onDestroyStub();
-      }
-    }
-
-    const moduleInstance = new ModuleInstance(TestModule, container);
-    await moduleInstance.onSetup();
-    expect(onCreateStub).toHaveBeenCalled();
-    await moduleInstance.onDestroy();
-    expect(onDestroyStub).toHaveBeenCalled();
-  });
-
-  test('Call inherited module lifecycle', async () => {
-    // For unknown reason jest.spy does not work here. Use stub pattern instead
-    const onCreateStub = jest.fn(),
-      onDestroyStub = jest.fn();
-
-    const provide = Symbol();
-    @ModuleClass({
-      constants: [{provide, value: 0}],
-    })
-    class Parent {
-      @OnModuleCreate()
-      onModuleCreate(@Inject(injectToken) param: any) {
-        onCreateStub(Parent);
-      }
-
-      @OnModuleDestroy()
-      async onModuleDestroy() {
-        onDestroyStub(Parent);
-      }
-    }
-
-    @ModuleClass()
-    class Child extends Parent {
-      @OnModuleCreate()
-      async onChildModuleCreate(@Inject(provide) parentProvidedConstant: any) {
-        onCreateStub(Child);
-      }
-      @OnModuleDestroy()
-      async onChildModuleDestroy() {
-        onDestroyStub(Child);
-      }
-    }
-
-    const moduleInstance = new ModuleInstance(Child, container);
-    await moduleInstance.onSetup();
-    expect(onCreateStub).toHaveBeenNthCalledWith(1, Parent);
-    expect(onCreateStub).toHaveBeenNthCalledWith(2, Child);
-    await moduleInstance.onDestroy();
-    expect(onDestroyStub).toHaveBeenCalled();
-    expect(onDestroyStub).toHaveBeenNthCalledWith(1, Child);
-    expect(onDestroyStub).toHaveBeenNthCalledWith(2, Parent);
-  });
-});
 
 describe('Module resolve', () => {
   const id = Symbol();
@@ -342,14 +209,32 @@ describe('Module Root', () => {
 
   test('lifecycle', async () => {
     const xOnCreateSpy = jest.fn(),
+      xOnStart = jest.fn(),
+      xOnStop = jest.fn(),
       xOnDestroySpy = jest.fn();
     const yOnCreateSpy = jest.fn(),
+      yOnStart = jest.fn(),
+      yOnStop = jest.fn(),
       yOnDestroySpy = jest.fn();
     const zOnCreateSpy = jest.fn(),
+      zOnStart = jest.fn(),
+      zOnStop = jest.fn(),
       zOnDestroySpy = jest.fn();
 
     @Component()
     class A {}
+
+    const expectAllCreated = () => {
+      expect(xOnCreateSpy).toHaveBeenCalled();
+      expect(yOnCreateSpy).toHaveBeenCalled();
+      expect(zOnCreateSpy).toHaveBeenCalled();
+    };
+
+    const expectAllNotDestroyed = () => {
+      expect(xOnDestroySpy).not.toHaveBeenCalled();
+      expect(yOnDestroySpy).not.toHaveBeenCalled();
+      expect(zOnDestroySpy).not.toHaveBeenCalled();
+    };
 
     @ModuleClass({
       components: [A],
@@ -358,13 +243,29 @@ describe('Module Root', () => {
       constructor(@Inject(A) unnamed: A) {}
 
       @OnModuleCreate()
-      onCreate(@Inject(A) unnamed: A) {
+      async onCreate(@Inject(A) unnamed: A) {
+        await new Promise(setImmediate);
         expect(zOnCreateSpy).not.toHaveBeenCalled();
         xOnCreateSpy();
       }
 
+      @OnStart()
+      async onStart() {
+        expectAllCreated();
+        await new Promise(setImmediate);
+        xOnStart();
+      }
+
+      @OnStop()
+      async onStop() {
+        xOnStop();
+        await new Promise(setImmediate);
+        expect(zOnStop).not.toHaveBeenCalled();
+        expectAllNotDestroyed();
+      }
+
       @OnModuleDestroy()
-      onDestroy(@Inject(A) unnamed: A) {
+      async onDestroy(@Inject(A) unnamed: A) {
         expect(zOnDestroySpy).toHaveBeenCalled();
         xOnDestroySpy();
       }
@@ -375,17 +276,33 @@ describe('Module Root', () => {
     })
     class Y {
       @OnModuleCreate()
-      onCreate(@Inject(A) unnamed: A) {
+      async onCreate(@Inject(A) unnamed: A) {
+        await new Promise(setImmediate);
         expect(xOnCreateSpy).toHaveBeenCalled();
         expect(zOnCreateSpy).not.toHaveBeenCalled();
         yOnCreateSpy();
       }
 
+      @OnStart()
+      async onStart() {
+        await new Promise(setImmediate);
+        yOnStart();
+      }
+
+      @OnStop()
+      async onStop() {
+        yOnStop();
+        await new Promise(setImmediate);
+        expect(zOnStop).not.toHaveBeenCalled();
+        expectAllNotDestroyed();
+      }
+
       @OnModuleDestroy()
-      onDestroy(@Inject(A) unnamed: A) {
+      async onDestroy(@Inject(A) unnamed: A) {
+        yOnDestroySpy();
+        await new Promise(setImmediate);
         expect(xOnDestroySpy).not.toHaveBeenCalled();
         expect(zOnDestroySpy).toHaveBeenCalled();
-        yOnDestroySpy();
       }
     }
 
@@ -396,14 +313,29 @@ describe('Module Root', () => {
       constructor(@Inject(A) unnamed: A) {}
 
       @OnModuleCreate()
-      onCreate(@Inject(A) unnamed: A) {
+      async onCreate(@Inject(A) unnamed: A) {
         expect(xOnCreateSpy).toHaveBeenCalled();
         expect(yOnCreateSpy).toHaveBeenCalled();
         zOnCreateSpy();
       }
 
+      @OnStart()
+      async onStart() {
+        expect(xOnStart).toHaveBeenCalled();
+        expect(yOnStart).toHaveBeenCalled();
+        zOnStart();
+      }
+
+      @OnStop()
+      async onStop() {
+        zOnStop();
+        expect(xOnStop).toHaveBeenCalled();
+        expect(yOnStop).toHaveBeenCalled();
+        expectAllNotDestroyed();
+      }
+
       @OnModuleDestroy()
-      onDestroy(@Inject(A) unnamed: A) {
+      async onDestroy(@Inject(A) unnamed: A) {
         expect(xOnDestroySpy).not.toHaveBeenCalled();
         expect(yOnDestroySpy).not.toHaveBeenCalled();
         zOnDestroySpy();
@@ -414,7 +346,13 @@ describe('Module Root', () => {
 
     await moduleRoot.start();
     expect(zOnCreateSpy).toHaveBeenCalled();
+    expect(xOnStart).toHaveBeenCalled();
+    expect(yOnStart).toHaveBeenCalled();
+    expect(zOnStart).toHaveBeenCalled();
     await moduleRoot.stop();
+    expect(xOnStop).toHaveBeenCalled();
+    expect(yOnStop).toHaveBeenCalled();
+    expect(zOnStop).toHaveBeenCalled();
     expect(xOnDestroySpy).toHaveBeenCalled();
   });
 });

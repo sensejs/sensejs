@@ -4,19 +4,20 @@ import {
   Inject,
   InjectLogger,
   Logger,
-  MethodInvokerBuilder,
   ModuleClass,
+  ModuleMetadata,
   ModuleOption,
   ModuleScanner,
   OnModuleCreate,
   OnModuleDestroy,
+  OnStart,
+  OnStop,
   ProcessManager,
   provideConnectionFactory,
   provideOptionInjector,
-  RequestInterceptor,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {Container} from '@sensejs/container';
+import {AsyncInterceptProvider, Container} from '@sensejs/container';
 import {
   KafkaBatchConsumeMessageParam,
   KafkaReceivedMessage,
@@ -33,6 +34,7 @@ import {
   getSubscribeControllerMetadata,
   getSubscribeTopicMetadata,
   SubscribeControllerMetadata,
+  SubscribeTopicMetadata,
   SubscribeTopicOption,
 } from './consumer-decorators';
 import {KafkaLogAdapterOption} from '@sensejs/kafkajs-standalone/src/logging';
@@ -42,7 +44,7 @@ export interface ConfigurableMessageConsumerOption extends Omit<MessageConsumerO
 }
 
 export interface MessageConsumerModuleOption extends ModuleOption {
-  globalInterceptors?: Constructor<RequestInterceptor<MessageConsumeContext>>[];
+  globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
   messageConsumerOption?: Partial<ConfigurableMessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier<ConfigurableMessageConsumerOption>;
   matchLabels?: (string | symbol)[] | Set<string | symbol> | ((labels: Set<string | symbol>) => boolean);
@@ -63,6 +65,140 @@ function mergeConnectOption(
   return {connectOption, fetchOption, ...rest};
 }
 
+function getSubscribeOption(
+  subscribeMetadata: SubscribeTopicMetadata,
+  container: Container,
+): {topic: string; fromBeginning?: boolean} {
+  const {fallbackOption = {}, injectOptionFrom} = subscribeMetadata;
+  const injected = injectOptionFrom ? container.resolve<SubscribeTopicOption>(injectOptionFrom) : {};
+
+  const {topic, fromBeginning} = Object.assign({}, fallbackOption, injected);
+  if (typeof topic !== 'string') {
+    throw new TypeError('subscribe topic must be a string');
+  }
+  return {topic, fromBeginning};
+}
+
+function getSimpleConsumeCallback<T>(
+  container: Container,
+  interceptProviders: Constructor<AsyncInterceptProvider>[],
+  consumerGroupId: string,
+  target: Constructor<T>,
+  method: keyof T,
+) {
+  const invoker = container.createMethodInvoker(
+    target,
+    method,
+    interceptProviders,
+    SimpleMessageConsumeContext,
+    MessageConsumeContext,
+  );
+  return async (message: KafkaReceivedMessage) => {
+    const context = new SimpleMessageConsumeContext(target, method, consumerGroupId, message);
+    await invoker.createInvokeSession().invokeTargetMethod(context, context);
+  };
+}
+
+function getBatchedConsumeCallback<T>(
+  container: Container,
+  interceptProviders: Constructor<AsyncInterceptProvider>[],
+  consumerGroupId: string,
+  target: Constructor<T>,
+  method: keyof T,
+) {
+  const invoker = container.createMethodInvoker(
+    target,
+    method,
+    interceptProviders,
+    BatchedMessageConsumeContext,
+    MessageConsumeContext,
+  );
+  return async (message: KafkaBatchConsumeMessageParam) => {
+    const context = new BatchedMessageConsumeContext(target, method, consumerGroupId, message);
+    await invoker.createInvokeSession().invokeTargetMethod(context, context);
+  };
+}
+
+function scanPrototypeMethod(
+  container: Container,
+  messageConsumer: MessageConsumer,
+  component: Constructor,
+  controllerMetadata: SubscribeControllerMetadata,
+  option: MessageConsumerModuleOption,
+) {
+  for (const [methodKey, pd] of Object.entries(Object.getOwnPropertyDescriptors(component.prototype))) {
+    const subscribeMetadata = getSubscribeTopicMetadata(pd.value);
+    const method = pd.value;
+
+    if (!subscribeMetadata || method === undefined) {
+      continue;
+    }
+    const {topic, fromBeginning} = getSubscribeOption(subscribeMetadata, container);
+    const interceptProviders = [
+      ...(option.globalInterceptProviders ?? []),
+      ...controllerMetadata.interceptProviders,
+      ...subscribeMetadata.interceptProviders,
+    ];
+
+    switch (subscribeMetadata.type) {
+      case 'simple':
+        {
+          messageConsumer.subscribe(
+            topic,
+            getSimpleConsumeCallback(
+              container,
+              interceptProviders,
+              messageConsumer.consumerGroupId,
+              controllerMetadata.target,
+              methodKey,
+            ),
+            fromBeginning,
+          );
+        }
+        break;
+      case 'batched': {
+        messageConsumer.subscribeBatched({
+          topic,
+          consumer: getBatchedConsumeCallback(
+            container,
+            interceptProviders,
+            messageConsumer.consumerGroupId,
+            controllerMetadata.target,
+            methodKey,
+          ),
+          fromBeginning,
+        });
+      }
+    }
+  }
+}
+
+function scanComponents(
+  container: Container,
+  messageConsumer: MessageConsumer,
+  moduleMetadata: ModuleMetadata,
+  option: MessageConsumerModuleOption,
+) {
+  [...moduleMetadata.components, ...(moduleMetadata.dynamicComponents ?? [])].forEach((component) => {
+    const controllerMetadata = getSubscribeControllerMetadata(component);
+    if (!controllerMetadata) {
+      return;
+    }
+    if (typeof option.matchLabels === 'function') {
+      if (!option.matchLabels(controllerMetadata.labels)) {
+        return;
+      }
+    } else {
+      const matchLabels = new Set(option.matchLabels);
+      const intersectedLabels = lodash.intersection([...matchLabels], [...controllerMetadata.labels]);
+      if (intersectedLabels.length !== matchLabels.size) {
+        return;
+      }
+    }
+    scanPrototypeMethod(container, messageConsumer, component, controllerMetadata, option);
+  });
+}
+
 function scanSubscriber(
   option: MessageConsumerModuleOption,
   connectionModule: Constructor,
@@ -72,140 +208,25 @@ function scanSubscriber(
     requires: [connectionModule],
   })
   class SubscriberScanModule {
-    private methodInvokerBuilder = MethodInvokerBuilder.create<MessageConsumeContext>(this.container);
     constructor(
       @Inject(Container) private container: Container,
       @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
       @Inject(ProcessManager) private pm: ProcessManager,
-    ) {
-      if (option.globalInterceptors) {
-        this.methodInvokerBuilder.addInterceptor(...option.globalInterceptors);
-      }
-    }
+    ) {}
 
-    @OnModuleCreate()
-    async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
-      moduleScanner.scanModule((moduleMetadata) => {
-        [...moduleMetadata.components, ...(moduleMetadata.dynamicComponents ?? [])].forEach((component) => {
-          const controllerMetadata = getSubscribeControllerMetadata(component);
-          if (!controllerMetadata) {
-            return;
-          }
-          if (typeof option.matchLabels === 'function') {
-            if (!option.matchLabels(controllerMetadata.labels)) {
-              return;
-            }
-          } else {
-            const matchLabels = new Set(option.matchLabels);
-            const intersectedLabels = lodash.intersection([...matchLabels], [...controllerMetadata.labels]);
-            if (intersectedLabels.length !== matchLabels.size) {
-              return;
-            }
-          }
-          this.scanPrototypeMethod(component, controllerMetadata);
-        });
-      });
-
-      const promise = this.messageConsumer.start();
-      this.messageConsumer.wait().catch((e) => this.pm.shutdown(e));
-      return promise;
-    }
-
-    @OnModuleDestroy()
+    @OnStop()
     async onDestroy() {
       return this.messageConsumer.stop();
     }
 
-    private scanPrototypeMethod(component: Constructor, controllerMetadata: SubscribeControllerMetadata) {
-      const methodInvokerBuilder = this.methodInvokerBuilder.clone().addInterceptor(...controllerMetadata.interceptors);
-      for (const [methodKey, propertyDescriptor] of Object.entries(
-        Object.getOwnPropertyDescriptors(component.prototype),
-      )) {
-        const subscribeMetadata = getSubscribeTopicMetadata(propertyDescriptor.value);
-        const method = propertyDescriptor.value;
-
-        if (!subscribeMetadata || method === undefined) {
-          continue;
-        }
-
-        const {fallbackOption = {}, injectOptionFrom} = subscribeMetadata;
-        const injected = injectOptionFrom ? this.container.resolve<SubscribeTopicOption>(injectOptionFrom) : {};
-
-        const subscribeOption = Object.assign({}, fallbackOption, injected);
-        if (typeof subscribeOption.topic !== 'string') {
-          throw new TypeError('subscribe topic must be a string');
-        }
-        const {topic, fromBeginning} = subscribeOption;
-        switch (subscribeMetadata.type) {
-          case 'simple':
-            {
-              const consumeCallback = this.getConsumeCallback(
-                methodInvokerBuilder.clone().addInterceptor(...subscribeMetadata.interceptors),
-                controllerMetadata.target,
-                methodKey,
-              );
-              this.messageConsumer.subscribe(topic, consumeCallback, fromBeginning);
-            }
-            break;
-          case 'batched': {
-            const consumer = this.getBatchConsumerCallback(
-              methodInvokerBuilder.clone().addInterceptor(...subscribeMetadata.interceptors),
-              controllerMetadata.target,
-              methodKey,
-            );
-            this.messageConsumer.subscribeBatched({topic, consumer, fromBeginning, autoResolve: false});
-          }
-        }
-      }
-    }
-
-    private getConsumeCallback<T>(
-      methodInvokerBuilder: MethodInvokerBuilder<MessageConsumeContext>,
-      target: Constructor<T>,
-      method: keyof T,
-    ) {
-      const invoker = methodInvokerBuilder.build(target, method);
-      return async (message: KafkaReceivedMessage) => {
-        await invoker.invoke({
-          resolveSession: this.container.createResolveSession(),
-          contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
-            const context = new SimpleMessageConsumeContext(
-              resolveContext,
-              targetConstructor,
-              targetMethodKey,
-              this.messageConsumer.consumerGroupId,
-              message,
-            );
-            resolveContext.addTemporaryConstantBinding(MessageConsumeContext, context);
-            resolveContext.addTemporaryConstantBinding(SimpleMessageConsumeContext, context);
-            return context;
-          },
-        });
-      };
-    }
-    private getBatchConsumerCallback<T>(
-      methodInvokerBuilder: MethodInvokerBuilder<BatchedMessageConsumeContext>,
-      target: Constructor<T>,
-      method: keyof T,
-    ) {
-      const invoker = methodInvokerBuilder.build(target, method);
-      return async (batch: KafkaBatchConsumeMessageParam) => {
-        await invoker.invoke({
-          resolveSession: this.container.createResolveSession(),
-          contextFactory: (resolveContext, targetConstructor, targetMethodKey) => {
-            const context = new BatchedMessageConsumeContext(
-              resolveContext,
-              targetConstructor,
-              targetMethodKey,
-              this.messageConsumer.consumerGroupId,
-              batch,
-            );
-            resolveContext.addTemporaryConstantBinding(MessageConsumeContext, context);
-            resolveContext.addTemporaryConstantBinding(BatchedMessageConsumeContext, context);
-            return context;
-          },
-        });
-      };
+    @OnStart()
+    async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
+      moduleScanner.scanModule((moduleMetadata) => {
+        scanComponents(this.container, this.messageConsumer, moduleMetadata, option);
+      });
+      const promise = this.messageConsumer.start();
+      this.messageConsumer.wait().catch((e) => this.pm.shutdown(e));
+      return promise;
     }
   }
 
@@ -240,7 +261,6 @@ function KafkaConsumerHelperModule(option: MessageConsumerModuleOption, exportSy
 
     @OnModuleCreate()
     async onCreate(): Promise<void> {
-      const {...rest} = this.config;
       await this.consumerGroupFactory.connect({
         ...this.config,
         logger: this.logger,

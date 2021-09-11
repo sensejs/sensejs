@@ -77,6 +77,7 @@ importers:
   examples/demo-app:
     specifiers:
       '@sensejs/config': workspace:*
+      '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
       '@sensejs/http-common': workspace:*
       '@sensejs/http-koa-platform': workspace:*
@@ -92,6 +93,7 @@ importers:
       typeorm: ^0.2.34
     dependencies:
       '@sensejs/config': link:../../packages/config
+      '@sensejs/container': link:../../packages/container
       '@sensejs/core': link:../../packages/core
       '@sensejs/http-common': link:../../packages/http-common
       '@sensejs/http-koa-platform': link:../../packages/http-koa-platform
@@ -170,6 +172,7 @@ importers:
 
   packages/http-common:
     specifiers:
+      '@sensejs/container': workspace:^0.9.0-alpha.0
       '@sensejs/core': workspace:*
       '@sensejs/utility': workspace:^0.9.0-alpha.0
       reflect-metadata: ^0.1.13
@@ -178,6 +181,7 @@ importers:
       '@sensejs/utility': link:../utility
       tslib: 2.3.1
     devDependencies:
+      '@sensejs/container': link:../container
       '@sensejs/core': link:../core
       reflect-metadata: 0.1.13
 

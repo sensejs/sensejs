@@ -5,32 +5,31 @@ import {
   Inject,
   ModuleClass,
   OnModuleCreate,
+  OnStart,
   ProcessManager,
 } from '@sensejs/core';
 import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
-import {Controller, GET, HttpContext, HttpInterceptor, Query} from '@sensejs/http-common';
+import {Controller, GET, HttpContext, Query} from '@sensejs/http-common';
 import {createHttpModule, KoaHttpApplicationBuilder} from '../src';
+import {InterceptProviderClass} from '@sensejs/container';
 
 test('HttpModule', async () => {
   const serverIdentifier = Symbol();
 
-  class MockInterceptor extends HttpInterceptor {
-    intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
+  @InterceptProviderClass()
+  class MockInterceptor {
+    intercept(next: () => Promise<void>): Promise<void> {
       return next();
     }
   }
 
   @Component()
   class MyComponent {
-    constructor(
-      @Inject(ProcessManager) private processManager: ProcessManager,
-      @Inject(serverIdentifier) private httpServer: unknown,
-    ) {}
+    constructor(@Inject(ProcessManager) private processManager: ProcessManager) {}
 
     foo() {
-      expect(this.httpServer).toBeInstanceOf(Server);
       this.processManager.shutdown();
       return 'foo';
     }
@@ -42,7 +41,7 @@ test('HttpModule', async () => {
     bar() {}
   }
 
-  @Controller('/foo', {interceptors: [MockInterceptor], labels: ['foo']})
+  @Controller('/foo', {interceptProviders: [MockInterceptor], labels: ['foo']})
   class FooController {
     constructor(@Inject(MyComponent) private myComponent: MyComponent) {}
 
@@ -75,8 +74,8 @@ test('HttpModule', async () => {
     ],
   })
   class Module {
-    @OnModuleCreate()
-    async onModuleCreate(@Inject(serverIdentifier) server: Server) {
+    @OnStart()
+    async onStart(@Inject(serverIdentifier) server: Server) {
       const port = (server.address() as AddressInfo).port;
       const baseUrl = `http://localhost:${port}`;
       await supertest(baseUrl).get('/bar').expect(404);

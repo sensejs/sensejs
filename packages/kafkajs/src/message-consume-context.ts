@@ -1,9 +1,7 @@
-import {Constructor, RequestContext} from '@sensejs/core';
-import {ResolveSession} from '@sensejs/container';
+import {Constructor} from '@sensejs/core';
 import {KafkaBatchConsumeMessageParam, KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
 
-export abstract class MessageConsumeContext extends RequestContext {
-  abstract resolveSession: ResolveSession;
+export abstract class MessageConsumeContext {
   abstract readonly targetConstructor: Constructor;
   abstract readonly targetMethodKey: keyof any;
   abstract readonly consumerGroup: string;
@@ -11,9 +9,6 @@ export abstract class MessageConsumeContext extends RequestContext {
   abstract readonly partition: number;
   abstract readonly firstOffset: string | null;
   abstract readonly lastOffset: string;
-  protected constructor() {
-    super();
-  }
 }
 export class SimpleMessageConsumeContext extends MessageConsumeContext {
   readonly topic: string;
@@ -22,7 +17,6 @@ export class SimpleMessageConsumeContext extends MessageConsumeContext {
   readonly firstOffset: string;
   readonly lastOffset: string;
   constructor(
-    readonly resolveSession: ResolveSession,
     readonly targetConstructor: Constructor,
     readonly targetMethodKey: keyof any,
     readonly consumerGroup: string,
@@ -44,7 +38,6 @@ export class BatchedMessageConsumeContext extends MessageConsumeContext {
   readonly firstOffset: string | null;
   readonly lastOffset: string;
   constructor(
-    readonly resolveSession: ResolveSession,
     readonly targetConstructor: Constructor,
     readonly targetMethodKey: keyof any,
     readonly consumerGroup: string,
