@@ -131,7 +131,7 @@ test('Performance test', async () => {
 
   container.add(Foo);
 
-  let N = 50000;
+  let N = 10000;
   // 10000 method invoking should be done within 30s
   let symbol = a;
   const interceptors = Array(100)
@@ -152,17 +152,11 @@ test('Performance test', async () => {
       return Interceptor;
     });
 
-  try {
-    container.compile();
+  container.compile();
 
-    const methodInvoker = container.createMethodInvoker(Foo, 'bar', interceptors, CustomContext);
-    const t = process.hrtime();
-    while (N--) {
-      await methodInvoker.createInvokeSession().invokeTargetMethod(new CustomContext(Foo, 'bar'));
-    }
-    console.log(process.hrtime(t));
-  } catch (e) {
-    console.error(e);
-    throw e;
+  const methodInvoker = container.createMethodInvoker(Foo, 'bar', interceptors, CustomContext);
+  const t = process.hrtime();
+  while (N--) {
+    await methodInvoker.createInvokeSession().invokeTargetMethod(new CustomContext(Foo, 'bar'));
   }
 }, 10000);
