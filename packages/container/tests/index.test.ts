@@ -275,9 +275,7 @@ describe('Container', () => {
         this.bar = param1;
       }
 
-      method(@inject('const2') value: number, @inject('temp2') value2: number) {
-        expect(value + this.param1).toEqual(value2);
-      }
+      method(@inject('const2') value: number, @inject('temp2') value2: number) { }
     }
 
     const methodSpy = jest.spyOn(Foo.prototype, 'method');
@@ -294,31 +292,9 @@ describe('Container', () => {
       value: value2,
     });
     container.compile();
-    const context = await container.createResolveSession();
-    await context.intercept({
-      interceptorBuilder: (param1: number) => {
-        return async (next) => {
-          context.addTemporaryConstantBinding('temp1', param1);
-          await next();
-        };
-      },
-      paramInjectionMetadata: [{id: 'const1', index: 0, optional: false}],
-    });
-    await context.intercept({
-      interceptorBuilder: (param1: number, param2: number) => {
-        return async (next) => {
-          context.addTemporaryConstantBinding('temp2', param1 + param2);
-          await next();
-        };
-      },
-      paramInjectionMetadata: [
-        {id: 'temp1', index: 0, optional: false},
-        {id: 'const2', index: 1, optional: false},
-      ],
-    });
-    await context.invoke(Foo, 'method');
+    const context = await container.createResolveSession().addTemporaryConstantBinding('temp2', 'temp2');
+    context.invoke(Foo, 'method');
     expect(methodSpy).toHaveBeenCalled();
-    await context.cleanUp();
   });
 
   test('invalid invoke', () => {
@@ -362,21 +338,7 @@ describe('Container', () => {
 
     container.add(Foo);
     container.compile();
-    const stub = jest.fn();
     const context = container.createResolveSession();
-    await context.intercept({
-      interceptorBuilder: () => {
-        return async (next) => {
-          try {
-            await next();
-          } catch (e) {
-            stub(e);
-            throw e;
-          }
-        };
-      },
-      paramInjectionMetadata: [],
-    });
     let err;
     expect(() => {
       try {
@@ -386,35 +348,6 @@ describe('Container', () => {
         throw e;
       }
     }).toThrow(FooError);
-
-    expect(stub).not.toHaveBeenCalled();
-    await expect(context.cleanUp(err)).rejects.toBeInstanceOf(FooError);
-    expect(stub).toHaveBeenCalled();
-  });
-
-  test('interceptor throw', async () => {
-    const container = new Container();
-
-    class Foo {
-      constructor() {}
-
-      method() {}
-    }
-
-    container.add(Foo);
-    container.compile();
-    const context = container.createResolveSession();
-    await context.intercept({
-      interceptorBuilder: () => {
-        return async (next) => {
-          await next();
-          throw new Error();
-        };
-      },
-      paramInjectionMetadata: [],
-    });
-    context.invoke(Foo, 'method');
-    await expect(context.cleanUp()).rejects.toBeInstanceOf(Error);
   });
 
   test('scope', () => {
