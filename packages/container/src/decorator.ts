@@ -1,4 +1,4 @@
-import {Class, Constructor, InjectScope, ServiceId, Transformer} from './types';
+import {AsyncInterceptProvider, Class, Constructor, InjectScope, ServiceId, Transformer} from './types';
 import {
   assignParamInjectMetadata,
   ensureConstructorParamInjectMetadata,
@@ -100,4 +100,23 @@ export namespace Scope {
  */
 export function scope(scope: InjectScope) {
   return Scope(scope);
+}
+
+export const METADATA_KEY = Symbol();
+export type ServiceTypeOf<T extends any[]> = T extends [ServiceId<infer P>, ...infer Q] ? [P, ...ServiceTypeOf<Q>] : [];
+
+export function InterceptProviderClass<T extends ServiceId[]>(...serviceIds: T) {
+  return <U extends Constructor<AsyncInterceptProvider<ServiceTypeOf<T>>>>(constructor: U): U => {
+    Reflect.defineMetadata(METADATA_KEY, serviceIds, constructor);
+    Injectable()(constructor);
+    return constructor;
+  };
+}
+
+export function getInterceptProviderMetadata(constructor: Constructor): ServiceId[] {
+  const metadata = Reflect.getOwnMetadata(METADATA_KEY, constructor);
+  if (!Array.isArray(metadata)) {
+    throw new Error('missing metadata');
+  }
+  return metadata;
 }

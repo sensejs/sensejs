@@ -24,9 +24,9 @@ function constructorToFactory(constructor: Class) {
 }
 
 export class ResolveSession {
-  protected readonly instructions: Instruction[] = [];
-  protected readonly sessionCache: Map<any, any> = new Map();
-  protected readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
+  private readonly instructions: Instruction[] = [];
+  private readonly sessionCache: Map<any, any> = new Map();
+  private readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
   protected readonly stack: any[] = [];
 
   private allFinished: Promise<void>;
@@ -49,7 +49,7 @@ export class ResolveSession {
   async intercept(interceptor: AsyncResolveInterceptorFactory): Promise<void> {
     const {interceptorBuilder, paramInjectionMetadata} = interceptor;
     const serviceId = Symbol();
-    this.instructions.push(
+    const interceptorInstance = this.evalInstructions([
       {
         code: InstructionCode.BUILD,
         cacheScope: InjectScope.TRANSIENT,
@@ -58,8 +58,7 @@ export class ResolveSession {
         serviceId,
       },
       ...compileParamInjectInstruction(paramInjectionMetadata, true),
-    );
-    const interceptorInstance = this.evalInstructions() as AsyncResolveInterceptor;
+    ]) as AsyncResolveInterceptor;
     return new Promise<void>((resolve, reject) => {
       const cleanUp = this.dependentsCleanedUp;
       let errorHandler = reject;
@@ -115,11 +114,12 @@ export class ResolveSession {
       id: serviceId,
       value,
     });
+    this.sessionCache.set(serviceId, value);
     return this;
   }
 
-  resolve<T>(target: ServiceId<T>, allowTemporary: boolean = true): T {
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary});
+  resolve<T>(target: ServiceId<T>): T {
+    this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true});
     return this.evalInstructions();
   }
 
@@ -128,7 +128,8 @@ export class ResolveSession {
     return this.evalInstructions();
   }
 
-  protected evalInstructions() {
+  protected evalInstructions(instruction: Instruction[] = []) {
+    this.instructions.push(...instruction);
     for (;;) {
       const instruction = this.instructions.pop();
       if (!instruction) {

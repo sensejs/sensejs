@@ -1,5 +1,4 @@
-import {BindingType, Constructor, Container, Inject, Injectable} from '../src';
-import {InterceptProviderClass} from '../src/method-invoker';
+import {BindingType, Constructor, Container, Inject, Injectable, InterceptProviderClass} from '../src';
 
 class CustomContext<T extends {} = any, K extends keyof T = any> {
   constructor(readonly targetConstructor: Constructor<T>, readonly targetMethodKey: K) {}
