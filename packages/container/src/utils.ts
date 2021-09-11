@@ -11,14 +11,13 @@ export function internalValidateDependencies(
   bindingMap: Map<ServiceId, Binding<any>>,
   visitPath: ServiceId[],
   validatedSet: Set<ServiceId>,
-) {
+): void {
   if (validatedSet.has(binding.id)) {
     return;
   }
   switch (binding.type) {
     case BindingType.CONSTANT:
       return;
-    case BindingType.ASYNC_FACTORY:
     case BindingType.FACTORY:
     case BindingType.INSTANCE:
       {

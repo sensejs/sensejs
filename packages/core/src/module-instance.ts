@@ -154,7 +154,7 @@ export class ModuleInstance<T extends {} = {}> {
 
   private bindFactories(factories: FactoryProvider<unknown>[]) {
     factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
-      const {provide, factory, scope = InjectScope.REQUEST, ...rest} = factoryProvider;
+      const {provide, factory, scope = InjectScope.SESSION, ...rest} = factoryProvider;
       this.container.add(factory);
       this.container.addBinding({
         type: BindingType.FACTORY,

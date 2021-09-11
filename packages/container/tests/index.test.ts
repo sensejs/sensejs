@@ -5,14 +5,13 @@ import {
   CircularDependencyError,
   Container,
   DuplicatedBindingError,
-  inject,
+  Inject,
   Injectable,
-  injectable,
   InjectScope,
   InvalidParamBindingError,
   NoEnoughInjectMetadataError,
-  optional,
-  scope,
+  Optional,
+  Scope,
 } from '../src';
 
 function untransformed(input: any) {
@@ -60,11 +59,11 @@ describe('Container', () => {
     container.compile();
 
     class Foo {
-      constructor(@inject('1') readonly param: number) {}
+      constructor(@Inject('1') readonly param: number) {}
     }
 
     class Bar {
-      constructor(@inject('2') readonly param: number) {}
+      constructor(@Inject('2') readonly param: number) {}
     }
 
     expect(container.createResolveSession().construct(Foo)).toEqual(expect.objectContaining({param: value}));
@@ -271,11 +270,11 @@ describe('Container', () => {
     class Foo {
       bar;
 
-      constructor(@inject('const1') readonly param1: number) {
+      constructor(@Inject('const1') readonly param1: number) {
         this.bar = param1;
       }
 
-      method(@inject('const2') value: number, @inject('temp2') value2: number) { }
+      method(@Inject('const2') value: number, @Inject('temp2') value2: number) { }
     }
 
     const methodSpy = jest.spyOn(Foo.prototype, 'method');
@@ -303,7 +302,7 @@ describe('Container', () => {
     class Foo {
       constructor() {}
 
-      method(@inject('const2') param1: number, param2: number) {}
+      method(@Inject('const2') param1: number, param2: number) {}
     }
     container.add(Foo);
     container.compile();
@@ -316,7 +315,7 @@ describe('Container', () => {
     class Foo {
       constructor() {}
 
-      method(@optional() @inject('const') param1?: number) {}
+      method(@Optional() @Inject('const') param1?: number) {}
     }
     container.add(Foo).compile();
 
@@ -419,14 +418,15 @@ describe('Container', () => {
   });
 
   test('decorator', () => {
-    @injectable({scope: InjectScope.SINGLETON})
+    @Injectable()
+    @Scope(InjectScope.SINGLETON)
     class Foo {
       constructor() {}
     }
 
-    @injectable()
+    @Injectable()
     class X {
-      constructor(@inject(Foo) readonly foo: Foo, @optional() @inject('optional') optionalParam?: any) {}
+      constructor(@Inject(Foo) readonly foo: Foo, @Optional() @Inject('optional') optionalParam?: any) {}
     }
 
     const container = new Container();
@@ -442,29 +442,32 @@ describe('Container', () => {
   test('temporary binding cannot be used by global component', () => {
     const container = new Container();
     const stub = jest.fn();
-    @injectable()
-    @scope(InjectScope.SINGLETON)
+
+    @Injectable()
+    @Scope(InjectScope.SINGLETON)
     class GlobalB {
       constructor() {}
     }
-    @injectable()
-    @scope(InjectScope.SINGLETON)
+
+    @Injectable()
+    @Scope(InjectScope.SINGLETON)
     class GlobalA {
-      constructor(@inject(GlobalB) readonly param: any) {}
+      constructor(@Inject(GlobalB) readonly param: any) {}
     }
 
-    @injectable()
-    @scope(InjectScope.TRANSIENT)
+    @Injectable()
+    @Scope(InjectScope.TRANSIENT)
     class A {
-      constructor(@inject(GlobalA) readonly global: GlobalA) {}
+      constructor(@Inject(GlobalA) readonly global: GlobalA) {}
     }
 
     const temporaryGlobalB = new GlobalB();
     let singletonB: any;
-    @injectable()
-    @scope(InjectScope.SESSION)
+
+    @Injectable()
+    @Scope(InjectScope.SESSION)
     class B {
-      foo(@inject(A) a: A) {
+      foo(@Inject(A) a: A) {
         expect(a.global.param).toBeInstanceOf(GlobalB);
         if (singletonB) {
           expect(a.global.param).toBe(singletonB);
@@ -488,34 +491,6 @@ describe('Container', () => {
     container.createResolveSession().addTemporaryConstantBinding(GlobalB, temporaryGlobalB).invoke(B, 'foo');
     expect(stub).toHaveBeenCalledTimes(2);
     expect(stub).toHaveBeenLastCalledWith(singletonB);
-  });
-
-  test('deprecated createResolveContext works', () => {
-    @injectable()
-    class A {}
-    @injectable({scope: InjectScope.REQUEST})
-    class B {}
-
-    const container = new Container();
-    expect(container.add(A).compile().createResolveContext().resolve(A)).toBeInstanceOf(A);
-    container.add(B).compile();
-    expect(container.resolve(B)).not.toBe(container.resolve(B));
-    const resolveContext = container.createResolveContext();
-    expect(resolveContext.resolve(B)).toBe(resolveContext.resolve(B));
-  });
-
-  test('@injectable deprecated scope option', () => {
-    @injectable({scope: InjectScope.SINGLETON})
-    class SingletonA {}
-    @injectable({scope: InjectScope.REQUEST})
-    @scope(InjectScope.SINGLETON)
-    class SingletonB {}
-
-    const container = new Container();
-    container.add(SingletonA).add(SingletonB).compile();
-
-    expect(container.resolve(SingletonA)).toBe(container.resolve(SingletonA));
-    expect(container.resolve(SingletonB)).toBe(container.resolve(SingletonB));
   });
 
   test('aliased by injectable parent', () => {

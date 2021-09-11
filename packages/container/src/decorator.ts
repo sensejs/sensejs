@@ -3,7 +3,6 @@ import {
   assignParamInjectMetadata,
   ensureConstructorParamInjectMetadata,
   ensureMethodInvokeProxy,
-  getInjectScope,
   setInjectScope,
 } from './metadata';
 
@@ -55,28 +54,9 @@ export function optional(value = true): InjectionDecorator {
   return Optional(value);
 }
 
-/**
- * @deprecated
- */
-export interface InjectableOption {
-  scope?: InjectScope;
-}
-
 export function Injectable() {
   return (ctor: Class): void => {
     ensureConstructorParamInjectMetadata(ctor);
-  };
-}
-
-/**
- * @deprecated
- */
-export function injectable(option: InjectableOption = {}) {
-  return (ctor: Class): void => {
-    if (typeof option.scope !== 'undefined' && !getInjectScope(ctor)) {
-      setInjectScope(ctor, option.scope);
-    }
-    return Injectable()(ctor);
   };
 }
 
@@ -91,15 +71,6 @@ export namespace Scope {
   export const SESSION = InjectScope.SESSION;
   export const TRANSIENT = InjectScope.TRANSIENT;
   export const SINGLETON = InjectScope.SINGLETON;
-  /** @deprecated */
-  export const REQUEST = InjectScope.REQUEST;
-}
-
-/**
- * @deprecated
- */
-export function scope(scope: InjectScope) {
-  return Scope(scope);
 }
 
 export const METADATA_KEY = Symbol();

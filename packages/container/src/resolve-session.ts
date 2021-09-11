@@ -193,7 +193,7 @@ export class ResolveSession {
   }
 
   private cacheIfNecessary(cacheScope: InjectScope, serviceId: ServiceId, result: any) {
-    if (cacheScope === InjectScope.REQUEST || cacheScope === InjectScope.SESSION) {
+    if (cacheScope === InjectScope.SESSION) {
       this.sessionCache.set(serviceId, result);
     } else if (cacheScope === InjectScope.SINGLETON) {
       this.globalCache.set(serviceId, result);
