@@ -18,14 +18,16 @@
     "access": "public"
   },
   "dependencies": {
-    "tslib": "^1.10.0",
-    "@sensejs/utility": "workspace:^0.9.0-alpha.0"
+    "@sensejs/utility": "workspace:^0.9.0-alpha.1",
+    "tslib": "^1.14.1"
   },
   "devDependencies": {
+    "@sensejs/container": "workspace:^0.9.0-alpha.3",
     "@sensejs/core": "workspace:*",
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
+    "@sensejs/container": "workspace:^0.9.0-alpha.0",
     "@sensejs/core": "workspace:^0.9.0-alpha.0",
     "reflect-metadata": "^0.1.13"
   },

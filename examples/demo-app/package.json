@@ -23,11 +23,11 @@
     "@sensejs/typeorm": "workspace:*",
     "@sensejs/utility": "workspace:*",
     "config": "^3.3.6",
-    "fp-ts": "^2.10.5",
+    "fp-ts": "^2.11.1",
     "io-ts": "^2.2.16",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.34"
+    "typeorm": "^0.2.37"
   },
   "devDependencies": {
     "@types/config": "^0.0.38"
