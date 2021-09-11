@@ -1,15 +1,12 @@
-import {Component, Inject, LoggerBuilder, uuidV1} from '@sensejs/core';
-import {HttpContext, HttpInterceptor} from '@sensejs/http-common';
+import {Inject, LoggerBuilder, uuidV1} from '@sensejs/core';
 import {SenseLoggerBuilder} from '@sensejs/logger';
+import {InterceptProviderClass} from '@sensejs/container';
 
-@Component()
-export class TracingInterceptor extends HttpInterceptor {
-  constructor(@Inject(SenseLoggerBuilder) private loggerBuilder: SenseLoggerBuilder) {
-    super();
-  }
+@InterceptProviderClass(LoggerBuilder)
+export class TracingInterceptor {
+  constructor(@Inject(SenseLoggerBuilder) private loggerBuilder: SenseLoggerBuilder) {}
 
-  async intercept(context: HttpContext, next: () => Promise<void>): Promise<void> {
-    context.bindContextValue(LoggerBuilder, this.loggerBuilder.setTraceId(uuidV1()));
-    return next();
+  async intercept(next: (loggerBuilder: LoggerBuilder) => Promise<void>): Promise<void> {
+    return next(this.loggerBuilder.setTraceId(uuidV1()));
   }
 }

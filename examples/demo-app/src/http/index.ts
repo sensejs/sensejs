@@ -12,6 +12,6 @@ export default createHttpModule({
   },
   requires: [PublishingModule],
   components: [ExampleController],
-  globalInterceptors: [TracingInterceptor, ErrorHandlerInterceptor, RequestTimingInterceptor],
+  globalInterceptProviders: [TracingInterceptor, ErrorHandlerInterceptor, RequestTimingInterceptor],
   injectOptionFrom: 'config.http',
 });
