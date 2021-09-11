@@ -1,6 +1,5 @@
-import {Container, InvokeResult, ResolveContext, ResolveSession} from '@sensejs/container';
-import {Constructor, ServiceIdentifier} from './interfaces';
-import {RequestContext, RequestInterceptor} from './interceptor';
+import {InvokeResult, ResolveSession} from '@sensejs/container';
+import {Constructor} from './interfaces';
 
 /**
  * Invoke method with arguments from container

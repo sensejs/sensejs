@@ -5,7 +5,6 @@ import {
   Inject,
   ModuleClass,
   ModuleRoot,
-  RequestInterceptor,
   SubscribeEvent,
   SubscribeEventController,
 } from '../src';

@@ -1,5 +1,4 @@
-import {Constructor, RequestContext} from '@sensejs/core';
-import {ResolveSession} from '@sensejs/container';
+import {Constructor} from '@sensejs/core';
 import {KafkaBatchConsumeMessageParam, KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
 
 export abstract class MessageConsumeContext {
