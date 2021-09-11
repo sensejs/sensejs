@@ -1,7 +1,14 @@
 import {Binding, BindingType, ParamInjectionMetadata, ServiceId} from './types';
-import {BindingNotFoundError, CircularAliasError, CircularDependencyError} from './errors';
+import {BindingNotFoundError, CircularDependencyError} from './errors';
 import {Instruction, InstructionCode} from './instructions';
 import {ensureValidatedParamInjectMetadata} from './metadata';
+
+export function serviceIdToString(id: ServiceId): string {
+  if (typeof id === 'string' || typeof id === 'symbol') {
+    return id.toString();
+  }
+  return id.constructor.name;
+}
 
 /**
  * Find cyclic and unmet dependencies through DFS
@@ -12,6 +19,7 @@ export function internalValidateDependencies(
   visitPath: ServiceId[],
   validatedSet: Set<ServiceId>,
 ): void {
+  const {id} = binding;
   if (validatedSet.has(binding.id)) {
     return;
   }
@@ -22,14 +30,18 @@ export function internalValidateDependencies(
     case BindingType.INSTANCE:
       {
         for (const m of binding.paramInjectionMetadata) {
-          if (visitPath.indexOf(m.id) >= 0) {
-            throw new CircularDependencyError('Circular dependencies');
+          const index = visitPath.indexOf(m.id);
+          if (index >= 0) {
+            throw new CircularDependencyError(m.id, visitPath.slice(index));
           }
 
           const binding = bindingMap.get(m.id);
           if (typeof binding === 'undefined') {
             if (!m.optional) {
-              throw new BindingNotFoundError('Unmet dependencies: ' + m.id.toString());
+              throw new BindingNotFoundError(
+                m.id,
+                `Binding not found for parameters[${m.index}] of "${serviceIdToString(id)}"`,
+              );
             }
             break;
           }
@@ -38,12 +50,13 @@ export function internalValidateDependencies(
       }
       break;
     case BindingType.ALIAS: {
-      if (visitPath.indexOf(binding.canonicalId) >= 0) {
-        throw new CircularAliasError('Circular dependencies');
+      const index = visitPath.indexOf(binding.canonicalId);
+      if (index >= 0) {
+        throw new CircularDependencyError(binding.canonicalId, visitPath.slice(index));
       }
       const aliased = bindingMap.get(binding.canonicalId);
       if (!aliased) {
-        throw new BindingNotFoundError('Unmet dependencies: ' + binding.canonicalId.toString());
+        throw new BindingNotFoundError(binding.canonicalId);
       }
       internalValidateDependencies(aliased, bindingMap, [...visitPath, binding.canonicalId], validatedSet);
     }
