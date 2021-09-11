@@ -13,12 +13,12 @@ import {
   convertParamInjectionMetadata,
   ensureConstructorParamInjectMetadata,
   ensureValidatedMethodInvokeProxy,
-  ensureValidatedParamInjectMetadata,
   MethodInvokeProxy,
 } from './metadata';
 import {Injectable, Scope} from './decorator';
 import {ResolveSession} from './resolve-session';
 import {BindingNotFoundError} from './errors';
+import {compileParamInjectInstruction} from './utils';
 
 const METADATA_KEY = Symbol();
 
@@ -30,21 +30,6 @@ export function InterceptProviderClass<T extends ServiceId[]>(...serviceIds: T) 
     Injectable()(constructor);
     return constructor;
   };
-}
-
-function compileParamInjectInstruction(
-  paramInjectionMetadata: ParamInjectionMetadata[],
-  allowTemporary: boolean,
-): Instruction[] {
-  const sortedMetadata = ensureValidatedParamInjectMetadata(paramInjectionMetadata);
-  return sortedMetadata.reduceRight((instructions, m): Instruction[] => {
-    const {id, transform, optional} = m;
-    if (typeof transform === 'function') {
-      instructions.push({code: InstructionCode.TRANSFORM, transformer: transform});
-    }
-    instructions.push({code: InstructionCode.PLAN, target: id, optional, allowTemporary});
-    return instructions;
-  }, [] as Instruction[]);
 }
 
 function constructorToFactory(constructor: Class) {
