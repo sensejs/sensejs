@@ -170,7 +170,7 @@ importers:
 
   packages/http-common:
     specifiers:
-      '@sensejs/container': workspace:^0.9.0-alpha.3
+      '@sensejs/container': workspace:^0.9.0-alpha.4
       '@sensejs/core': workspace:*
       '@sensejs/utility': workspace:^0.9.0-alpha.1
       reflect-metadata: ^0.1.13
