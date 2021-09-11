@@ -51,8 +51,13 @@ function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);
 }
 
-export class AsyncMethodInvokeSession<T extends {}, K extends keyof T, Context = void> extends ResolveSession {
+export class AsyncMethodInvokeSession<
+  T extends {},
+  K extends keyof T,
+  ContextIds extends any[] = [],
+> extends ResolveSession {
   private result?: InvokeResult<T, K>;
+  private contextIds: ContextIds;
 
   constructor(
     bindingMap: Map<ServiceId, Binding<any>>,
@@ -62,14 +67,15 @@ export class AsyncMethodInvokeSession<T extends {}, K extends keyof T, Context =
     private readonly proxyConstructInstructions: Instruction[],
     private readonly targetConstructor: Constructor,
     private readonly targetFunction: Function,
-    private contextId?: ServiceId<Context>,
+    ...contextIds: ContextIds
   ) {
     super(bindingMap, compiledInstructionMap, globalCache);
+    this.contextIds = contextIds;
   }
 
-  async invokeTargetMethod(ctx: Context): Promise<InvokeResult<T, K>> {
-    if (this.contextId) {
-      this.addTemporaryConstantBinding(this.contextId, ctx);
+  async invokeTargetMethod(...ctx: ServiceTypeOf<ContextIds>): Promise<InvokeResult<T, K>> {
+    for (let i = 0; i < ctx.length && i < this.contextIds.length; i++) {
+      this.addTemporaryConstantBinding(this.contextIds[i], ctx[i]);
     }
     const performInvoke = (): Promise<InvokeResult<T, K>> => {
       this.performPlan({
@@ -106,11 +112,12 @@ export class AsyncMethodInvokeSession<T extends {}, K extends keyof T, Context =
   }
 }
 
-export class MethodInvoker<T extends {}, K extends keyof T, Context = void> {
+export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends any[]> {
   private readonly proxyConstructInstructions: Instruction[];
   private readonly targetFunction: Function;
   private readonly interceptorProviderAndMetadata: [Instruction[], ServiceId[]][] = [];
   private readonly proxyConstructorInjectionMetadata;
+  private contextIds;
 
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
@@ -119,8 +126,9 @@ export class MethodInvoker<T extends {}, K extends keyof T, Context = void> {
     private targetConstructor: Constructor<T>,
     private targetMethod: K,
     private interceptors: Constructor<AsyncInterceptProvider<any>>[],
-    private contextId?: ServiceId<Context>,
+    ...contextIds: ContextIds
   ) {
+    this.contextIds = contextIds;
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(targetConstructor, targetMethod);
     this.proxyConstructorInjectionMetadata = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(proxy));
     this.validate();
@@ -146,15 +154,13 @@ export class MethodInvoker<T extends {}, K extends keyof T, Context = void> {
       this.proxyConstructInstructions,
       this.targetConstructor,
       this.targetFunction,
-      this.contextId,
+      ...this.contextIds,
     );
   }
 
   private validate() {
     const validatedSet = new Set(new Map(this.bindingMap).keys());
-    if (this.contextId) {
-      validatedSet.add(this.contextId);
-    }
+    this.contextIds.forEach((id) => validatedSet.add(id));
     const validateParamInjectMetadata = (metadata: ParamInjectionMetadata[], name: string) => {
       metadata.forEach((v, idx) => {
         const {id, optional = false} = v;

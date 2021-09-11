@@ -40,23 +40,12 @@ export class Container {
     return new ResolveSession(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
   }
 
-  createMethodInvoker<T extends {}, K extends keyof T>(
+  createMethodInvoker<T extends {}, K extends keyof T, ServiceIds extends any[] = []>(
     targetConstructor: Constructor<T>,
     targetMethod: K,
     asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
-  ): MethodInvoker<T, K>;
-  createMethodInvoker<Context, T extends {}, K extends keyof T>(
-    targetConstructor: Constructor<T>,
-    targetMethod: K,
-    asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
-    contextId?: ServiceId<Context>,
-  ): MethodInvoker<T, K, Context>;
-  createMethodInvoker<Context, T extends {}, K extends keyof T>(
-    targetConstructor: Constructor<T>,
-    targetMethod: K,
-    asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
-    contextId?: ServiceId<Context>,
-  ): MethodInvoker<T, K, Context> {
+    ...contextIds: ServiceIds
+  ): MethodInvoker<T, K, ServiceIds> {
     this.compile();
     return new MethodInvoker(
       this.bindingMap,
@@ -65,7 +54,7 @@ export class Container {
       targetConstructor,
       targetMethod,
       asyncInterceptProviders,
-      contextId,
+      ...contextIds,
     );
   }
 
