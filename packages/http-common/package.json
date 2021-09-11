@@ -23,10 +23,12 @@
   },
   "devDependencies": {
     "@sensejs/core": "workspace:*",
+    "@sensejs/container": "workspace:^0.9.0-alpha.0",
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
     "@sensejs/core": "workspace:^0.9.0-alpha.0",
+    "@sensejs/container": "workspace:^0.9.0-alpha.0",
     "reflect-metadata": "^0.1.13"
   },
   "author": "LAN Xingcan",

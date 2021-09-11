@@ -1,6 +1,6 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {Constructor, Inject} from '@sensejs/core';
-import {Container} from '@sensejs/container';
+import {AsyncInterceptProvider, Container, InterceptProviderClass} from '@sensejs/container';
 import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src';
 import {
@@ -13,34 +13,37 @@ import {
   PATCH,
   DELETE,
   GET,
-  HttpInterceptor,
   HttpContext,
   Controller,
   getHttpControllerMetadata,
 } from '@sensejs/http-common';
 
 describe('KoaHttpApplicationBuilder', () => {
-  const makeMockInterceptor = (stub: jest.Mock<any>, symbol: symbol): Constructor<HttpInterceptor> => {
-    return class extends HttpInterceptor {
-      async intercept(context: HttpContext, next: () => Promise<void>) {
-        stub('before');
-        expect(context.nativeRequest).toBeDefined();
-        expect(context.nativeResponse).toBeDefined();
-        expect(typeof context.targetConstructor).toBe('function');
-        expect(typeof context.targetMethodKey).toBe('string');
+  const makeMockInterceptor = (stub: jest.Mock<any>, symbol: symbol): Constructor<AsyncInterceptProvider> => {
+    @InterceptProviderClass(symbol)
+    class MockHttpInterceptProvider {
+      constructor(@Inject(HttpContext) readonly context: HttpContext) {}
 
-        const statusCode = context.response.statusCode;
-        const data = context.response.data;
+      async intercept(next: (value: number) => Promise<void>) {
+        stub('before');
+        expect(this.context.nativeRequest).toBeDefined();
+        expect(this.context.nativeResponse).toBeDefined();
+        expect(typeof this.context.targetConstructor).toBe('function');
+        expect(typeof this.context.targetMethodKey).toBe('string');
+
+        const statusCode = this.context.response.statusCode;
+        const data = this.context.response.data;
 
         // Setter
-        context.response.statusCode = statusCode;
-        context.response.data = data;
+        this.context.response.statusCode = statusCode;
+        this.context.response.data = data;
 
-        context.bindContextValue(symbol, Math.random());
-        await next();
+        await next(Math.random());
         stub('after');
       }
-    };
+    }
+
+    return MockHttpInterceptProvider;
   };
 
   test('http context', async () => {
@@ -137,7 +140,7 @@ describe('KoaHttpApplicationBuilder', () => {
     // const InterceptorC = makeMockInterceptor(stubForC, symbolC);
 
     @Controller('/', {
-      interceptors: [InterceptorB],
+      interceptProviders: [InterceptorB],
     })
     class FooController {
       unusedMethod() {}
@@ -183,7 +186,7 @@ describe('KoaHttpApplicationBuilder', () => {
     const container = new Container();
     container.add(FooController).compile();
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
-    koaHttpApplicationBuilder.addGlobalInspector(InterceptorA);
+    koaHttpApplicationBuilder.addGlobalInterceptProvider(InterceptorA);
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));

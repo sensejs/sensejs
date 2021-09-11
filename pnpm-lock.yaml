@@ -170,6 +170,7 @@ importers:
 
   packages/http-common:
     specifiers:
+      '@sensejs/container': workspace:^0.9.0-alpha.0
       '@sensejs/core': workspace:*
       '@sensejs/utility': workspace:^0.9.0-alpha.0
       reflect-metadata: ^0.1.13
@@ -178,6 +179,7 @@ importers:
       '@sensejs/utility': link:../utility
       tslib: 1.14.1
     devDependencies:
+      '@sensejs/container': link:../container
       '@sensejs/core': link:../core
       reflect-metadata: 0.1.13
 

@@ -1,4 +1,4 @@
-import {BindingType, Container} from '@sensejs/container';
+import {AsyncInterceptProvider, Container} from '@sensejs/container';
 import * as http from 'http';
 import {promisify} from 'util';
 import {KoaHttpApplicationBuilder} from './http-koa-integration';
@@ -15,10 +15,12 @@ import {
   ModuleScanner,
   OnModuleCreate,
   OnModuleDestroy,
+  OnStart,
+  OnStop,
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {getHttpControllerMetadata, HttpApplicationOption, HttpInterceptor} from '@sensejs/http-common';
+import {getHttpControllerMetadata, HttpApplicationOption} from '@sensejs/http-common';
 
 export interface HttpOption extends HttpApplicationOption {
   listenAddress: string;
@@ -38,13 +40,12 @@ export interface HttpModuleOption extends ModuleOption {
   httpAdaptorFactory?: () => KoaHttpApplicationBuilder;
 
   /**
-   * Interceptors applied by this http server
+   * Intercept providers applied by this http server
    */
-  globalInterceptors?: Constructor<HttpInterceptor>[];
+  globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
 
   /**
    * If specified, http server instance will be bound to container with this as service identifier
-   * @deprecated
    */
   serverIdentifier?: ServiceIdentifier;
 
@@ -70,6 +71,7 @@ export interface HttpModuleOption extends ModuleOption {
  * @constructor
  */
 export function createHttpModule(option: HttpModuleOption = {httpOption: defaultHttpConfig}): Constructor {
+  const serverIdentifier = option.serverIdentifier ?? Symbol();
   const httpAdaptorFactory = option.httpAdaptorFactory || (() => new KoaHttpApplicationBuilder());
   const optionProvider = provideOptionInjector<HttpOption>(
     option.httpOption,
@@ -88,7 +90,7 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
     factories: [optionProvider],
   })
   class HttpModule {
-    private httpServer?: http.Server;
+    // private httpServer?: http.Server;
 
     constructor(
       @InjectLogger() private logger: Logger,
@@ -97,36 +99,34 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
     ) {}
 
     @OnModuleCreate()
-    async onCreate(
+    async onCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
+      loader.addConstant({
+        provide: serverIdentifier,
+        value: http.createServer(),
+      });
+    }
+
+    @OnStart()
+    async onStart(
       @Inject(ModuleScanner) moduleScanner: ModuleScanner,
-      @Inject(DynamicModuleLoader) dynamicLoader: DynamicModuleLoader,
+      @Inject(serverIdentifier) httpServer: http.Server,
     ) {
       const httpAdaptor = httpAdaptorFactory().setErrorHandler((e) => {
         this.logger.error('Error occurred when handling http request: ', e);
       });
 
-      for (const inspector of option.globalInterceptors || []) {
-        httpAdaptor.addGlobalInspector(inspector);
+      for (const ip of option.globalInterceptProviders || []) {
+        httpAdaptor.addGlobalInterceptProvider(ip);
       }
       this.scanControllers(httpAdaptor, moduleScanner);
 
-      this.httpServer = await this.createHttpServer(this.httpOption, httpAdaptor);
-
-      if (option.serverIdentifier) {
-        dynamicLoader.addConstant({
-          provide: option.serverIdentifier,
-          value: this.httpServer,
-        });
-      }
+      await this.setupHttpServer(this.httpOption, httpAdaptor, httpServer);
     }
 
-    @OnModuleDestroy()
-    async onDestroy() {
+    @OnStop()
+    async onStop(@Inject(serverIdentifier) httpServer: http.Server) {
       await promisify((done: (e?: Error) => void) => {
-        if (!this.httpServer) {
-          return done();
-        }
-        return this.httpServer.close(done);
+        return httpServer.close(done);
       })();
     }
 
@@ -145,10 +145,10 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
       });
     }
 
-    private createHttpServer(httpOption: HttpOption, httpAdaptor: KoaHttpApplicationBuilder) {
+    private setupHttpServer(httpOption: HttpOption, httpAdaptor: KoaHttpApplicationBuilder, httpServer: http.Server) {
       const {listenPort, listenAddress, ...httpApplicationOption} = httpOption;
       return new Promise<http.Server>((resolve, reject) => {
-        const httpServer = http.createServer(httpAdaptor.build(httpApplicationOption, this.container));
+        httpServer.on('request', httpAdaptor.build(httpApplicationOption, this.container));
         httpServer.once('error', reject);
         httpServer.listen(listenPort, listenAddress, () => {
           httpServer.removeListener('error', reject);
