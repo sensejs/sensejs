@@ -1,7 +1,6 @@
 import {
   BindingNotFoundError,
   BindingType,
-  CircularAliasError,
   CircularDependencyError,
   Container,
   DuplicatedBindingError,
@@ -259,7 +258,7 @@ describe('Container', () => {
       canonicalId: 'foo',
     });
 
-    expect(() => container.compile()).toThrow(CircularAliasError);
+    expect(() => container.compile()).toThrow(CircularDependencyError);
   });
 
   test('invoke', async () => {

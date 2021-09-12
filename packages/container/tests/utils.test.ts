@@ -1,6 +1,6 @@
 import {validateBindings} from '../src/utils';
 import {Binding, BindingType, InjectScope, ServiceId} from '../src/types';
-import {BindingNotFoundError, CircularAliasError, CircularDependencyError} from '../src';
+import {BindingNotFoundError, CircularDependencyError} from '../src';
 
 describe('validateBinding', () => {
   class A {}
@@ -82,7 +82,7 @@ describe('validateBinding', () => {
       id: '2',
       canonicalId: '1',
     });
-    expect(() => validateBindings(bindingMap)).toThrow(CircularAliasError);
+    expect(() => validateBindings(bindingMap)).toThrow(CircularDependencyError);
 
     bindingMap.clear();
     bindingMap.set('1', {
@@ -100,7 +100,7 @@ describe('validateBinding', () => {
       id: '3',
       canonicalId: '1',
     });
-    expect(() => validateBindings(bindingMap)).toThrow(CircularAliasError);
+    expect(() => validateBindings(bindingMap)).toThrow(CircularDependencyError);
   });
 
   test('detect circular dependencies', () => {

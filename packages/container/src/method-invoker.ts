@@ -34,7 +34,7 @@ function validateParamInjectMetadata(metadata: ParamInjectionMetadata[], name: s
       if (optional) {
         return;
       }
-      throw new BindingNotFoundError(`binding not found for parameters[${idx}/${metadata.length - 1}] of ${name}`);
+      throw new BindingNotFoundError(id, `binding not found for parameters[${idx}] of "${name}"`);
     }
   });
 }

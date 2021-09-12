@@ -19,23 +19,17 @@ export class DuplicatedBindingError extends Error {
     Error.captureStackTrace(this, DuplicatedBindingError);
   }
 }
-export class CircularAliasError extends Error {
-  constructor(readonly serviceId: ServiceId) {
-    super();
-    Error.captureStackTrace(this, CircularAliasError);
-  }
-}
 
 export class CircularDependencyError extends Error {
-  constructor(readonly serviceId: ServiceId) {
+  constructor(readonly serviceId: ServiceId, circularPath: ServiceId[]) {
     super();
     Error.captureStackTrace(this, CircularDependencyError);
   }
 }
 
 export class BindingNotFoundError extends Error {
-  constructor(readonly serviceId: ServiceId) {
-    super();
+  constructor(readonly serviceId: ServiceId, message?: string) {
+    super(message);
     Error.captureStackTrace(this, BindingNotFoundError);
   }
 }
