@@ -100,7 +100,6 @@ describe('Deprecate on class', () => {
     container.add(X);
     container.add(Y);
     container.add(V);
-    container.compile();
 
     expect(container.resolve(X)).toBeInstanceOf(X);
     expect(stub).lastCalledWith(X);
@@ -179,7 +178,6 @@ describe('Deprecate instance method', () => {
       value: result,
     });
     container.add(X);
-    container.compile();
     try {
       expect(invokeMethod(container.createResolveContext(), X, 'foo')).toBe(result);
     } catch (e) {

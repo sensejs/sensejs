@@ -1,17 +1,8 @@
-import {
-  ApplicationRunner,
-  Component,
-  createModule,
-  Inject,
-  ModuleClass,
-  OnModuleCreate,
-  OnStart,
-  ProcessManager,
-} from '@sensejs/core';
+import {ApplicationRunner, Component, createModule, Inject, ModuleClass, OnStart, ProcessManager} from '@sensejs/core';
 import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
-import {Controller, GET, HttpContext, Query} from '@sensejs/http-common';
+import {Controller, GET, Query} from '@sensejs/http-common';
 import {createHttpModule, KoaHttpApplicationBuilder} from '../src';
 import {InterceptProviderClass} from '@sensejs/container';
 

@@ -14,7 +14,6 @@ import {
   ModuleOption,
   ModuleScanner,
   OnModuleCreate,
-  OnModuleDestroy,
   OnStart,
   OnStop,
   provideOptionInjector,
