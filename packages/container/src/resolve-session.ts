@@ -31,13 +31,6 @@ export class ResolveSession {
     return proxyInstance.call(fn, self);
   }
 
-  /**
-   * Validate all dependencies between components are met and there is no circular
-   */
-  validate(): void {
-    validateBindings(this.bindingMap);
-  }
-
   public addTemporaryConstantBinding<T>(serviceId: ServiceId<T>, value: T): this {
     this.temporaryBinding.set(serviceId, {
       type: BindingType.CONSTANT,

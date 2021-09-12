@@ -39,7 +39,6 @@ describe('Container', () => {
       paramInjectionMetadata: [{id: '1', index: 0, optional: false, transform: transformer}],
       scope: InjectScope.SINGLETON,
     });
-    container.compile();
 
     const result = container.resolve(Foo);
     expect(result).toBeInstanceOf(Foo);
@@ -55,7 +54,6 @@ describe('Container', () => {
       value,
       id: '1',
     });
-    container.compile();
 
     class Foo {
       constructor(@Inject('1') readonly param: number) {}
@@ -92,8 +90,6 @@ describe('Container', () => {
       scope: InjectScope.SINGLETON,
     });
 
-    container.compile();
-
     const result = container.resolve(Foo);
     expect(result).toBeInstanceOf(Foo);
     expect(result.param).toBe(value);
@@ -123,7 +119,6 @@ describe('Container', () => {
       ],
       scope: InjectScope.SINGLETON,
     });
-    container.compile();
 
     const result = container.resolve(Foo);
     expect(result).toBeInstanceOf(Foo);
@@ -166,7 +161,6 @@ describe('Container', () => {
       ],
       scope: InjectScope.SINGLETON,
     });
-    container.compile();
 
     const result = container.resolve(Bar);
     expect(result.param1).toBeInstanceOf(Foo);
@@ -193,7 +187,6 @@ describe('Container', () => {
         canonicalId: 'canonicalId',
       }),
     ).toThrow(DuplicatedBindingError);
-    container.compile();
     expect(() =>
       container.addBinding({
         type: BindingType.ALIAS,
@@ -221,7 +214,7 @@ describe('Container', () => {
           scope: InjectScope.TRANSIENT,
           constructor: Foo,
         })
-        .compile(),
+        .validate(),
     ).toThrow(InvalidParamBindingError);
   });
 
@@ -247,7 +240,7 @@ describe('Container', () => {
       scope: InjectScope.SINGLETON,
     });
 
-    expect(() => container.compile()).toThrow(CircularDependencyError);
+    expect(() => container.validate()).toThrow(CircularDependencyError);
   });
 
   test('circular alias', () => {
@@ -258,7 +251,7 @@ describe('Container', () => {
       canonicalId: 'foo',
     });
 
-    expect(() => container.compile()).toThrow(CircularDependencyError);
+    expect(() => container.validate()).toThrow(CircularDependencyError);
   });
 
   test('invoke', async () => {
@@ -289,7 +282,6 @@ describe('Container', () => {
       id: 'const2',
       value: value2,
     });
-    container.compile();
     const context = await container.createResolveSession().addTemporaryConstantBinding('temp2', 'temp2');
     context.invoke(Foo, 'method');
     expect(methodSpy).toHaveBeenCalled();
@@ -304,7 +296,6 @@ describe('Container', () => {
       method(@Inject('const2') param1: number, param2: number) {}
     }
     container.add(Foo);
-    container.compile();
     expect(() => container.createResolveSession().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
 
@@ -316,7 +307,7 @@ describe('Container', () => {
 
       method(@Optional() @Inject('const') param1?: number) {}
     }
-    container.add(Foo).compile();
+    container.add(Foo);
 
     container.createResolveSession().invoke(Foo, 'method');
   });
@@ -335,7 +326,6 @@ describe('Container', () => {
     }
 
     container.add(Foo);
-    container.compile();
     const context = container.createResolveSession();
     let err;
     expect(() => {
@@ -404,7 +394,6 @@ describe('Container', () => {
       ],
       scope: InjectScope.SESSION,
     });
-    container.compile();
 
     const root = container.resolve(Root);
     expect(root.param1).toBeInstanceOf(Transient);
@@ -431,7 +420,6 @@ describe('Container', () => {
     const container = new Container();
     container.add(Foo);
     container.add(X);
-    container.compile();
     const x = container.resolve(X);
     const y = container.resolve(X);
     expect(x.foo).toBeInstanceOf(Foo);
@@ -482,7 +470,6 @@ describe('Container', () => {
     container.add(GlobalB);
     container.add(A);
     container.add(B);
-    container.compile();
     expect(container.resolve(A)).toBeInstanceOf(A);
     container.createResolveSession().invoke(B, 'foo');
     expect(stub).toHaveBeenCalledTimes(1);
@@ -502,7 +489,7 @@ describe('Container', () => {
     class ChildB extends ParentB {}
 
     const container = new Container();
-    container.add(ChildA).add(ChildB).compile();
+    container.add(ChildA).add(ChildB);
     expect(container.resolve(ChildA)).toBeInstanceOf(ChildA);
     expect(container.resolve(ChildA)).toBeInstanceOf(ParentA);
     expect(container.resolve(ParentA)).toBeInstanceOf(ParentA);

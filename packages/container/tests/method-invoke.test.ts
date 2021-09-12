@@ -152,8 +152,6 @@ test('Performance test', async () => {
       return Interceptor;
     });
 
-  container.compile();
-
   const methodInvoker = container.createMethodInvoker(Foo, 'bar', interceptors, CustomContext);
   const t = process.hrtime();
   while (N--) {

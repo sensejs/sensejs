@@ -26,7 +26,7 @@ import {compileParamInjectInstruction, internalValidateDependencies} from './uti
 export class ResolveContext extends ResolveSession {}
 
 export class Container {
-  private pendingBindingMap: Map<ServiceId, Binding<any>> = new Map();
+  private validatedBindings: Set<ServiceId> = new Set();
   private bindingMap: Map<ServiceId, Binding<any>> = new Map();
   private compiledInstructionMap: Map<ServiceId, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId, any> = new Map();
@@ -46,7 +46,7 @@ export class Container {
     asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
     ...contextIds: ServiceIds
   ): MethodInvoker<T, K, ServiceIds> {
-    this.compile();
+    this.validate();
     return new MethodInvoker(
       this.bindingMap,
       this.compiledInstructionMap,
@@ -56,13 +56,6 @@ export class Container {
       asyncInterceptProviders,
       ...contextIds,
     );
-  }
-
-  /**
-   * Validate all dependencies between components are met and there is no circular
-   */
-  validate() {
-    new ResolveSession(this.bindingMap, this.compiledInstructionMap, this.singletonCache).validate();
   }
 
   add(ctor: Constructor): this {
@@ -92,10 +85,19 @@ export class Container {
 
   addBinding<T>(binding: Binding<T>): this {
     const id = binding.id;
-    if (this.bindingMap.has(id) || this.pendingBindingMap.has(id)) {
+    if (this.bindingMap.has(id)) {
       throw new DuplicatedBindingError(id);
     }
-    this.pendingBindingMap.set(id, binding);
+    this.bindingMap.set(id, binding);
+    switch (binding.type) {
+      case BindingType.FACTORY:
+        this.compileFactoryBinding(binding);
+        break;
+      case BindingType.INSTANCE:
+        this.compileInstanceBinding(binding);
+        break;
+    }
+
     return this;
   }
 
@@ -103,30 +105,15 @@ export class Container {
     return this.createResolveSession().resolve(serviceId);
   }
 
-  compile() {
-    const validatedSet = new Set(this.bindingMap.keys());
+  validate() {
     const mergedBindingMap = new Map([...this.bindingMap.entries()]);
-    this.pendingBindingMap.forEach((value, key) => mergedBindingMap.set(key, value));
 
-    for (const [, binding] of this.pendingBindingMap) {
-      internalValidateDependencies(binding, mergedBindingMap, [], validatedSet);
-    }
-
-    // Pending bindings are now validated, merge and compile them
-
-    this.pendingBindingMap.forEach((value, key) => {
-      this.bindingMap.set(key, value);
-      switch (value.type) {
-        case BindingType.FACTORY:
-          this.compileFactoryBinding(value);
-          break;
-        case BindingType.INSTANCE:
-          this.compileInstanceBinding(value);
-          break;
+    for (const [id, binding] of this.bindingMap) {
+      if (this.validatedBindings.has(id)) {
+        continue;
       }
-    });
-    this.pendingBindingMap.clear();
-    return this;
+      internalValidateDependencies(binding, mergedBindingMap, [], this.validatedBindings);
+    }
   }
 
   private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
