@@ -51,13 +51,14 @@ export class AsyncMethodInvokeSession<
     bindingMap: Map<ServiceId, Binding<any>>,
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
     globalCache: Map<any, any>,
+    validatedBindings: Set<ServiceId>,
     readonly interceptProviderAndMetadata: [Instruction[], ServiceId[]][],
     private readonly proxyConstructInstructions: Instruction[],
     private readonly targetConstructor: Constructor,
     private readonly targetFunction: Function,
     ...contextIds: ContextIds
   ) {
-    super(bindingMap, compiledInstructionMap, globalCache);
+    super(bindingMap, compiledInstructionMap, globalCache, validatedBindings);
     this.contextIds = contextIds;
   }
 
@@ -103,6 +104,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     readonly bindingMap: Map<ServiceId, Binding<any>>,
     readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
     private globalCache: Map<ServiceId, any>,
+    private validatedSet: Set<ServiceId>,
     private targetConstructor: Constructor<T>,
     private targetMethod: K,
     private interceptors: Constructor<AsyncInterceptProvider<any>>[],
@@ -130,6 +132,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
       this.bindingMap,
       this.compiledInstructionMap,
       this.globalCache,
+      this.validatedSet,
       this.interceptorProviderAndMetadata,
       this.proxyConstructInstructions,
       this.targetConstructor,

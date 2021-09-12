@@ -6,7 +6,7 @@ import {
   ensureValidatedMethodInvokeProxy,
 } from './metadata';
 import {BindingNotFoundError} from './errors';
-import {compileParamInjectInstruction, validateBindings} from './utils';
+import {compileParamInjectInstruction, internalValidateDependencies, validateBindings} from './utils';
 
 function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);
@@ -22,6 +22,7 @@ export class ResolveSession {
     readonly bindingMap: Map<ServiceId, Binding<any>>,
     readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
     readonly globalCache: Map<any, any>,
+    readonly validatedSet: Set<ServiceId>,
   ) {}
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
@@ -148,6 +149,9 @@ export class ResolveSession {
     allowUnbound: boolean,
     allowTemporary: boolean,
   ) {
+    if (!this.validatedSet) {
+      internalValidateDependencies(target, this.bindingMap, [], this.validatedSet);
+    }
     const binding = this.internalGetBinding(target, allowTemporary);
     if (binding) {
       return binding;

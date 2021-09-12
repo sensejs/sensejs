@@ -153,8 +153,9 @@ test('Performance test', async () => {
     });
 
   const methodInvoker = container.createMethodInvoker(Foo, 'bar', interceptors, CustomContext);
-  const t = process.hrtime();
+  let t = process.hrtime();
   while (N--) {
     await methodInvoker.createInvokeSession().invokeTargetMethod(new CustomContext(Foo, 'bar'));
   }
+  t = process.hrtime(t);
 }, 10000);

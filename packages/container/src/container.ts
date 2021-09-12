@@ -33,11 +33,21 @@ export class Container {
 
   /** @deprecated */
   createResolveContext(): ResolveContext {
-    return new ResolveContext(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
+    return new ResolveContext(
+      this.bindingMap,
+      this.compiledInstructionMap,
+      this.singletonCache,
+      this.validatedBindings,
+    );
   }
 
   createResolveSession(): ResolveSession {
-    return new ResolveSession(this.bindingMap, this.compiledInstructionMap, this.singletonCache);
+    return new ResolveSession(
+      this.bindingMap,
+      this.compiledInstructionMap,
+      this.singletonCache,
+      this.validatedBindings,
+    );
   }
 
   createMethodInvoker<T extends {}, K extends keyof T, ServiceIds extends any[] = []>(
@@ -51,6 +61,7 @@ export class Container {
       this.bindingMap,
       this.compiledInstructionMap,
       this.singletonCache,
+      this.validatedBindings,
       targetConstructor,
       targetMethod,
       asyncInterceptProviders,
@@ -106,13 +117,11 @@ export class Container {
   }
 
   validate() {
-    const mergedBindingMap = new Map([...this.bindingMap.entries()]);
-
-    for (const [id, binding] of this.bindingMap) {
+    for (const [id] of this.bindingMap) {
       if (this.validatedBindings.has(id)) {
         continue;
       }
-      internalValidateDependencies(binding, mergedBindingMap, [], this.validatedBindings);
+      internalValidateDependencies(id, this.bindingMap, [], this.validatedBindings);
     }
   }
 

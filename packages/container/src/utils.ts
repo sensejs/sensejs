@@ -14,15 +14,19 @@ export function serviceIdToString(id: ServiceId): string {
  * Find cyclic and unmet dependencies through DFS
  */
 export function internalValidateDependencies(
-  binding: Binding<unknown>,
+  target: ServiceId,
   bindingMap: Map<ServiceId, Binding<any>>,
   visitPath: ServiceId[],
   validatedSet: Set<ServiceId>,
 ): void {
-  const {id} = binding;
-  if (validatedSet.has(binding.id)) {
+  if (validatedSet.has(target)) {
     return;
   }
+  let binding = bindingMap.get(target);
+  if (!binding) {
+    throw new BindingNotFoundError(target);
+  }
+
   switch (binding.type) {
     case BindingType.CONSTANT:
       return;
@@ -35,17 +39,17 @@ export function internalValidateDependencies(
             throw new CircularDependencyError(m.id, visitPath.slice(index));
           }
 
-          const binding = bindingMap.get(m.id);
+          binding = bindingMap.get(m.id);
           if (typeof binding === 'undefined') {
             if (!m.optional) {
               throw new BindingNotFoundError(
                 m.id,
-                `Binding not found for parameters[${m.index}] of "${serviceIdToString(id)}"`,
+                `Binding not found for parameters[${m.index}] of "${serviceIdToString(target)}"`,
               );
             }
             break;
           }
-          internalValidateDependencies(binding, bindingMap, [...visitPath, m.id], validatedSet);
+          internalValidateDependencies(binding.id, bindingMap, [...visitPath, m.id], validatedSet);
         }
       }
       break;
@@ -54,19 +58,15 @@ export function internalValidateDependencies(
       if (index >= 0) {
         throw new CircularDependencyError(binding.canonicalId, visitPath.slice(index));
       }
-      const aliased = bindingMap.get(binding.canonicalId);
-      if (!aliased) {
-        throw new BindingNotFoundError(binding.canonicalId);
-      }
-      internalValidateDependencies(aliased, bindingMap, [...visitPath, binding.canonicalId], validatedSet);
+      internalValidateDependencies(binding.canonicalId, bindingMap, [...visitPath, binding.canonicalId], validatedSet);
     }
   }
-  validatedSet.add(binding.id);
+  validatedSet.add(target);
 }
 
 export function validateBindings(bindingMap: Map<ServiceId, Binding<any>>): void {
   const set = new Set<ServiceId>();
-  bindingMap.forEach((binding) => internalValidateDependencies(binding, bindingMap, [], set));
+  bindingMap.forEach((binding, id) => internalValidateDependencies(id, bindingMap, [], set));
 }
 
 export function compileParamInjectInstruction(
