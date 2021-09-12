@@ -7,7 +7,7 @@ export function serviceIdToString(id: ServiceId): string {
   if (typeof id === 'string' || typeof id === 'symbol') {
     return id.toString();
   }
-  return id.constructor.name;
+  return id.name;
 }
 
 /**
