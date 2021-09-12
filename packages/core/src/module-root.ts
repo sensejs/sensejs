@@ -44,7 +44,6 @@ export class ModuleRoot<T extends {} = {}> {
       value: this.moduleScanner,
       id: ModuleScanner,
     });
-    this.container.compile();
 
     this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, this.moduleInstanceMap);
   }
@@ -90,6 +89,7 @@ export class ModuleRoot<T extends {} = {}> {
 
   public async start(): Promise<void> {
     await ModuleRoot.startModule(this.entryModuleInstance);
+    this.container.validate();
     await this.entryModuleInstance.onBootstrap();
   }
 

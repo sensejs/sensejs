@@ -183,7 +183,6 @@ export class ModuleInstance<T extends {} = {}> {
     this.bindComponents(this.moduleMetadata.components);
     this.bindConstants(this.moduleMetadata.constants);
     this.bindFactories(this.moduleMetadata.factories);
-    this.container.compile();
     this.moduleInstance = this.container.resolve<object>(this.moduleClass);
     const dynamicComponentLoader = new DynamicModuleLoader();
     for (const method of this.moduleMetadata.onModuleCreate) {
@@ -196,7 +195,6 @@ export class ModuleInstance<T extends {} = {}> {
     this.bindDynamicComponents(dynamicComponentLoader.getComponents());
     this.bindDynamicConstants(dynamicComponentLoader.getConstants());
     this.bindDynamicFactories(dynamicComponentLoader.getFactories());
-    this.container.compile();
   }
 
   private async performBootstrap() {
