@@ -116,13 +116,11 @@ export class Container {
     return this.createResolveSession().resolve(serviceId);
   }
 
-  validate() {
+  validate(): this {
     for (const [id] of this.bindingMap) {
-      if (this.validatedBindings.has(id)) {
-        continue;
-      }
       internalValidateDependencies(id, this.bindingMap, [], this.validatedBindings);
     }
+    return this;
   }
 
   private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
