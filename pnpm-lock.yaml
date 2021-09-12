@@ -266,11 +266,11 @@ importers:
   packages/logger:
     specifiers:
       '@sensejs/core': workspace:*
-      colors: ^1.4.0
+      chalk: ^4.1.2
       moment: ^2.29.1
       tslib: ^2.3.1
     dependencies:
-      colors: 1.4.0
+      chalk: 4.1.2
       moment: 2.29.1
       tslib: 2.3.1
     devDependencies:
@@ -4716,11 +4716,6 @@ packages:
 
   /colorette/1.4.0:
     resolution: {integrity: sha512-Y2oEozpomLn7Q3HFP7dpww7AtMJplbM9lGZP6RDfHqmbeRjiwRg4n6VM6j4KLmRke85uWEI7JqF17f3pqdRA0g==}
-
-  /colors/1.4.0:
-    resolution: {integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==}
-    engines: {node: '>=0.1.90'}
-    dev: false
 
   /combine-promises/1.1.0:
     resolution: {integrity: sha512-ZI9jvcLDxqwaXEixOhArm3r7ReIivsXkpbyEWyeOhzz1QS0iSgBPnWvEqvIQtYyamGCYA88gFhmUrs9hrrQ0pg==}

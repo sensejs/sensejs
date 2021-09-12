@@ -1,4 +1,4 @@
-import colors from 'colors/safe';
+import chalk from 'chalk';
 import moment from 'moment';
 import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer';
 import {LogLevel, RawLogData} from './definition';
@@ -7,17 +7,17 @@ import {formatWithOptions} from 'util';
 function logLevelColorMap(level: LogLevel) {
   switch (level) {
     case LogLevel.TRACE:
-      return colors.blue;
+      return chalk.blue;
     case LogLevel.DEBUG:
-      return colors.cyan;
+      return chalk.cyan;
     case LogLevel.INFO:
-      return colors.green;
+      return chalk.green;
     case LogLevel.WARN:
-      return colors.yellow;
+      return chalk.yellow;
     case LogLevel.ERROR:
-      return colors.magenta;
+      return chalk.red;
     case LogLevel.FATAL:
-      return colors.red;
+      return chalk.redBright;
   }
 }
 
@@ -33,11 +33,11 @@ function timestampColoredBySeverity(metadata: RawLogData) {
 }
 
 function boldLogLabel(metadata: RawLogData) {
-  return metadata.label ? colorTextView(colors.bold, metadata.label) : colorTextView(colors.grey, '-');
+  return metadata.label ? colorTextView(chalk.bold.bold, metadata.label) : colorTextView(chalk.grey, '-');
 }
 
 function underlinedTraceId(metadata: RawLogData) {
-  return metadata.traceId ? colorTextView(colors.underline, metadata.traceId) : colorTextView(colors.grey, '-');
+  return metadata.traceId ? colorTextView(chalk.underline, metadata.traceId) : colorTextView(chalk.grey, '-');
 }
 
 export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
@@ -50,7 +50,7 @@ export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
   }
 
   getContentSeparator(rawData: RawLogData): string {
-    return colors.grey(super.getContentSeparator(rawData));
+    return chalk.grey(super.getContentSeparator(rawData));
   }
 
   contentFormatter(...messages: [unknown, ...unknown[]]): string {
