@@ -27,7 +27,7 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
         run: |-
           echo "Building docker image for workspace with NODE_VERSION=${NODE_VERSION}"
-          docker-compose build workspace-test
+          docker-compose build --build-arg=NODE_VERSION=$NODE_VERSION workspace-test
 
       - name: Test
         env:
