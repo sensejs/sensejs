@@ -12,7 +12,7 @@ module.exports = {
     '^.+\\.tsx?$': 'ts-jest',
   },
   coveragePathIgnorePatterns: ['/node_modules/', '/packages/*/lib'],
-  setupFiles: [__dirname+'/jest-setup.js'],
+  setupFiles: [__dirname+'/jest-setup.cjs'],
   resetMocks: true,
   restoreMocks: true,
   globals: {
