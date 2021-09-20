@@ -2,7 +2,7 @@ import {InstanceMethodDecorator, InstanceMethodParamDecorator} from '@sensejs/ut
 import {Component, Inject, InjectionDecorator, Transformer} from '@sensejs/core';
 import {Constructor} from '@sensejs/core';
 import {IncomingHttpHeaders} from 'http';
-import {AsyncInterceptProvider} from '@sensejs/container';
+import {AsyncInterceptProvider, ParamInjectionMetadata} from '@sensejs/container';
 
 export enum HttpMethod {
   GET = 'get',
@@ -232,29 +232,40 @@ function decorateParam(metadata: ParamMappingMetadata): InstanceMethodParamDecor
 
 const noop: Transformer = (x) => x;
 
-export function Path(name: string, transform: Transformer = noop): InjectionDecorator {
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.params[name]),
-  });
+export function Path(name: string, transform: Transformer = noop): InstanceMethodParamDecorator {
+  return (prototype, key, pd) => {
+    Inject(HttpContext, {
+      transform: (ctx: HttpContext) => transform(ctx.request.params[name]),
+    })(prototype, key, pd);
+    decorateParam({type: HttpParamType.PATH, name})(prototype, key, pd);
+  };
 }
 
-export function Body(transform: Transformer = noop): InjectionDecorator {
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.body),
-  });
+export function Body(transform: Transformer = noop): InstanceMethodParamDecorator {
+  return (prototype, key, pd) => {
+    Inject(HttpContext, {
+      transform: (ctx: HttpContext) => transform(ctx.request.body),
+    })(prototype, key, pd);
+    decorateParam({type: HttpParamType.BODY})(prototype, key, pd);
+  };
 }
 
-export function Query(transform: Transformer = noop): InjectionDecorator {
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.query),
-  });
+export function Query(transform: Transformer = noop): InstanceMethodParamDecorator {
+  return (prototype, key, pd) => {
+    Inject(HttpContext, {
+      transform: (ctx: HttpContext) => transform(ctx.request.query),
+    })(prototype, key, pd);
+    decorateParam({type: HttpParamType.QUERY})(prototype, key, pd);
+  };
 }
 
-export function Header(name: string, transform: Transformer = noop): InjectionDecorator {
-  name = name.toLowerCase();
-  return Inject(HttpContext, {
-    transform: (ctx: HttpContext) => transform(ctx.request.headers[name]),
-  });
+export function Header(name: string, transform: Transformer = noop): InstanceMethodParamDecorator {
+  return (prototype, key, pd) => {
+    Inject(HttpContext, {
+      transform: (ctx: HttpContext) => transform(ctx.request.headers[name]),
+    })(prototype, key, pd);
+    decorateParam({type: HttpParamType.HEADER, name})(prototype, key, pd);
+  };
 }
 
 const RequestMappingMetadataStoreKey = Symbol('RequestMappingMetadataStoreKey');
@@ -303,6 +314,9 @@ export function RequestMapping(
       path,
       interceptProviders: option.interceptProviders ?? [],
     });
+    const metadata = ensureMetadataOnMethod(prototype, method, {params: new Map()});
+    metadata.path = path;
+    metadata.method = httpMethod;
   };
 }
 
