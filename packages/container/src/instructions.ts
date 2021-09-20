@@ -1,4 +1,4 @@
-import {Class, InjectScope, ServiceId} from './types';
+import {Class, InjectScope, ServiceId} from './types.js';
 
 export enum InstructionCode {
   PLAN = 'PLAN',

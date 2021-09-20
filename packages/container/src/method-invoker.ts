@@ -7,18 +7,18 @@ import {
   InvokeResult,
   ParamInjectionMetadata,
   ServiceId,
-} from './types';
-import {Instruction, InstructionCode} from './instructions';
+} from './types.js';
+import {Instruction, InstructionCode} from './instructions.js';
 import {
   convertParamInjectionMetadata,
   ensureConstructorParamInjectMetadata,
   ensureValidatedMethodInvokeProxy,
   MethodInvokeProxy,
-} from './metadata';
-import {getInterceptProviderMetadata, Scope, ServiceTypeOf} from './decorator';
-import {ResolveSession} from './resolve-session';
-import {BindingNotFoundError} from './errors';
-import {compileParamInjectInstruction} from './utils';
+} from './metadata.js';
+import {getInterceptProviderMetadata, Scope, ServiceTypeOf} from './decorator.js';
+import {ResolveSession} from './resolve-session.js';
+import {BindingNotFoundError} from './errors.js';
+import {compileParamInjectInstruction} from './utils.js';
 
 function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);

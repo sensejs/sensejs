@@ -1,6 +1,6 @@
 import {Batch, EachBatchPayload} from 'kafkajs';
 import '@sensejs/testing-utility/lib/mock-console';
-import {createModule, Inject, ProcessManager} from '@sensejs/core';
+import {ApplicationRunner, createModule, Inject, ProcessManager} from '@sensejs/core';
 import {BatchSubscribeOption, MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
   BatchedMessageConsumeContext,
@@ -12,7 +12,6 @@ import {
   SubscribeTopic,
 } from '../src';
 import {Subject} from 'rxjs';
-import {ApplicationRunner} from '@sensejs/core/lib/entry-point';
 import {InterceptProviderClass} from '@sensejs/container';
 
 jest.mock('@sensejs/kafkajs-standalone');

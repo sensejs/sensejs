@@ -1,12 +1,21 @@
-import {Binding, BindingType, Class, ConstantBinding, Constructor, InjectScope, InvokeResult, ServiceId} from './types';
-import {BuildInstruction, Instruction, InstructionCode, PlanInstruction, TransformInstruction} from './instructions';
+import {
+  Binding,
+  BindingType,
+  Class,
+  ConstantBinding,
+  Constructor,
+  InjectScope,
+  InvokeResult,
+  ServiceId,
+} from './types.js';
+import {BuildInstruction, Instruction, InstructionCode, PlanInstruction, TransformInstruction} from './instructions.js';
 import {
   convertParamInjectionMetadata,
   ensureConstructorParamInjectMetadata,
   ensureValidatedMethodInvokeProxy,
-} from './metadata';
-import {BindingNotFoundError} from './errors';
-import {compileParamInjectInstruction, internalValidateDependencies, validateBindings} from './utils';
+} from './metadata.js';
+import {BindingNotFoundError} from './errors.js';
+import {compileParamInjectInstruction, internalValidateDependencies} from './utils.js';
 
 function constructorToFactory(constructor: Class) {
   return (...params: any[]) => Reflect.construct(constructor, params);

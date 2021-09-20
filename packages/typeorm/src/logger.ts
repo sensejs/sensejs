@@ -1,5 +1,5 @@
 import {Logger} from '@sensejs/core';
-import {SilentLogger, consoleLogger} from '@sensejs/utility';
+import {SilentLogger} from '@sensejs/utility';
 import {EntityManager, Logger as TypeOrmLogger, QueryRunner} from 'typeorm';
 
 export function createTypeOrmLogger(logger: Logger, migrationLogger: Logger): TypeOrmLogger {
@@ -41,7 +41,6 @@ function getLoggerFromQueryRunner(queryRunner?: QueryRunner): Logger {
   const loggerConfig = loggerWeakMap.get(queryRunner.manager);
   if (!loggerConfig) {
     return silentLogger;
-
   }
   return loggerConfig;
 }

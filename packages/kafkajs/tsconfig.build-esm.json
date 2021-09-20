@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "ESNext",
+    "outDir": "dist-esm/lib",
+    "declarationDir": "dist-esm/lib",
+    "baseUrl": ".",
+    "paths": {}
+  }
+}

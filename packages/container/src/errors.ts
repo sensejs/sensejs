@@ -1,4 +1,4 @@
-import {Constructor, ParamInjectionMetadata, ServiceId} from './types';
+import {Constructor, ParamInjectionMetadata, ServiceId} from './types.js';
 
 export class NoEnoughInjectMetadataError<T extends {}> extends Error {
   constructor(private target: Constructor<T>, private methodKey?: keyof T) {

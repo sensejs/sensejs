@@ -1,10 +1,10 @@
-import {AsyncInterceptProvider, Class, Constructor, InjectScope, ServiceId, Transformer} from './types';
+import {AsyncInterceptProvider, Class, Constructor, InjectScope, ServiceId, Transformer} from './types.js';
 import {
   assignParamInjectMetadata,
   ensureConstructorParamInjectMetadata,
   ensureMethodInvokeProxy,
   setInjectScope,
-} from './metadata';
+} from './metadata.js';
 
 export interface InjectionDecorator {
   <T extends {}>(prototype: T, name: keyof T, index: number): void;

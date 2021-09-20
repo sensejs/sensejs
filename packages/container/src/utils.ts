@@ -1,7 +1,7 @@
-import {Binding, BindingType, ParamInjectionMetadata, ServiceId} from './types';
-import {BindingNotFoundError, CircularDependencyError} from './errors';
-import {Instruction, InstructionCode} from './instructions';
-import {ensureValidatedParamInjectMetadata} from './metadata';
+import {Binding, BindingType, ParamInjectionMetadata, ServiceId} from './types.js';
+import {BindingNotFoundError, CircularDependencyError} from './errors.js';
+import {Instruction, InstructionCode} from './instructions.js';
+import {ensureValidatedParamInjectMetadata} from './metadata.js';
 
 export function serviceIdToString(id: ServiceId): string {
   if (typeof id === 'string' || typeof id === 'symbol') {

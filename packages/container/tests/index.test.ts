@@ -11,7 +11,8 @@ import {
   NoEnoughInjectMetadataError,
   Optional,
   Scope,
-} from '../src';
+} from '../src/index.js';
+import {jest} from '@jest/globals';
 
 function untransformed(input: any) {
   return input;

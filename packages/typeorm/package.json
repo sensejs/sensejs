@@ -3,16 +3,29 @@
   "version": "0.9.0-alpha.3",
   "description": "",
   "files": [
-    "lib/**/*.d.ts",
-    "lib/**/*.js",
-    "lib/**/*.js.map",
+    "dist-cjs/package.json",
+    "dist-cjs/lib/**/*.ts",
+    "dist-cjs/lib/**/*.js",
+    "dist-cjs/lib/**/*.map",
+    "dist-esm/package.json",
+    "dist-esm/lib/**/*.ts",
+    "dist-esm/lib/**/*.js",
+    "dist-esm/lib/**/*.map",
     "src/**/*.ts",
     "README.md"
   ],
-  "types": "lib/index.d.ts",
-  "main": "lib/index.js",
+  "type": "module",
+  "types": "./dist-esm/lib/index.js",
+  "main": "./dist-esm/lib/index.js",
+  "module": "./dist-esm/lib/index.js",
+  "exports": {
+    "import": "./dist-esm/lib/index.js",
+    "require": "./dist-cjs/lib/index.js"
+  },
   "scripts": {
-    "prepare": "tsc -p tsconfig.build.json",
+    "test": "jest",
+    "build": "tsc -p tsconfig.build-cjs.json && tsc -p tsconfig.build-esm.json",
+    "prepare": "npm run clean && npm run build",
     "clean": "rm -rf ./lib"
   },
   "publishConfig": {

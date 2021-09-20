@@ -1,3 +1,4 @@
+const path = require('path');
 const performEndToEndTest = typeof process.env.END_TO_END_TEST === 'string';
 
 const testRegex = performEndToEndTest
@@ -11,14 +12,17 @@ module.exports = {
   transform: {
     '^.+\\.tsx?$': 'ts-jest',
   },
+  extensionsToTreatAsEsm: ['.ts'],
   coveragePathIgnorePatterns: ['/node_modules/', '/packages/*/lib'],
   setupFiles: [__dirname+'/jest-setup.cjs'],
+  resolver: path.resolve(__dirname, './jest-resolver.cjs'),
   resetMocks: true,
   restoreMocks: true,
   globals: {
     'ts-jest': {
-      tsconfig: '<rootDir>/tests/tsconfig.json',
-      diagnostics: 'pretty'
+      tsconfig: '<rootDir>/tsconfig.test.json',
+      diagnostics: 'pretty',
+      useESM: true
     },
   },
 };

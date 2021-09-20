@@ -206,8 +206,11 @@ fabric.properties
 .vscode
 
 packages/**/lib/
+!packages/**/lib/**/package.json
 examples/**/lib/
 tools/**/lib/
 temp/
 # typeorm test use temp.db for sqlite3 driver
 temp.*
+
+

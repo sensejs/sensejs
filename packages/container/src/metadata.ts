@@ -1,5 +1,5 @@
-import {Class, Constructor, ParamInjectionMetadata, InjectScope} from './types';
-import {InvalidParamBindingError, NoEnoughInjectMetadataError} from './errors';
+import {Class, Constructor, ParamInjectionMetadata, InjectScope} from './types.js';
+import {InvalidParamBindingError, NoEnoughInjectMetadataError} from './errors.js';
 
 export interface MethodInvokeMetadata {
   proxy: Map<keyof any, Constructor<MethodInvokeProxy>>;

@@ -1,9 +1,10 @@
 import {attachLoggerToEntityManager, createTypeOrmLogger} from '../src/logger';
-import {Logger} from '@sensejs/core';
+// @ts-ignore
+import core from '@sensejs/core';
 import {EntityManager, QueryRunner} from 'typeorm';
 import '@sensejs/testing-utility/lib/mock-console';
 
-function mockLogger(): Logger {
+function mockLogger(): core.Logger {
   return {
     log: jest.fn(),
     info: jest.fn(),
@@ -20,7 +21,9 @@ function randomString() {
 }
 
 describe('createTypeOrmLogger', () => {
-  const logger = mockLogger(), migrationLogger = mockLogger(), queryLogger = mockLogger();
+  const logger = mockLogger(),
+    migrationLogger = mockLogger(),
+    queryLogger = mockLogger();
   const ormLogger = createTypeOrmLogger(logger, migrationLogger);
   afterEach(() => {
     jest.clearAllMocks();
@@ -66,5 +69,4 @@ describe('createTypeOrmLogger', () => {
     ormLogger.logQuerySlow(Math.random(), query, undefined, mockQueryRunner);
     expect(queryLogger.warn).toHaveBeenCalled();
   });
-
 });

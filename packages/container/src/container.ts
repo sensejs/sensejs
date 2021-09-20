@@ -7,18 +7,18 @@ import {
   InjectScope,
   InstanceBinding,
   ServiceId,
-} from './types';
-import {DuplicatedBindingError} from './errors';
-import {Instruction, InstructionCode} from './instructions';
+} from './types.js';
+import {DuplicatedBindingError} from './errors.js';
+import {Instruction, InstructionCode} from './instructions.js';
 import {
   convertParamInjectionMetadata,
   ensureConstructorParamInjectMetadata,
   getConstructorParamInjectMetadata,
   getInjectScope,
-} from './metadata';
-import {MethodInvoker} from './method-invoker';
-import {ResolveSession} from './resolve-session';
-import {compileParamInjectInstruction, internalValidateDependencies} from './utils';
+} from './metadata.js';
+import {MethodInvoker} from './method-invoker.js';
+import {ResolveSession} from './resolve-session.js';
+import {compileParamInjectInstruction, internalValidateDependencies} from './utils.js';
 
 /**
  * @deprecated
