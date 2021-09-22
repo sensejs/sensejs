@@ -3,7 +3,7 @@ import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
 import {Controller, GET, Query} from '@sensejs/http-common';
-import {createHttpModule, KoaHttpApplicationBuilder} from '../src';
+import {createHttpModule, KoaHttpApplicationBuilder} from '../src/index.js';
 import {InterceptProviderClass} from '@sensejs/container';
 
 test('HttpModule', async () => {

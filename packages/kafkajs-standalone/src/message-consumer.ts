@@ -7,10 +7,9 @@ import {
   KafkaMessage as KafkaJsMessage,
   RetryOptions,
 } from 'kafkajs';
-import {WorkerController} from './worker-synchronizer';
-import {createKafkaClient} from './create-client';
-import {KafkaBatchConsumeMessageParam, KafkaClientOption, KafkaReceivedMessage} from './types';
-import {Observable} from 'rxjs';
+import {WorkerController} from './worker-synchronizer.js';
+import {createKafkaClient} from './create-client.js';
+import {KafkaBatchConsumeMessageParam, KafkaClientOption, KafkaReceivedMessage} from './types.js';
 
 export interface KafkaFetchOption extends Exclude<ConsumerConfig, 'retry'> {
   retry?: RetryOptions;

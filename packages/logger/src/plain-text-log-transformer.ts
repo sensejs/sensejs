@@ -1,5 +1,5 @@
-import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer';
-import {LogLevel, RawLogData} from './definition';
+import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer.js';
+import {LogLevel, RawLogData} from './definition.js';
 import {format} from 'util';
 
 export const LOG_LEVEL_TAG = {

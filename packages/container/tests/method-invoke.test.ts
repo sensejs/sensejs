@@ -1,4 +1,4 @@
-import {BindingType, Constructor, Container, Inject, Injectable, InterceptProviderClass} from '../src';
+import {BindingType, Constructor, Container, Inject, Injectable, InterceptProviderClass} from '../src/index.js';
 import {jest} from '@jest/globals';
 
 class CustomContext<T extends {} = any, K extends keyof T = any> {

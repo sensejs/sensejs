@@ -1,8 +1,9 @@
 import '@sensejs/testing-utility/lib/mock-console';
+import {jest} from '@jest/globals';
 import {Constructor, Inject} from '@sensejs/core';
 import {AsyncInterceptProvider, Container, InterceptProviderClass} from '@sensejs/container';
 import supertest from 'supertest';
-import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src';
+import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/index.js';
 import {
   Query,
   Path,
@@ -135,8 +136,8 @@ describe('KoaHttpApplicationBuilder', () => {
       symbolB = Symbol('B'),
       symbolC = Symbol('C');
 
-    const InterceptorA = makeMockInterceptor(stubForA, symbolA);
-    const InterceptorB = makeMockInterceptor(stubForB, symbolB);
+    const InterceptorA = makeMockInterceptor(stubForA as any, symbolA);
+    const InterceptorB = makeMockInterceptor(stubForB as any, symbolB);
     // const InterceptorC = makeMockInterceptor(stubForC, symbolC);
 
     @Controller('/', {

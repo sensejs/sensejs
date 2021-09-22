@@ -1,5 +1,5 @@
-import {LogLevel, LogTransport} from './definition';
-import {StreamLogTransport} from './stream-log-transport';
+import {LogLevel, LogTransport} from './definition.js';
+import {StreamLogTransport} from './stream-log-transport.js';
 import {Logger, LoggerBuilder} from '@sensejs/core';
 
 const MODULE_NAME_RULE = /^[^<>{}*'"`]{0,80}$/;

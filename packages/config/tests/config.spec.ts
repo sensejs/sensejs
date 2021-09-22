@@ -1,5 +1,6 @@
+import {jest} from '@jest/globals';
 import {ModuleClass, ModuleRoot, Inject} from '@sensejs/core';
-import {createConfigModule} from '../src';
+import {createConfigModule} from '../src/index.js';
 
 describe('ConfigModule', () => {
   test('circurlar dependency', () => {

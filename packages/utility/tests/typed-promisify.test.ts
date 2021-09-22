@@ -1,4 +1,10 @@
-import {aggregatedPromisifiedCall, aggregatedPromisify, NodeCallback, promisifiedCall, promisify} from '../src';
+import {
+  aggregatedPromisifiedCall,
+  aggregatedPromisify,
+  NodeCallback,
+  promisifiedCall,
+  promisify,
+} from '../src/index.js';
 
 function f1(cb: NodeCallback<number>) {
   return cb(null, 42);

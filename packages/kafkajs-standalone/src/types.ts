@@ -1,6 +1,6 @@
 import * as k from 'kafkajs';
-import {CompressionTypes, LogEntry, logLevel, Message, Offsets, RecordMetadata, TopicMessages} from 'kafkajs';
-import {KafkaLogAdapterOption} from './logging';
+import {LogEntry, logLevel, Message, Offsets, RecordMetadata, TopicMessages} from 'kafkajs';
+import {KafkaLogAdapterOption} from './logging.js';
 import {Logger} from '@sensejs/utility';
 
 export interface KafkaConnectOption extends Omit<k.KafkaConfig, 'logLevel' | 'logCreator' | 'brokers'> {

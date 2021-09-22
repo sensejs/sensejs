@@ -28,7 +28,7 @@ import {
   BatchedMessageConsumeContext,
   MessageConsumeContext,
   SimpleMessageConsumeContext,
-} from './message-consume-context';
+} from './message-consume-context.js';
 import lodash from 'lodash';
 import {
   getSubscribeControllerMetadata,
@@ -36,7 +36,7 @@ import {
   SubscribeControllerMetadata,
   SubscribeTopicMetadata,
   SubscribeTopicOption,
-} from './consumer-decorators';
+} from './consumer-decorators.js';
 import {KafkaLogAdapterOption} from '@sensejs/kafkajs-standalone/src/logging';
 
 export interface ConfigurableMessageConsumerOption extends Omit<MessageConsumerOption, 'logOption'> {

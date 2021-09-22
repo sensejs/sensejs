@@ -1,5 +1,5 @@
 import {LogEntry, logLevel} from 'kafkajs';
-import {KafkaLogOption} from './types';
+import {KafkaLogOption} from './types.js';
 import {Logger} from '@sensejs/utility';
 
 export type KafkaLogLevel = 'NOTHING' | 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';

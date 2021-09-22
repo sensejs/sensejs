@@ -1,7 +1,7 @@
 import {AsyncInterceptProvider, Container} from '@sensejs/container';
 import * as http from 'http';
 import {promisify} from 'util';
-import {KoaHttpApplicationBuilder} from './http-koa-integration';
+import {KoaHttpApplicationBuilder} from './http-koa-integration.js';
 import {
   Constructor,
   createModule,

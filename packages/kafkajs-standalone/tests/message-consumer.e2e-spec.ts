@@ -1,5 +1,5 @@
 import '@sensejs/testing-utility/lib/mock-console';
-import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src';
+import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src/index.js';
 import config from 'config';
 
 async function prepareConsumeAndTopic(groupId: string, topic: string, message?: string) {

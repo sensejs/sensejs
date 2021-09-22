@@ -1,4 +1,5 @@
-import {attachLoggerToEntityManager, createTypeOrmLogger} from '../src/logger';
+import {jest} from '@jest/globals';
+import {attachLoggerToEntityManager, createTypeOrmLogger} from '../src/logger.js';
 // @ts-ignore
 import core from '@sensejs/core';
 import {EntityManager, QueryRunner} from 'typeorm';

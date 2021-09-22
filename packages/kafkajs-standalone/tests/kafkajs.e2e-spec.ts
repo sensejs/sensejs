@@ -1,5 +1,6 @@
+import {jest} from '@jest/globals';
 import '@sensejs/testing-utility/lib/mock-console';
-import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src';
+import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src/index.js';
 import {Subject} from 'rxjs';
 import config from 'config';
 

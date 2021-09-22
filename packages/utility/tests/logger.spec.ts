@@ -1,5 +1,5 @@
 import '@sensejs/testing-utility/lib/mock-console';
-import {consoleLogger as logger} from '../src';
+import {consoleLogger as logger} from '../src/index.js';
 
 test('ConsoleLogger', () => {
   logger.fatal('fatal');

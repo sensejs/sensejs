@@ -1,6 +1,6 @@
 // tslint:disable:no-console
 import '@sensejs/testing-utility/lib/mock-console';
-import {createLogOption} from '../src/logging';
+import {createLogOption} from '../src/logging.js';
 import {consoleLogger} from '@sensejs/utility';
 
 const fixture = {

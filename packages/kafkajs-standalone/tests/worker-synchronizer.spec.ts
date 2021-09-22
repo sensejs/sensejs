@@ -1,13 +1,12 @@
-import {WorkerController} from '../src';
+import {jest} from '@jest/globals';
+import {WorkerController} from '../src/index.js';
 import {Subject} from 'rxjs';
 
 describe('WorkerSynchronization', () => {
-
   test('no synchronization', async () => {
-
     const controller = new WorkerController();
     const worker = controller.createSynchronizer();
-    const stub = jest.fn();
+    const stub = jest.fn(async () => void 0);
     await worker.checkSynchronized(stub);
     worker.detach();
     expect(stub).not.toHaveBeenCalled();
@@ -15,14 +14,14 @@ describe('WorkerSynchronization', () => {
 
   test('no worker', async () => {
     const controller = new WorkerController();
-    const stub = jest.fn().mockResolvedValue(true);
-    await controller.synchronize(stub);
+    const stub = jest.fn(async () => void 0) as () => Promise<void>;
+    controller.synchronize(stub);
     expect(stub).toHaveBeenCalledTimes(1);
 
     const worker = controller.createSynchronizer();
     await worker.checkSynchronized(stub);
     worker.detach();
-    await controller.synchronize(stub);
+    controller.synchronize(stub);
     expect(stub).toHaveBeenCalledTimes(2);
   });
 

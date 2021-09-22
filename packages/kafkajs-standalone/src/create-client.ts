@@ -1,7 +1,7 @@
 import {Kafka} from 'kafkajs';
-import {KafkaClientOption} from './types';
+import {KafkaClientOption} from './types.js';
 import {consoleLogger} from '@sensejs/utility';
-import {createLogOption} from './logging';
+import {createLogOption} from './logging.js';
 
 export function createKafkaClient(clientOption: KafkaClientOption): Kafka {
   const {

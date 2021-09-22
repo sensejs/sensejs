@@ -11,7 +11,7 @@ import {
   POST,
   PUT,
   Query,
-} from '../src';
+} from '../src/index.js';
 
 describe('Http annotations', () => {
   test('metadata', () => {

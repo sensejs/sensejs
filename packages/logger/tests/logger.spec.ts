@@ -1,10 +1,11 @@
+import {jest} from '@jest/globals';
 import {
   ColorTtyTextLogTransformer,
   LogLevel,
   PlainTextLogTransformer,
   SenseLoggerBuilder,
   StreamLogTransport,
-} from '../src';
+} from '../src/index.js';
 import {Writable} from 'stream';
 
 class MockLogTransport extends StreamLogTransport {
@@ -80,10 +81,7 @@ describe('Logger', () => {
 
     // Change both module name and trace id
     newModuleName = `module_${Date.now()}`;
-    logger = loggerFactory
-      .setTraceId(newTraceId)
-      .setLabel(newModuleName)
-      .build();
+    logger = loggerFactory.setTraceId(newTraceId).setLabel(newModuleName).build();
     logger.log('...');
     assertTransportModuleAndTranceID(newModuleName, newTraceId);
 
@@ -145,7 +143,7 @@ describe('Logger', () => {
   describe('StreamLogTransport', () => {
     test('log level filter', async () => {
       const levels = [LogLevel.FATAL, LogLevel.ERROR, LogLevel.WARN];
-      const mockWriter = jest.fn((chunk, encoding, callback) => {
+      const mockWriter = jest.fn((chunk, encoding, callback: any) => {
         setImmediate(callback);
       });
       const mockOutput = new Writable({
@@ -173,7 +171,7 @@ describe('Logger', () => {
 
     test('streaming', async () => {
       const levels = [LogLevel.ERROR];
-      const mockWriter = jest.fn((chunk, encoding, callback) => {
+      const mockWriter = jest.fn((chunk, encoding, callback: any) => {
         setImmediate(callback);
       });
       const mockOutput = new Writable({

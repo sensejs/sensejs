@@ -1,5 +1,4 @@
 import {
-  Component,
   Constructor,
   createModule,
   DynamicModuleLoader,
@@ -14,11 +13,11 @@ import {
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {AsyncInterceptProvider, BindingType, Container, InterceptProviderClass} from '@sensejs/container';
+import {AsyncInterceptProvider, Container, InterceptProviderClass} from '@sensejs/container';
 import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
-import {attachLoggerToEntityManager, createTypeOrmLogger} from './logger';
+import {attachLoggerToEntityManager, createTypeOrmLogger} from './logger.js';
 
-export {attachLoggerToEntityManager} from './logger';
+export {attachLoggerToEntityManager} from './logger.js';
 
 export interface TypeOrmModuleOption extends ModuleOption {
   typeOrmOption?: Partial<ConnectionOptions>;

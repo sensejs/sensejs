@@ -1,4 +1,4 @@
-import '../src';
+import '../src/index.js';
 import {CompressionTypes, Kafka} from 'kafkajs';
 import config from 'config';
 

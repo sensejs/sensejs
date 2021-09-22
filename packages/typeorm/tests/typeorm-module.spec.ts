@@ -1,3 +1,4 @@
+import {jest} from '@jest/globals';
 import {Component, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
 import {Container} from '@sensejs/container';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
@@ -8,7 +9,7 @@ import {
   InjectRepository,
   InjectTreeRepository,
   Transactional,
-} from '../src';
+} from '../src/index.js';
 import '@sensejs/testing-utility/lib/mock-console';
 
 describe('InjectRepository', () => {

@@ -1,4 +1,4 @@
-import {Decorator, DecoratorBuilder} from '../src';
+import {Decorator, DecoratorBuilder} from '../src/index.js';
 
 function noop() {}
 

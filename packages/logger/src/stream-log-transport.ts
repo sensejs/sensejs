@@ -1,6 +1,6 @@
-import {LogLevel, LogTransformer, LogTransport, RawLogData} from './definition';
-import {ColorTtyTextLogTransformer} from './color-tty-text-log-transformer';
-import {PlainTextLogTransformer} from './plain-text-log-transformer';
+import {LogLevel, LogTransformer, LogTransport, RawLogData} from './definition.js';
+import {ColorTtyTextLogTransformer} from './color-tty-text-log-transformer.js';
+import {PlainTextLogTransformer} from './plain-text-log-transformer.js';
 
 function checkIsTty(writableStream: NodeJS.WritableStream): boolean {
   const ws = writableStream as NodeJS.WriteStream;

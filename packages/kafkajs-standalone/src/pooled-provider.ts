@@ -1,9 +1,9 @@
-import {MessageProducerOption, MessageProducerProvider} from './types';
+import {MessageProducerOption, MessageProducerProvider} from './types.js';
 import {Kafka, Producer} from 'kafkajs';
-import {SimpleKafkaJsMessageProducer} from './simple-message-producer';
-import {KafkaJsTransactionalMessageProducer} from './transactional-message-producer';
+import {SimpleKafkaJsMessageProducer} from './simple-message-producer.js';
+import {KafkaJsTransactionalMessageProducer} from './transactional-message-producer.js';
 import {Pool, PoolConfiguration} from 'lightning-pool';
-import {createKafkaClient} from './create-client';
+import {createKafkaClient} from './create-client.js';
 
 export interface PoolOption {
   min?: number;

@@ -1,6 +1,6 @@
-import {validateBindings} from '../src/utils';
-import {Binding, BindingType, InjectScope, ServiceId} from '../src/types';
-import {BindingNotFoundError, CircularDependencyError} from '../src';
+import {validateBindings} from '../src/utils.js';
+import {Binding, BindingType, InjectScope, ServiceId} from '../src/types.js';
+import {BindingNotFoundError, CircularDependencyError} from '../src/index.js';
 
 describe('validateBinding', () => {
   class A {}

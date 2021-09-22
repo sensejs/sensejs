@@ -1,9 +1,11 @@
-import {KafkaSendOption, TransactionalMessageProducer} from './types';
+import {KafkaSendOption, TransactionalMessageProducer} from './types.js';
 import {Offsets, Producer, Transaction} from 'kafkajs';
-import {BaseKafkaJsMessageProducer} from './base-message-producer';
+import {BaseKafkaJsMessageProducer} from './base-message-producer.js';
 
-export class KafkaJsTransactionalMessageProducer extends BaseKafkaJsMessageProducer
-  implements TransactionalMessageProducer {
+export class KafkaJsTransactionalMessageProducer
+  extends BaseKafkaJsMessageProducer
+  implements TransactionalMessageProducer
+{
   private tx?: Transaction = undefined;
   constructor(option: KafkaSendOption, private producer: Producer, onRelease: (e?: Error) => Promise<void>) {
     super(option, onRelease);

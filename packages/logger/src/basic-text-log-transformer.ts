@@ -1,4 +1,4 @@
-import {LogTransformer, RawLogData} from './definition';
+import {LogTransformer, RawLogData} from './definition.js';
 
 export type MetadataView = (metadata: RawLogData) => {text: string; length: number};
 

@@ -1,7 +1,7 @@
 import config from 'config';
-import {SimpleKafkaJsProducerProvider} from '../src/simple-provider';
-import {PooledKafkaJsProducerProvider} from '../src/pooled-provider';
-import {BaseKafkaJsMessageProducer} from '../src/base-message-producer';
+import {SimpleKafkaJsProducerProvider} from '../src/simple-provider.js';
+import {PooledKafkaJsProducerProvider} from '../src/pooled-provider.js';
+import {BaseKafkaJsMessageProducer} from '../src/base-message-producer.js';
 
 async function testProducer(producer: BaseKafkaJsMessageProducer) {
   await producer.sendMessage('foo', {value: 'bar'});

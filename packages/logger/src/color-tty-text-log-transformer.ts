@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import moment from 'moment';
-import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer';
-import {LogLevel, RawLogData} from './definition';
+import {BasicTextLogTransformer, MetadataView} from './basic-text-log-transformer.js';
+import {LogLevel, RawLogData} from './definition.js';
 import {formatWithOptions} from 'util';
 
 function logLevelColorMap(level: LogLevel) {
