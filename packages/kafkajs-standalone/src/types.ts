@@ -1,4 +1,4 @@
-import * as k from 'kafkajs';
+import k from 'kafkajs';
 import {LogEntry, logLevel, Message, Offsets, RecordMetadata, TopicMessages} from 'kafkajs';
 import {KafkaLogAdapterOption} from './logging.js';
 import {Logger} from '@sensejs/utility';

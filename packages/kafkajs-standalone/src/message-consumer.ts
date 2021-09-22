@@ -1,18 +1,10 @@
-import {
-  Consumer,
-  ConsumerConfig,
-  EachBatchPayload,
-  Kafka,
-  KafkaJSError,
-  KafkaMessage as KafkaJsMessage,
-  RetryOptions,
-} from 'kafkajs';
+import kafkajs from 'kafkajs';
 import {WorkerController} from './worker-synchronizer.js';
 import {createKafkaClient} from './create-client.js';
 import {KafkaBatchConsumeMessageParam, KafkaClientOption, KafkaReceivedMessage} from './types.js';
 
-export interface KafkaFetchOption extends Exclude<ConsumerConfig, 'retry'> {
-  retry?: RetryOptions;
+export interface KafkaFetchOption extends Exclude<kafkajs.ConsumerConfig, 'retry'> {
+  retry?: kafkajs.RetryOptions;
 }
 
 export interface KafkaCommitOption {
@@ -56,8 +48,8 @@ export interface BatchSubscribeOption {
 type ConsumeOption = SimpleConsumeOption | BatchConsumeOption;
 
 export class MessageConsumer {
-  private client: Kafka;
-  private consumer: Consumer;
+  private client: kafkajs.Kafka;
+  private consumer: kafkajs.Consumer;
   private consumeOptions: Map<string, ConsumeOption> = new Map();
   private crashPromise?: Promise<void>;
   private runPromise?: Promise<unknown>;
@@ -161,7 +153,7 @@ export class MessageConsumer {
     }
   }
 
-  private async eachBatch(payload: EachBatchPayload) {
+  private async eachBatch(payload: kafkajs.EachBatchPayload) {
     const {topic, partition} = payload.batch;
     const consumeOption = this.consumeOptions.get(topic);
     if (!consumeOption) {
@@ -190,7 +182,7 @@ export class MessageConsumer {
     };
 
     await this.processBatch(
-      async (message: KafkaJsMessage) => {
+      async (message: kafkajs.KafkaMessage) => {
         await consumer({topic, partition, ...message});
         payload.resolveOffset(message.offset);
         await payload.commitOffsetsIfNecessary();
@@ -203,11 +195,11 @@ export class MessageConsumer {
   }
 
   private async processBatch(
-    consumer: (message: KafkaJsMessage) => Promise<void>,
+    consumer: (message: kafkajs.KafkaMessage) => Promise<void>,
     heartbeat: () => Promise<void>,
     resolveOffset: (offset: string) => void,
     commitOffset: (forced?: boolean) => Promise<void>,
-    messages: KafkaJsMessage[],
+    messages: kafkajs.KafkaMessage[],
   ) {
     const synchronizer = this.workerController.createSynchronizer(false);
     try {

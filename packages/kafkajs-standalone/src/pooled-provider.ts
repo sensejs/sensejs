@@ -1,5 +1,5 @@
 import {MessageProducerOption, MessageProducerProvider} from './types.js';
-import {Kafka, Producer} from 'kafkajs';
+import kafka from 'kafkajs';
 import {SimpleKafkaJsMessageProducer} from './simple-message-producer.js';
 import {KafkaJsTransactionalMessageProducer} from './transactional-message-producer.js';
 import {Pool, PoolConfiguration} from 'lightning-pool';
@@ -17,13 +17,13 @@ export interface PooledMessageProducerOption extends MessageProducerOption {
 }
 
 export class PooledKafkaJsProducerProvider extends MessageProducerProvider {
-  private pool?: Pool<Producer>;
-  private client: Kafka;
+  private pool?: Pool<kafka.Producer>;
+  private client: kafka.Kafka;
   /**
    * This map will store each pool by
    * For Transactional producer, since the transaction id must be unique,
    */
-  private txPoolMap: Map<string, Pool<Producer>> = new Map();
+  private txPoolMap: Map<string, Pool<kafka.Producer>> = new Map();
   private txPoolOption: PoolConfiguration;
   private allResourcesDrained = Promise.resolve();
 
@@ -39,14 +39,14 @@ export class PooledKafkaJsProducerProvider extends MessageProducerProvider {
       idleTimeoutMillis,
       maxQueue: maxWaitingClients,
     };
-    this.pool = new Pool<Producer>(
+    this.pool = new Pool<kafka.Producer>(
       {
-        create: async (): Promise<Producer> => {
+        create: async (): Promise<kafka.Producer> => {
           const producer = this.client.producer(this.option.producerOption);
           await producer.connect();
           return producer;
         },
-        destroy: async (client: Producer): Promise<void> => {
+        destroy: async (client: kafka.Producer): Promise<void> => {
           await client.disconnect();
         },
         reset: async () => {},
@@ -83,9 +83,9 @@ export class PooledKafkaJsProducerProvider extends MessageProducerProvider {
       maxInFlightRequests: 1,
       idempotent: true,
     });
-    const pool = new Pool<Producer>(
+    const pool = new Pool<kafka.Producer>(
       {
-        create: async (): Promise<Producer> => {
+        create: async (): Promise<kafka.Producer> => {
           await producer.connect();
           return producer;
         },
@@ -111,7 +111,7 @@ export class PooledKafkaJsProducerProvider extends MessageProducerProvider {
     return this.createTxPool(transactionalId);
   }
 
-  private checkReleased(): Pool<Producer> {
+  private checkReleased(): Pool<kafka.Producer> {
     if (!this.pool) {
       throw new Error('Pool has been destroyed');
     }

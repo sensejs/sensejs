@@ -20,7 +20,6 @@ MockKafka.prototype.admin = jest.fn();
 MockKafka.prototype.consumer = jest.fn();
 
 jest.mock('kafkajs', () => {
-  console.log('returning mocked kafkajs');
   return {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     Kafka: MockKafka,

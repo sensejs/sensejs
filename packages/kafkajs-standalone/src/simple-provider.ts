@@ -1,12 +1,12 @@
 import {SimpleKafkaJsMessageProducer} from './simple-message-producer.js';
-import {Kafka} from 'kafkajs';
+import kafkajs from 'kafkajs';
 import {KafkaJsTransactionalMessageProducer} from './transactional-message-producer.js';
 import {MessageProducerOption, MessageProducerProvider} from './types.js';
 import {createKafkaClient} from './create-client.js';
 
 export class SimpleKafkaJsProducerProvider extends MessageProducerProvider {
   private allProducerClosed: Promise<any> = Promise.resolve();
-  private client: Kafka;
+  private client: kafkajs.Kafka;
 
   constructor(private option: MessageProducerOption) {
     super();

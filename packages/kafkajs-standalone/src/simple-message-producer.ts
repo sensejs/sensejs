@@ -1,4 +1,4 @@
-import {Sender} from 'kafkajs';
+import type {Sender} from 'kafkajs';
 import {KafkaSendOption} from './types.js';
 import {BaseKafkaJsMessageProducer} from './base-message-producer.js';
 

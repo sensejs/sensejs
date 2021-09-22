@@ -1,5 +1,5 @@
 import {KafkaSendOption, TransactionalMessageProducer} from './types.js';
-import {Offsets, Producer, Transaction} from 'kafkajs';
+import type {Offsets, Producer, Transaction} from 'kafkajs';
 import {BaseKafkaJsMessageProducer} from './base-message-producer.js';
 
 export class KafkaJsTransactionalMessageProducer

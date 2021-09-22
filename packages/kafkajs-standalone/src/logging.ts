@@ -1,4 +1,4 @@
-import {LogEntry, logLevel} from 'kafkajs';
+import kafkajs from 'kafkajs';
 import {KafkaLogOption} from './types.js';
 import {Logger} from '@sensejs/utility';
 
@@ -8,17 +8,17 @@ export interface KafkaLogAdapterOption {
   level?: KafkaLogLevel;
 }
 
-function adaptLogLevel(level: logLevel) {
+function adaptLogLevel(level: kafkajs.logLevel) {
   switch (level) {
-    case logLevel.ERROR:
+    case kafkajs.logLevel.ERROR:
       return 'error';
-    case logLevel.WARN:
+    case kafkajs.logLevel.WARN:
       return 'warn';
-    case logLevel.INFO:
+    case kafkajs.logLevel.INFO:
       return 'info';
-    case logLevel.DEBUG:
+    case kafkajs.logLevel.DEBUG:
       return 'debug';
-    case logLevel.NOTHING:
+    case kafkajs.logLevel.NOTHING:
     default:
       return '';
   }
@@ -27,10 +27,10 @@ function adaptLogLevel(level: logLevel) {
 export function createLogOption(logger: Logger, option: KafkaLogAdapterOption = {}): Required<KafkaLogOption> {
   const {level: desiredLevel = 'INFO'} = option;
   return {
-    level: logLevel[desiredLevel],
+    level: kafkajs.logLevel[desiredLevel],
     logCreator: () => {
-      return (logEntry: LogEntry) => {
-        if (logLevel[desiredLevel] >= logEntry.level) {
+      return (logEntry: kafkajs.LogEntry) => {
+        if (kafkajs.logLevel[desiredLevel] >= logEntry.level) {
           const {timestamp, message, ...rest} = logEntry.log;
           const level = adaptLogLevel(logEntry.level);
           if (level) {

@@ -1,6 +1,6 @@
 import {createModule, Inject, ModuleClass, ModuleRoot, uuidV1} from '@sensejs/core';
 import config from 'config';
-import {createPooledProducerModule, createSimpleProducerModule} from '../src/producer-provider-module';
+import {createPooledProducerModule, createSimpleProducerModule} from '../src/producer-provider-module.js';
 import {MessageProducerProvider} from '@sensejs/kafkajs-standalone';
 
 test('createSimpleProducerModule', async () => {

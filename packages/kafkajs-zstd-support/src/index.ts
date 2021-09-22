@@ -1,9 +1,9 @@
-import {CompressionTypes, CompressionCodecs} from 'kafkajs';
-import {Compressor, Decompressor} from 'zstd-napi';
+import kafkajs from 'kafkajs';
+import zn from 'zstd-napi';
 
 const zstdKafkaCodec = () => {
-  const compressor = new Compressor();
-  const decompressor = new Decompressor();
+  const compressor = new zn.Compressor();
+  const decompressor = new zn.Decompressor();
   return {
     async compress(encoder: any) {
       return compressor.compress(encoder.buffer);
@@ -15,4 +15,4 @@ const zstdKafkaCodec = () => {
   };
 };
 
-CompressionCodecs[CompressionTypes.ZSTD] = zstdKafkaCodec;
+kafkajs.CompressionCodecs[kafkajs.CompressionTypes.ZSTD] = zstdKafkaCodec;

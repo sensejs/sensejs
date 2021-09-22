@@ -227,6 +227,7 @@ importers:
       '@sensejs/kafkajs-standalone': workspace:^0.9.0-alpha.1
       '@sensejs/testing-utility': workspace:*
       '@sensejs/utility': workspace:^0.9.0-alpha.1
+      config: ^3.3.6
       lodash: ^4.17.21
       tslib: ^2.3.1
     dependencies:
@@ -238,6 +239,7 @@ importers:
       '@sensejs/container': link:../container
       '@sensejs/core': link:../core
       '@sensejs/testing-utility': link:../../tools/testing-utility
+      config: 3.3.6
 
   packages/kafkajs-standalone:
     specifiers:
@@ -260,6 +262,7 @@ importers:
 
   packages/kafkajs-zstd-support:
     specifiers:
+      config: ^3.3.6
       kafkajs: ^1.15.0
       tslib: ^2.3.1
       zstd-napi: ^0.0.6
@@ -267,6 +270,7 @@ importers:
       tslib: 2.3.1
       zstd-napi: 0.0.6
     devDependencies:
+      config: 3.3.6
       kafkajs: 1.15.0
 
   packages/logger:

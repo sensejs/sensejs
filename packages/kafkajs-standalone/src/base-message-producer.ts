@@ -1,4 +1,4 @@
-import {Message, RecordMetadata, Sender, TopicMessages} from 'kafkajs';
+import type {Message, RecordMetadata, Sender, TopicMessages} from 'kafkajs';
 import {KafkaSendOption, SimpleMessageProducer} from './types.js';
 
 export abstract class BaseKafkaJsMessageProducer implements SimpleMessageProducer {
