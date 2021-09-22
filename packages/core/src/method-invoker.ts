@@ -1,5 +1,5 @@
 import {InvokeResult, ResolveSession} from '@sensejs/container';
-import {Constructor} from './interfaces';
+import {Constructor} from './interfaces.js';
 
 /**
  * Invoke method with arguments from container

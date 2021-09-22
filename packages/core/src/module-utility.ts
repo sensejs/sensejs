@@ -1,6 +1,6 @@
-import {ComponentFactory, Constructor, FactoryProvider, ServiceIdentifier} from './interfaces';
+import {ComponentFactory, Constructor, FactoryProvider, ServiceIdentifier} from './interfaces.js';
 import {Component} from './component';
-import {Inject} from './decorators';
+import {Inject} from './decorators.js';
 import {InjectScope} from '@sensejs/container';
 
 export interface ConnectionFactoryProvider<T, Option> extends FactoryProvider<T> {

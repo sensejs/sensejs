@@ -1,4 +1,4 @@
-import {ConstantProvider, Constructor, FactoryProvider} from './interfaces';
+import {ConstantProvider, Constructor, FactoryProvider} from './interfaces.js';
 import {Injectable, InjectScope, Scope} from '@sensejs/container';
 import _ from 'lodash';
 

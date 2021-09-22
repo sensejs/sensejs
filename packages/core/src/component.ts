@@ -1,5 +1,5 @@
 import {Injectable, Scope, InjectScope} from '@sensejs/container';
-import {Class, ComponentMetadata, Constructor} from './interfaces';
+import {Class, ComponentMetadata, Constructor} from './interfaces.js';
 export {InjectScope as ComponentScope, Scope} from '@sensejs/container';
 
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');

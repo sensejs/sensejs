@@ -1,8 +1,8 @@
 import {BindingType, Container, InjectScope, ServiceId} from '@sensejs/container';
-import {getModuleMetadata, ModuleMetadata} from './module';
-import {invokeMethod} from './method-invoker';
-import {ComponentFactory, ComponentMetadata, ConstantProvider, Constructor, FactoryProvider} from './interfaces';
-import {getComponentMetadata} from './component';
+import {getModuleMetadata, ModuleMetadata} from './module.js';
+import {invokeMethod} from './method-invoker.js';
+import {ComponentFactory, ComponentMetadata, ConstantProvider, Constructor, FactoryProvider} from './interfaces.js';
+import {getComponentMetadata} from './component.js';
 
 function bindComponent(container: Container, constructor: Constructor, metadata: ComponentMetadata) {
   const {target, id, bindParentConstructor} = metadata;

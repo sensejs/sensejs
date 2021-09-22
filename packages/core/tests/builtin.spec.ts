@@ -1,3 +1,4 @@
+import {jest} from '@jest/globals';
 import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src';
 
 describe('BuiltinModule', () => {

@@ -1,3 +1,4 @@
+import {jest} from '@jest/globals';
 import {createModule, getModuleMetadata, ModuleScanner} from '../src';
 
 test('ModuleScanner', () => {

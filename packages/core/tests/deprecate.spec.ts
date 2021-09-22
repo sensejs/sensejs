@@ -1,8 +1,10 @@
+import {jest} from '@jest/globals';
 import {Deprecated} from '../src/utils';
 import {BindingType, Container, Inject, Injectable} from '@sensejs/container';
 import {invokeMethod} from '../src';
 
-const awaitWarningCalled = (stub: jest.SpyInstance) =>
+// TODO: Typing error of jest
+const awaitWarningCalled = (stub: any) =>
   new Promise<void>((done) => {
     stub.mockImplementationOnce(() => {
       done();

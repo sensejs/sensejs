@@ -1,11 +1,10 @@
-import {ModuleRoot} from './module-root';
-import {consoleLogger, Logger} from './logger';
-import {Constructor} from './interfaces';
+import {ModuleRoot} from './module-root.js';
+import {consoleLogger, Logger} from './logger.js';
+import {Constructor} from './interfaces.js';
 import {concat, firstValueFrom, from, fromEvent, merge, Observable, of, Subject} from 'rxjs';
-import {ModuleClass} from './module';
+import {ModuleClass} from './module.js';
 import {catchError, first, mapTo, mergeMap, skip, timeout} from 'rxjs/operators';
 import {ProcessManager} from './builtins';
-import {EventEmitter} from 'events';
 
 interface NormalExitOption {
   exitCode: number;

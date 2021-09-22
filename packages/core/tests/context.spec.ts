@@ -1,3 +1,4 @@
+import {jest} from '@jest/globals';
 import {EventEmitter} from 'events';
 import {Component, ModuleClass, ModuleRoot, OnModuleCreate, OnModuleDestroy} from '../src';
 import {inject} from '@sensejs/container';

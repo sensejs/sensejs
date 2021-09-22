@@ -1,11 +1,11 @@
-import {Component, ComponentScope} from './component';
-import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces';
+import {Component, ComponentScope} from './component.js';
+import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces.js';
 import {Subject} from 'rxjs';
 import {createModule, ModuleClass, ModuleOption, OnModuleCreate, OnModuleDestroy, OnStart, OnStop} from './module';
 import {AsyncInterceptProvider, Container} from '@sensejs/container';
-import {Inject} from './decorators';
-import {ModuleScanner} from './module-scanner';
-import {matchLabels} from './utils';
+import {Inject} from './decorators.js';
+import {ModuleScanner} from './module-scanner.js';
+import {matchLabels} from './utils/match-labels';
 
 export interface EventChannelSubscription {
   unsubscribe(): void;

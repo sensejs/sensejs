@@ -1,9 +1,9 @@
 import {BindingType, Container, InvokeResult} from '@sensejs/container';
-import {ModuleInstance} from './module-instance';
-import {Constructor} from './interfaces';
-import {BackgroundTaskQueue, ProcessManager} from './builtins';
-import {invokeMethod} from './method-invoker';
-import {ModuleScanner} from './module-scanner';
+import {ModuleInstance} from './module-instance.js';
+import {Constructor} from './interfaces.js';
+import {BackgroundTaskQueue, ProcessManager} from './builtins.js';
+import {invokeMethod} from './method-invoker.js';
+import {ModuleScanner} from './module-scanner.js';
 
 export class ModuleShutdownError extends Error {
   constructor(readonly error: unknown, readonly nestedError?: unknown) {

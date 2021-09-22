@@ -1,3 +1,4 @@
+import {jest} from '@jest/globals';
 import {
   Component,
   consoleLogger,
@@ -9,7 +10,7 @@ import {
   LoggerBuilder,
   ModuleClass,
   ModuleRoot,
-} from '../src';
+} from '../src/index.js';
 import '@sensejs/testing-utility/lib/mock-console';
 
 describe('InjectLogger', () => {

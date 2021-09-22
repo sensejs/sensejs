@@ -1,5 +1,5 @@
-import {getModuleMetadata, ModuleMetadata} from './module';
-import {Constructor} from './interfaces';
+import {getModuleMetadata, ModuleMetadata} from './module.js';
+import {Constructor} from './interfaces.js';
 
 export class ModuleScanner {
   public constructor(private entryModule: Constructor) {}

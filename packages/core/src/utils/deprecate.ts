@@ -1,6 +1,6 @@
 import {ClassDecorator, Decorator, DecoratorBuilder} from '@sensejs/utility';
-import {Class} from '../interfaces';
-import {copyMetadata} from './copy-metadata';
+import type {Class} from '../interfaces.js';
+import {copyMetadata} from './copy-metadata.js';
 
 function getName(func: Function | string | symbol) {
   return typeof func === 'function' ? func.name : typeof func === 'symbol' ? func.toString() : func;

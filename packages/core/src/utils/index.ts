@@ -1,2 +1,2 @@
-export * from './deprecate';
-export * from './match-labels';
+export * from './deprecate.js';
+export * from './match-labels.js';

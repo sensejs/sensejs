@@ -1,5 +1,5 @@
-import {Class, Transformer} from './interfaces';
-import {Inject, InjectionDecorator, Optional} from './decorators';
+import {Class, Transformer} from './interfaces.js';
+import {Inject, InjectionDecorator, Optional} from './decorators.js';
 import {consoleLogger, DecoratorBuilder, Logger} from '@sensejs/utility';
 
 export {consoleLogger, Logger} from '@sensejs/utility';

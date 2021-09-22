@@ -1,10 +1,13 @@
+import {jest} from '@jest/globals';
 import {
   createConnectionFactory,
   ModuleClass,
   ModuleRoot,
   provideConnectionFactory,
   provideOptionInjector,
-  Inject, OnModuleCreate, OnModuleDestroy,
+  Inject,
+  OnModuleCreate,
+  OnModuleDestroy,
 } from '../src';
 
 test('createConnectionFactory', async () => {
