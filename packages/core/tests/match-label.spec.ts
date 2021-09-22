@@ -1,4 +1,4 @@
-import {matchLabels} from '../src/utils';
+import {matchLabels} from '../src/utils/match-labels.js';
 
 test('matchLabel', () => {
   expect(matchLabels(new Set([]))).toBeTruthy();

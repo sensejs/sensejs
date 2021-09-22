@@ -1,7 +1,6 @@
 import {jest} from '@jest/globals';
-import {Deprecated} from '../src/utils';
 import {BindingType, Container, Inject, Injectable} from '@sensejs/container';
-import {invokeMethod} from '../src';
+import {invokeMethod, Deprecated} from '../src/index.js';
 
 // TODO: Typing error of jest
 const awaitWarningCalled = (stub: any) =>

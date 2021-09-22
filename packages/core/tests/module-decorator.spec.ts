@@ -1,4 +1,12 @@
-import {createModule, getModuleMetadata, ModuleClass, OnModuleCreate, OnModuleDestroy, OnStart, OnStop} from '../src';
+import {
+  createModule,
+  getModuleMetadata,
+  ModuleClass,
+  OnModuleCreate,
+  OnModuleDestroy,
+  OnStart,
+  OnStop,
+} from '../src/index.js';
 
 describe('@ModuleClass', () => {
   test('created module metadata', () => {

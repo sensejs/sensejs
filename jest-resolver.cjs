@@ -14,6 +14,12 @@ module.exports = function (request, options) {
     fullySpecified: false,
     extensions: [".js", ".json", ".node", ".ts", ".tsx"]
   })
-  request = request.replace(/\.js$/, '');
+  if (options.basedir.startsWith(__dirname)
+    && options.basedir.indexOf('/node_modules/') < 0) {
+    if ((options.conditions ?? []).indexOf('import') >= 0 && request.startsWith('.') && !/.[cm]?js$/.test(request)) {
+      throw new Error('File extensions cannot be omitted when importing a file from ESM module')
+    }
+    request = request.replace(/\.js$/, '');
+  }
   return resolver(options.basedir, request);
 };

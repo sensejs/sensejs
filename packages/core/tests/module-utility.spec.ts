@@ -8,7 +8,7 @@ import {
   Inject,
   OnModuleCreate,
   OnModuleDestroy,
-} from '../src';
+} from '../src/index.js';
 
 test('createConnectionFactory', async () => {
   interface Option {

@@ -1,4 +1,4 @@
-import {Component, ComponentScope, getComponentMetadata} from '../src';
+import {Component, ComponentScope, getComponentMetadata} from '../src/index.js';
 
 describe('Component', () => {
   test('getComponent', async () => {
@@ -75,5 +75,4 @@ describe('Component', () => {
 
     expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({target: MyComponent, id: MyComponent}));
   });
-
 });

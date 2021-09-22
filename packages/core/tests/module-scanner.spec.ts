@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {createModule, getModuleMetadata, ModuleScanner} from '../src';
+import {createModule, getModuleMetadata, ModuleScanner} from '../src/index.js';
 
 test('ModuleScanner', () => {
   const X = createModule();

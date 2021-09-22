@@ -1,3 +1,3 @@
-export * from './decorator-builder';
-export * from './logger';
-export * from './typed-promisify';
+export * from './decorator-builder.js';
+export * from './logger.js';
+export * from './typed-promisify.js';

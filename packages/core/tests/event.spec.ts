@@ -8,7 +8,7 @@ import {
   ModuleRoot,
   SubscribeEvent,
   SubscribeEventController,
-} from '../src';
+} from '../src/index.js';
 import {InterceptProviderClass} from '@sensejs/container';
 
 describe('Event subscribe and announce', () => {

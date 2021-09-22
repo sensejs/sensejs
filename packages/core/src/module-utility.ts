@@ -1,5 +1,5 @@
 import {ComponentFactory, Constructor, FactoryProvider, ServiceIdentifier} from './interfaces.js';
-import {Component} from './component';
+import {Component} from './component.js';
 import {Inject} from './decorators.js';
 import {InjectScope} from '@sensejs/container';
 

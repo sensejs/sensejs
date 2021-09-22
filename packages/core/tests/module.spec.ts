@@ -4,9 +4,11 @@ import {
   Component,
   ComponentFactory,
   ConstantProvider,
+  DynamicModuleLoader,
   FactoryProvider,
   Inject,
   ModuleClass,
+  ModuleInstance,
   ModuleOption,
   ModuleRoot,
   ModuleShutdownError,
@@ -15,8 +17,7 @@ import {
   OnStart,
   OnStop,
   ServiceIdentifier,
-} from '../src';
-import {DynamicModuleLoader, ModuleInstance} from '../src/module-instance';
+} from '../src/index.js';
 
 describe('Module resolve', () => {
   const id = Symbol();

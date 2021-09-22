@@ -8,7 +8,7 @@ import {
   OnModuleCreate,
   OnModuleDestroy,
   RunOption,
-} from '../src';
+} from '../src/index.js';
 import '@sensejs/testing-utility/lib/mock-console';
 
 const onExit = jest.fn();

@@ -4,7 +4,7 @@ import {Constructor} from './interfaces.js';
 import {concat, firstValueFrom, from, fromEvent, merge, Observable, of, Subject} from 'rxjs';
 import {ModuleClass} from './module.js';
 import {catchError, first, mapTo, mergeMap, skip, timeout} from 'rxjs/operators';
-import {ProcessManager} from './builtins';
+import {ProcessManager} from './builtins.js';
 
 interface NormalExitOption {
   exitCode: number;

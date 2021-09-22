@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src';
+import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src/index.js';
 
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {

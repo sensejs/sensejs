@@ -1,6 +1,6 @@
 import {jest} from '@jest/globals';
 import {EventEmitter} from 'events';
-import {Component, ModuleClass, ModuleRoot, OnModuleCreate, OnModuleDestroy} from '../src';
+import {Component, ModuleClass, ModuleRoot, OnModuleCreate, OnModuleDestroy} from '../src/index.js';
 import {inject} from '@sensejs/container';
 
 describe('ModuleRoot', () => {
