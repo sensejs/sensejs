@@ -7,6 +7,7 @@
   ],
   "main": "index.js",
   "scripts": {
+    "build": "npm run prepare",
     "test": "jest",
     "prepare": "tsc -p tsconfig.build.json",
     "clean": "rm -rf ./lib"
