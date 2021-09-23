@@ -3,20 +3,14 @@
   "version": "0.9.0-alpha.7",
   "description": "",
   "files": [
-    "dist-cjs/package.json",
-    "dist-cjs/lib/**/*.ts",
-    "dist-cjs/lib/**/*.js",
-    "dist-cjs/lib/**/*.map",
-    "dist-esm/package.json",
-    "dist-esm/lib/**/*.ts",
-    "dist-esm/lib/**/*.js",
-    "dist-esm/lib/**/*.map",
+    "dist-cjs/**/!(*.tsbuildinfo)",
+    "dist-cjs/**/!(*.tsbuildinfo)",
     "src/**/*.ts",
     "README.md"
   ],
   "type": "module",
   "types": "./dist-esm/lib/index.js",
-  "main": "./dist-esm/lib/index.js",
+  "main": "./dist-cjs/lib/index.js",
   "module": "./dist-esm/lib/index.js",
   "exports": {
     "import": "./dist-esm/lib/index.js",
