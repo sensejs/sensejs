@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/logger",
-  "version": "0.9.0-alpha.2",
+  "version": "0.9.0-alpha.3",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
