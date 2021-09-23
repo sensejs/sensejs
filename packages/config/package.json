@@ -20,7 +20,7 @@
     "test": "jest",
     "build": "tsc -p tsconfig.build-cjs.json && tsc -p tsconfig.build-esm.json",
     "prepare": "npm run clean && npm run build",
-    "clean": "rm -rf ./lib"
+    "clean": "rm -rf ./dist-esm/lib dist-cjs/lib"
   },
   "author": "LAN Xingcan",
   "license": "ISC",
