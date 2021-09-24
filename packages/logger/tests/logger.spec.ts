@@ -26,7 +26,7 @@ describe('Logger', () => {
     const mockLogTransport = new MockLogTransport();
     const writeSpy = jest.spyOn(mockLogTransport, 'write');
 
-    const loggerFactory = new SenseLoggerBuilder([mockLogTransport]);
+    const loggerFactory = new SenseLoggerBuilder([]).resetLogTransports().addLogTransports(mockLogTransport);
     let logger = loggerFactory.build();
 
     const assertTransportLogLevelParams = (level: LogLevel) => {
