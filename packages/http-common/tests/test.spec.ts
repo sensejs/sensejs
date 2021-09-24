@@ -1,8 +1,11 @@
 import {
   Body,
+  Controller,
   DELETE,
   ensureMetadataOnPrototype,
   GET,
+  getHttpControllerMetadata,
+  getRequestMappingMetadata,
   Header,
   HttpMethod,
   HttpParamType,
@@ -12,13 +15,28 @@ import {
   PUT,
   Query,
 } from '../src/index.js';
+import {InterceptProviderClass} from '../../container/src/decorator.js';
 
 describe('Http annotations', () => {
   test('metadata', () => {
     const handlePut = Symbol();
 
+    const generateInterceptorClass = () => {
+      @InterceptProviderClass()
+      class Interceptor {
+        async intercept(cb: () => Promise<void>) {}
+      }
+      return Interceptor;
+    };
+
+    const I1 = generateInterceptorClass(),
+      I2 = generateInterceptorClass();
+
+    const L1 = Symbol();
+
+    @Controller('/', {interceptProviders: [I1], labels: [L1]})
     class FooController {
-      @GET('/get')
+      @GET('/get', {interceptProviders: [I2]})
       handleGet() {}
 
       @POST('/:id')
@@ -38,6 +56,25 @@ describe('Http annotations', () => {
       @PATCH('/')
       handlePatch() {}
     }
+
+    const cm = getHttpControllerMetadata(FooController);
+    expect(cm).toEqual(
+      expect.objectContaining({
+        target: FooController,
+        path: '/',
+        interceptProviders: expect.arrayContaining([I1]),
+        prototype: FooController.prototype,
+      }),
+    );
+    expect(Array.from(cm!.labels)).toEqual(expect.arrayContaining([L1]));
+    const rm = getRequestMappingMetadata(FooController.prototype, 'handleGet');
+    expect(rm).toEqual(
+      expect.objectContaining({
+        httpMethod: HttpMethod.GET,
+        interceptProviders: expect.arrayContaining([I2]),
+        path: '/get',
+      }),
+    );
 
     const metadata = ensureMetadataOnPrototype(FooController.prototype);
     expect(metadata.get('handleGet')).toEqual({

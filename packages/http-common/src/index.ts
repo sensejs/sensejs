@@ -288,8 +288,8 @@ function setRequestMappingMetadata(prototype: object, key: keyof any, requestMap
   store.set(key, requestMappingMetadata);
 }
 
-export function getRequestMappingMetadata(targetMethod: object, key: keyof any): RequestMappingMetadata | undefined {
-  const store = ensureRequestMappingStore(targetMethod);
+export function getRequestMappingMetadata(prototype: object, key: keyof any): RequestMappingMetadata | undefined {
+  const store = ensureRequestMappingStore(prototype);
   return store.get(key);
 }
 
