@@ -15,15 +15,10 @@ export class SimpleKafkaJsProducerProvider extends MessageProducerProvider {
 
   async create() {
     const producer = this.client.producer(this.option.producerOption);
-    try {
-      await producer.connect();
-      return new SimpleKafkaJsMessageProducer(this.option.sendOption ?? {}, producer, async () => {
-        this.allProducerClosed = Promise.all([this.allProducerClosed, producer.disconnect()]);
-      });
-    } catch (e) {
-      await producer.disconnect();
-      throw e;
-    }
+    await producer.connect();
+    return new SimpleKafkaJsMessageProducer(this.option.sendOption ?? {}, producer, async () => {
+      this.allProducerClosed = Promise.all([this.allProducerClosed, producer.disconnect()]);
+    });
   }
 
   async createTransactional(transactionalId: string) {
@@ -33,15 +28,10 @@ export class SimpleKafkaJsProducerProvider extends MessageProducerProvider {
       maxInFlightRequests: 1,
       idempotent: true,
     });
-    try {
-      await producer.connect();
-      return new KafkaJsTransactionalMessageProducer(this.option.sendOption ?? {}, producer, async () => {
-        this.allProducerClosed = Promise.all([this.allProducerClosed, producer.disconnect()]);
-      });
-    } catch (e) {
-      await producer.disconnect();
-      throw e;
-    }
+    await producer.connect();
+    return new KafkaJsTransactionalMessageProducer(this.option.sendOption ?? {}, producer, async () => {
+      this.allProducerClosed = Promise.all([this.allProducerClosed, producer.disconnect()]);
+    });
   }
 
   async destroy() {
