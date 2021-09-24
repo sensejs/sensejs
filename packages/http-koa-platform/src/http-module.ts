@@ -89,8 +89,6 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
     factories: [optionProvider],
   })
   class HttpModule {
-    // private httpServer?: http.Server;
-
     constructor(
       @InjectLogger() private logger: Logger,
       @Inject(Container) private container: Container,
@@ -124,9 +122,11 @@ export function createHttpModule(option: HttpModuleOption = {httpOption: default
 
     @OnStop()
     async onStop(@Inject(serverIdentifier) httpServer: http.Server) {
-      await promisify((done: (e?: Error) => void) => {
-        return httpServer.close(done);
-      })();
+      if (httpServer.listening) {
+        await promisify((done: (e?: Error) => void) => {
+          return httpServer.close(done);
+        })();
+      }
     }
 
     private scanControllers(httpAdaptor: KoaHttpApplicationBuilder, moduleScanner: ModuleScanner) {
