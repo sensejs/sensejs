@@ -1,33 +1,19 @@
 import {Constructor} from '@sensejs/core';
 import {RequestListener} from 'http';
-import {AsyncInterceptProvider, Container} from '@sensejs/container';
+import {Container} from '@sensejs/container';
 import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
 import KoaRouter from '@koa/router';
 import KoaCors from '@koa/cors';
 import koaQs from 'koa-qs';
 import {
-  ControllerMetadata,
-  getRequestMappingMetadata,
-  HttpApplicationOption,
+  AbstractHttpApplicationBuilder,
+  CrossOriginResourceShareOption,
   HttpContext,
-  HttpMethod,
   HttpRequest,
   HttpResponse,
+  MethodRouteSpec,
 } from '@sensejs/http-common';
-
-interface MethodRouteSpec<T = any> {
-  path: string;
-  httpMethod: HttpMethod;
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
-  targetConstructor: Constructor<T>;
-  targetMethod: keyof T;
-}
-
-interface ControllerRouteSpec {
-  path: string;
-  methodRouteSpecs: MethodRouteSpec[];
-}
 
 export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
 
@@ -110,31 +96,12 @@ export class KoaHttpContext extends HttpContext {
   }
 }
 
-export class KoaHttpApplicationBuilder {
-  // private readonly globalInterceptors: Constructor<HttpInterceptor>[] = [];
-  private readonly globalInterceptProviders: Constructor<AsyncInterceptProvider>[] = [];
-  private readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
-  private errorHandler?: (e: unknown) => any;
+export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
   private middlewareList: Koa.Middleware[] = [];
   private bodyParserOption?: KoaBodyParserOption;
   private queryStringParsingMode: QueryStringParsingMode = 'simple';
-
-  addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
-    const controllerRouteSpec: ControllerRouteSpec = {
-      path: controllerMetadata.path,
-      methodRouteSpecs: [],
-    };
-    this.controllerRouteSpecs.push(controllerRouteSpec);
-
-    for (const [key, propertyDescriptor] of Object.entries(
-      Object.getOwnPropertyDescriptors(controllerMetadata.prototype),
-    )) {
-      if (typeof propertyDescriptor.value === 'function') {
-        this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, controllerMetadata.prototype, key);
-      }
-    }
-    return this;
-  }
+  private trustProxy = false;
+  private corsOption?: CrossOriginResourceShareOption;
 
   clearMiddleware(): this {
     this.middlewareList = [];
@@ -156,23 +123,23 @@ export class KoaHttpApplicationBuilder {
     return this;
   }
 
-  addGlobalInterceptProvider(...interceptProvider: Constructor<AsyncInterceptProvider>[]): this {
-    this.globalInterceptProviders.push(...interceptProvider);
+  setCorsOption(corsOption: CrossOriginResourceShareOption): this {
+    this.corsOption = corsOption;
     return this;
   }
 
-  setErrorHandler(cb: (e: unknown) => any): this {
-    this.errorHandler = cb;
+  setTrustProxy(trustProxy: boolean): this {
+    this.trustProxy = trustProxy;
     return this;
   }
 
-  build(httpAppOption: HttpApplicationOption, container: Container): RequestListener {
+  build(container: Container): RequestListener {
     const koa = this.createKoaInstance();
-    const {corsOption, trustProxy = false} = httpAppOption;
     const errorHandler = this.errorHandler;
-    koa.proxy = trustProxy;
-    if (corsOption) {
-      koa.use(KoaCors(corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
+    koa.proxy = this.trustProxy;
+
+    if (this.corsOption) {
+      koa.use(KoaCors(this.corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
     }
     koa.use(koaBodyParser(this.bodyParserOption));
     for (const middleware of this.middlewareList) {
@@ -184,7 +151,6 @@ export class KoaHttpApplicationBuilder {
     if (errorHandler) {
       koa.on('error', errorHandler);
     }
-
     return koa.callback();
   }
 
@@ -195,33 +161,6 @@ export class KoaHttpApplicationBuilder {
     }
 
     return koaQs(koa, this.queryStringParsingMode);
-  }
-
-  private addRouterSpec(
-    methodRoutSpecs: MethodRouteSpec[],
-    controllerMetadata: ControllerMetadata,
-    prototype: object,
-    method: keyof any,
-  ) {
-    const requestMappingMetadata = getRequestMappingMetadata(prototype, method);
-    if (!requestMappingMetadata) {
-      return;
-    }
-
-    const {httpMethod, path, interceptProviders = []} = requestMappingMetadata;
-
-    methodRoutSpecs.push({
-      path,
-      httpMethod,
-      // interceptors: [...this.globalInterceptors, ...controllerMetadata.interceptors, ...interceptors],
-      interceptProviders: [
-        ...this.globalInterceptProviders,
-        ...controllerMetadata.interceptProviders,
-        ...interceptProviders,
-      ],
-      targetConstructor: controllerMetadata.target,
-      targetMethod: method,
-    });
   }
 
   protected createGlobalRouter(container: Container): KoaRouter {

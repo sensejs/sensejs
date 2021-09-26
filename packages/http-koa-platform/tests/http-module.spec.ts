@@ -1,9 +1,9 @@
+import {createKoaHttpModule} from '../src/index.js';
 import {ApplicationRunner, Component, createModule, Inject, ModuleClass, OnStart, ProcessManager} from '@sensejs/core';
 import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
 import {Controller, GET, Query} from '@sensejs/http-common';
-import {createHttpModule, KoaHttpApplicationBuilder} from '../src/index.js';
 import {InterceptProviderClass} from '@sensejs/container';
 
 test('HttpModule', async () => {
@@ -49,10 +49,7 @@ test('HttpModule', async () => {
 
   @ModuleClass({
     requires: [
-      createHttpModule({
-        httpAdaptorFactory: () => {
-          return new KoaHttpApplicationBuilder().setKoaBodyParserOption({}).setQueryStringParsingMode('extended');
-        },
+      createKoaHttpModule({
         requires: [createModule({components: [MyComponent, FooController]})],
         serverIdentifier,
         matchLabels: ['foo'],
@@ -60,6 +57,7 @@ test('HttpModule', async () => {
           listenPort: 0,
           listenAddress: '0.0.0.0',
           corsOption: {},
+          queryStringParsingMode: 'extended',
         },
       }),
     ],

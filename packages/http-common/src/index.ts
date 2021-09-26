@@ -1,8 +1,21 @@
 import {InstanceMethodDecorator, InstanceMethodParamDecorator} from '@sensejs/utility';
-import {Component, Inject, InjectionDecorator, Transformer} from '@sensejs/core';
-import {Constructor} from '@sensejs/core';
-import {IncomingHttpHeaders} from 'http';
-import {AsyncInterceptProvider, ParamInjectionMetadata} from '@sensejs/container';
+import {
+  Component,
+  Constructor,
+  DynamicModuleLoader,
+  Inject,
+  matchLabels,
+  ModuleScanner,
+  OnModuleCreate,
+  OnStart,
+  OnStop,
+  ServiceIdentifier,
+  Transformer,
+} from '@sensejs/core';
+import {IncomingHttpHeaders, RequestListener} from 'http';
+import {AsyncInterceptProvider, Container} from '@sensejs/container';
+import http from 'http';
+import {promisify} from 'util';
 
 export enum HttpMethod {
   GET = 'get',
@@ -160,6 +173,84 @@ export abstract class HttpContext {
   abstract readonly request: HttpRequest;
 
   abstract readonly response: HttpResponse;
+}
+
+export interface MethodRouteSpec<T = any> {
+  path: string;
+  httpMethod: HttpMethod;
+  interceptProviders: Constructor<AsyncInterceptProvider>[];
+  targetConstructor: Constructor<T>;
+  targetMethod: keyof T;
+}
+
+export interface ControllerRouteSpec {
+  path: string;
+  methodRouteSpecs: MethodRouteSpec[];
+}
+
+export abstract class AbstractHttpApplicationBuilder {
+  private readonly globalInterceptProviders: Constructor<AsyncInterceptProvider>[] = [];
+  protected readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
+  protected errorHandler?: (e: unknown) => any;
+
+  abstract build(container: Container): RequestListener;
+
+  abstract setTrustProxy(trustProxy: boolean): this;
+
+  abstract setCorsOption(corsOption: CrossOriginResourceShareOption): this;
+
+  addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
+    const controllerRouteSpec: ControllerRouteSpec = {
+      path: controllerMetadata.path,
+      methodRouteSpecs: [],
+    };
+    this.controllerRouteSpecs.push(controllerRouteSpec);
+
+    for (const [key, propertyDescriptor] of Object.entries(
+      Object.getOwnPropertyDescriptors(controllerMetadata.prototype),
+    )) {
+      if (typeof propertyDescriptor.value === 'function') {
+        this.addRouterSpec(controllerRouteSpec.methodRouteSpecs, controllerMetadata, controllerMetadata.prototype, key);
+      }
+    }
+    return this;
+  }
+
+  addGlobalInterceptProvider(...interceptProvider: Constructor<AsyncInterceptProvider>[]): this {
+    this.globalInterceptProviders.push(...interceptProvider);
+    return this;
+  }
+
+  setErrorHandler(cb: (e: unknown) => any): this {
+    this.errorHandler = cb;
+    return this;
+  }
+
+  private addRouterSpec(
+    methodRoutSpecs: MethodRouteSpec[],
+    controllerMetadata: ControllerMetadata,
+    prototype: object,
+    method: keyof any,
+  ) {
+    const requestMappingMetadata = getRequestMappingMetadata(prototype, method);
+    if (!requestMappingMetadata) {
+      return;
+    }
+
+    const {httpMethod, path, interceptProviders = []} = requestMappingMetadata;
+
+    methodRoutSpecs.push({
+      path,
+      httpMethod,
+      interceptProviders: [
+        ...this.globalInterceptProviders,
+        ...controllerMetadata.interceptProviders,
+        ...interceptProviders,
+      ],
+      targetConstructor: controllerMetadata.target,
+      targetMethod: method,
+    });
+  }
 }
 
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
@@ -387,4 +478,103 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
       labels: labels instanceof Set ? labels : new Set(labels),
     });
   };
+}
+
+export interface HttpOption extends HttpApplicationOption {
+  listenAddress?: string;
+  listenPort: number;
+  trustProxy?: boolean;
+}
+
+const defaultHttpConfig = {
+  listenAddress: '0.0.0.0',
+  listenPort: 3000,
+};
+export interface HttpModuleOption<O extends HttpOption = HttpOption> {
+  /**
+   * Intercept providers applied by this http server
+   */
+  globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
+
+  /**
+   * If specified, http server instance will be bound to container with this as service identifier
+   */
+  serverIdentifier?: ServiceIdentifier;
+
+  /**
+   * Http application options
+   */
+  httpOption?: Partial<O>;
+
+  /**
+   * If specified, only match the controllers which contains all required label
+   */
+  matchLabels?: (string | symbol)[] | Set<string | symbol> | ((labels: Set<string | symbol>) => boolean);
+}
+
+export abstract class AbstractHttpModule {
+  private readonly httpServer: http.Server;
+  private readonly serviceId;
+
+  protected constructor(protected readonly httpModuleOption: HttpModuleOption) {
+    this.serviceId = this.httpModuleOption.serverIdentifier ?? Symbol();
+    this.httpServer = http.createServer();
+  }
+
+  protected abstract getAdaptor(): AbstractHttpApplicationBuilder;
+
+  @OnModuleCreate()
+  async onCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
+    loader.addConstant({
+      provide: this.serviceId,
+      value: this.httpServer,
+    });
+  }
+
+  @OnStart()
+  async onStart(@Inject(ModuleScanner) moduleScanner: ModuleScanner, @Inject(Container) container: Container) {
+    const httpAdaptor = this.getAdaptor();
+    for (const ip of this.httpModuleOption.globalInterceptProviders || []) {
+      httpAdaptor.addGlobalInterceptProvider(ip);
+    }
+    this.scanControllers(httpAdaptor, moduleScanner);
+    await this.setupHttpServer(httpAdaptor, this.httpServer, container);
+  }
+
+  @OnStop()
+  async onStop() {
+    if (this.httpServer && this.httpServer.listening) {
+      const httpServer = this.httpServer;
+      await promisify((done: (e?: Error) => void) => {
+        return httpServer.close(done);
+      })();
+    }
+  }
+
+  private scanControllers(httpAdaptor: AbstractHttpApplicationBuilder, moduleScanner: ModuleScanner) {
+    moduleScanner.scanModule((metadata) => {
+      metadata.components.forEach((component) => {
+        const httpControllerMetadata = getHttpControllerMetadata(component);
+        if (!httpControllerMetadata) {
+          return;
+        }
+        if (!matchLabels(httpControllerMetadata.labels, this.httpModuleOption.matchLabels)) {
+          return;
+        }
+        httpAdaptor.addControllerWithMetadata(httpControllerMetadata);
+      });
+    });
+  }
+
+  private setupHttpServer(httpAdaptor: AbstractHttpApplicationBuilder, httpServer: http.Server, container: Container) {
+    const {httpOption: {listenPort = 3000, listenAddress = 'localhost'} = defaultHttpConfig} = this.httpModuleOption;
+    return new Promise<http.Server>((resolve, reject) => {
+      httpServer.on('request', httpAdaptor.build(container));
+      httpServer.once('error', reject);
+      httpServer.listen(listenPort, listenAddress, () => {
+        httpServer.removeListener('error', reject);
+        resolve(httpServer);
+      });
+    });
+  }
 }

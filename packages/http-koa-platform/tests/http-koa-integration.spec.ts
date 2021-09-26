@@ -79,10 +79,9 @@ describe('KoaHttpApplicationBuilder', () => {
     container.add(FooController);
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
-    const koaHttpApplication = koaHttpApplicationBuilder.build(
-      {trustProxy: true, corsOption: {origin: '*'}},
-      container,
-    );
+    koaHttpApplicationBuilder.setTrustProxy(true).setCorsOption({origin: '*'});
+
+    const koaHttpApplication = koaHttpApplicationBuilder.build(container);
 
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
     await testClient
@@ -111,10 +110,9 @@ describe('KoaHttpApplicationBuilder', () => {
     container.add(FooController);
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
-    const koaHttpApplication = koaHttpApplicationBuilder.build(
-      {trustProxy: true, corsOption: {origin: '*'}},
-      container,
-    );
+    koaHttpApplicationBuilder.setTrustProxy(true).setCorsOption({origin: '*'});
+
+    const koaHttpApplication = koaHttpApplicationBuilder.build(container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
 
     const spy = jest.spyOn(console, 'error');
@@ -189,7 +187,7 @@ describe('KoaHttpApplicationBuilder', () => {
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
     koaHttpApplicationBuilder.addGlobalInterceptProvider(InterceptorA);
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
-    const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
+    const koaHttpApplication = koaHttpApplicationBuilder.build(container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
     await testClient.get('/any?key=value').then((result) => {
       expect(result.header['key']).toBe('value');
@@ -255,7 +253,7 @@ describe('KoaHttpApplicationBuilder', () => {
       return next();
     });
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
-    const koaHttpApplication = koaHttpApplicationBuilder.build({}, container);
+    const koaHttpApplication = koaHttpApplicationBuilder.build(container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
 
     await testClient

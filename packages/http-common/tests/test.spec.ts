@@ -15,7 +15,7 @@ import {
   PUT,
   Query,
 } from '../src/index.js';
-import {InterceptProviderClass} from '../../container/src/decorator.js';
+import {InterceptProviderClass} from '@sensejs/container';
 
 describe('Http annotations', () => {
   test('metadata', () => {
