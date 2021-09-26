@@ -1,6 +1,5 @@
 import {
   Constructor,
-  createModule,
   Inject,
   InjectLogger,
   Logger,
@@ -8,12 +7,9 @@ import {
   ModuleMetadata,
   ModuleOption,
   ModuleScanner,
-  OnModuleCreate,
-  OnModuleDestroy,
   OnStart,
   OnStop,
   ProcessManager,
-  provideConnectionFactory,
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
@@ -43,12 +39,14 @@ export interface ConfigurableMessageConsumerOption extends Omit<MessageConsumerO
   logOption?: KafkaLogAdapterOption;
 }
 
-export interface MessageConsumerModuleOption extends ModuleOption {
+export interface MessageConsumerModuleOption {
   globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
   messageConsumerOption?: Partial<ConfigurableMessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier<ConfigurableMessageConsumerOption>;
   matchLabels?: (string | symbol)[] | Set<string | symbol> | ((labels: Set<string | symbol>) => boolean);
 }
+
+export interface CreateMessageConsumerModuleOption extends ModuleOption, MessageConsumerModuleOption {}
 
 function mergeConnectOption(
   fallback?: Partial<ConfigurableMessageConsumerOption>,
@@ -199,89 +197,59 @@ function scanComponents(
   });
 }
 
-function scanSubscriber(
-  option: MessageConsumerModuleOption,
-  connectionModule: Constructor,
-  messageConsumerSymbol: symbol,
-) {
-  @ModuleClass({
-    requires: [connectionModule],
-  })
-  class SubscriberScanModule {
-    constructor(
-      @Inject(Container) private container: Container,
-      @Inject(messageConsumerSymbol) private messageConsumer: MessageConsumer,
-      @Inject(ProcessManager) private pm: ProcessManager,
-    ) {}
+export class AbstractKafkaConsumerGroupModule {
+  private readonly messageConsumer;
 
-    @OnStop()
-    async onDestroy() {
-      return this.messageConsumer.stop();
-    }
-
-    @OnStart()
-    async onCreate(@Inject(ModuleScanner) moduleScanner: ModuleScanner) {
-      moduleScanner.scanModule((moduleMetadata) => {
-        scanComponents(this.container, this.messageConsumer, moduleMetadata, option);
-      });
-      const promise = this.messageConsumer.start();
-      this.messageConsumer.wait().catch((e) => this.pm.shutdown(e));
-      return promise;
-    }
+  constructor(option: ConfigurableMessageConsumerOption, private moduleOption: MessageConsumerModuleOption) {
+    this.messageConsumer = new MessageConsumer(option);
   }
 
-  return SubscriberScanModule;
-}
-
-function KafkaConsumerHelperModule(option: MessageConsumerModuleOption, exportSymbol: symbol) {
-  const optionProvider = provideOptionInjector(
-    option.messageConsumerOption,
-    option.injectOptionFrom,
-    mergeConnectOption,
-  );
-
-  const factoryProvider = provideConnectionFactory<MessageConsumer, MessageConsumerOption>(
-    async (option) => {
-      return new MessageConsumer(option);
-    }, // connect on kafkaConsumerModule
-    async () => undefined, // close on KafkaConsumerModule
-    exportSymbol,
-  );
-
-  @ModuleClass({
-    requires: [createModule(option)],
-    factories: [optionProvider, factoryProvider],
-  })
-  class KafkaConsumerGroupModule {
-    constructor(
-      @InjectLogger() private logger: Logger,
-      @Inject(factoryProvider.factory) private consumerGroupFactory: InstanceType<typeof factoryProvider.factory>,
-      @Inject(optionProvider.provide) private config: ConfigurableMessageConsumerOption,
-    ) {}
-
-    @OnModuleCreate()
-    async onCreate(): Promise<void> {
-      await this.consumerGroupFactory.connect({
-        ...this.config,
-        logger: this.logger,
-      });
-    }
-
-    @OnModuleDestroy()
-    async onDestroy(): Promise<void> {
-      await this.consumerGroupFactory.disconnect();
-    }
+  @OnStart()
+  async onStart(
+    @Inject(ModuleScanner) moduleScanner: ModuleScanner,
+    @Inject(Container) container: Container,
+    @Inject(ProcessManager) pm: ProcessManager,
+  ): Promise<void> {
+    moduleScanner.scanModule((moduleMetadata) => {
+      scanComponents(container, this.messageConsumer, moduleMetadata, this.moduleOption);
+    });
+    const promise = this.messageConsumer.start();
+    this.messageConsumer.wait().catch((e) => pm.shutdown(e));
+    return promise;
   }
 
-  return createModule({requires: [KafkaConsumerGroupModule]});
+  @OnStop()
+  async onStop(): Promise<void> {
+    return this.messageConsumer.stop();
+  }
 }
 
 /**
  * Create kafka consumer module for sense.js framework
  * @param option
  */
-export function createMessageConsumerModule(option: MessageConsumerModuleOption): Constructor {
-  const injectMessageConsumerSymbol = Symbol('MessageConsumer');
-  const kafkaConnectionModule = KafkaConsumerHelperModule(option, injectMessageConsumerSymbol);
-  return scanSubscriber(option, kafkaConnectionModule, injectMessageConsumerSymbol);
+export function createMessageConsumerModule(option: CreateMessageConsumerModuleOption): Constructor {
+  const {requires, components, factories, constants, ...rest} = option;
+  const optionProvider = provideOptionInjector(
+    option.messageConsumerOption,
+    option.injectOptionFrom,
+    mergeConnectOption,
+  );
+
+  @ModuleClass({
+    factories: [optionProvider, ...(factories ?? [])],
+    constants,
+    components,
+    requires,
+  })
+  class KafkaConsumerGroupModule extends AbstractKafkaConsumerGroupModule {
+    constructor(
+      @InjectLogger() logger: Logger,
+      @Inject(optionProvider.provide) config: ConfigurableMessageConsumerOption,
+    ) {
+      super({logger, ...config}, rest);
+    }
+  }
+
+  return KafkaConsumerGroupModule;
 }

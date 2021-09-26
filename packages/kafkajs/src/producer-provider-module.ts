@@ -1,14 +1,12 @@
 import {
-  AbstractConnectionFactory,
   Constructor,
-  createModule,
+  DynamicModuleLoader,
   Inject,
   InjectLogger,
   ModuleClass,
   ModuleOption,
   OnModuleCreate,
   OnModuleDestroy,
-  provideConnectionFactory,
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
@@ -17,7 +15,6 @@ import {
   MessageProducerProvider,
   PooledKafkaJsProducerProvider,
   PooledMessageProducerOption,
-  SimpleKafkaJsProducerProvider,
 } from '@sensejs/kafkajs-standalone';
 import _ from 'lodash';
 import {Logger} from '@sensejs/utility';
@@ -35,71 +32,59 @@ export interface PooledProducerModuleOption extends ModuleOption {
   injectOptionFrom?: ServiceIdentifier<Partial<ConfigurablePooledMessageProducerOption>>;
 }
 
+class AbstractProducerModuleBase {
+  constructor(private producer: MessageProducerProvider) {}
+
+  @OnModuleCreate()
+  async onModuleCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
+    loader.addConstant({provide: MessageProducerProvider, value: this.producer});
+  }
+
+  @OnModuleDestroy()
+  async onModuleDestroy() {
+    await this.producer.destroy();
+  }
+}
+
+export class AbstractPooledProducerModule extends AbstractProducerModuleBase {
+  constructor(option: PooledMessageProducerOption) {
+    super(new PooledKafkaJsProducerProvider(option));
+  }
+}
+
+export class AbstractSimpleProducerModule extends AbstractProducerModuleBase {
+  constructor(option: PooledMessageProducerOption) {
+    super(new PooledKafkaJsProducerProvider(option));
+  }
+}
+
 export function createPooledProducerModule(option: PooledProducerModuleOption): Constructor {
-  const connectionFactory = provideConnectionFactory<PooledKafkaJsProducerProvider, MessageProducerOption>(
-    async (option) => new PooledKafkaJsProducerProvider(option),
-    (provider) => provider.destroy(),
-    MessageProducerProvider as ServiceIdentifier<any>,
+  const {factories, injectOptionFrom, kafkaProducerOption, ...rest} = option;
+
+  const configurationFactory = provideOptionInjector(kafkaProducerOption, injectOptionFrom, (fallback, injected) =>
+    _.merge({}, fallback, injected),
   );
 
-  const configurationFactory = provideOptionInjector(
-    option.kafkaProducerOption,
-    option.injectOptionFrom,
-    (fallback, injected) => _.merge({}, fallback, injected),
-  );
-
-  @ModuleClass({requires: [createModule(option)], factories: [connectionFactory, configurationFactory]})
-  class PooledProducerModule {
-    constructor(
-      @InjectLogger() private logger: Logger,
-      @Inject(configurationFactory.provide) private option: MessageProducerOption,
-      @Inject(connectionFactory.factory)
-      private factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
-    ) {}
-
-    @OnModuleCreate()
-    async onModuleCreate() {
-      await this.factory.connect({...this.option, logger: this.logger});
-    }
-
-    @OnModuleDestroy()
-    async onModuleDestroy() {
-      await this.factory.disconnect();
+  @ModuleClass({factories: [configurationFactory, ...(factories ?? [])], ...rest})
+  class PooledProducerModule extends AbstractPooledProducerModule {
+    constructor(@InjectLogger() logger: Logger, @Inject(configurationFactory.provide) option: MessageProducerOption) {
+      super({...option, logger});
     }
   }
   return PooledProducerModule;
 }
 
 export function createSimpleProducerModule(option: SimpleProducerModuleOption): Constructor {
-  const connectionFactory = provideConnectionFactory<SimpleKafkaJsProducerProvider, MessageProducerOption>(
-    async (option) => new SimpleKafkaJsProducerProvider(option),
-    (provider) => provider.destroy(),
-    MessageProducerProvider as ServiceIdentifier<any>,
+  const {factories, injectOptionFrom, kafkaProducerOption, ...rest} = option;
+
+  const configurationFactory = provideOptionInjector(kafkaProducerOption, injectOptionFrom, (fallback, injected) =>
+    _.merge({}, fallback, injected),
   );
 
-  const configurationFactory = provideOptionInjector(
-    option.kafkaProducerOption,
-    option.injectOptionFrom,
-    (fallback, injected) => _.merge({}, fallback, injected),
-  );
-
-  @ModuleClass({requires: [createModule(option)], factories: [connectionFactory, configurationFactory]})
-  class SimpleProducerModule {
-    constructor(
-      @InjectLogger() private logger: Logger,
-      @Inject(configurationFactory.provide) private option: MessageProducerOption,
-      @Inject(connectionFactory.factory)
-      private factory: AbstractConnectionFactory<MessageProducerProvider, MessageProducerOption>,
-    ) {}
-
-    @OnModuleCreate()
-    async onModuleCreate() {
-      await this.factory.connect({...this.option, logger: this.logger});
-    }
-
-    @OnModuleDestroy()
-    async onModuleDestroy() {
-      await this.factory.disconnect();
+  @ModuleClass({factories: [configurationFactory, ...(factories ?? [])], ...rest})
+  class SimpleProducerModule extends AbstractSimpleProducerModule {
+    constructor(@InjectLogger() logger: Logger, @Inject(configurationFactory.provide) option: MessageProducerOption) {
+      super({...option, logger});
     }
   }
   return SimpleProducerModule;

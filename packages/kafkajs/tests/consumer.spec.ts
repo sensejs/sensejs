@@ -14,7 +14,7 @@ import {
   SubscribeController,
   SubscribeTopic,
 } from '../src/index.js';
-import {Subject} from 'rxjs';
+import {lastValueFrom, Subject} from 'rxjs';
 import {InterceptProviderClass} from '@sensejs/container';
 
 describe('Subscribe decorators', () => {
@@ -179,15 +179,7 @@ describe('Subscriber', () => {
         return undefined as never;
       },
     });
-    await exitSubject.toPromise();
-    //
-    // expect(MessageConsumer).toHaveBeenCalledWith(
-    //   expect.objectContaining({
-    //     connectOption: expect.objectContaining({
-    //       brokers,
-    //     }),
-    //   }),
-    // );
+    await lastValueFrom(exitSubject, {defaultValue: 0});
 
     expect(startSpy).toBeCalled();
     expect(subscribeSpy).toBeCalledTimes(1);

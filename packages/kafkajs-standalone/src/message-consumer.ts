@@ -14,7 +14,6 @@ export interface KafkaCommitOption {
 export interface MessageConsumerOption extends KafkaClientOption {
   fetchOption: KafkaFetchOption;
   commitOption?: KafkaCommitOption;
-  onCrash?: (e?: Error) => Promise<boolean>;
 }
 
 export interface MessageConsumeCallback {

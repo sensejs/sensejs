@@ -101,6 +101,7 @@ export interface KafkaClientOption {
 export abstract class MessageProducerProvider {
   abstract create(): Promise<SimpleMessageProducer>;
   abstract createTransactional(transactionalId: string): Promise<TransactionalMessageProducer>;
+  abstract destroy(): Promise<void>;
 }
 
 export interface MessageProducerOption extends KafkaClientOption {
