@@ -1,6 +1,10 @@
+import {jest} from '@jest/globals';
 import {
+  AbstractHttpApplicationBuilder,
+  AbstractHttpModule,
   Body,
   Controller,
+  CrossOriginResourceShareOption,
   DELETE,
   ensureMetadataOnPrototype,
   GET,
@@ -15,7 +19,9 @@ import {
   PUT,
   Query,
 } from '../src/index.js';
-import {InterceptProviderClass} from '@sensejs/container';
+import {Container, InterceptProviderClass} from '@sensejs/container';
+import {RequestListener} from 'http';
+import {Component, ModuleClass, ModuleRoot, OnStart} from '@sensejs/core';
 
 describe('Http annotations', () => {
   test('metadata', () => {
@@ -26,6 +32,7 @@ describe('Http annotations', () => {
       class Interceptor {
         async intercept(cb: () => Promise<void>) {}
       }
+
       return Interceptor;
     };
 
@@ -110,4 +117,90 @@ describe('Http annotations', () => {
       params: expect.objectContaining({}),
     });
   });
+});
+
+test('Adaptor and abstract module', async () => {
+  class TestAdaptor extends AbstractHttpApplicationBuilder {
+    build(container: Container): RequestListener {
+      return (req, res) => {
+        throw new Error();
+      };
+    }
+
+    setCorsOption(corsOption: CrossOriginResourceShareOption): this {
+      return this;
+    }
+
+    setTrustProxy(trustProxy: boolean): this {
+      return this;
+    }
+  }
+
+  const addControllerSpy = jest.spyOn(TestAdaptor.prototype, 'addControllerWithMetadata');
+  const addRouterSpy = jest.spyOn(TestAdaptor.prototype, 'addRouterSpec');
+
+  const createInterceptor = () => {
+    @InterceptProviderClass()
+    class I {
+      intercept(next: () => Promise<void>) {
+        return next();
+      }
+    }
+    return I;
+  };
+
+  @Controller('/', {interceptProviders: [createInterceptor()]})
+  class TestController {
+    @GET('/', {interceptProviders: [createInterceptor()]})
+    foo() {}
+  }
+
+  @Controller('/', {interceptProviders: [createInterceptor()], labels: ['foobar']})
+  class Test1Controller {
+    @GET('/', {interceptProviders: [createInterceptor()]})
+    foo() {}
+  }
+
+  @Component()
+  class NonController {}
+
+  @ModuleClass({
+    components: [TestController, Test1Controller, NonController],
+  })
+  class TestHttpModule extends AbstractHttpModule {
+    constructor() {
+      super({
+        httpOption: {
+          listenPort: 0,
+        },
+        matchLabels: (labels) => labels.size == 0,
+        globalInterceptProviders: [createInterceptor()],
+      });
+    }
+
+    main() {
+      const expectControllerContaining = expect.objectContaining({
+        target: TestController,
+        prototype: TestController.prototype,
+      });
+      expect(addControllerSpy).toHaveBeenCalledWith(expectControllerContaining);
+      expect(addControllerSpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          target: Test1Controller,
+        }),
+      );
+      expect(addRouterSpy).toHaveBeenCalledWith(
+        expect.anything(),
+        expectControllerContaining,
+        TestController.prototype,
+        'foo',
+      );
+    }
+
+    protected getAdaptor(): AbstractHttpApplicationBuilder {
+      return new TestAdaptor().addGlobalInterceptProvider(createInterceptor());
+    }
+  }
+
+  await ModuleRoot.run(TestHttpModule, 'main');
 });

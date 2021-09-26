@@ -226,7 +226,7 @@ export abstract class AbstractHttpApplicationBuilder {
     return this;
   }
 
-  private addRouterSpec(
+  addRouterSpec(
     methodRoutSpecs: MethodRouteSpec[],
     controllerMetadata: ControllerMetadata,
     prototype: object,
