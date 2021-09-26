@@ -81,7 +81,7 @@ const ON_MODULE_DESTROY = Symbol();
  * @param metadataKey Metadata key of lifecycle function, must be ON_MODULE_CREATE or ON_MODULE_CREATE
  */
 function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: symbol): (keyof T)[] {
-  const lifecycleMethods = Reflect.getOwnMetadata(metadataKey, constructor.prototype);
+  const lifecycleMethods = Reflect.getMetadata(metadataKey, constructor.prototype);
   return Array.isArray(lifecycleMethods) ? lifecycleMethods : [];
 }
 
@@ -101,29 +101,18 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
     const onStart = getModuleLifecycleMethod(constructor, ON_START);
     const onStop = getModuleLifecycleMethod(constructor, ON_STOP);
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
-    const parentConstructor = Object.getPrototypeOf(constructor);
-    const {
-      requires = [],
-      constants = [],
-      factories = [],
-      components = [],
-      properties = {},
-      onModuleCreate: parentOnModuleCreate = [],
-      onModuleDestroy: parentOnModuleDestroy = [],
-      onStart: parentOnStart = [],
-      onStop: parentOnStop = [],
-    } = _.cloneDeep(Reflect.getMetadata(MODULE_REFLECT_SYMBOL, parentConstructor) ?? {}) as Partial<ModuleMetadata<T>>;
+    const {requires = [], constants = [], factories = [], components = [], properties = []} = option;
 
     setModuleMetadata(constructor, {
-      requires: requires.concat(option.requires ?? []),
-      constants: constants.concat(option.constants ?? []),
-      factories: factories.concat(option.factories ?? []),
-      components: components.concat(option.components ?? []),
-      properties: Object.assign({}, properties, option.properties),
-      onModuleCreate: parentOnModuleCreate.concat(onModuleCreate),
-      onStart: parentOnStart.concat(onStart),
-      onStop: parentOnStop.concat(onStop),
-      onModuleDestroy: parentOnModuleDestroy.concat(onModuleDestroy),
+      requires,
+      constants,
+      factories,
+      components,
+      properties,
+      onModuleCreate,
+      onStart,
+      onStop,
+      onModuleDestroy,
     });
     Injectable()(constructor);
     Scope(InjectScope.SINGLETON)(constructor);
@@ -141,7 +130,7 @@ function defineModuleLifecycleMetadata(metadataKey: symbol): ModuleLifecycleMeth
     if (typeof value === 'function') {
       let lifecycleMethods = Reflect.getOwnMetadata(metadataKey, prototype);
       if (!Array.isArray(lifecycleMethods)) {
-        lifecycleMethods = [];
+        lifecycleMethods = Reflect.getMetadata(metadataKey, prototype) ?? [];
         Reflect.defineMetadata(metadataKey, lifecycleMethods, prototype);
       }
       lifecycleMethods.push(name);
