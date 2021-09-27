@@ -1,5 +1,6 @@
 import {Injectable, Scope, InjectScope} from '@sensejs/container';
 import {Class, ComponentMetadata, Constructor} from './interfaces.js';
+import {InvalidComponentError, InvalidComponentIdError} from './error.js';
 export {InjectScope as ComponentScope, Scope} from '@sensejs/container';
 
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
@@ -15,7 +16,7 @@ export interface ComponentOption<T extends {} = {}> {
 export function getComponentMetadata<T extends {}>(target: Class<T>): ComponentMetadata<T> {
   const result: ComponentMetadata<T> = Reflect.getMetadata(COMPONENT_METADATA_KEY, target);
   if (!result) {
-    throw new Error('Target is not an component');
+    throw new InvalidComponentError(target);
   }
   return result;
 }
@@ -49,7 +50,7 @@ export function Component(option: ComponentOption = {}) {
     Injectable()(target);
     if (typeof option.id === 'function') {
       if (!(target.prototype instanceof option.id) && option.id !== target) {
-        throw new Error('Explicitly specified component id must be string, symbol, or any of its base class');
+        throw new InvalidComponentIdError(target, option.id);
       }
     }
     setComponentMetadata(target, option);
