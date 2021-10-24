@@ -37,8 +37,8 @@ describe('BuiltinModule', () => {
     }
 
     const moduleRoot = new ModuleRoot(MyModule);
-    await moduleRoot.start();
-    await moduleRoot.stop().then(() => {
+    await moduleRoot.bootstrap();
+    await moduleRoot.shutdown().then(() => {
       expect(spy).toHaveBeenCalled();
       stoppedStub();
       expect(moduleScannerStub).toHaveBeenCalled();

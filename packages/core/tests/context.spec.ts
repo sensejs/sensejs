@@ -1,7 +1,7 @@
 import {jest} from '@jest/globals';
 import {EventEmitter} from 'events';
 import {Component, ModuleClass, ModuleRoot, OnModuleCreate, OnModuleDestroy} from '../src/index.js';
-import {inject} from '@sensejs/container';
+import {Inject} from '@sensejs/container';
 
 describe('ModuleRoot', () => {
   test('lifecycle', async () => {
@@ -52,7 +52,7 @@ describe('ModuleRoot', () => {
     await startPromise;
     expect(stubForCreateB).toHaveBeenCalled();
 
-    const stopPromise = app.stop();
+    const stopPromise = app.shutdown();
     expect(stubForDestroyA).not.toHaveBeenCalled();
     mockedModuleEvent.emit('destroy');
     await stopPromise;
@@ -70,7 +70,7 @@ describe('ModuleRoot', () => {
 
     @Component()
     class BarComponent {
-      constructor(@inject(FooComponent) private fooComponent: FooComponent) {
+      constructor(@Inject(FooComponent) private fooComponent: FooComponent) {
         barComponentStub();
       }
     }

@@ -18,6 +18,10 @@ export class ModuleRoot<T extends {} = {}> {
   private readonly entryModuleInstance: ModuleInstance<T>;
   private readonly backgroundTaskQueue = new BackgroundTaskQueue();
   private readonly moduleScanner: ModuleScanner;
+  private bootstrapPromise?: Promise<void>;
+  private startPromise?: Promise<void>;
+  private stopPromise?: Promise<void>;
+  private shutdownPromise?: Promise<void>;
 
   public constructor(entryModule: Constructor<T>, processManager?: ProcessManager) {
     this.moduleScanner = new ModuleScanner(entryModule);
@@ -57,7 +61,7 @@ export class ModuleRoot<T extends {} = {}> {
     } catch (e) {
       error = e;
     } finally {
-      await moduleRoot.stop().catch((e) => {
+      await moduleRoot.shutdown().catch((e) => {
         error = new ModuleShutdownError(e, error);
       });
     }
@@ -66,18 +70,32 @@ export class ModuleRoot<T extends {} = {}> {
     }
   }
 
-  private static async startModule<T>(moduleInstance: ModuleInstance<T>) {
+  private static async bootstrapModule<T>(moduleInstance: ModuleInstance<T>) {
     for (const dependency of moduleInstance.dependencies) {
-      await ModuleRoot.startModule(dependency);
+      await ModuleRoot.bootstrapModule(dependency);
     }
-    await moduleInstance.onSetup();
+    await moduleInstance.bootstrap();
+  }
+
+  private static async shutdownModule<T>(moduleInstance: ModuleInstance<T>) {
+    if (--moduleInstance.referencedCounter > 0) {
+      return;
+    }
+    await moduleInstance.destroy();
+    for (;;) {
+      const dependency = moduleInstance.dependencies.pop();
+      if (!dependency) {
+        return;
+      }
+      await this.shutdownModule(dependency);
+    }
   }
 
   private static async stopModule<T>(moduleInstance: ModuleInstance<T>) {
     if (--moduleInstance.referencedCounter > 0) {
       return;
     }
-    await moduleInstance.onDestroy();
+    await moduleInstance.destroy();
     for (;;) {
       const dependency = moduleInstance.dependencies.pop();
       if (!dependency) {
@@ -88,18 +106,45 @@ export class ModuleRoot<T extends {} = {}> {
   }
 
   public async start(): Promise<void> {
-    await ModuleRoot.startModule(this.entryModuleInstance);
+    if (this.startPromise) {
+      return this.startPromise;
+    }
     this.container.validate();
-    await this.entryModuleInstance.onBootstrap();
+    this.startPromise = this.bootstrap().then(() => this.entryModuleInstance.start());
+    return this.startPromise;
+  }
+
+  public async bootstrap() {
+    if (this.bootstrapPromise) {
+      return this.bootstrapPromise;
+    }
+    this.bootstrapPromise = ModuleRoot.bootstrapModule(this.entryModuleInstance);
+    return this.bootstrapPromise;
   }
 
   public async stop(): Promise<void> {
-    await this.entryModuleInstance.onShutdown();
-    await ModuleRoot.stopModule(this.entryModuleInstance);
-    await this.backgroundTaskQueue.waitAllTaskFinished();
+    if (this.stopPromise) {
+      return this.stopPromise;
+    }
+    this.stopPromise = this.startPromise
+      ? this.startPromise.catch(() => {}).then(() => this.entryModuleInstance.stop())
+      : Promise.resolve();
+    return this.stopPromise;
+  }
+
+  public async shutdown() {
+    if (this.shutdownPromise) {
+      return this.shutdownPromise;
+    }
+    this.shutdownPromise = this.stop()
+      .finally(() => {
+        return ModuleRoot.shutdownModule(this.entryModuleInstance);
+      })
+      .finally(() => this.backgroundTaskQueue.waitAllTaskFinished());
+    return this.shutdownPromise;
   }
 
   public run<K extends keyof T>(method: K): InvokeResult<T, K> {
-    return invokeMethod(this.container.createResolveContext(), this.entryModuleInstance.moduleClass, method);
+    return invokeMethod(this.container.createResolveSession(), this.entryModuleInstance.moduleClass, method);
   }
 }

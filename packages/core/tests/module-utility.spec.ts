@@ -56,9 +56,9 @@ test('createConnectionFactory', async () => {
   }
 
   const moduleRoot = new ModuleRoot(MyModule);
-  await moduleRoot.start();
+  await moduleRoot.bootstrap();
   expect(stub).toHaveBeenCalled();
-  await moduleRoot.stop();
+  await moduleRoot.shutdown();
   expect(MockConn.prototype.close).toHaveBeenCalled();
 });
 

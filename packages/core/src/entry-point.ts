@@ -62,7 +62,7 @@ interface EntryPointModule {
   main(): Promise<ExitOption>;
 }
 
-export class ApplicationRunner {
+export class ApplicationRunner<M> {
   private runPromise?: Promise<void>;
   private logger: Logger = this.runOption.logger;
 
@@ -97,7 +97,7 @@ export class ApplicationRunner {
 
   constructor(
     private process: NodeJS.EventEmitter,
-    private module: Constructor,
+    private module: Constructor<M>,
     private runOption: RunOption<unknown>,
   ) {}
 
@@ -120,12 +120,24 @@ export class ApplicationRunner {
     return this.runPromise;
   }
 
+  private getBoostrapObservable(moduleRoot: ModuleRoot<EntryPointModule>): Observable<ExitOption> {
+    return merge(
+      from(moduleRoot.bootstrap()).pipe(
+        mergeMap(() => of<ExitOption>()),
+        catchError((e) => {
+          this.logger.error('Error occurred while bootstrapping:', e);
+          return of(this.runOption.errorExitOption);
+        }),
+      ),
+    );
+  }
+
   private getStartupObservable(moduleRoot: ModuleRoot<EntryPointModule>): Observable<ExitOption> {
     return merge(
       from(moduleRoot.start()).pipe(
         mergeMap(() => of<ExitOption>()),
         catchError((e) => {
-          this.logger.error('Error occurred while starting up:', e);
+          this.logger.error('Error occurred while starting:', e);
           return of(this.runOption.errorExitOption);
         }),
       ),
@@ -134,10 +146,25 @@ export class ApplicationRunner {
 
   private performStop<T>(moduleRoot: ModuleRoot<T>, exitOption: ExitOption, ueo: Observable<number>) {
     return merge(
-      from(moduleRoot.stop()).pipe(
+      from(moduleRoot.shutdown()).pipe(
         mapTo(exitOption.exitCode),
         catchError((e) => {
-          this.logger.error('Error occurred while shutting down:', e);
+          this.logger.error('Error occurred while stopping:', e);
+          return of(this.runOption.errorExitOption.exitCode);
+        }),
+        timeout(exitOption.timeout),
+        catchError(() => of(this.runOption.forcedExitOption.forcedExitCode)),
+      ),
+      ueo,
+    ).pipe(first());
+  }
+
+  private performShutdown<T>(moduleRoot: ModuleRoot<T>, exitOption: ExitOption, ueo: Observable<number>) {
+    return merge(
+      from(moduleRoot.shutdown()).pipe(
+        mapTo(exitOption.exitCode),
+        catchError((e) => {
+          this.logger.error('Error occurred while shutdown:', e);
           return of(this.runOption.errorExitOption.exitCode);
         }),
         timeout(exitOption.timeout),

@@ -104,8 +104,8 @@ describe('Module resolve', () => {
       new Container(),
     );
     try {
-      await instance.onSetup();
-      await instance.onDestroy();
+      await instance.bootstrap();
+      await instance.destroy();
     } catch (e) {
       console.error(e);
       throw e;
@@ -119,8 +119,8 @@ describe('Module resolve', () => {
       }),
       new Container(),
     );
-    await instance.onSetup();
-    await instance.onDestroy();
+    await instance.bootstrap();
+    await instance.destroy();
   });
 
   test('dynamic resolve', async () => {
@@ -262,7 +262,7 @@ describe('Module Root', () => {
       async onStop() {
         xOnStop();
         await new Promise(setImmediate);
-        expect(zOnStop).not.toHaveBeenCalled();
+        expect(zOnStop).toHaveBeenCalled();
         expectAllNotDestroyed();
       }
 
@@ -295,7 +295,7 @@ describe('Module Root', () => {
       async onStop() {
         yOnStop();
         await new Promise(setImmediate);
-        expect(zOnStop).not.toHaveBeenCalled();
+        expect(zOnStop).toHaveBeenCalled();
         expectAllNotDestroyed();
       }
 
@@ -331,8 +331,8 @@ describe('Module Root', () => {
       @OnStop()
       async onStop() {
         zOnStop();
-        expect(xOnStop).toHaveBeenCalled();
-        expect(yOnStop).toHaveBeenCalled();
+        expect(xOnStop).not.toHaveBeenCalled();
+        expect(yOnStop).not.toHaveBeenCalled();
         expectAllNotDestroyed();
       }
 
@@ -351,7 +351,7 @@ describe('Module Root', () => {
     expect(xOnStart).toHaveBeenCalled();
     expect(yOnStart).toHaveBeenCalled();
     expect(zOnStart).toHaveBeenCalled();
-    await moduleRoot.stop();
+    await moduleRoot.shutdown();
     expect(xOnStop).toHaveBeenCalled();
     expect(yOnStop).toHaveBeenCalled();
     expect(zOnStop).toHaveBeenCalled();
