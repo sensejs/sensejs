@@ -45,10 +45,13 @@ const runOptionFixture: Omit<RunOption<number>, 'logger'> = {
 };
 
 function createAppRunner(module: Constructor, onExit: (exitCode: number) => unknown) {
-  const runOption = Object.assign({}, runOptionFixture, {
+  const runOption: RunOption<void> = {
+    ...runOptionFixture,
     logger: consoleLogger,
-    onExit,
-  });
+    onExit: (exitCode: number) => {
+      onExit(exitCode);
+    },
+  };
   return new ApplicationRunner(process, module, runOption);
 }
 

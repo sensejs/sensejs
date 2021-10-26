@@ -1,9 +1,9 @@
+import {concat, defer, firstValueFrom, from, fromEvent, merge, Observable, of, Subject, Subscription} from 'rxjs';
+import {catchError, first, mapTo, mergeMap, skip, tap, timeout} from 'rxjs/operators';
 import {ModuleRoot} from './module-root.js';
 import {consoleLogger, Logger} from './logger.js';
 import {Constructor} from './interfaces.js';
-import {concat, firstValueFrom, from, fromEvent, merge, Observable, of, Subject} from 'rxjs';
 import {ModuleClass} from './module.js';
-import {catchError, first, mapTo, mergeMap, skip, timeout} from 'rxjs/operators';
 import {ProcessManager} from './builtins.js';
 
 interface NormalExitOption {
@@ -63,7 +63,7 @@ interface EntryPointModule {
 }
 
 export class ApplicationRunner<M> {
-  private runPromise?: Promise<void>;
+  private runSubscription?: Subscription;
   private logger: Logger = this.runOption.logger;
 
   private stoppedSubject = new Subject<ExitOption>();
@@ -101,10 +101,10 @@ export class ApplicationRunner<M> {
     private runOption: RunOption<unknown>,
   ) {}
 
-  static async runModule<T>(entryModule: Constructor, runOption: Partial<RunOption<T>> = {}): Promise<void> {
+  static runModule<T>(entryModule: Constructor, runOption: Partial<RunOption<T>> = {}) {
     const actualRunOption = Object.assign({}, defaultRunOption, runOption);
     const runner = new ApplicationRunner(process, entryModule, actualRunOption);
-    await runner.run();
+    runner.run();
   }
 
   shutdown(): void {
@@ -112,12 +112,12 @@ export class ApplicationRunner<M> {
     this.stoppedSubject.complete();
   }
 
-  async run(): Promise<void> {
-    if (this.runPromise) {
-      return this.runPromise;
+  run() {
+    if (this.runSubscription) {
+      return;
     }
-    this.runPromise = this.performRun();
-    return this.runPromise;
+    this.runSubscription = this.performRun().subscribe();
+    return;
   }
 
   private getBoostrapObservable(moduleRoot: ModuleRoot<EntryPointModule>): Observable<ExitOption> {
@@ -133,14 +133,14 @@ export class ApplicationRunner<M> {
   }
 
   private getStartupObservable(moduleRoot: ModuleRoot<EntryPointModule>): Observable<ExitOption> {
-    return merge(
-      from(moduleRoot.start()).pipe(
-        mergeMap(() => of<ExitOption>()),
-        catchError((e) => {
-          this.logger.error('Error occurred while starting:', e);
-          return of(this.runOption.errorExitOption);
-        }),
-      ),
+    return defer(() => moduleRoot.start()).pipe(
+      mergeMap(() => {
+        return of<ExitOption>();
+      }),
+      catchError((e) => {
+        this.logger.error('Error occurred while starting:', e);
+        return of(this.runOption.errorExitOption);
+      }),
     );
   }
 
@@ -189,7 +189,7 @@ export class ApplicationRunner<M> {
     return ApplicationRunnerModule;
   }
 
-  private async performRun() {
+  private performRun(): Observable<number> {
     const moduleRoot = new ModuleRoot(this.createApplicationRunnerModule(), this.processManager);
     const uncaughtErrorExitCodeObservable = this.uncaughtErrorObservable.pipe(
       mapTo(this.runOption.errorExitOption.exitCode),
@@ -207,14 +207,15 @@ export class ApplicationRunner<M> {
       uncaughtErrorExitCodeObservable,
     );
 
-    try {
-      const exitCode = await firstValueFrom(merge(shutdownObservable, this.forcedExitSignalObservable).pipe(first()));
-      this.runOption.onExit(exitCode);
-    } finally {
-      uncaughtErrorSubscriber.unsubscribe();
-      shutdownSignalSubscriber.unsubscribe();
-      warningSubscriber.unsubscribe();
-    }
+    return merge(shutdownObservable, this.forcedExitSignalObservable).pipe(
+      first(),
+      tap((exitCode) => {
+        uncaughtErrorSubscriber.unsubscribe();
+        shutdownSignalSubscriber.unsubscribe();
+        warningSubscriber.unsubscribe();
+        this.runOption.onExit(exitCode);
+      }),
+    );
   }
 
   private getShutdownSubscriber(
@@ -225,7 +226,7 @@ export class ApplicationRunner<M> {
     return runningProcessObservable.pipe(
       first(),
       mergeMap((exitOption) => {
-        return this.performStop(moduleRoot, exitOption, uncaughtErrorObserver);
+        return this.performShutdown(moduleRoot, exitOption, uncaughtErrorObserver);
       }),
     );
   }
@@ -236,16 +237,12 @@ export class ApplicationRunner<M> {
   ) {
     return concat(
       startupProcessObservable,
-      new Observable<ExitOption>((subscriber) =>
-        merge(
-          from(Promise.resolve(moduleRoot.run('main'))).pipe(
-            catchError((e) => {
-              this.logger.error('Error occurred while running:', e);
-              this.logger.error('Going to quit.');
-              return of(this.runOption.errorExitOption);
-            }),
-          ),
-        ).subscribe(subscriber),
+      defer(async () => moduleRoot.run('main')).pipe(
+        catchError((e) => {
+          this.logger.error('Error occurred while running:', e);
+          this.logger.error('Going to quit.');
+          return of(this.runOption.errorExitOption);
+        }),
       ),
     );
   }
