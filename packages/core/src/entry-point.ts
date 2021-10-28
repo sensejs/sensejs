@@ -1,10 +1,24 @@
-import {concat, defer, firstValueFrom, from, fromEvent, merge, Observable, of, Subject, Subscription} from 'rxjs';
+import {
+  concat,
+  defer,
+  EMPTY,
+  firstValueFrom,
+  from,
+  fromEvent,
+  map,
+  merge,
+  Observable,
+  of,
+  Subject,
+  Subscription,
+} from 'rxjs';
 import {catchError, first, mapTo, mergeMap, skip, tap, timeout} from 'rxjs/operators';
 import {ModuleRoot} from './module-root.js';
 import {consoleLogger, Logger} from './logger.js';
 import {Constructor} from './interfaces.js';
 import {ModuleClass} from './module.js';
 import {ProcessManager} from './builtins.js';
+import _ from 'lodash';
 
 interface NormalExitOption {
   exitCode: number;
@@ -22,7 +36,7 @@ type ExitSignalOption = {
   [signal in NodeJS.Signals]?: Partial<ExitOption>;
 };
 
-export interface RunOption<T = never> {
+export interface RunnerOption<T = never> {
   normalExitOption: NormalExitOption;
   forcedExitOption: ForcedExitOption;
   errorExitOption: ExitOption;
@@ -32,7 +46,7 @@ export interface RunOption<T = never> {
   onExit: (exitCode: number) => T;
 }
 
-export const defaultRunOption: RunOption = {
+export const defaultRunOption: RunnerOption<any> = {
   normalExitOption: {
     exitCode: 0,
     timeout: 5000,
@@ -62,222 +76,197 @@ interface EntryPointModule {
   main(): Promise<ExitOption>;
 }
 
-export class ApplicationRunner<M> {
+export class ApplicationRunner {
+  static instance = new ApplicationRunner(process);
   private runSubscription?: Subscription;
-  private logger: Logger = this.runOption.logger;
 
   private stoppedSubject = new Subject<ExitOption>();
-  private processManager = new ProcessManager((e?: Error) => {
-    if (e) {
-      this.logger.info('Requested to shutdown due to error occurred: ', e);
-    }
-    this.stoppedSubject.next(e ? this.runOption.errorExitOption : this.runOption.normalExitOption);
-    this.stoppedSubject.complete();
-  });
-
-  private exitSignalObservables = Object.entries(this.runOption.exitSignals).map(([signal, partialExitOption]) => {
-    const exitOption: ExitOption = Object.assign({}, this.runOption.normalExitOption, partialExitOption);
-    return fromEvent(this.process, signal).pipe(
-      first(),
-      mergeMap(() => this.createForcedExitObservable(signal, exitOption)),
-    );
-  });
-
-  private exitSignalObservable = merge(...this.exitSignalObservables.map((o) => o.pipe(first()))).pipe(first());
-
-  private forcedExitSignalObservable = merge(...this.exitSignalObservables.map((o) => o.pipe(skip(1)))).pipe(
-    first(),
-    mapTo(this.runOption.forcedExitOption.forcedExitCode),
-  );
-
   private uncaughtErrorObservable = merge(
     fromEvent(this.process, 'uncaughtException'),
     fromEvent(this.process, 'unhandledRejection'),
   );
 
-  constructor(
-    private process: NodeJS.EventEmitter,
-    private module: Constructor<M>,
-    private runOption: RunOption<unknown>,
-  ) {}
+  protected constructor(private process: NodeJS.EventEmitter) {}
 
-  static runModule<T>(entryModule: Constructor, runOption: Partial<RunOption<T>> = {}) {
-    const actualRunOption = Object.assign({}, defaultRunOption, runOption);
-    const runner = new ApplicationRunner(process, entryModule, actualRunOption);
-    runner.run();
+  run<M extends {}, K extends keyof M, T = never>(
+    entryModule: Constructor<M>,
+    entryMethodKey: K,
+    runOption: Partial<RunnerOption<T>> = {},
+  ) {
+    this.performRunModule(entryModule, entryMethodKey, _.merge({}, defaultRunOption, runOption), false);
   }
 
-  shutdown(): void {
-    this.stoppedSubject.next(this.runOption.normalExitOption);
-    this.stoppedSubject.complete();
-  }
-
-  run() {
-    if (this.runSubscription) {
-      return;
-    }
-    this.runSubscription = this.performRun().subscribe();
-    return;
-  }
-
-  private getBoostrapObservable(moduleRoot: ModuleRoot<EntryPointModule>): Observable<ExitOption> {
-    return merge(
-      from(moduleRoot.bootstrap()).pipe(
-        mergeMap(() => of<ExitOption>()),
-        catchError((e) => {
-          this.logger.error('Error occurred while bootstrapping:', e);
-          return of(this.runOption.errorExitOption);
-        }),
-      ),
-    );
-  }
-
-  private getStartupObservable(moduleRoot: ModuleRoot<EntryPointModule>): Observable<ExitOption> {
-    return defer(() => moduleRoot.start()).pipe(
-      mergeMap(() => {
-        return of<ExitOption>();
-      }),
-      catchError((e) => {
-        this.logger.error('Error occurred while starting:', e);
-        return of(this.runOption.errorExitOption);
-      }),
-    );
-  }
-
-  private performStop<T>(moduleRoot: ModuleRoot<T>, exitOption: ExitOption, ueo: Observable<number>) {
-    return merge(
-      from(moduleRoot.shutdown()).pipe(
-        mapTo(exitOption.exitCode),
-        catchError((e) => {
-          this.logger.error('Error occurred while stopping:', e);
-          return of(this.runOption.errorExitOption.exitCode);
-        }),
-        timeout(exitOption.timeout),
-        catchError(() => of(this.runOption.forcedExitOption.forcedExitCode)),
-      ),
-      ueo,
-    ).pipe(first());
-  }
-
-  private performShutdown<T>(moduleRoot: ModuleRoot<T>, exitOption: ExitOption, ueo: Observable<number>) {
-    return merge(
-      from(moduleRoot.shutdown()).pipe(
-        mapTo(exitOption.exitCode),
-        catchError((e) => {
-          this.logger.error('Error occurred while shutdown:', e);
-          return of(this.runOption.errorExitOption.exitCode);
-        }),
-        timeout(exitOption.timeout),
-        catchError(() => of(this.runOption.forcedExitOption.forcedExitCode)),
-      ),
-      ueo,
-    ).pipe(first());
-  }
-
-  private createApplicationRunnerModule(): Constructor<EntryPointModule> {
+  runModule<M extends {}, K extends keyof M, T = never>(
+    ...args:
+      | [entryModule: Constructor<M>, entryMethod: K, runOption: Partial<RunnerOption<T>>]
+      | [entryModule: Constructor<M>, runOption: Partial<RunnerOption<T>>]
+      | [entryModule: Constructor<M>, entryMethod: K]
+      | [entryModule: Constructor<M>]
+  ) {
+    const entryModule = args[0];
     const stoppedPromise = firstValueFrom(this.stoppedSubject);
 
     @ModuleClass({
-      requires: [this.module],
+      requires: [entryModule],
     })
-    class ApplicationRunnerModule implements EntryPointModule {
+    class RunnerWrapperModule implements EntryPointModule {
       async main() {
         return stoppedPromise;
       }
     }
 
-    return ApplicationRunnerModule;
+    if (args.length === 1) {
+      this.performRunModule(RunnerWrapperModule, 'main', defaultRunOption, true);
+    } else if (typeof args[1] === 'object') {
+      this.performRunModule(RunnerWrapperModule, 'main', _.merge({}, defaultRunOption, args[1]), true);
+    } else {
+      this.performRunModule(entryModule, args[1], _.merge({}, defaultRunOption, args[2]), true);
+    }
   }
 
-  private performRun(): Observable<number> {
-    const moduleRoot = new ModuleRoot(this.createApplicationRunnerModule(), this.processManager);
+  private createProcessManager<T>(runOption: RunnerOption<T>) {
+    return new ProcessManager((e?: Error) => {
+      if (e) {
+        runOption.logger.info('Requested to shutdown due to error occurred: ', e);
+      }
+      this.stoppedSubject.next(e ? runOption.errorExitOption : runOption.normalExitOption);
+      this.stoppedSubject.complete();
+    });
+  }
+
+  private performRunModule<M extends {}, K extends keyof M, T = never>(
+    entryModule: Constructor<M>,
+    entryMethodKey: K,
+    runOption: RunnerOption<T>,
+    startAllModules: boolean,
+  ) {
+    const {logger} = runOption;
+    if (this.runSubscription) {
+      logger.error('run() or runModule() of ApplicationRunner has already been called');
+      return;
+    }
+
+    const processManager = this.createProcessManager(runOption);
+    const moduleRoot = new ModuleRoot<M>(entryModule, processManager);
     const uncaughtErrorExitCodeObservable = this.uncaughtErrorObservable.pipe(
-      mapTo(this.runOption.errorExitOption.exitCode),
-    );
-
-    const warningSubscriber = this.getWarningSubscriber();
-    const uncaughtErrorSubscriber = this.getUncaughtErrorSubscriber(this.uncaughtErrorObservable);
-    const shutdownSignalSubscriber = this.getShutdownSignalSubscriber(this.exitSignalObservable);
-
-    const startupObservable = this.getStartupObservable(moduleRoot);
-    const runningObservable = this.getRunningObservable(startupObservable, moduleRoot);
-    const shutdownObservable = this.getShutdownSubscriber(
-      runningObservable,
-      moduleRoot,
-      uncaughtErrorExitCodeObservable,
-    );
-
-    return merge(shutdownObservable, this.forcedExitSignalObservable).pipe(
       first(),
-      tap((exitCode) => {
-        uncaughtErrorSubscriber.unsubscribe();
-        shutdownSignalSubscriber.unsubscribe();
-        warningSubscriber.unsubscribe();
-        this.runOption.onExit(exitCode);
+      tap((e) => {
+        runOption.logger.error('Going to quit due to uncaught error:', e);
+      }),
+      mapTo(runOption.errorExitOption),
+    );
+
+    const warningSubscriber = this.getWarningSubscriber(runOption);
+    const exitSignalObservables = this.getExitSignalObservables(runOption);
+    const exitSignalObservable = merge(...exitSignalObservables).pipe(first());
+    const forcedExitSignalObservable = merge(...exitSignalObservables.map((o) => o.pipe(skip(1)))).pipe(
+      first(),
+      map((x) => x.forcedExitCode ?? runOption.forcedExitOption.forcedExitCode),
+    );
+
+    const runningObservable = merge(
+      uncaughtErrorExitCodeObservable,
+      exitSignalObservable,
+      concat(
+        startAllModules
+          ? this.getStartupObservable(moduleRoot, runOption)
+          : this.getBoostrapObservable(moduleRoot, runOption),
+        defer(async () => moduleRoot.run(entryMethodKey)).pipe(
+          mapTo(runOption.normalExitOption),
+          catchError((e) => {
+            runOption.logger.error('Error occurred while running:', e);
+            runOption.logger.error('Going to quit.');
+            return of(runOption.errorExitOption);
+          }),
+        ),
+      ),
+    ).pipe(first(), tap(console.log));
+    const shutdownObservable = this.getShutdownObservable(runningObservable, moduleRoot, runOption);
+
+    this.runSubscription = merge(shutdownObservable, forcedExitSignalObservable)
+      .pipe(
+        first(),
+        tap((exitCode) => {
+          warningSubscriber.unsubscribe();
+          return runOption.onExit(exitCode);
+        }),
+      )
+      .subscribe();
+  }
+
+  private getExitSignalObservables<T>(runOption: RunnerOption<T>) {
+    return Object.entries(runOption.exitSignals).map(([signal, partialExitOption]) => {
+      const exitOption: ExitOption = Object.assign({}, runOption.normalExitOption, partialExitOption);
+      return fromEvent(this.process, signal).pipe(
+        first(),
+        mergeMap(() => this.createForcedExitObservable(signal, exitOption, runOption)),
+      );
+    });
+  }
+
+  private getBoostrapObservable<M, T>(moduleRoot: ModuleRoot<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
+    return defer(() => moduleRoot.bootstrap()).pipe(
+      mergeMap(() => EMPTY),
+      catchError((e) => {
+        runOption.logger.error('Error occurred while bootstrapping:', e);
+        return of(runOption.errorExitOption);
       }),
     );
   }
 
-  private getShutdownSubscriber(
+  private getStartupObservable<M, T>(moduleRoot: ModuleRoot<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
+    return defer(() => moduleRoot.start()).pipe(
+      mergeMap(() => EMPTY),
+      catchError((e) => {
+        runOption.logger.error('Error occurred while starting:', e);
+        return of(runOption.errorExitOption);
+      }),
+    );
+  }
+
+  private performShutdown<M, T>(moduleRoot: ModuleRoot<M>, exitOption: ExitOption, runOption: RunnerOption<T>) {
+    return merge(
+      from(moduleRoot.shutdown()).pipe(
+        mapTo(exitOption.exitCode),
+        catchError((e) => {
+          runOption.logger.error('Error occurred while shutdown:', e);
+          return of(runOption.errorExitOption.exitCode);
+        }),
+        timeout(exitOption.timeout),
+        catchError(() => of(runOption.forcedExitOption.forcedExitCode)),
+      ),
+    ).pipe(first());
+  }
+
+  private getShutdownObservable<M extends {}, T>(
     runningProcessObservable: Observable<ExitOption>,
-    moduleRoot: ModuleRoot<EntryPointModule>,
-    uncaughtErrorObserver: Observable<number>,
+    moduleRoot: ModuleRoot<M>,
+    runOption: RunnerOption<T>,
   ) {
     return runningProcessObservable.pipe(
       first(),
       mergeMap((exitOption) => {
-        return this.performShutdown(moduleRoot, exitOption, uncaughtErrorObserver);
+        return concat(this.performShutdown(moduleRoot, exitOption, runOption), of(exitOption.exitCode));
       }),
     );
   }
 
-  private getRunningObservable(
-    startupProcessObservable: Observable<ExitOption>,
-    moduleRoot: ModuleRoot<EntryPointModule>,
-  ) {
-    return concat(
-      startupProcessObservable,
-      defer(async () => moduleRoot.run('main')).pipe(
-        catchError((e) => {
-          this.logger.error('Error occurred while running:', e);
-          this.logger.error('Going to quit.');
-          return of(this.runOption.errorExitOption);
-        }),
-      ),
-    );
-  }
-
-  private getShutdownSignalSubscriber(exitSignalObservable: Observable<ExitOption>) {
-    return exitSignalObservable.subscribe({
-      next: (exitOption) => {
-        this.stoppedSubject.next(exitOption);
-        this.stoppedSubject.complete();
-      },
-    });
-  }
-
-  private getUncaughtErrorSubscriber(uncaughtErrorObserver: Observable<unknown>) {
-    return uncaughtErrorObserver.subscribe({
-      next: (e) => {
-        this.logger.error('Going to quit due to uncaught error:', e);
-        this.stoppedSubject.next(this.runOption.errorExitOption);
-        this.stoppedSubject.complete();
-      },
-    });
-  }
-
-  private getWarningSubscriber() {
+  private getWarningSubscriber<T>(runOption: RunnerOption<T>) {
     return fromEvent(this.process, 'warning').subscribe({
       next: (e) => {
-        if (this.runOption.printWarning) {
-          this.logger.warn('Warning: ', e);
+        if (runOption.printWarning) {
+          runOption.logger.warn('Warning: ', e);
         }
       },
     });
   }
 
-  private createForcedExitObservable(signal: string, exitOption: ExitOption): Observable<ExitOption> {
-    this.logger.info('Receive signal %s, going to quit', signal);
+  private createForcedExitObservable<T>(
+    signal: string,
+    exitOption: ExitOption,
+    runOption: RunnerOption<T>,
+  ): Observable<ExitOption> {
+    runOption.logger.info('Receive signal %s, going to quit', signal);
     const result = of(exitOption);
     if (!exitOption.forcedExitWhenRepeated) {
       return result;
@@ -286,19 +275,11 @@ export class ApplicationRunner<M> {
   }
 }
 
-let entryPointCalled = false;
-
-export function EntryPoint(runOption: Partial<RunOption> = {}) {
+export function EntryPoint(runOption: Partial<RunnerOption> = {}) {
   return (moduleConstructor: Constructor): void => {
-    if (entryPointCalled) {
-      throw new Error('only one entry point is allowed');
-    }
-    entryPointCalled = true;
-    process.nextTick(() =>
-      ApplicationRunner.runModule(
-        moduleConstructor,
-        Object.assign({}, defaultRunOption, {onExit: (exitCode: number) => process.exit(exitCode)}, runOption),
-      ),
+    ApplicationRunner.instance.runModule(
+      moduleConstructor,
+      Object.assign({}, defaultRunOption, {onExit: (exitCode: number) => process.exit(exitCode)}, runOption),
     );
   };
 }
