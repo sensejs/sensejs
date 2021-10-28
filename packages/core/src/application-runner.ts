@@ -140,10 +140,8 @@ export class ApplicationRunner {
     runOption: RunnerOption<T>,
     startAllModules: boolean,
   ) {
-    const {logger} = runOption;
     if (this.runSubscription) {
-      logger.error('run() or runModule() of ApplicationRunner has already been called');
-      return;
+      throw new Error('run() or runModule() ApplicationRunner can only be executed once in a process');
     }
 
     const processManager = this.createProcessManager(runOption);
@@ -159,7 +157,11 @@ export class ApplicationRunner {
     const warningSubscriber = this.getWarningSubscriber(runOption);
     const exitSignalObservables = this.getExitSignalObservables(runOption);
     const exitSignalObservable = merge(...exitSignalObservables).pipe(first());
-    const forcedExitSignalObservable = merge(...exitSignalObservables.map((o) => o.pipe(skip(1)))).pipe(
+    const forcedExitSignalObservable = merge(
+      ...exitSignalObservables.map((o) => {
+        return o.pipe(skip(1));
+      }),
+    ).pipe(
       first(),
       map((x) => x.forcedExitCode ?? runOption.forcedExitOption.forcedExitCode),
     );
@@ -180,7 +182,10 @@ export class ApplicationRunner {
           }),
         ),
       ),
-    ).pipe(first(), tap(console.log));
+    ).pipe(
+      first(),
+      tap(() => {}),
+    );
     const shutdownObservable = this.getShutdownObservable(runningObservable, moduleRoot, runOption);
 
     this.runSubscription = merge(shutdownObservable, forcedExitSignalObservable)
@@ -204,9 +209,19 @@ export class ApplicationRunner {
     });
   }
 
+  private runOnNextTick(fn: () => Promise<void>) {
+    return new Observable<never>((subscriber) => {
+      setImmediate(() => {
+        fn().then(
+          () => subscriber.complete(),
+          (e) => subscriber.error(e),
+        );
+      });
+    });
+  }
+
   private getBoostrapObservable<M, T>(moduleRoot: ModuleRoot<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
-    return defer(() => moduleRoot.bootstrap()).pipe(
-      mergeMap(() => EMPTY),
+    return defer(() => this.runOnNextTick(() => moduleRoot.bootstrap())).pipe(
       catchError((e) => {
         runOption.logger.error('Error occurred while bootstrapping:', e);
         return of(runOption.errorExitOption);
@@ -215,7 +230,7 @@ export class ApplicationRunner {
   }
 
   private getStartupObservable<M, T>(moduleRoot: ModuleRoot<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
-    return defer(() => moduleRoot.start()).pipe(
+    return defer(() => this.runOnNextTick(() => moduleRoot.start())).pipe(
       mergeMap(() => EMPTY),
       catchError((e) => {
         runOption.logger.error('Error occurred while starting:', e);

@@ -9,7 +9,7 @@ import {
   OnModuleDestroy,
   ProcessManager,
 } from '../src/index.js';
-import '@sensejs/testing-utility/lib/mock-console';
+// import '@sensejs/testing-utility/lib/mock-console';
 
 /**
  * Because EntryPoint decorator is coupled to state of global process object,
@@ -25,11 +25,8 @@ test('EntryPoint decorator', async () => {
   });
 
   jest.spyOn(process, 'exit').mockImplementation((exitCode: number = 0): never => {
-    // throw an application to emulate process.exit, not finally block will be executed anyway
-    console.log('exit');
     stub(exitCode);
-    return undefined as never;
-    // throw new EmulateProcessExit('process exit');
+    return void 0 as never;
   });
 
   @EntryPoint()
@@ -40,6 +37,15 @@ test('EntryPoint decorator', async () => {
       const stub = jest.fn();
       moduleScanner.scanModule(stub);
       expect(stub).toHaveBeenCalledWith(getModuleMetadata(GlobalEntryPoint));
+
+      // Make sure this assertion happens before process.exit to be called, otherwise the exception to be thrown
+      // will be ignored by jest and trigger an "unhandledRejection" event
+      expect(() => {
+        @EntryPoint()
+        @ModuleClass()
+        class B {}
+      }).toThrow();
+
       pm.shutdown();
     }
 
@@ -49,13 +55,8 @@ test('EntryPoint decorator', async () => {
     }
   }
 
-  expect(() => {
-    @EntryPoint()
-    @ModuleClass()
-    class B {}
-  }).toThrow();
-
-  await processExitPromise;
-  expect(onDestroyStub).toHaveBeenCalled();
-  expect(stub).toHaveBeenCalled();
+  await processExitPromise.then(() => {
+    expect(onDestroyStub).toHaveBeenCalled();
+    expect(stub).toHaveBeenCalled();
+  });
 });
