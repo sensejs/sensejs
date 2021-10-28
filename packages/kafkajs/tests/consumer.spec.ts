@@ -173,7 +173,7 @@ describe('Subscriber', () => {
     });
     const exitSubject = new Subject();
 
-    await ApplicationRunner.runModule(module, {
+    await ApplicationRunner.instance.runModule(module, {
       onExit: () => {
         exitSubject.complete();
         return undefined as never;

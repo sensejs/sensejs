@@ -1,5 +1,14 @@
 import {createKoaHttpModule} from '../src/index.js';
-import {ApplicationRunner, Component, createModule, Inject, ModuleClass, OnStart, ProcessManager} from '@sensejs/core';
+import {
+  ApplicationRunner,
+  Component,
+  createModule,
+  Inject,
+  ModuleClass,
+  ModuleRoot,
+  OnStart,
+  ProcessManager,
+} from '@sensejs/core';
 import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
@@ -63,8 +72,7 @@ test('HttpModule', async () => {
     ],
   })
   class Module {
-    @OnStart()
-    async onStart(@Inject(serverIdentifier) server: Server) {
+    async test(@Inject(serverIdentifier) server: Server) {
       const port = (server.address() as AddressInfo).port;
       const baseUrl = `http://localhost:${port}`;
       await supertest(baseUrl).get('/bar').expect(404);
@@ -81,10 +89,5 @@ test('HttpModule', async () => {
     }
   }
 
-  const runPromise = ApplicationRunner.runModule(Module, {
-    onExit: () => {
-      return undefined as never;
-    },
-  });
-  await runPromise;
+  return await ModuleRoot.run(Module, 'test');
 });
