@@ -6,6 +6,7 @@ export * from './interfaces.js';
 export * from './component.js';
 export * from './logger.js';
 export * from './decorators.js';
+export * from './application-runner.js';
 export * from './entry-point.js';
 export * from './module-instance.js';
 export * from './module-utility.js';
