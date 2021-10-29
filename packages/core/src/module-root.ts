@@ -56,7 +56,6 @@ export class ModuleRoot<T extends {} = {}> {
     let error: unknown = undefined;
     const moduleRoot = new ModuleRoot(entryModule, new ProcessManager((e) => (error = e)));
     try {
-      await moduleRoot.start();
       await moduleRoot.run(method);
     } catch (e) {
       error = e;
@@ -88,20 +87,6 @@ export class ModuleRoot<T extends {} = {}> {
         return;
       }
       await this.shutdownModule(dependency);
-    }
-  }
-
-  private static async stopModule<T>(moduleInstance: ModuleInstance<T>) {
-    if (--moduleInstance.referencedCounter > 0) {
-      return;
-    }
-    await moduleInstance.destroy();
-    for (;;) {
-      const dependency = moduleInstance.dependencies.pop();
-      if (!dependency) {
-        return;
-      }
-      await this.stopModule(dependency);
     }
   }
 
