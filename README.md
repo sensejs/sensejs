@@ -49,10 +49,10 @@ See [Documentation](https://sensejs.io)
             // In case you need context, inject it through constructor
             construct(@Inject(HttpContext) context: HttpContext) {}
 
-            async intercept(next: (value: any)=> Promise<void>) {
+            async intercept(next: (value1: any, value2: any)=> Promise<void>) {
                 const value1 = await getValue1();
                 const value2 = await getValue2();
-                await next(value1, value2); // The injectable is not provided through argument of next
+                await next(value1, value2); // The injectable is now provided through argument of next
             }
         }
         ```
