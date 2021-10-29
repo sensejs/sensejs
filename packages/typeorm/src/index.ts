@@ -1,6 +1,5 @@
 import {
   Constructor,
-  createModule,
   DynamicModuleLoader,
   Inject,
   InjectLogger,
@@ -9,13 +8,13 @@ import {
   ModuleOption,
   OnModuleCreate,
   OnModuleDestroy,
-  provideConnectionFactory,
-  provideOptionInjector,
+  Optional,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {AsyncInterceptProvider, Container, InterceptProviderClass} from '@sensejs/container';
+import {AsyncInterceptProvider, InterceptProviderClass} from '@sensejs/container';
 import {Connection, ConnectionOptions, createConnection, EntityManager} from 'typeorm';
 import {attachLoggerToEntityManager, createTypeOrmLogger} from './logger.js';
+import _ from 'lodash';
 
 export {attachLoggerToEntityManager} from './logger.js';
 
@@ -109,63 +108,41 @@ function mergeTypeOrmConfig(defaultValue?: Partial<ConnectionOptions>, injectedV
   return result as ConnectionOptions;
 }
 
-function createConnectionModule(option: TypeOrmModuleOption) {
-  const optionProvider = provideOptionInjector(option.typeOrmOption, option.injectOptionFrom, mergeTypeOrmConfig);
-  const factoryProvider = provideConnectionFactory(createConnection, (conn) => conn.close(), Connection);
+class BaseTypeOrmModule {
+  constructor(protected option: ConnectionOptions) {}
 
-  @ModuleClass({requires: [createModule(option)], factories: [factoryProvider, optionProvider]})
-  class TypeOrmConnectionModule {
-    constructor(@Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {}
-
-    @OnModuleCreate()
-    async onCreate(
-      @Inject(optionProvider.provide) config: ConnectionOptions,
-      @InjectLogger('TypeOrmMigration') migrationLogger: Logger,
-      @InjectLogger('TypeOrm') logger: Logger,
-    ): Promise<void> {
-      if (config.logging === true && !config.logger) {
-        config = Object.assign({}, config, {
-          logger: createTypeOrmLogger(logger, migrationLogger),
-        });
-      }
-      await this.factory.connect(config);
-    }
-
-    @OnModuleDestroy()
-    async onDestroy(): Promise<void> {
-      await this.factory.disconnect();
-    }
+  @OnModuleCreate()
+  async onModuleCreate(
+    @InjectLogger('TypeOrmMigration') migrationLogger: Logger,
+    @InjectLogger('TypeOrm') logger: Logger,
+    @Inject(DynamicModuleLoader) loader: DynamicModuleLoader,
+  ) {
+    const config = _.merge({}, {logger: createTypeOrmLogger(logger, migrationLogger)}, this.option);
+    const conn = await createConnection(config);
+    attachLoggerToEntityManager(conn.manager, logger);
+    loader.addConstant({provide: Connection, value: conn});
+    loader.addConstant({
+      provide: EntityManagerInjectSymbol,
+      value: conn.manager,
+    });
   }
 
-  return TypeOrmConnectionModule;
+  @OnModuleDestroy()
+  async onModuleDestroy(@Inject(Connection) conn: Connection) {
+    await conn.close();
+  }
 }
 
 export function createTypeOrmModule(option: TypeOrmModuleOption): Constructor {
+  const {injectOptionFrom = Symbol(), typeOrmOption, ...rest} = option;
+
   @ModuleClass({
-    requires: [createConnectionModule(option)],
+    ...rest,
   })
-  class TypeOrmModule {
-    private readonly entityManager: EntityManager;
-
-    constructor(
-      @Inject(Container) private container: Container,
-      @Inject(Connection) private connection: Connection,
-      @InjectLogger('TypeOrm') private logger: Logger,
-    ) {
-      this.entityManager = connection.manager;
-      attachLoggerToEntityManager(this.entityManager, this.logger);
+  class TypeOrmModule extends BaseTypeOrmModule {
+    constructor(@Optional() @Inject(injectOptionFrom) injected: Partial<ConnectionOptions> = {}) {
+      super(mergeTypeOrmConfig(typeOrmOption, injected));
     }
-
-    @OnModuleCreate()
-    async onCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
-      loader.addConstant({
-        provide: EntityManagerInjectSymbol,
-        value: this.entityManager,
-      });
-    }
-
-    @OnModuleDestroy()
-    async onDestroy() {}
   }
 
   return TypeOrmModule;
