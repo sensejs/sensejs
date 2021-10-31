@@ -140,7 +140,7 @@ export class ModuleRoot<T extends {} = {}> {
     }
     this.startPromise = this.bootstrap().then(() => {
       this.container.validate();
-      this.entryModuleInstance.start();
+      return this.entryModuleInstance.start();
     });
     return this.startPromise;
   }

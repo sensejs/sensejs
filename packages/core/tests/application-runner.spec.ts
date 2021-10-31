@@ -14,6 +14,7 @@ import {
   RunnerOption,
   Component,
 } from '../src/index.js';
+import {Container} from '@sensejs/container';
 import events from 'events';
 import '@sensejs/testing-utility/lib/mock-console';
 
@@ -200,6 +201,27 @@ describe('Application', () => {
 
     @ModuleClass({components: [BadComponent]})
     class TargetModule {}
+
+    const exitCode = await runModuleForTest(TargetModule);
+    expect(exitCode).toBe(runOptionFixture.errorExitOption.exitCode);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  test('create invoker onmodule start', async () => {
+    const fn = jest.fn();
+
+    @Component()
+    class BadComponent {
+      foo(@Inject('anything') anything: any) {}
+    }
+
+    @ModuleClass({components: [BadComponent]})
+    class TargetModule {
+      @OnStart()
+      onStart(@Inject(Container) container: Container) {
+        container.createMethodInvoker(BadComponent, 'foo', []);
+      }
+    }
 
     const exitCode = await runModuleForTest(TargetModule);
     expect(exitCode).toBe(runOptionFixture.errorExitOption.exitCode);
