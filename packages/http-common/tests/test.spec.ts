@@ -19,9 +19,9 @@ import {
   PUT,
   Query,
 } from '../src/index.js';
-import {Container, InterceptProviderClass} from '@sensejs/container';
+import {Container, Inject, InterceptProviderClass} from '@sensejs/container';
 import {RequestListener} from 'http';
-import {Component, ModuleClass, ModuleRoot, OnStart} from '@sensejs/core';
+import {Component, ModuleClass, ModuleRoot, OnStart, ProcessManager} from '@sensejs/core';
 
 describe('Http annotations', () => {
   test('metadata', () => {
@@ -178,7 +178,7 @@ test('Adaptor and abstract module', async () => {
       });
     }
 
-    main() {
+    main(@Inject(ProcessManager) pm: ProcessManager) {
       const expectControllerContaining = expect.objectContaining({
         target: TestController,
         prototype: TestController.prototype,
@@ -195,6 +195,7 @@ test('Adaptor and abstract module', async () => {
         TestController.prototype,
         'foo',
       );
+      pm.shutdown();
     }
 
     protected getAdaptor(): AbstractHttpApplicationBuilder {
@@ -202,5 +203,5 @@ test('Adaptor and abstract module', async () => {
     }
   }
 
-  await ModuleRoot.run(TestHttpModule, 'main');
+  await ModuleRoot.start(TestHttpModule, 'main');
 });
