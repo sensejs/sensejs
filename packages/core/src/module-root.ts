@@ -55,6 +55,10 @@ export class ModuleRoot<T extends {} = {}> {
   static async run<T>(entryModule: Constructor<T>, method: keyof T): Promise<void> {
     let error: unknown = undefined;
     const moduleRoot = new ModuleRoot(entryModule, new ProcessManager((e) => (error = e)));
+    await moduleRoot.bootstrap();
+    if (error) {
+      throw error;
+    }
     try {
       await moduleRoot.run(method);
     } catch (e) {
