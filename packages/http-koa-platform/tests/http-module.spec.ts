@@ -72,7 +72,7 @@ test('HttpModule', async () => {
     ],
   })
   class Module {
-    async test(@Inject(serverIdentifier) server: Server) {
+    async test(@Inject(serverIdentifier) server: Server, @Inject(ProcessManager) pm: ProcessManager) {
       const port = (server.address() as AddressInfo).port;
       const baseUrl = `http://localhost:${port}`;
       await supertest(baseUrl).get('/bar').expect(404);
@@ -86,8 +86,9 @@ test('HttpModule', async () => {
         }),
       );
       await supertest(baseUrl).get('/foo').expect(200);
+      pm.shutdown();
     }
   }
 
-  return await ModuleRoot.run(Module, 'test');
+  return await ModuleRoot.start(Module, 'test');
 });

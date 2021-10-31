@@ -6,6 +6,7 @@ import {
   Inject,
   ModuleClass,
   ModuleRoot,
+  ProcessManager,
   SubscribeEvent,
   SubscribeEventController,
 } from '../src/index.js';
@@ -72,7 +73,10 @@ describe('Event subscribe and announce', () => {
       ],
     })
     class EntryModule {
-      async onModuleCreate(@Inject(EventPublisher) eventPublisher: EventPublisher) {
+      async onModuleCreate(
+        @Inject(EventPublisher) eventPublisher: EventPublisher,
+        @Inject(ProcessManager) pm: ProcessManager,
+      ) {
         await eventPublisher.publish('event', 'bar');
         await eventPublisher.publish('channel', {
           a: 1,
@@ -97,9 +101,10 @@ describe('Event subscribe and announce', () => {
             b: 1,
           }),
         ).rejects;
+        pm.shutdown();
       }
     }
 
-    await ModuleRoot.run(EntryModule, 'onModuleCreate');
+    await ModuleRoot.start(EntryModule, 'onModuleCreate');
   });
 });
