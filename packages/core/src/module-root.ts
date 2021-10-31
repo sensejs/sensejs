@@ -4,6 +4,8 @@ import {Constructor} from './interfaces.js';
 import {BackgroundTaskQueue, ProcessManager} from './builtins.js';
 import {invokeMethod} from './method-invoker.js';
 import {ModuleScanner} from './module-scanner.js';
+import {ModuleClass} from './module.js';
+import {firstValueFrom, Subject} from 'rxjs';
 
 export class ModuleShutdownError extends Error {
   constructor(readonly error: unknown, readonly nestedError?: unknown) {
@@ -70,6 +72,48 @@ export class ModuleRoot<T extends {} = {}> {
     }
     if (error) {
       throw error;
+    }
+  }
+
+  static async start<T>(entryModule: Constructor<T>, method?: keyof T): Promise<void> {
+    let error: unknown = undefined;
+    let moduleRoot: ModuleRoot<any>;
+    let methodKey: keyof any;
+    if (!method) {
+      const exitSubject = new Subject<void>();
+      const exitPromise = firstValueFrom(exitSubject);
+      @ModuleClass({requires: [entryModule]})
+      class ModuleRootEntryWrapper {
+        async main() {
+          return exitPromise;
+        }
+      }
+      moduleRoot = new ModuleRoot(
+        ModuleRootEntryWrapper,
+        new ProcessManager((e) => {
+          error = e;
+          exitSubject.next();
+        }),
+      );
+      methodKey = 'main';
+
+      await moduleRoot.run('main');
+    } else {
+      moduleRoot = new ModuleRoot(entryModule);
+      methodKey = method;
+    }
+    await moduleRoot.start();
+    if (error) {
+      throw error;
+    }
+    try {
+      await moduleRoot.run(methodKey);
+    } catch (e) {
+      error = e;
+    } finally {
+      await moduleRoot.shutdown().catch((e) => {
+        error = new ModuleShutdownError(e, error);
+      });
     }
   }
 
