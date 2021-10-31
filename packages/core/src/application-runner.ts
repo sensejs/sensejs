@@ -19,6 +19,9 @@ import {Constructor} from './interfaces.js';
 import {ModuleClass} from './module.js';
 import {ProcessManager} from './builtins.js';
 import _ from 'lodash';
+import {Container} from '@sensejs/container';
+import {Inject} from './decorators.js';
+import {invokeMethod} from './method-invoker.js';
 
 interface NormalExitOption {
   exitCode: number;
@@ -104,21 +107,11 @@ export class ApplicationRunner {
       | [entryModule: Constructor<M>]
   ) {
     const entryModule = args[0];
-    const stoppedPromise = firstValueFrom(this.stoppedSubject);
-
-    @ModuleClass({
-      requires: [entryModule],
-    })
-    class RunnerWrapperModule implements EntryPointModule {
-      async main() {
-        return stoppedPromise;
-      }
-    }
 
     if (args.length === 1) {
-      this.performRunModule(RunnerWrapperModule, 'main', defaultRunOption, true);
+      this.performRunModule(entryModule, undefined, defaultRunOption, true);
     } else if (typeof args[1] === 'object') {
-      this.performRunModule(RunnerWrapperModule, 'main', _.merge({}, defaultRunOption, args[1]), true);
+      this.performRunModule(entryModule, undefined, _.merge({}, defaultRunOption, args[1]), true);
     } else {
       this.performRunModule(entryModule, args[1], _.merge({}, defaultRunOption, args[2]), true);
     }
@@ -136,16 +129,28 @@ export class ApplicationRunner {
 
   private performRunModule<M extends {}, K extends keyof M, T = never>(
     entryModule: Constructor<M>,
-    entryMethodKey: K,
+    entryMethodKey: K | undefined,
     runOption: RunnerOption<T>,
     startAllModules: boolean,
   ) {
     if (this.runSubscription) {
       throw new Error('run() or runModule() ApplicationRunner can only be executed once in a process');
     }
+    const stoppedPromise = firstValueFrom(this.stoppedSubject);
+    @ModuleClass({
+      requires: [entryModule],
+    })
+    class RunnerWrapperModule {
+      async main(@Inject(Container) container: Container) {
+        if (entryMethodKey) {
+          await invokeMethod(container.createResolveSession(), entryModule, entryMethodKey);
+        }
+        return stoppedPromise;
+      }
+    }
 
     const processManager = this.createProcessManager(runOption);
-    const moduleRoot = new ModuleRoot<M>(entryModule, processManager);
+    const moduleRoot = new ModuleRoot(RunnerWrapperModule, processManager);
     const uncaughtErrorExitCodeObservable = this.uncaughtErrorObservable.pipe(
       first(),
       tap((e) => {
@@ -173,7 +178,7 @@ export class ApplicationRunner {
         startAllModules
           ? this.getStartupObservable(moduleRoot, runOption)
           : this.getBoostrapObservable(moduleRoot, runOption),
-        defer(async () => moduleRoot.run(entryMethodKey)).pipe(
+        defer(async () => moduleRoot.run('main')).pipe(
           mapTo(runOption.normalExitOption),
           catchError((e) => {
             runOption.logger.error('Error occurred while running:', e);

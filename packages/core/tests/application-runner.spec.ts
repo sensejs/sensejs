@@ -4,11 +4,13 @@ import {
   consoleLogger,
   Constructor,
   createModule,
+  Inject,
   ModuleClass,
   OnModuleCreate,
   OnModuleDestroy,
   OnStart,
   OnStop,
+  ProcessManager,
   RunnerOption,
 } from '../src/index.js';
 import events from 'events';
@@ -129,8 +131,8 @@ describe('Application', () => {
         onStart();
       }
 
-      async entryPoint() {
-        await new Promise((resolve) => setImmediate(resolve));
+      entryPoint(@Inject(ProcessManager) pm: ProcessManager) {
+        setImmediate(() => pm.shutdown());
       }
 
       @OnStop()
