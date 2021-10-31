@@ -19,7 +19,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc -p tsconfig.build-cjs.json && tsc -p tsconfig.build-esm.json",
-    "prepare": "npm run clean && npm run build",
+    "prepublishOnly": "npm run clean && npm run prepare",
     "clean": "rm -rf ./dist-esm/lib dist-cjs/lib"
   },
   "publishConfig": {

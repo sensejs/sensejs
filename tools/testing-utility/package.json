@@ -10,7 +10,7 @@
   ],
   "main": "lib/index.js",
   "scripts": {
-    "prepare": "tsc"
+    "build": "tsc"
   },
   "author": "Xingcan LAN <thynson@live.com>",
   "license": "ISC",

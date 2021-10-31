@@ -7,9 +7,9 @@
   ],
   "main": "index.js",
   "scripts": {
-    "build": "npm run prepare",
+    "build": "tsc -p tsconfig.build.json",
     "test": "jest",
-    "prepare": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
     "clean": "rm -rf ./lib"
   },
   "author": "Xingcan LAN <thynson@live.com>",

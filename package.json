@@ -50,7 +50,6 @@
     "lint": "eslint --",
     "postinstall": "husky install",
     "lint-all": "eslint '**/*.ts'",
-    "build": "pnpm recursive run prepare",
     "pretest": "pnpm recursive run prepare",
     "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx release-it -c `pwd`/.release-it.yaml --non-interactive",
     "format ": "prettier --write  \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\""
