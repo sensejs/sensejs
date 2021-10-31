@@ -12,6 +12,7 @@ import {
   OnStop,
   ProcessManager,
   RunnerOption,
+  Component,
 } from '../src/index.js';
 import events from 'events';
 import '@sensejs/testing-utility/lib/mock-console';
@@ -185,6 +186,22 @@ describe('Application', () => {
     }
 
     const exitCode = await runModuleForTest(TargetModule, 'entryPoint');
+    expect(exitCode).toBe(runOptionFixture.errorExitOption.exitCode);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  test('container validation failed', async () => {
+    const fn = jest.fn();
+
+    @Component()
+    class BadComponent {
+      constructor(@Inject('anything') anything: any) {}
+    }
+
+    @ModuleClass({components: [BadComponent]})
+    class TargetModule {}
+
+    const exitCode = await runModuleForTest(TargetModule);
     expect(exitCode).toBe(runOptionFixture.errorExitOption.exitCode);
     expect(fn).not.toHaveBeenCalled();
   });

@@ -138,8 +138,10 @@ export class ModuleRoot<T extends {} = {}> {
     if (this.startPromise) {
       return this.startPromise;
     }
-    this.container.validate();
-    this.startPromise = this.bootstrap().then(() => this.entryModuleInstance.start());
+    this.startPromise = this.bootstrap().then(() => {
+      this.container.validate();
+      this.entryModuleInstance.start();
+    });
     return this.startPromise;
   }
 
