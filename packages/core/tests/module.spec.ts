@@ -16,6 +16,7 @@ import {
   OnModuleDestroy,
   OnStart,
   OnStop,
+  ProcessManager,
   ServiceIdentifier,
 } from '../src/index.js';
 
@@ -185,6 +186,37 @@ describe('Module Root', () => {
     }
 
     await expect(() => ModuleRoot.run(A, 'main')).rejects.toBeInstanceOf(MyError);
+  });
+
+  test('start module', async () => {
+    const onStart = jest.fn(),
+      onStop = jest.fn(),
+      main = jest.fn();
+
+    @ModuleClass()
+    class A {
+      @OnStart()
+      onStart() {
+        onStart();
+      }
+
+      @OnStop()
+      onStop() {
+        expect(main).toHaveBeenCalled();
+        onStop();
+      }
+
+      main(@Inject(ProcessManager) pm: ProcessManager) {
+        expect(onStart).toHaveBeenCalled();
+        setImmediate(() => {
+          expect(onStop).not.toHaveBeenCalled();
+          main();
+          pm.shutdown();
+        });
+      }
+    }
+    await ModuleRoot.start(A, 'main');
+    expect(onStop).toHaveBeenCalled();
   });
 
   test('shutdown error', async () => {

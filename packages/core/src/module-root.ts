@@ -1,4 +1,4 @@
-import {BindingType, Container, InvokeResult} from '@sensejs/container';
+import {BindingType, Container, Inject, InvokeResult} from '@sensejs/container';
 import {ModuleInstance} from './module-instance.js';
 import {Constructor} from './interfaces.js';
 import {BackgroundTaskQueue, ProcessManager} from './builtins.js';
@@ -77,37 +77,33 @@ export class ModuleRoot<T extends {} = {}> {
 
   static async start<T>(entryModule: Constructor<T>, method?: keyof T): Promise<void> {
     let error: unknown = undefined;
-    let moduleRoot: ModuleRoot<any>;
-    let methodKey: keyof any;
-    if (!method) {
-      const exitSubject = new Subject<void>();
-      const exitPromise = firstValueFrom(exitSubject);
-      @ModuleClass({requires: [entryModule]})
-      class ModuleRootEntryWrapper {
-        async main() {
-          return exitPromise;
-        }
-      }
-      moduleRoot = new ModuleRoot(
-        ModuleRootEntryWrapper,
-        new ProcessManager((e) => {
-          error = e;
-          exitSubject.next();
-        }),
-      );
-      methodKey = 'main';
+    const exitSubject = new Subject<void>();
+    const exitPromise = firstValueFrom(exitSubject);
 
-      await moduleRoot.run('main');
-    } else {
-      moduleRoot = new ModuleRoot(entryModule);
-      methodKey = method;
+    @ModuleClass({requires: [entryModule]})
+    class EntrypointWrapperModule {
+      async main(@Inject(Container) container: Container, @Inject(entryModule) entryModuleInstance: T) {
+        if (method) {
+          await invokeMethod(container.createResolveSession(), entryModule, method);
+        }
+        return exitPromise;
+      }
     }
+
+    const moduleRoot = new ModuleRoot(
+      EntrypointWrapperModule,
+      new ProcessManager((e) => {
+        error = e;
+        exitSubject.next();
+      }),
+    );
+
     await moduleRoot.start();
     if (error) {
       throw error;
     }
     try {
-      await moduleRoot.run(methodKey);
+      await moduleRoot.run('main');
     } catch (e) {
       error = e;
     } finally {
