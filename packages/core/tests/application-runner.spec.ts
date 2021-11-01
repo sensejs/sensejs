@@ -37,6 +37,8 @@ const runOptionFixture: Omit<RunnerOption<number>, 'logger'> = {
       exitCode: 0,
       forcedExitWhenRepeated: false,
     },
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    SIGABRT: {},
   },
   errorExitOption: {
     exitCode: 101,
@@ -232,6 +234,7 @@ describe('Application', () => {
     const promise = runModuleForTest(createModule());
     emitSignalOnNextTick();
     expect(await promise).toBe(runOptionFixture.normalExitOption.exitCode);
+    expect(console.info).toHaveBeenCalledTimes(1);
   });
 
   test('failed on start', async () => {
@@ -307,7 +310,6 @@ describe('Application', () => {
     const promise = runModuleForTest(BadModule);
     setImmediate(() => {
       // @ts-ignore
-      console.log('emit SIGINT');
       mockedProcess.emit('SIGINT');
       // @ts-ignore
       setImmediate(() => mockedProcess.emit('SIGINT'));

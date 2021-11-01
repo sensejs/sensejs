@@ -75,10 +75,6 @@ export const defaultRunOption: RunnerOption<any> = {
   onExit: (exitCode) => process.exit(exitCode),
 };
 
-interface EntryPointModule {
-  main(): Promise<ExitOption>;
-}
-
 export class ApplicationRunner {
   static instance = new ApplicationRunner(process);
   private runSubscription?: Subscription;
@@ -161,17 +157,23 @@ export class ApplicationRunner {
 
     const warningSubscriber = this.getWarningSubscriber(runOption);
     const exitSignalObservables = this.getExitSignalObservables(runOption);
-    const exitSignalObservable = merge(...exitSignalObservables).pipe(first());
+    const exitSignalObservable = merge(...exitSignalObservables).pipe(
+      first(),
+      tap((signal) => {
+        runOption.logger.info('Receive signal %s, going to quit', signal);
+      }),
+      map((signal) => Object.assign({}, runOption.normalExitOption, runOption.exitSignals[signal])),
+    );
     const forcedExitSignalObservable = merge(
       ...exitSignalObservables.map((o) => {
         return o.pipe(skip(1));
       }),
     ).pipe(
       first(),
-      map((x) => x.forcedExitCode ?? runOption.forcedExitOption.forcedExitCode),
+      map((signal) => runOption.exitSignals[signal]?.forcedExitCode ?? runOption.forcedExitOption.forcedExitCode),
     );
 
-    const runningObservable = merge(
+    const runningObservable = merge<NormalExitOption[]>(
       uncaughtErrorExitCodeObservable,
       exitSignalObservable,
       concat(
@@ -204,13 +206,9 @@ export class ApplicationRunner {
       .subscribe();
   }
 
-  private getExitSignalObservables<T>(runOption: RunnerOption<T>) {
-    return Object.entries(runOption.exitSignals).map(([signal, partialExitOption]) => {
-      const exitOption: ExitOption = Object.assign({}, runOption.normalExitOption, partialExitOption);
-      return fromEvent(this.process, signal).pipe(
-        first(),
-        mergeMap(() => this.createForcedExitObservable(signal, exitOption, runOption)),
-      );
+  private getExitSignalObservables<T>(runOption: RunnerOption<T>): Observable<NodeJS.Signals>[] {
+    return Object.entries(runOption.exitSignals).map(([signal]) => {
+      return fromEvent(this.process, signal).pipe(mapTo(signal as NodeJS.Signals));
     });
   }
 
@@ -279,18 +277,5 @@ export class ApplicationRunner {
         }
       },
     });
-  }
-
-  private createForcedExitObservable<T>(
-    signal: string,
-    exitOption: ExitOption,
-    runOption: RunnerOption<T>,
-  ): Observable<ExitOption> {
-    runOption.logger.info('Receive signal %s, going to quit', signal);
-    const result = of(exitOption);
-    if (!exitOption.forcedExitWhenRepeated) {
-      return result;
-    }
-    return concat(result, fromEvent(this.process as NodeJS.EventEmitter, signal).pipe(first(), mapTo(exitOption)));
   }
 }
