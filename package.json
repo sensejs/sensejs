@@ -7,8 +7,8 @@
   "license": "ISC",
   "private": true,
   "devDependencies": {
-    "@commitlint/cli": "^13.0.0",
-    "@commitlint/config-conventional": "^13.0.0",
+    "@commitlint/cli": "^14.0.0",
+    "@commitlint/config-conventional": "^14.0.0",
     "@jest/globals": "^27.2.1",
     "@types/jest": "^27.0.0",
     "@types/koa": "^2.13.4",
