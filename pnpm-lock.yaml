@@ -145,6 +145,7 @@ importers:
 
   packages/config:
     specifiers:
+      '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
       traverse: ^0.6.6
       tslib: ^2.3.1
@@ -152,6 +153,7 @@ importers:
       traverse: 0.6.6
       tslib: 2.3.1
     devDependencies:
+      '@sensejs/container': link:../container
       '@sensejs/core': link:../core
 
   packages/container:

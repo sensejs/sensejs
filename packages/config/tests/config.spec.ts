@@ -1,6 +1,6 @@
 import {jest} from '@jest/globals';
 import {ModuleClass, EntryModule, Inject} from '@sensejs/core';
-import {createConfigModule} from '../src/index.js';
+import {createConfigModule, Config, createStaticConfigModule, MissingConfigError} from '../src/index.js';
 
 describe('ConfigModule', () => {
   test('circurlar dependency', () => {
@@ -44,4 +44,24 @@ describe('ConfigModule', () => {
     await new EntryModule(MyModule).start();
     expect(spy).toHaveBeenCalled();
   });
+});
+
+test('InjectConfig', async () => {
+  const staticConfig = {
+    a: 'a',
+    b: 'b',
+  };
+  @ModuleClass({
+    requires: [createStaticConfigModule(staticConfig)],
+  })
+  class A {
+    constructor(@Config('a') a: unknown) {}
+
+    test(@Config('b') b: unknown) {}
+
+    missingConfig(@Config('missingKey') missingConfig: unknown) {}
+  }
+
+  await EntryModule.run(A, 'test');
+  await expect(() => EntryModule.run(A, 'missingConfig')).rejects.toThrow(MissingConfigError);
 });

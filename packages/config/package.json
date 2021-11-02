@@ -29,9 +29,11 @@
     "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:*"
+    "@sensejs/core": "workspace:*",
+    "@sensejs/container": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.9.0"
+    "@sensejs/core": "workspace:^0.9.0",
+    "@sensejs/container": "workspace:^0.9.0"
   }
 }
