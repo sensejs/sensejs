@@ -10,7 +10,7 @@ import {
   ModuleClass,
   ModuleInstance,
   ModuleOption,
-  ModuleRoot,
+  EntryModule,
   ModuleShutdownError,
   OnModuleCreate,
   OnModuleDestroy,
@@ -74,7 +74,7 @@ describe('Module resolve', () => {
       }
     }
 
-    const instance = new ModuleRoot(
+    const instance = new EntryModule(
       createStubModule(
         {
           requires: [MyModule],
@@ -155,7 +155,7 @@ describe('Module resolve', () => {
         expect(producedValue).toBe('factory');
       }
     }
-    await ModuleRoot.run(DynamicModule, 'entryPoint');
+    await EntryModule.run(DynamicModule, 'entryPoint');
     expect(stub).toHaveBeenCalled();
   });
 });
@@ -174,7 +174,7 @@ describe('Module Root', () => {
       main() {}
     }
 
-    await expect(() => ModuleRoot.run(A, 'main')).rejects.toBeInstanceOf(MyError);
+    await expect(() => EntryModule.run(A, 'main')).rejects.toBeInstanceOf(MyError);
   });
 
   test('run error', async () => {
@@ -185,7 +185,7 @@ describe('Module Root', () => {
       }
     }
 
-    await expect(() => ModuleRoot.run(A, 'main')).rejects.toBeInstanceOf(MyError);
+    await expect(() => EntryModule.run(A, 'main')).rejects.toBeInstanceOf(MyError);
   });
 
   test('start module', async () => {
@@ -215,7 +215,7 @@ describe('Module Root', () => {
         });
       }
     }
-    await ModuleRoot.start(A, 'main');
+    await EntryModule.start(A, 'main');
     expect(onStop).toHaveBeenCalled();
   });
 
@@ -234,8 +234,8 @@ describe('Module Root', () => {
       }
     }
 
-    await expect(() => ModuleRoot.run(A, 'main')).rejects.toBeInstanceOf(ModuleShutdownError);
-    await expect(() => ModuleRoot.run(A, 'main')).rejects.toMatchObject({
+    await expect(() => EntryModule.run(A, 'main')).rejects.toBeInstanceOf(ModuleShutdownError);
+    await expect(() => EntryModule.run(A, 'main')).rejects.toMatchObject({
       error: expect.any(ShutdownError),
       nestedError: expect.any(MyError),
     });
@@ -376,7 +376,7 @@ describe('Module Root', () => {
       }
     }
 
-    const moduleRoot = new ModuleRoot(Z);
+    const moduleRoot = new EntryModule(Z);
 
     await moduleRoot.start();
     expect(zOnCreateSpy).toHaveBeenCalled();

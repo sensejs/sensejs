@@ -1,6 +1,6 @@
 import {jest} from '@jest/globals';
 import {EventEmitter} from 'events';
-import {Component, ModuleClass, ModuleRoot, OnModuleCreate, OnModuleDestroy} from '../src/index.js';
+import {Component, ModuleClass, EntryModule, OnModuleCreate, OnModuleDestroy} from '../src/index.js';
 import {Inject} from '@sensejs/container';
 
 describe('ModuleRoot', () => {
@@ -43,7 +43,7 @@ describe('ModuleRoot', () => {
     @ModuleClass({requires: [ModuleA, ModuleB]})
     class ModuleC {}
 
-    const app = new ModuleRoot(ModuleC);
+    const app = new EntryModule(ModuleC);
     jest.spyOn(ModuleB.prototype, 'onDestroy').mockImplementation(() => mockedBLifecycleDestroyed);
 
     const startPromise = app.start();
@@ -78,7 +78,7 @@ describe('ModuleRoot', () => {
     @ModuleClass({requires: [FooModule], components: [BarComponent]})
     class BarModule {}
 
-    const moduleRoot = new ModuleRoot(BarModule);
+    const moduleRoot = new EntryModule(BarModule);
     await moduleRoot.start();
   });
 });

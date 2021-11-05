@@ -13,7 +13,7 @@ import {
   Subscription,
 } from 'rxjs';
 import {catchError, first, mapTo, mergeMap, skip, tap, timeout} from 'rxjs/operators';
-import {ModuleRoot} from './module-root.js';
+import {EntryModule} from './entry-module.js';
 import {consoleLogger, Logger} from './logger.js';
 import {Constructor} from './interfaces.js';
 import {ModuleClass} from './module.js';
@@ -146,7 +146,7 @@ export class ApplicationRunner {
     }
 
     const processManager = this.createProcessManager(runOption);
-    const moduleRoot = new ModuleRoot(RunnerWrapperModule, processManager);
+    const moduleRoot = new EntryModule(RunnerWrapperModule, processManager);
     const uncaughtErrorExitCodeObservable = this.uncaughtErrorObservable.pipe(
       first(),
       tap((e) => {
@@ -223,7 +223,7 @@ export class ApplicationRunner {
     });
   }
 
-  private getBoostrapObservable<M, T>(moduleRoot: ModuleRoot<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
+  private getBoostrapObservable<M, T>(moduleRoot: EntryModule<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
     return defer(() => this.runOnNextTick(() => moduleRoot.bootstrap())).pipe(
       catchError((e) => {
         runOption.logger.error('Error occurred while bootstrapping:', e);
@@ -232,7 +232,7 @@ export class ApplicationRunner {
     );
   }
 
-  private getStartupObservable<M, T>(moduleRoot: ModuleRoot<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
+  private getStartupObservable<M, T>(moduleRoot: EntryModule<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
     return defer(() => this.runOnNextTick(() => moduleRoot.start())).pipe(
       mergeMap(() => EMPTY),
       catchError((e) => {
@@ -242,7 +242,7 @@ export class ApplicationRunner {
     );
   }
 
-  private performShutdown<M, T>(moduleRoot: ModuleRoot<M>, exitOption: ExitOption, runOption: RunnerOption<T>) {
+  private performShutdown<M, T>(moduleRoot: EntryModule<M>, exitOption: ExitOption, runOption: RunnerOption<T>) {
     return merge(
       from(moduleRoot.shutdown()).pipe(
         mapTo(exitOption.exitCode),
@@ -258,7 +258,7 @@ export class ApplicationRunner {
 
   private getShutdownObservable<M extends {}, T>(
     runningProcessObservable: Observable<ExitOption>,
-    moduleRoot: ModuleRoot<M>,
+    moduleRoot: EntryModule<M>,
     runOption: RunnerOption<T>,
   ) {
     return runningProcessObservable.pipe(

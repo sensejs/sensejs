@@ -9,7 +9,7 @@ import {
   LOGGER_BUILDER_SYMBOL,
   LoggerBuilder,
   ModuleClass,
-  ModuleRoot,
+  EntryModule,
 } from '../src/index.js';
 import '@sensejs/testing-utility/lib/mock-console';
 
@@ -79,6 +79,6 @@ describe('Logger', () => {
       constructor(@Inject(FooComponent) fooComponent: FooComponent, @Inject(BarComponent) barComponent: BarComponent) {}
     }
 
-    await new ModuleRoot(createModule({requires: [MainModule]})).start();
+    await new EntryModule(createModule({requires: [MainModule]})).start();
   });
 });

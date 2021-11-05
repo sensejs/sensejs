@@ -14,7 +14,7 @@ export class ModuleShutdownError extends Error {
   }
 }
 
-export class ModuleRoot<T extends {} = {}> {
+export class EntryModule<T extends {} = {}> {
   readonly container: Container;
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
   private readonly entryModuleInstance: ModuleInstance<T>;
@@ -56,7 +56,7 @@ export class ModuleRoot<T extends {} = {}> {
 
   static async run<T>(entryModule: Constructor<T>, method: keyof T): Promise<void> {
     let error: unknown = undefined;
-    const moduleRoot = new ModuleRoot(entryModule, new ProcessManager((e) => (error = e)));
+    const moduleRoot = new EntryModule(entryModule, new ProcessManager((e) => (error = e)));
     await moduleRoot.bootstrap();
     if (error) {
       throw error;
@@ -90,7 +90,7 @@ export class ModuleRoot<T extends {} = {}> {
       }
     }
 
-    const moduleRoot = new ModuleRoot(
+    const moduleRoot = new EntryModule(
       EntrypointWrapperModule,
       new ProcessManager((e) => {
         error = e;
@@ -115,7 +115,7 @@ export class ModuleRoot<T extends {} = {}> {
 
   private static async bootstrapModule<T>(moduleInstance: ModuleInstance<T>) {
     for (const dependency of moduleInstance.dependencies) {
-      await ModuleRoot.bootstrapModule(dependency);
+      await EntryModule.bootstrapModule(dependency);
     }
     await moduleInstance.bootstrap();
   }
@@ -149,7 +149,7 @@ export class ModuleRoot<T extends {} = {}> {
     if (this.bootstrapPromise) {
       return this.bootstrapPromise;
     }
-    this.bootstrapPromise = ModuleRoot.bootstrapModule(this.entryModuleInstance);
+    this.bootstrapPromise = EntryModule.bootstrapModule(this.entryModuleInstance);
     return this.bootstrapPromise;
   }
 
@@ -169,7 +169,7 @@ export class ModuleRoot<T extends {} = {}> {
     }
     this.shutdownPromise = this.stop()
       .finally(() => {
-        return ModuleRoot.shutdownModule(this.entryModuleInstance);
+        return EntryModule.shutdownModule(this.entryModuleInstance);
       })
       .finally(() => this.backgroundTaskQueue.waitAllTaskFinished());
     return this.shutdownPromise;

@@ -2,7 +2,7 @@ import {jest} from '@jest/globals';
 import {
   createConnectionFactory,
   ModuleClass,
-  ModuleRoot,
+  EntryModule,
   provideConnectionFactory,
   provideOptionInjector,
   Inject,
@@ -55,7 +55,7 @@ test('createConnectionFactory', async () => {
     constructor(@Inject(MockConn) conn: MockConn) {}
   }
 
-  const moduleRoot = new ModuleRoot(MyModule);
+  const moduleRoot = new EntryModule(MyModule);
   await moduleRoot.bootstrap();
   expect(stub).toHaveBeenCalled();
   await moduleRoot.shutdown();
@@ -100,7 +100,7 @@ test('createConfigHelperFactory', async () => {
     constructor(@Inject(optionProvider.provide) private factory: Foo) {}
   }
 
-  await new ModuleRoot(CorrectModule).start();
+  await new EntryModule(CorrectModule).start();
 
   @ModuleClass({
     constants: [{provide: injectSymbol, value: {foo: {x: 'x'}}}],
@@ -110,5 +110,5 @@ test('createConfigHelperFactory', async () => {
     constructor(@Inject(optionProvider.provide) private factory: Foo) {}
   }
 
-  await expect(new ModuleRoot(BuggyModule).start()).rejects.toBeInstanceOf(TypeError);
+  await expect(new EntryModule(BuggyModule).start()).rejects.toBeInstanceOf(TypeError);
 });

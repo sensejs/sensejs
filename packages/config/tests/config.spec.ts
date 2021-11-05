@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {ModuleClass, ModuleRoot, Inject} from '@sensejs/core';
+import {ModuleClass, EntryModule, Inject} from '@sensejs/core';
 import {createConfigModule} from '../src/index.js';
 
 describe('ConfigModule', () => {
@@ -41,7 +41,7 @@ describe('ConfigModule', () => {
       }
     }
 
-    await new ModuleRoot(MyModule).start();
+    await new EntryModule(MyModule).start();
     expect(spy).toHaveBeenCalled();
   });
 });

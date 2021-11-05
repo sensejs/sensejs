@@ -5,7 +5,7 @@ import {
   EventSubscriptionContext,
   Inject,
   ModuleClass,
-  ModuleRoot,
+  EntryModule,
   ProcessManager,
   SubscribeEvent,
   SubscribeEventController,
@@ -72,11 +72,8 @@ describe('Event subscribe and announce', () => {
         }),
       ],
     })
-    class EntryModule {
-      async onModuleCreate(
-        @Inject(EventPublisher) eventPublisher: EventPublisher,
-        @Inject(ProcessManager) pm: ProcessManager,
-      ) {
+    class TestEntry {
+      async main(@Inject(EventPublisher) eventPublisher: EventPublisher, @Inject(ProcessManager) pm: ProcessManager) {
         await eventPublisher.publish('event', 'bar');
         await eventPublisher.publish('channel', {
           a: 1,
@@ -105,6 +102,6 @@ describe('Event subscribe and announce', () => {
       }
     }
 
-    await ModuleRoot.start(EntryModule, 'onModuleCreate');
+    await EntryModule.start(TestEntry, 'main');
   });
 });

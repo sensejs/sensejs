@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {Component, Inject, ModuleClass, ModuleRoot, OnModuleCreate} from '@sensejs/core';
+import {Component, Inject, ModuleClass, EntryModule, OnModuleCreate} from '@sensejs/core';
 import {Container} from '@sensejs/container';
 import {ChildEntity, Column, Entity, PrimaryColumn, Repository, TableInheritance} from 'typeorm';
 import {
@@ -133,7 +133,7 @@ describe('TypeOrmModule', () => {
       }
     }
 
-    const moduleRoot = new ModuleRoot(FooModule);
+    const moduleRoot = new EntryModule(FooModule);
     await moduleRoot.start();
     await moduleRoot.stop();
     expect(spy).toBeCalled();

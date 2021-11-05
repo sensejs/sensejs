@@ -1,5 +1,5 @@
 import {createKoaHttpModule} from '../src/index.js';
-import {Component, createModule, Inject, ModuleClass, ModuleRoot, ProcessManager} from '@sensejs/core';
+import {Component, createModule, Inject, ModuleClass, EntryModule, ProcessManager} from '@sensejs/core';
 import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
@@ -81,5 +81,5 @@ test('HttpModule', async () => {
     }
   }
 
-  return await ModuleRoot.start(Module, 'test');
+  return await EntryModule.start(Module, 'test');
 });

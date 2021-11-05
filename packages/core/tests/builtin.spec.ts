@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {Inject, ModuleClass, ModuleRoot, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src/index.js';
+import {Inject, ModuleClass, EntryModule, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src/index.js';
 
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {
@@ -36,7 +36,7 @@ describe('BuiltinModule', () => {
       }
     }
 
-    const moduleRoot = new ModuleRoot(MyModule);
+    const moduleRoot = new EntryModule(MyModule);
     await moduleRoot.bootstrap();
     await moduleRoot.shutdown().then(() => {
       expect(spy).toHaveBeenCalled();
