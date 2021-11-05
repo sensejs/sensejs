@@ -52,7 +52,7 @@ const MyModule = createModule({
 ## Lifecycle hooks
 
 Sometimes your components need to be initialized and de-initialized, it can be done in the
-life cycle hooks of a module.
+`@OnModuleCreate` and `@OnModuleDestroy` hooks of a module.
 
 ```typescript
 
@@ -77,6 +77,32 @@ class DatabaseModule {
     }
 }
 ```
+
+A module may also define `@OnStart` and `@OnStop` hooks when it's designed to handle requests.
+
+```typescript
+@ModuleClass()
+class TcpEchoServerModule {
+    tcpServer?: net.Server;
+
+    @OnModuleStart()
+    async onCreated() {
+        this.tcpServer = net.createServer((conn)=> conn.pipe(conn)).listen(3000);
+    }
+
+    @OnModuleStop()
+    async onDestroyed() {
+        if (this.tcpServer) {
+            this.tcpServer.close();
+        }
+    }
+}
+```
+
+`@OnModuleCreate` hooks are ensured be invoked after all `@OnModuleCreated` hooks finished, while `@OnModuleDestroy`
+hooks are ensured to be invoked before any `@OnModuleDestroy` hooks. This is how SenseJS gracefully startup and
+shutdown your app.
+
 
 ## Inter-Module dependencies
 
