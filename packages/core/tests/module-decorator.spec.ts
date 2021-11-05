@@ -4,8 +4,8 @@ import {
   ModuleClass,
   OnModuleCreate,
   OnModuleDestroy,
-  OnStart,
-  OnStop,
+  OnModuleStart,
+  OnModuleStop,
 } from '../src/index.js';
 
 describe('@ModuleClass', () => {
@@ -47,11 +47,11 @@ describe('@ModuleClass', () => {
       @OnModuleCreate()
       onModuleCreate() {}
 
-      @OnStart()
-      onStart() {}
+      @OnModuleStart()
+      onModuleStart() {}
 
-      @OnStop()
-      onStop() {}
+      @OnModuleStop()
+      onModuleStop() {}
 
       @OnModuleDestroy()
       bar() {}
@@ -65,8 +65,8 @@ describe('@ModuleClass', () => {
         requires: [Y],
         onModuleCreate: ['foo', 'onModuleCreate'],
         onModuleDestroy: ['bar', 'onModuleDestroy'],
-        onStart: ['onStart'],
-        onStop: ['onStop'],
+        onModuleStart: ['onModuleStart'],
+        onModuleStop: ['onModuleStop'],
       }),
     );
   });

@@ -8,8 +8,8 @@ import {
   ModuleClass,
   OnModuleCreate,
   OnModuleDestroy,
-  OnStart,
-  OnStop,
+  OnModuleStart,
+  OnModuleStop,
   ProcessManager,
   RunnerOption,
   Component,
@@ -130,7 +130,7 @@ describe('Application', () => {
         onModuleCreate();
       }
 
-      @OnStart()
+      @OnModuleStart()
       async onStart() {
         onStart();
       }
@@ -139,7 +139,7 @@ describe('Application', () => {
         setImmediate(() => pm.shutdown());
       }
 
-      @OnStop()
+      @OnModuleStop()
       async onStop() {
         onStop();
       }
@@ -219,7 +219,7 @@ describe('Application', () => {
 
     @ModuleClass({components: [BadComponent]})
     class TargetModule {
-      @OnStart()
+      @OnModuleStart()
       onStart(@Inject(Container) container: Container) {
         container.createMethodInvoker(BadComponent, 'foo', []);
       }

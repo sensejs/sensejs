@@ -210,7 +210,7 @@ export class ModuleInstance<T extends {} = {}> {
   private async performStart() {
     await Promise.all(this.dependencies.map((x) => x.start()));
     await Promise.all(
-      this.moduleMetadata.onStart.map(async (method) => {
+      this.moduleMetadata.onModuleStart.map(async (method) => {
         await invokeMethod(this.container.createResolveSession(), this.moduleClass, method);
       }),
     );
@@ -222,7 +222,7 @@ export class ModuleInstance<T extends {} = {}> {
       return;
     }
     await Promise.all(
-      this.moduleMetadata.onStop.map(async (method) => {
+      this.moduleMetadata.onModuleStop.map(async (method) => {
         await invokeMethod(this.container.createResolveSession(), this.moduleClass, method);
       }),
     );

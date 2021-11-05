@@ -7,8 +7,8 @@ import {
   matchLabels,
   ModuleScanner,
   OnModuleCreate,
-  OnStart,
-  OnStop,
+  OnModuleStart,
+  OnModuleStop,
   ServiceIdentifier,
   Transformer,
 } from '@sensejs/core';
@@ -531,7 +531,7 @@ export abstract class AbstractHttpModule {
     });
   }
 
-  @OnStart()
+  @OnModuleStart()
   async onStart(@Inject(ModuleScanner) moduleScanner: ModuleScanner, @Inject(Container) container: Container) {
     const httpAdaptor = this.getAdaptor();
     for (const ip of this.httpModuleOption.globalInterceptProviders || []) {
@@ -541,7 +541,7 @@ export abstract class AbstractHttpModule {
     await this.setupHttpServer(httpAdaptor, this.httpServer, container);
   }
 
-  @OnStop()
+  @OnModuleStop()
   async onStop() {
     if (this.httpServer && this.httpServer.listening) {
       const httpServer = this.httpServer;

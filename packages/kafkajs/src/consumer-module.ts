@@ -7,8 +7,8 @@ import {
   ModuleMetadata,
   ModuleOption,
   ModuleScanner,
-  OnStart,
-  OnStop,
+  OnModuleStart,
+  OnModuleStop,
   ProcessManager,
   provideOptionInjector,
   ServiceIdentifier,
@@ -204,7 +204,7 @@ export class AbstractKafkaConsumerGroupModule {
     this.messageConsumer = new MessageConsumer(option);
   }
 
-  @OnStart()
+  @OnModuleStart()
   async onStart(
     @Inject(ModuleScanner) moduleScanner: ModuleScanner,
     @Inject(Container) container: Container,
@@ -218,7 +218,7 @@ export class AbstractKafkaConsumerGroupModule {
     return promise;
   }
 
-  @OnStop()
+  @OnModuleStop()
   async onStop(): Promise<void> {
     return this.messageConsumer.stop();
   }

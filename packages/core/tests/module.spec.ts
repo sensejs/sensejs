@@ -14,8 +14,8 @@ import {
   ModuleShutdownError,
   OnModuleCreate,
   OnModuleDestroy,
-  OnStart,
-  OnStop,
+  OnModuleStart,
+  OnModuleStop,
   ProcessManager,
   ServiceIdentifier,
 } from '../src/index.js';
@@ -195,12 +195,12 @@ describe('Module Root', () => {
 
     @ModuleClass()
     class A {
-      @OnStart()
+      @OnModuleStart()
       onStart() {
         onStart();
       }
 
-      @OnStop()
+      @OnModuleStop()
       onStop() {
         expect(main).toHaveBeenCalled();
         onStop();
@@ -283,14 +283,14 @@ describe('Module Root', () => {
         xOnCreateSpy();
       }
 
-      @OnStart()
+      @OnModuleStart()
       async onStart() {
         expectAllCreated();
         await new Promise(setImmediate);
         xOnStart();
       }
 
-      @OnStop()
+      @OnModuleStop()
       async onStop() {
         xOnStop();
         await new Promise(setImmediate);
@@ -317,13 +317,13 @@ describe('Module Root', () => {
         yOnCreateSpy();
       }
 
-      @OnStart()
+      @OnModuleStart()
       async onStart() {
         await new Promise(setImmediate);
         yOnStart();
       }
 
-      @OnStop()
+      @OnModuleStop()
       async onStop() {
         yOnStop();
         await new Promise(setImmediate);
@@ -353,14 +353,14 @@ describe('Module Root', () => {
         zOnCreateSpy();
       }
 
-      @OnStart()
+      @OnModuleStart()
       async onStart() {
         expect(xOnStart).toHaveBeenCalled();
         expect(yOnStart).toHaveBeenCalled();
         zOnStart();
       }
 
-      @OnStop()
+      @OnModuleStop()
       async onStop() {
         zOnStop();
         expect(xOnStop).not.toHaveBeenCalled();

@@ -1,7 +1,7 @@
 import {Component, ComponentScope} from './component.js';
 import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces.js';
 import {Subject} from 'rxjs';
-import {createModule, ModuleClass, ModuleOption, OnStart, OnStop} from './module.js';
+import {createModule, ModuleClass, ModuleOption, OnModuleStart, OnModuleStop} from './module.js';
 import {AsyncInterceptProvider, Container} from '@sensejs/container';
 import {Inject} from './decorators.js';
 import {ModuleScanner} from './module-scanner.js';
@@ -193,7 +193,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       @Inject(EventBusImplement) private eventBus: EventBusImplement,
     ) {}
 
-    @OnStart()
+    @OnModuleStart()
     onStart() {
       this.scanner.scanModule((moduleMetadata) => {
         moduleMetadata.components.forEach((component) => {
@@ -211,7 +211,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
       });
     }
 
-    @OnStop()
+    @OnModuleStop()
     onStop() {
       this.subscriptions.forEach((subscription) => subscription.unsubscribe());
     }

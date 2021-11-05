@@ -38,8 +38,8 @@ export interface ModuleMetadata<T = {}> extends Required<ModuleOption> {
   dynamicFactories?: FactoryProvider<any>[];
   dynamicConstants?: ConstantProvider<any>[];
   onModuleCreate: (keyof T)[];
-  onStart: (keyof T)[];
-  onStop: (keyof T)[];
+  onModuleStart: (keyof T)[];
+  onModuleStop: (keyof T)[];
   onModuleDestroy: (keyof T)[];
 }
 
@@ -71,8 +71,8 @@ export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMet
 }
 
 const ON_MODULE_CREATE = Symbol();
-const ON_START = Symbol();
-const ON_STOP = Symbol();
+const ON_MODULE_START = Symbol();
+const ON_MODULE_STOP = Symbol();
 const ON_MODULE_DESTROY = Symbol();
 
 /**
@@ -98,8 +98,8 @@ export interface ModuleClassDecorator {
 export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
   return <T extends {}>(constructor: Constructor<T>): Constructor<T> => {
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
-    const onStart = getModuleLifecycleMethod(constructor, ON_START);
-    const onStop = getModuleLifecycleMethod(constructor, ON_STOP);
+    const onModuleStart = getModuleLifecycleMethod(constructor, ON_MODULE_START);
+    const onModuleStop = getModuleLifecycleMethod(constructor, ON_MODULE_STOP);
     const onModuleDestroy = getModuleLifecycleMethod(constructor, ON_MODULE_DESTROY);
     const {requires = [], constants = [], factories = [], components = [], properties = []} = option;
 
@@ -110,8 +110,8 @@ export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
       components,
       properties,
       onModuleCreate,
-      onStart,
-      onStop,
+      onModuleStart,
+      onModuleStop,
       onModuleDestroy,
     });
     Injectable()(constructor);
@@ -147,15 +147,15 @@ export function OnModuleCreate(): ModuleLifecycleMethodDecorator {
 /**
  * Decorator for marking a method function to be called when all module has been loaded
  */
-export function OnStart(): ModuleLifecycleMethodDecorator {
-  return defineModuleLifecycleMetadata(ON_START);
+export function OnModuleStart(): ModuleLifecycleMethodDecorator {
+  return defineModuleLifecycleMetadata(ON_MODULE_START);
 }
 
 /**
  * Decorator for marking a method function to be called when it's going to destroy all modules
  */
-export function OnStop(): ModuleLifecycleMethodDecorator {
-  return defineModuleLifecycleMetadata(ON_STOP);
+export function OnModuleStop(): ModuleLifecycleMethodDecorator {
+  return defineModuleLifecycleMetadata(ON_MODULE_STOP);
 }
 
 /**

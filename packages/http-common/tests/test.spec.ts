@@ -21,7 +21,7 @@ import {
 } from '../src/index.js';
 import {Container, Inject, InterceptProviderClass} from '@sensejs/container';
 import {RequestListener} from 'http';
-import {Component, ModuleClass, ModuleRoot, OnStart, ProcessManager} from '@sensejs/core';
+import {Component, ModuleClass, ModuleRoot, ProcessManager} from '@sensejs/core';
 
 describe('Http annotations', () => {
   test('metadata', () => {

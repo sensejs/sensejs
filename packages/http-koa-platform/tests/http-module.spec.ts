@@ -1,14 +1,5 @@
 import {createKoaHttpModule} from '../src/index.js';
-import {
-  ApplicationRunner,
-  Component,
-  createModule,
-  Inject,
-  ModuleClass,
-  ModuleRoot,
-  OnStart,
-  ProcessManager,
-} from '@sensejs/core';
+import {Component, createModule, Inject, ModuleClass, ModuleRoot, ProcessManager} from '@sensejs/core';
 import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
