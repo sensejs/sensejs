@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {createHttpModule, Controller, GET} from '@sensejs/http-koa-platform';
+import {createKoaHttpModule, Controller, GET} from '@sensejs/http-koa-platform';
 import {
   EntryPoint,
   ModuleClass,
@@ -41,7 +41,7 @@ class HelloWorldController {
 @EntryPoint()
 @ModuleClass({
   requires: [
-    createHttpModule({
+    createKoaHttpModule({
       requires: [TimerModule],
       components: [HelloWorldController],
       httpOption: {

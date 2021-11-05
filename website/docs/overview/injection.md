@@ -88,7 +88,7 @@ We can also log the duration when application is shutdown, by add a shutdown hoo
 @EntryPoint()
 @ModuleClass({
   requires: [
-    createHttpModule({
+    createKoaHttpModule({
       requires: [TimerModule],
       components: [
         HelloWorldController,

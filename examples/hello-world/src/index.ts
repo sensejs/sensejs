@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import {createHttpModule, Controller, GET} from '@sensejs/http-koa-platform';
+import {createKoaHttpModule, Controller, GET} from '@sensejs/http-koa-platform';
 import {EntryPoint, ModuleClass, OnModuleCreate} from '@sensejs/core';
 
 @Controller('/')
@@ -13,7 +13,7 @@ class HelloWorldController {
 @EntryPoint()
 @ModuleClass({
   requires: [
-    createHttpModule({
+    createKoaHttpModule({
       components: [HelloWorldController],
       httpOption: {
         listenAddress: 'localhost',
