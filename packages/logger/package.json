@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/logger",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -36,6 +36,6 @@
     "@sensejs/core": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.9.0-alpha.5"
+    "@sensejs/core": "workspace:^0.9.0"
   }
 }
