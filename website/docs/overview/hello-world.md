@@ -26,7 +26,7 @@ If you don't want to do it by hand, you can also
 ```typescript
 import 'reflect-metadata';
 import {createKoaHttpModule, Controller, GET} from '@sensejs/http';
-import {EntryPoint, ModuleClass, OnModuleCreate} from '@sensejs/core';
+import {ApplicationRunner, ModuleClass, OnModuleCreate} from '@sensejs/core';
 
 @Controller('/')
 class HelloWorldController {
@@ -38,7 +38,6 @@ class HelloWorldController {
 
 }
 
-@EntryPoint()
 @ModuleClass({
   requires: [
     createKoaHttpModule({
@@ -52,11 +51,13 @@ class HelloWorldController {
 })
 class HelloWorldApp {
 
-  @OnModuleCreate()
+  @OnModuleStart()
   onModuleCreate() {
     console.log('service started');
   }
 }
+
+ApplicationRunner.instance.start(HelloWorldApp);
 ```
 
 The above code create a simple hello world http service that will listen at `localhost:8080`.

@@ -1,6 +1,6 @@
 ---
 id: injection
-sidebar_position: 2
+sidebar_position: 3
 ---
 
 # Injection
@@ -85,7 +85,6 @@ class HelloWorldController {
 We can also log the duration when application is shutdown, by add a shutdown hook to `HelloWorldApp`.
 
 ```typescript
-@EntryPoint()
 @ModuleClass({
   requires: [
     createKoaHttpModule({
@@ -111,7 +110,7 @@ class HelloWorldApp {
     console.log(`service stopped at ${timeMeasure.getDuration()} milliseconds`);
   }
 }
-
+ApplicationRunner.instance.start(HelloWorldApp);
 ```
 
 Be noticed that `TimerModule` is added to `requires` property of param for creating the http module, without this the

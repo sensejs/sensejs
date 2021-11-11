@@ -1,6 +1,6 @@
 ---
 id: module
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Module
@@ -14,12 +14,16 @@ entry point is also a module.
 The concept of the module takes an important roles in SenseJS. It's designed to do the following job for your
 application:
 
-- Export injectables to make them injectable to others
-- Initialize and de-initialize injectables and its underlying I/O system.
+- Provide entry points for your application.
+
+- Export injectables for other modules and components to use.
+
+- Initialize and de-initialize components and I/O resources, such as creating database connections and establishing
+  HTTP listeners.
 
 ## Creating a module
 
-You can create a module by decorating a class with `@ModuleClass`
+You can create a module by decorating a class with `@ModuleClass`.
 
 ```typescript
 @ModuleClass({
@@ -30,6 +34,10 @@ You can create a module by decorating a class with `@ModuleClass`
 })
 class MyModule {
 
+    constructor(@Inject(Loggable) loggable: Loggable) {
+        loggable.log('Hello from MyModule');
+    }
+
     @OnModuleCreated()
     onModuleCreated() {} // perform initialization here
 
@@ -38,7 +46,9 @@ class MyModule {
 }
 ```
 
-In case that you don't need the lifecycle hooks, you can also create a module by
+A module can have a constructor, and its parameters are automatically injected by the framework.
+
+In case that neither constructor nor lifecycle hooks is needed, you can also create a module in a simpler way:
 
 ```typescript
 const MyModule = createModule({
@@ -51,57 +61,64 @@ const MyModule = createModule({
 
 ## Lifecycle hooks
 
-Sometimes your components need to be initialized and de-initialized, it can be done in the
-`@OnModuleCreate` and `@OnModuleDestroy` hooks of a module.
+SenseJS defined four lifecycle hooks for modules. Just like module constructor, parameters of these lifecycle hooks
+are automatically injected by the framework.
 
-```typescript
+- `OnModuleCreated`/`OnModuleStop`: called when the module is created/destroyed, respectively.
 
-@Component({scope: ComponentScope.SINGLETON})
-class DatabaseConnection {
-    async connect() { }
-    async disconnect() { }
-    async query() { }
-}
+    When your components need to be initialized and de-initialized, it shall be done in the
+    `@OnModuleCreate` and `@OnModuleDestroy` hooks of a module.
 
-@ModuleClass({components: [DatabaseConnection]})
-class DatabaseModule {
+    ```typescript
 
-    @OnModuleCreated()
-    async onCreated(@Inject(DatabaseConnection) conn) {
-        await conn.connect();
+    @Component({scope: ComponentScope.SINGLETON})
+    class DatabaseConnection {
+        async connect() { }
+        async disconnect() { }
+        async query() { }
     }
 
-    @OnModuleDestroy()
-    async onDestroyed(@Inject(DatabaseConnection) conn) {
-        await conn.disconnect();
-    }
-}
-```
+    @ModuleClass({components: [DatabaseConnection]})
+    class DatabaseModule {
 
-A module may also define `@OnStart` and `@OnStop` hooks when it's designed to handle requests.
+        @OnModuleCreated()
+        async onCreated(@Inject(DatabaseConnection) conn) {
+            await conn.connect();
+        }
 
-```typescript
-@ModuleClass()
-class TcpEchoServerModule {
-    tcpServer?: net.Server;
-
-    @OnModuleStart()
-    async onCreated() {
-        this.tcpServer = net.createServer((conn)=> conn.pipe(conn)).listen(3000);
-    }
-
-    @OnModuleStop()
-    async onDestroyed() {
-        if (this.tcpServer) {
-            this.tcpServer.close();
+        @OnModuleDestroy()
+        async onDestroyed(@Inject(DatabaseConnection) conn) {
+            await conn.disconnect();
         }
     }
-}
-```
+    ```
 
-`@OnModuleCreate` hooks are ensured be invoked after all `@OnModuleCreated` hooks finished, while `@OnModuleDestroy`
-hooks are ensured to be invoked before any `@OnModuleDestroy` hooks. This is how SenseJS gracefully startup and
-shutdown your app.
+- `OnModuleStart`/`OnModuleStop`: only when you start your app via `ApplicationRunner.start`(see [EntryPointModules](#entry-point-modules))
+
+    When a module is designed to handle requests, it needs`@OnModuleStart` and `@OnModuleStop` hooks.
+
+    ```typescript
+    @ModuleClass()
+    class TcpEchoServerModule {
+        tcpServer?: net.Server;
+
+        @OnModuleStart()
+        async onCreated() {
+            this.tcpServer = net.createServer((conn)=> conn.pipe(conn)).listen(3000);
+        }
+
+        @OnModuleStop()
+        async onDestroyed() {
+            if (this.tcpServer) {
+                this.tcpServer.close();
+            }
+        }
+    }
+    ```
+
+    `OnModuleCreate` hooks are ensured be invoked after all `OnModuleCreated` hooks finished, while `OnModuleDestroy`
+    hooks are ensured to be invoked before any `OnModuleDestroy` hooks. This is how SenseJS gracefully startup and
+    shutdown your app.
 
 
 ## Inter-Module dependencies
@@ -131,11 +148,46 @@ other modules that do not list it as a dependency. In other words, the inter-mod
 order of initialization and de-initialization but does not restrict you from injecting anything from any other module.
 However, it is still a good practice to carefully consider the relationship between modules.
 
+## Entry point modules
+
+There ought to be an entry point for an app. In SenseJS, your app can be started through:
+```typescript
+@ModuleClass({ requires: [OtherModules] })
+class MyApp {
+    main() {
+    }
+}
+
+ApplicationRunner.instance.run(MyApp, 'main');
+```
+And your app will exit when it returns from `main`.
+
+Some app may not have any explicit entry function, but establish a listener in `OnModuleStart` hooks and then
+wait for requests. In this case, you can use `ApplicationRunner.instance.start` to start your app.
+
+```typescript
+@ModuleClass({ requires: [OtherModules] })
+class MyApp {
+    @OnModuleStart()
+    onModuleStart() {
+        // start listening for requests
+    }
+    @OnModuleStop()
+    onModuleStop() {
+        // stop listening for requests
+    }
+}
+ApplicationRunner.instance.start(MyApp);
+```
+
+Such app will not exit until `ProcessManager.exit()` is called or any exit signals are received. SenseJS also ensures
+all `@OnModuleStop` hooks are invoked before the app exits.
+
 ## Conclusion
 
 From a global perspective, a typical SenseJS application is composed of modules. Some modules are organizing
-injectables, while some modules are also managing I/O. Based on the dependency graph of all the modules, SenseJS can
-gracefully startup and shut down your application.
+injectables, while some modules are also managing I/O, and an entry module that depends on all the others.
+Based on the dependency graph of all the modules, SenseJS can gracefully start up and shut down your application.
 
 
 
