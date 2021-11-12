@@ -117,7 +117,14 @@ export class EntryModule<T extends {} = {}> {
     for (const dependency of moduleInstance.dependencies) {
       await EntryModule.bootstrapModule(dependency);
     }
-    await moduleInstance.bootstrap();
+    try {
+      await moduleInstance.bootstrap();
+    } catch (e) {
+      for (const dependency of moduleInstance.dependencies) {
+        await EntryModule.shutdownModule(dependency);
+      }
+      throw e;
+    }
   }
 
   private static async shutdownModule<T>(moduleInstance: ModuleInstance<T>) {

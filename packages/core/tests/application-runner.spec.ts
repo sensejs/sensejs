@@ -83,7 +83,7 @@ function runForTest<M extends {}, K extends keyof M>(module: Constructor<M>, met
 }
 
 function runModuleForTest<M extends {}, K extends keyof M>(module: Constructor<M>, methodKey?: K) {
-  return new Promise((resolve) => {
+  return new Promise<number>((resolve) => {
     const runOption: RunnerOption<void> = {
       ...runOptionFixture,
       logger: consoleLogger,
@@ -235,6 +235,35 @@ describe('Application', () => {
     emitSignalOnNextTick();
     expect(await promise).toBe(runOptionFixture.normalExitOption.exitCode);
     expect(console.info).toHaveBeenCalledTimes(1);
+  });
+
+  test('app has duplicated bindings', async () => {
+    const aOnDestroy = jest.fn();
+
+    @Component()
+    class MyComponent {}
+
+    @ModuleClass({
+      components: [MyComponent],
+    })
+    class MyModuleA {
+      @OnModuleDestroy()
+      onModuleDestroy() {
+        aOnDestroy();
+      }
+    }
+
+    @ModuleClass({
+      components: [MyComponent],
+      requires: [MyModuleA],
+    })
+    class BadApp {
+      main() {}
+    }
+
+    const exitCode = await runModuleForTest(BadApp);
+    expect(exitCode).toBe(runOptionFixture.errorExitOption.exitCode);
+    expect(aOnDestroy).toHaveBeenCalledTimes(1);
   });
 
   test('failed on start', async () => {

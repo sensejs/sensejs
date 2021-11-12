@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {Container, InjectScope} from '@sensejs/container';
+import {Container, DuplicatedBindingError, InjectScope} from '@sensejs/container';
 import {
   Component,
   ComponentFactory,
@@ -162,6 +162,115 @@ describe('Module resolve', () => {
 
 describe('Module Root', () => {
   class MyError extends Error {}
+
+  test('entry has duplicate binding', async () => {
+    const aOnDestroy = jest.fn();
+
+    @Component()
+    class MyComponent {}
+    @ModuleClass({
+      components: [MyComponent],
+    })
+    class MyModuleA {
+      @OnModuleDestroy()
+      onDestroy() {
+        aOnDestroy();
+      }
+    }
+
+    const onDestroy = jest.fn();
+
+    @ModuleClass({
+      requires: [MyModuleA],
+    })
+    class BadApp {
+      @OnModuleCreate()
+      onModuleCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
+        loader.addComponent(MyComponent);
+      }
+      main() {}
+
+      @OnModuleDestroy()
+      onModuleDestroy() {
+        onDestroy();
+      }
+    }
+
+    await expect(EntryModule.start(BadApp)).rejects.toBeInstanceOf(DuplicatedBindingError);
+    expect(aOnDestroy).toHaveBeenCalled();
+    expect(onDestroy).not.toHaveBeenCalled();
+  });
+
+  test('shutdown during on create', async () => {
+    @ModuleClass()
+    class MyModuleB {
+      main() {}
+
+      @OnModuleCreate()
+      onModuleDestroy(@Inject(ProcessManager) manager: ProcessManager) {
+        return new Promise((resolve) => {
+          manager.shutdown();
+          setImmediate(resolve);
+        });
+      }
+    }
+    await EntryModule.run(MyModuleB, 'main');
+  });
+
+  test('duplicate binding', async () => {
+    @Component()
+    class MyComponent {}
+    @ModuleClass({
+      components: [MyComponent],
+    })
+    class MyModuleA {}
+    const entrySpy = jest.fn();
+    const onDestroySpy = jest.fn();
+
+    @ModuleClass({
+      components: [MyComponent],
+      requires: [MyModuleA],
+    })
+    class MyModuleB {
+      main() {}
+
+      @OnModuleDestroy()
+      onModuleDestroy() {
+        onDestroySpy();
+      }
+    }
+    await expect(() => EntryModule.start(MyModuleB)).rejects.toBeInstanceOf(DuplicatedBindingError);
+    expect(entrySpy).not.toHaveBeenCalled();
+    expect(onDestroySpy).not.toHaveBeenCalled();
+  });
+
+  test('duplicate dynamic binding', async () => {
+    const entrySpy = jest.fn();
+    const onDestroySpy = jest.fn();
+    @Component()
+    class MyComponent {}
+    @ModuleClass({
+      components: [MyComponent],
+    })
+    class MyModule {
+      @OnModuleCreate()
+      onModuleCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
+        loader.addComponent(MyComponent);
+      }
+
+      main() {
+        entrySpy();
+      }
+      @OnModuleDestroy()
+      onModuleDestroy() {
+        onDestroySpy();
+      }
+    }
+
+    await expect(() => EntryModule.start(MyModule)).rejects.toBeInstanceOf(DuplicatedBindingError);
+    expect(entrySpy).not.toHaveBeenCalled();
+    expect(onDestroySpy).not.toHaveBeenCalled();
+  });
 
   test('startup error', async () => {
     @ModuleClass()

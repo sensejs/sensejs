@@ -117,7 +117,7 @@ export class ModuleInstance<T extends {} = {}> {
 
   async destroy(): Promise<void> {
     if (!this.bootstrapPromise) {
-      throw new Error('Module not bootstrapped');
+      return;
     }
     if (this.destroyPromise) {
       return this.destroyPromise;
