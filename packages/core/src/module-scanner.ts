@@ -1,8 +1,8 @@
-import {getModuleMetadata, ModuleMetadata} from './module.js';
+import {ModuleMetadata, ModuleMetadataLoader} from './module.js';
 import {Constructor} from './interfaces.js';
 
 export class ModuleScanner {
-  public constructor(private entryModule: Constructor) {}
+  public constructor(private entryModule: Constructor, private loader: ModuleMetadataLoader) {}
 
   scanModule(callback: (metadata: ModuleMetadata) => void): void {
     const visitedModules = new Set<Constructor>();
@@ -15,7 +15,7 @@ export class ModuleScanner {
       if (visitedModules.has(moduleToVisit)) {
         continue;
       }
-      const metadata = getModuleMetadata(moduleToVisit);
+      const metadata = this.loader.get(moduleToVisit);
 
       for (const dependency of metadata.requires) {
         if (!visitedModules.has(dependency)) {

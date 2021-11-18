@@ -4,7 +4,7 @@ import {Constructor} from './interfaces.js';
 import {BackgroundTaskQueue, ProcessManager} from './builtins.js';
 import {invokeMethod} from './method-invoker.js';
 import {ModuleScanner} from './module-scanner.js';
-import {ModuleClass} from './module.js';
+import {ModuleClass, ModuleMetadataLoader} from './module.js';
 import {firstValueFrom, Subject} from 'rxjs';
 
 export class ModuleShutdownError extends Error {
@@ -25,8 +25,12 @@ export class EntryModule<T extends {} = {}> {
   private stopPromise?: Promise<void>;
   private shutdownPromise?: Promise<void>;
 
-  public constructor(entryModule: Constructor<T>, processManager?: ProcessManager) {
-    this.moduleScanner = new ModuleScanner(entryModule);
+  public constructor(
+    entryModule: Constructor<T>,
+    processManager?: ProcessManager,
+    loader: ModuleMetadataLoader = new ModuleMetadataLoader(),
+  ) {
+    this.moduleScanner = new ModuleScanner(entryModule, loader);
     this.container = new Container();
     this.container.addBinding({
       type: BindingType.CONSTANT,
@@ -51,7 +55,7 @@ export class EntryModule<T extends {} = {}> {
       id: ModuleScanner,
     });
 
-    this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, this.moduleInstanceMap);
+    this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, loader, this.moduleInstanceMap);
   }
 
   static async run<T>(entryModule: Constructor<T>, method: keyof T): Promise<void> {

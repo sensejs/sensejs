@@ -1,5 +1,5 @@
 import {BindingType, Container, InjectScope, ServiceId} from '@sensejs/container';
-import {getModuleMetadata, ModuleMetadata} from './module.js';
+import {ModuleMetadata, ModuleMetadataLoader} from './module.js';
 import {invokeMethod} from './method-invoker.js';
 import {ComponentFactory, ComponentMetadata, ConstantProvider, Constructor, FactoryProvider} from './interfaces.js';
 import {getComponentMetadata} from './component.js';
@@ -75,14 +75,15 @@ export class ModuleInstance<T extends {} = {}> {
   constructor(
     readonly moduleClass: Constructor<T>,
     private readonly container: Container,
+    loader: ModuleMetadataLoader = new ModuleMetadataLoader(),
     instanceMap: Map<Constructor, ModuleInstance<any>> = new Map(),
   ) {
-    this.moduleMetadata = getModuleMetadata(this.moduleClass);
+    this.moduleMetadata = loader.get(this.moduleClass);
     instanceMap.set(moduleClass, this);
     this.moduleMetadata.requires.forEach((moduleClass) => {
       let dependency = instanceMap.get(moduleClass);
       if (!dependency) {
-        dependency = new ModuleInstance(moduleClass, container, instanceMap);
+        dependency = new ModuleInstance(moduleClass, container, loader, instanceMap);
       }
       this.dependencies.push(dependency);
       dependency.referencedCounter++;

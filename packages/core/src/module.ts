@@ -175,3 +175,9 @@ export function createModule(option: ModuleOption = {}): Constructor {
 
   return Module;
 }
+
+export class ModuleMetadataLoader {
+  get(module: Constructor): ModuleMetadata {
+    return getModuleMetadata(module);
+  }
+}
