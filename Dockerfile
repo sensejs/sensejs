@@ -7,4 +7,4 @@ COPY pnpm-lock.yaml .
 RUN pnpm fetch
 COPY . .
 RUN pnpm recursive install --offline --frozen-lockfile
-RUN pnpm m run build
+RUN pnpm m --filter=./packages run build
