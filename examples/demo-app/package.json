@@ -29,7 +29,7 @@
     "io-ts": "^2.2.16",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.38"
+    "typeorm": "^0.2.41"
   },
   "devDependencies": {
     "@types/config": "^0.0.38"
