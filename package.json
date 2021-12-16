@@ -50,6 +50,7 @@
   "scripts": {
     "test": "node  --experimental-vm-modules --experimental-specifier-resolution=node  ./node_modules/jest/bin/jest.js",
     "lint": "eslint --",
+    "build": "pnpm recursive --filter ./packages --filter ./tools run build",
     "postinstall": "husky install",
     "lint-all": "eslint '**/*.ts'",
     "pretest": "pnpm recursive run prepare",

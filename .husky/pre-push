@@ -1,2 +1,2 @@
 #!/bin/bash
-pnpm recursive run build
+pnpm run build
