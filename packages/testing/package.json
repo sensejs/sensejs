@@ -1,0 +1,39 @@
+{
+  "name": "@sensejs/testing",
+  "version": "0.9.0",
+  "description": "",
+  "files": [
+    "dist-cjs/**/!(*.tsbuildinfo)",
+    "dist-esm/**/!(*.tsbuildinfo)",
+    "src/**/*.ts",
+    "README.md"
+  ],
+  "type": "module",
+  "types": "./dist-esm/lib/index.d.ts",
+  "main": "./dist-cjs/lib/index.js",
+  "module": "./dist-esm/lib/index.js",
+  "exports": {
+    "import": "./dist-esm/lib/index.js",
+    "require": "./dist-cjs/lib/index.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "tsc -p tsconfig.build-cjs.json && tsc -p tsconfig.build-esm.json",
+    "prepublishOnly": "npm run clean && npm run build",
+    "clean": "rm -rf ./dist-esm/lib dist-cjs/lib"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC",
+  "dependencies": {
+    "tslib": "^2.3.1"
+  },
+  "devDependencies": {
+    "@sensejs/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@sensejs/core": "workspace:^0.9.0"
+  }
+}

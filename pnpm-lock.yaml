@@ -292,6 +292,15 @@ importers:
     devDependencies:
       '@sensejs/core': link:../core
 
+  packages/testing:
+    specifiers:
+      '@sensejs/core': workspace:*
+      tslib: ^2.3.1
+    dependencies:
+      tslib: 2.3.1
+    devDependencies:
+      '@sensejs/core': link:../core
+
   packages/typeorm:
     specifiers:
       '@sensejs/container': workspace:*
