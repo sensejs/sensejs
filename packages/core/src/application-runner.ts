@@ -16,7 +16,7 @@ import {catchError, first, mapTo, mergeMap, skip, tap, timeout} from 'rxjs/opera
 import {EntryModule} from './entry-module.js';
 import {consoleLogger, Logger} from './logger.js';
 import {Constructor} from './interfaces.js';
-import {ModuleClass} from './module.js';
+import {ModuleClass, ModuleMetadataLoader} from './module.js';
 import {ProcessManager} from './builtins.js';
 import _ from 'lodash';
 import {Container} from '@sensejs/container';
@@ -85,7 +85,7 @@ export class ApplicationRunner {
     fromEvent(this.process, 'unhandledRejection'),
   );
 
-  protected constructor(private process: NodeJS.EventEmitter) {}
+  protected constructor(private process: NodeJS.EventEmitter, private moduleLoader = new ModuleMetadataLoader()) {}
 
   run<M extends {}, K extends keyof M, T = never>(
     entryModule: Constructor<M>,
@@ -124,7 +124,7 @@ export class ApplicationRunner {
   }
 
   private performRunModule<M extends {}, K extends keyof M, T = never>(
-    entryModule: Constructor<M>,
+    entryModuleConstructor: Constructor<M>,
     entryMethodKey: K | undefined,
     runOption: RunnerOption<T>,
     startAllModules: boolean,
@@ -134,19 +134,19 @@ export class ApplicationRunner {
     }
     const stoppedPromise = firstValueFrom(this.stoppedSubject);
     @ModuleClass({
-      requires: [entryModule],
+      requires: [entryModuleConstructor],
     })
     class RunnerWrapperModule {
       async main(@Inject(Container) container: Container) {
         if (entryMethodKey) {
-          await invokeMethod(container.createResolveSession(), entryModule, entryMethodKey);
+          await invokeMethod(container.createResolveSession(), entryModuleConstructor, entryMethodKey);
         }
         return stoppedPromise;
       }
     }
 
     const processManager = this.createProcessManager(runOption);
-    const moduleRoot = new EntryModule(RunnerWrapperModule, processManager);
+    const entryModule = new EntryModule(RunnerWrapperModule, processManager, this.moduleLoader);
     const uncaughtErrorExitCodeObservable = this.uncaughtErrorObservable.pipe(
       first(),
       tap((e) => {
@@ -178,9 +178,9 @@ export class ApplicationRunner {
       exitSignalObservable,
       concat(
         startAllModules
-          ? this.getStartupObservable(moduleRoot, runOption)
-          : this.getBoostrapObservable(moduleRoot, runOption),
-        defer(async () => moduleRoot.run('main')).pipe(
+          ? this.getStartupObservable(entryModule, runOption)
+          : this.getBoostrapObservable(entryModule, runOption),
+        defer(async () => entryModule.run('main')).pipe(
           mapTo(runOption.normalExitOption),
           catchError((e) => {
             runOption.logger.error('Error occurred while running:', e);
@@ -193,7 +193,7 @@ export class ApplicationRunner {
       first(),
       tap(() => {}),
     );
-    const shutdownObservable = this.getShutdownObservable(runningObservable, moduleRoot, runOption);
+    const shutdownObservable = this.getShutdownObservable(runningObservable, entryModule, runOption);
 
     this.runSubscription = merge(shutdownObservable, forcedExitSignalObservable)
       .pipe(
