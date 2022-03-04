@@ -6,6 +6,7 @@ export class MockModuleMetadataLoader extends ModuleMetadataLoader {
 
   mockModule(module: Constructor, fn: (m: ModuleMetadata) => ModuleMetadata) {
     this.mockedResult.set(module, fn(super.get(module)));
+    return this;
   }
 
   get(module: Constructor): ModuleMetadata {
@@ -25,8 +26,8 @@ export class MockApplicationRunner extends ApplicationRunner {
     this.mockedModuleLoader = mockedModuleLoader;
   }
 
-  emitSignal(signal: keyof NodeJS.Signals) {
-    this.mockedProcess.emit(signal as string, signal);
+  emitSignal(signal: NodeJS.Signals) {
+    this.mockedProcess.emit(signal, signal);
   }
 
   loader(): MockModuleMetadataLoader {
