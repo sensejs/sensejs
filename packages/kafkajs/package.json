@@ -34,13 +34,13 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@sensejs/container": "workspace:0.10.0-alpha.0",
+    "@sensejs/container": "workspace:0.10.0-alpha.1",
     "@sensejs/core": "workspace:0.10.0-alpha.0",
     "@sensejs/testing-utility": "workspace:0.10.0-alpha.0",
     "config": "^3.3.9"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.10.0-alpha.0",
+    "@sensejs/container": "workspace:^0.10.0-alpha.1",
     "@sensejs/core": "workspace:^0.10.0-alpha.0",
     "kafkajs": "^1.16.0 || ^2.0.2",
     "reflect-metadata": "^0.1.13"

@@ -29,8 +29,8 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@sensejs/container": "workspace:0.10.0-alpha.0",
-    "@sensejs/core": "workspace:0.10.0-alpha.0",
+    "@sensejs/container": "workspace:*",
+    "@sensejs/core": "workspace:*",
     "@types/traverse": "^0.6.32"
   },
   "peerDependencies": {

@@ -113,25 +113,25 @@ importers:
         specifier: ^5.6.14
         version: 5.6.14(@mikro-orm/core@5.6.14)
       '@sensejs/config':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/config
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/container
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/core
       '@sensejs/http-common':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/http-common
       '@sensejs/http-koa-platform':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/http-koa-platform
       '@sensejs/logger':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/logger
       '@sensejs/utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/utility
       config:
         specifier: ^3.3.9
@@ -190,10 +190,10 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../container
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../core
       '@types/traverse':
         specifier: ^0.6.32
@@ -225,10 +225,10 @@ importers:
         version: 9.0.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../container
       '@sensejs/testing-utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../tools/testing-utility
       '@types/uuid':
         specifier: ^8.3.4
@@ -244,7 +244,7 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:0.10.0-alpha.1
         version: link:../container
       '@sensejs/core':
         specifier: workspace:0.10.0-alpha.0
@@ -296,7 +296,7 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:0.10.0-alpha.1
         version: link:../container
       '@sensejs/core':
         specifier: workspace:0.10.0-alpha.0
@@ -324,7 +324,7 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:0.10.0-alpha.1
         version: link:../container
       '@sensejs/core':
         specifier: workspace:0.10.0-alpha.0
