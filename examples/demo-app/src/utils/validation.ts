@@ -1,14 +1,11 @@
-import * as iots from 'io-ts';
-import * as fpts from 'fp-ts';
-
-export function createTransformer<A, O = A, I = unknown>(type: iots.Type<A, O, I>, onError: (e: iots.Errors) => never) {
-  return (input: I): A => {
-    const result = type.decode(input);
-    const getOrElse = fpts.either.getOrElse(
-      (e: iots.Errors): A => {
-        onError(e);
-      },
-    );
-    return getOrElse(result);
+import * as st from 'suretype';
+export function createTransformer<T extends st.CoreValidator<unknown>>(type: T, onError: (e: unknown[]) => never) {
+  const validator = st.compile(type);
+  return (input: unknown) => {
+    const result = validator(input);
+    if (result.ok) {
+      return input as st.TypeOf<T>;
+    }
+    onError(result.errors);
   };
 }

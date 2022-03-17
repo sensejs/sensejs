@@ -2,6 +2,7 @@ import {Component, Inject, InjectLogger, Logger} from '@sensejs/core';
 import {HttpContext} from '@sensejs/http-common';
 import {HttpError} from './http-error';
 import {InterceptProviderClass} from '@sensejs/container';
+import {ValidationError} from 'suretype';
 
 @InterceptProviderClass()
 export class ErrorHandlerInterceptor {
@@ -11,7 +12,10 @@ export class ErrorHandlerInterceptor {
     try {
       await next();
     } catch (e) {
-      if (e instanceof HttpError) {
+      if (e instanceof ValidationError) {
+        this.context.response.statusCode = 400;
+        this.context.response.data = e.errors;
+      } else if (e instanceof HttpError) {
         this.context.response.statusCode = e.statusCode;
         this.context.response.data = {
           errorCode: e.errorCode,

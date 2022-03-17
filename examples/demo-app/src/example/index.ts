@@ -1,10 +1,15 @@
 import {PublishingFacade} from './publishing-facade.component';
-import {InjectLogger, Logger, ModuleClass, OnModuleDestroy, OnModuleCreate} from '@sensejs/core';
+import {ModuleClass} from '@sensejs/core';
 import {SenseLogModule} from '@sensejs/logger';
+import {EXPORT_ENTITY} from '../constants';
+import {AuthorEntity} from './author.entity';
+import {BookEntity} from './book.entity';
 
 @ModuleClass({
   requires: [SenseLogModule],
-  components: [PublishingFacade]
+  components: [PublishingFacade],
+  properties: {
+    [EXPORT_ENTITY]: [BookEntity, AuthorEntity],
+  },
 })
-export default class PublishingModule {
-}
+export default class PublishingModule {}

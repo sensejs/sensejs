@@ -4,6 +4,7 @@ import {RequestTimingInterceptor} from './request-timing.interceptor';
 import PublishingModule from '../example';
 import {TracingInterceptor} from './tracing-interceptor';
 import {ErrorHandlerInterceptor} from './error-handler.interceptor';
+import {DatabaseTransactionInterceptor} from '../database';
 
 export default createHttpModule({
   httpOption: {
@@ -12,6 +13,11 @@ export default createHttpModule({
   },
   requires: [PublishingModule],
   components: [ExampleController],
-  globalInterceptProviders: [TracingInterceptor, ErrorHandlerInterceptor, RequestTimingInterceptor],
+  globalInterceptProviders: [
+    TracingInterceptor,
+    ErrorHandlerInterceptor,
+    RequestTimingInterceptor,
+    DatabaseTransactionInterceptor,
+  ],
   injectOptionFrom: 'config.http',
 });

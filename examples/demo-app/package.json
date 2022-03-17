@@ -22,14 +22,16 @@
     "@sensejs/http-common": "workspace:*",
     "@sensejs/http-koa-platform": "workspace:*",
     "@sensejs/logger": "workspace:*",
-    "@sensejs/typeorm": "workspace:*",
     "@sensejs/utility": "workspace:*",
+    "@mikro-orm/core": "^5.0.0",
+    "@mikro-orm/sqlite": "^5.0.0",
+    "@mikro-orm/knex": "^5.0.0",
     "config": "^3.3.6",
+    "suretype": "^2.4.1",
     "fp-ts": "^2.11.5",
     "io-ts": "^2.2.16",
     "reflect-metadata": "^0.1.13",
-    "sqlite3": "^5.0.2",
-    "typeorm": "^0.2.41"
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "@types/config": "^0.0.38"

@@ -1,26 +1,24 @@
-import {Column, Entity, PrimaryGeneratedColumn} from 'typeorm';
+import {Entity, Property} from '@mikro-orm/core';
 import {BookEntity} from './book.entity';
+import crypto from 'crypto';
 
 @Entity()
 export class AuthorEntity {
+  @Property({primary: true})
+  id: string = crypto.randomUUID();
 
-  @PrimaryGeneratedColumn()
-  id?: string;
+  @Property()
+  name: string;
 
-  @Column()
-  name?: string;
-
-  @Column()
+  @Property()
   bookCount: number = 0;
 
-  static create(name: string) {
-    const author = new AuthorEntity();
-    author.name = name;
-    return author;
+  constructor(name: string) {
+    this.name = name;
   }
 
   writeBook(bookName: string): BookEntity {
     this.bookCount++;
-    return BookEntity.create(bookName, this);
+    return new BookEntity(bookName, this);
   }
 }

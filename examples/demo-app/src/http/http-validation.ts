@@ -1,4 +1,4 @@
-import * as iots from 'io-ts';
+import {TypeOf, v} from 'suretype';
 import {createTransformer} from '../utils/validation';
 import {HttpError} from './http-error';
 
@@ -6,16 +6,15 @@ function throwValidationError(e: object): never {
   throw new HttpError(400, 'VALIDATION_ERROR', 'Validation Error', e);
 }
 
-export const CreateAuthorForm = iots.type({
-  name: iots.string,
+export const CreateAuthorForm = v.object({
+  name: v.string().required(),
 });
 
-export type CreateAuthorFormType = iots.TypeOf<typeof CreateAuthorForm>;
+export type CreateAuthorFormType = TypeOf<typeof CreateAuthorForm>;
 
 export const validateCreateAuthorForm = createTransformer(CreateAuthorForm, throwValidationError);
-export const CreateBookForm = iots.type({
-  name: iots.string,
+export const CreateBookForm = v.object({
+  name: v.string().required(),
 });
-export type CreateBookFormType = iots.TypeOf<typeof CreateBookForm>;
 
 export const validateCreateBookForm = createTransformer(CreateBookForm, throwValidationError);
