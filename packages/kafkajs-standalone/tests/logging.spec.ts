@@ -6,7 +6,7 @@ import {consoleLogger} from '@sensejs/utility';
 const fixture = {
   log: {
     message: 'message',
-    timestamp: new Date(),
+    timestamp: new Date().toString(),
     label: 'label',
   },
   level: 0,

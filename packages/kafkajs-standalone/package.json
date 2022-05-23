@@ -35,7 +35,7 @@
     "tslib": "^2.3.1"
   },
   "peerDependencies": {
-    "kafkajs": "^1.14.0"
+    "kafkajs": "^1.16.0"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
