@@ -1,3 +1,3 @@
 #!/bin/bash
-pnpx --no-install lint-staged
+pnpm exec  lint-staged
 
