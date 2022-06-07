@@ -50,11 +50,11 @@
   "scripts": {
     "test": "node  --experimental-vm-modules --experimental-specifier-resolution=node  ./node_modules/jest/bin/jest.js",
     "lint": "eslint --",
-    "build": "pnpm recursive --filter ./packages --filter ./tools run build",
+    "build": "pnpm recursive --filter './packages/*' --filter './tools/*' run build",
     "postinstall": "husky install",
     "lint-all": "eslint '**/*.ts'",
     "pretest": "pnpm recursive run prepare",
-    "release": "pnpm recursive --workspace-concurrency 1 --filter ./packages exec -- pnpx release-it -c `pwd`/.release-it.yaml --non-interactive",
+    "release": "pnpm recursive --workspace-concurrency 1 --filter './packages/*' exec -- pnpx release-it -c `pwd`/.release-it.yaml --non-interactive",
     "format ": "prettier --write  \"packages/**/*.ts?(x)\" \"examples/**/*.ts?(x)\""
   }
 }
