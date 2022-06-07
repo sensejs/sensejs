@@ -7,6 +7,7 @@ importers:
       '@commitlint/cli': ^16.0.0
       '@commitlint/config-conventional': ^16.0.0
       '@jest/globals': ^27.4.4
+      '@types/config': ^0.0.41
       '@types/jest': ^27.0.3
       '@types/koa': ^2.13.4
       '@types/koa__cors': ^3.1.0
@@ -47,6 +48,7 @@ importers:
       '@commitlint/cli': 16.3.0
       '@commitlint/config-conventional': 16.2.4
       '@jest/globals': 27.5.1
+      '@types/config': 0.0.41
       '@types/jest': 27.5.2
       '@types/koa': 2.13.4
       '@types/koa__cors': 3.3.0
@@ -3477,6 +3479,10 @@ packages:
 
   /@types/config/0.0.38:
     resolution: {integrity: sha512-z2WizAfIFgSv8SQfQ8c0LlbDAcK47D/o93XW6bxZ9t3bs4fmmfAPjk1nhAIBTG84PBBCHfSPM+8g7vhLdbFokg==}
+    dev: true
+
+  /@types/config/0.0.41:
+    resolution: {integrity: sha512-HjXUmIld0gwvyG8MU/17QtLzOyuMX4jbGuijmS9sWsob5xxgZ/hY9cbRCaHIHqTQ3HMLhwS3F8uXq3Bt9zgzHA==}
     dev: true
 
   /@types/connect-history-api-fallback/1.3.5:

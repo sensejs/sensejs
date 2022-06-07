@@ -10,6 +10,7 @@
     "@commitlint/cli": "^16.0.0",
     "@commitlint/config-conventional": "^16.0.0",
     "@jest/globals": "^27.4.4",
+    "@types/config": "^0.0.41",
     "@types/jest": "^27.0.3",
     "@types/koa": "^2.13.4",
     "@types/koa-bodyparser": "^4.3.4",
