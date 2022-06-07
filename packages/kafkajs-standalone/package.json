@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs-standalone",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -35,7 +35,7 @@
     "tslib": "^2.3.1"
   },
   "peerDependencies": {
-    "kafkajs": "^2.0.2"
+    "kafkajs": "^1.16.0 || ^2.0.2"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",

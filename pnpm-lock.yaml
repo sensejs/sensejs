@@ -236,7 +236,7 @@ importers:
     specifiers:
       '@sensejs/container': workspace:*
       '@sensejs/core': workspace:*
-      '@sensejs/kafkajs-standalone': workspace:^0.9.1
+      '@sensejs/kafkajs-standalone': workspace:^0.9.2
       '@sensejs/testing-utility': workspace:*
       '@sensejs/utility': workspace:^0.9.0
       config: ^3.3.6
