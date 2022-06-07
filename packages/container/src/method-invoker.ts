@@ -165,7 +165,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     }
     validateParamInjectMetadata(
       this.proxyConstructorInjectionMetadata,
-      `${this.targetConstructor.name}.${this.targetMethod}`,
+      `${this.targetConstructor.name}.${String(this.targetMethod)}`,
       validatedSet,
     );
   }
