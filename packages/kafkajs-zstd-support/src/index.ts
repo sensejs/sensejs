@@ -1,5 +1,5 @@
 import kafkajs from 'kafkajs';
-import zn from 'zstd-napi';
+import * as zn from 'zstd-napi';
 
 const zstdKafkaCodec = () => {
   const compressor = new zn.Compressor();
