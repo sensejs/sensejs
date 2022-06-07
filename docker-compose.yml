@@ -85,4 +85,5 @@ services:
       END_TO_END_TEST: 'true'
     volumes:
       - ./coverage:/opt/sensejs/coverage
-    command: ['pnpm', 'run', 'test', '--', '--coverage', '--runInBand']
+    command: ['pnpm', 'run', 'test', '--coverage', '--runInBand']
+      - 12
