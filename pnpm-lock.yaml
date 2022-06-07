@@ -30,7 +30,7 @@ importers:
       jest: ^27.4.5
       jest-resolve: ^27.4.5
       jest-ts-webcompat-resolver: ^1.0.0
-      kafkajs: ^1.16.0
+      kafkajs: ^2.0.2
       lint-staged: ^12.1.2
       lodash: ^4.17.21
       prettier: ^2.5.1
@@ -71,7 +71,7 @@ importers:
       jest: 27.5.1_ts-node@10.8.1
       jest-resolve: 27.5.1
       jest-ts-webcompat-resolver: 1.0.0_jest-resolve@27.5.1
-      kafkajs: 1.16.0
+      kafkajs: 2.0.2
       lint-staged: 12.5.0_enquirer@2.3.6
       lodash: 4.17.21
       prettier: 2.6.2
@@ -8311,6 +8311,11 @@ packages:
   /kafkajs/1.16.0:
     resolution: {integrity: sha512-+Rcfu2hyQ/jv5skqRY8xA7Ra+mmRkDAzCaLDYbkGtgsNKpzxPWiLbk8ub0dgr4EbWrN1Zb4BCXHUkD6+zYfdWg==}
     engines: {node: '>=10.13.0'}
+    dev: true
+
+  /kafkajs/2.0.2:
+    resolution: {integrity: sha512-g6CM3fAenofOjR1bfOAqeZUEaSGhNtBscNokybSdW1rmIKYNwBPC9xQzwulFJm36u/xcxXUiCl/L/qfslapihA==}
+    engines: {node: '>=14.0.0'}
     dev: true
 
   /keygrip/1.1.0:

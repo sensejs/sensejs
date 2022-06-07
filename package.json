@@ -33,7 +33,7 @@
     "jest": "^27.4.5",
     "jest-resolve": "^27.4.5",
     "jest-ts-webcompat-resolver": "^1.0.0",
-    "kafkajs": "^1.16.0",
+    "kafkajs": "^2.0.2",
     "lint-staged": "^12.1.2",
     "lodash": "^4.17.21",
     "prettier": "^2.5.1",
