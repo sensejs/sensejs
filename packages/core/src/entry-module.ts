@@ -14,6 +14,10 @@ export class ModuleShutdownError extends Error {
   }
 }
 
+export interface EntryModuleExecOption {
+  moduleLoader?: ModuleMetadataLoader;
+}
+
 export class EntryModule<T extends {} = {}> {
   readonly container: Container;
   private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
@@ -58,9 +62,9 @@ export class EntryModule<T extends {} = {}> {
     this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, loader, this.moduleInstanceMap);
   }
 
-  static async run<T>(entryModule: Constructor<T>, method: keyof T): Promise<void> {
+  static async run<T>(entryModule: Constructor<T>, method: keyof T, option: EntryModuleExecOption = {}): Promise<void> {
     let error: unknown = undefined;
-    const moduleRoot = new EntryModule(entryModule, new ProcessManager((e) => (error = e)));
+    const moduleRoot = new EntryModule(entryModule, new ProcessManager((e) => (error = e)), option.moduleLoader);
     await moduleRoot.bootstrap();
     if (error) {
       throw error;
@@ -79,7 +83,11 @@ export class EntryModule<T extends {} = {}> {
     }
   }
 
-  static async start<T>(entryModule: Constructor<T>, method?: keyof T): Promise<void> {
+  static async start<T>(
+    entryModule: Constructor<T>,
+    method?: keyof T,
+    option: EntryModuleExecOption = {},
+  ): Promise<void> {
     let error: unknown = undefined;
     const exitSubject = new Subject<void>();
     const exitPromise = firstValueFrom(exitSubject);
@@ -100,6 +108,7 @@ export class EntryModule<T extends {} = {}> {
         error = e;
         exitSubject.next();
       }),
+      option.moduleLoader,
     );
 
     await moduleRoot.start();
@@ -184,6 +193,10 @@ export class EntryModule<T extends {} = {}> {
       })
       .finally(() => this.backgroundTaskQueue.waitAllTaskFinished());
     return this.shutdownPromise;
+  }
+
+  public exec<K extends keyof T>(method: K): InvokeResult<T, K> {
+    return invokeMethod(this.container.createResolveSession(), this.entryModuleInstance.moduleClass, method);
   }
 
   public run<K extends keyof T>(method: K): InvokeResult<T, K> {
