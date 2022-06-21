@@ -10,9 +10,8 @@ const BATCH_TOPIC = 'e2e-batch-topic' + Date.now();
 
 test('message producer e2e test', async () => {
   const transactionalId = 'transactionalId' + Date.now();
-  const legacyTransactionalId = 'legacyTransactionalId' + Date.now();
   const provider = new SimpleKafkaJsProducerProvider({
-    connectOption: config.get('kafka.connectOption'),
+    ...config.get('kafka'),
   });
 
   const firstMessage = new Date().toString();
@@ -46,7 +45,7 @@ test('message producer e2e test', async () => {
   const batchedConsumerStubA = jest.fn().mockImplementationOnce(() => observableBatchA.complete());
   const consumerStubB = jest.fn().mockImplementationOnce(() => observableB.complete());
   const messageConsumerA = new MessageConsumer({
-    connectOption: config.get('kafka.connectOption'),
+    ...config.get('kafka'),
     fetchOption: {
       groupId: 'e2etest-latest',
       retry: {
@@ -73,9 +72,10 @@ test('message producer e2e test', async () => {
   });
 
   const messageConsumerB = new MessageConsumer({
-    connectOption: config.get('kafka.connectOption'),
+    ...config.get('kafka'),
     fetchOption: {
       groupId: 'e2etest-earliest',
+      allowAutoTopicCreation: true,
     },
   });
 
