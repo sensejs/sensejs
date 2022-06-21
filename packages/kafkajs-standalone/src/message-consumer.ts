@@ -51,7 +51,7 @@ export class MessageConsumer {
   private consumer: kafkajs.Consumer;
   private consumeOptions: Map<string, ConsumeOption> = new Map();
   private crashPromise?: Promise<void>;
-  private runPromise?: Promise<unknown>;
+  private lastBatchConsumed: Promise<unknown> = Promise.resolve();
   private workerController = new WorkerController<boolean>();
   private startedPromise?: Promise<void>;
   private stoppedPromise?: Promise<void>;
@@ -96,10 +96,7 @@ export class MessageConsumer {
       throw new Error('The message consumer is not started');
     }
     await this.startedPromise;
-    if (!this.runPromise) {
-      throw new Error('The message consumer is not started');
-    }
-    await Promise.race([this.runPromise, this.crashPromise]);
+    await Promise.race([this.lastBatchConsumed, this.crashPromise]);
   }
 
   async start(): Promise<void> {
@@ -140,12 +137,16 @@ export class MessageConsumer {
         0,
       );
 
-      this.runPromise = this.consumer.run({
+      await this.consumer.run({
         autoCommit: true,
         autoCommitInterval: this.commitOption?.commitInterval,
         eachBatchAutoResolve: false,
         partitionsConsumedConcurrently: totalPartitions,
-        eachBatch: async (payload) => this.eachBatch(payload),
+        eachBatch: async (payload) => {
+          const promise = this.eachBatch(payload);
+          this.lastBatchConsumed = this.lastBatchConsumed.then(() => promise);
+          return promise;
+        },
       });
     } finally {
       await admin.disconnect();
