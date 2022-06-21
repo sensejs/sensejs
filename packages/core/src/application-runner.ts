@@ -245,7 +245,7 @@ export class ApplicationRunner {
   private performShutdown<M, T>(moduleRoot: EntryModule<M>, exitOption: ExitOption, runOption: RunnerOption<T>) {
     return merge(
       from(moduleRoot.shutdown()).pipe(
-        mapTo(exitOption.exitCode),
+        map(() => exitOption.exitCode),
         catchError((e) => {
           runOption.logger.error('Error occurred while shutdown:', e);
           return of(runOption.errorExitOption.exitCode);
