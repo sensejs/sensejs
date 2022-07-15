@@ -157,6 +157,7 @@ typings/
 **/.idea/**/dynamic.xml
 **/.idea/**/uiDesigner.xml
 **/.idea/**/dbnavigator.xml
+**/.idea/markdown.xml
 
 # Gradle
 **/.idea/**/gradle.xml
