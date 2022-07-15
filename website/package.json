@@ -16,8 +16,8 @@
   },
   "devDependencies": {
     "@algolia/client-search": "^4.11.0",
-    "@docusaurus/core": "2.0.0-beta.18",
-    "@docusaurus/preset-classic": "2.0.0-beta.18",
+    "@docusaurus/core": "2.0.0-rc.1",
+    "@docusaurus/preset-classic": "2.0.0-rc.1",
     "@mdx-js/react": "^1.6.22",
     "@svgr/webpack": "^6.1.2",
     "@types/react": "^17.0.37",
@@ -27,7 +27,8 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "url-loader": "^4.1.1",
-    "webpack": "^5.65.0"
+    "webpack": "^5.65.0",
+    "typescript": "^4.7.2"
   },
   "browserslist": {
     "production": [
