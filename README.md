@@ -22,7 +22,7 @@ See [Documentation](https://sensejs.io)
         performance.
 
     -   To make it possible to check dependencies at start-up time, the `RequestInterceptor`
-        is no-longer in replaced by `AsyncInterceptProvider`, this breaks the HTTP, kafka and
+        is replaced by `AsyncInterceptProvider`, this breaks the HTTP, kafka and
         builtin event publishing.
 
         Before:
@@ -41,8 +41,8 @@ See [Documentation](https://sensejs.io)
 
         ```typescript
 
-        // The `InterceptProviderClass` decorator accepts 0 to many service id to denote what
-        // injectables will be provided, it the type does not match the parameter of `next`,
+        // The `InterceptProviderClass` decorator accepts 0 to many service ids to denote what
+        // injectables will be provided, if they do not match with the type of parameter of `next`,
         // it will cause compile error
         @InterceptProviderClass(serviceId1, serviceId2)
         class MyInterceptor {
