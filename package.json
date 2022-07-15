@@ -32,7 +32,6 @@
     "husky": "^7.0.4",
     "jest": "^27.4.5",
     "jest-resolve": "^27.4.5",
-    "jest-ts-webcompat-resolver": "^1.0.0",
     "kafkajs": "^2.0.2",
     "lint-staged": "^12.1.2",
     "lodash": "^4.17.21",
@@ -45,7 +44,6 @@
     "ts-jest": "^27.1.1",
     "ts-node": "^10.4.0",
     "tslib": "^2.3.1",
-    "typeorm": "^0.3.0-rc.21",
     "typescript": "^4.7.2"
   },
   "scripts": {
