@@ -271,7 +271,7 @@ importers:
   packages/kafkajs-zstd-support:
     specifiers:
       config: ^3.3.6
-      kafkajs: ^1.15.0
+      kafkajs: ^2.0.2
       tslib: ^2.3.1
       zstd-napi: ^0.0.6
     dependencies:
@@ -279,7 +279,7 @@ importers:
       zstd-napi: 0.0.6
     devDependencies:
       config: 3.3.7
-      kafkajs: 1.16.0
+      kafkajs: 2.0.2
 
   packages/logger:
     specifiers:
@@ -8390,11 +8390,6 @@ packages:
     dependencies:
       json-to-ast: 2.1.0
     dev: false
-
-  /kafkajs/1.16.0:
-    resolution: {integrity: sha512-+Rcfu2hyQ/jv5skqRY8xA7Ra+mmRkDAzCaLDYbkGtgsNKpzxPWiLbk8ub0dgr4EbWrN1Zb4BCXHUkD6+zYfdWg==}
-    engines: {node: '>=10.13.0'}
-    dev: true
 
   /kafkajs/2.0.2:
     resolution: {integrity: sha512-g6CM3fAenofOjR1bfOAqeZUEaSGhNtBscNokybSdW1rmIKYNwBPC9xQzwulFJm36u/xcxXUiCl/L/qfslapihA==}

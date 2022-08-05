@@ -32,7 +32,7 @@
     "zstd-napi": "^0.0.6"
   },
   "devDependencies": {
-    "kafkajs": "^1.15.0",
+    "kafkajs": "^2.0.2",
     "config": "^3.3.6"
   },
   "peerDependencies": {
