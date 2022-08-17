@@ -1,6 +1,6 @@
 ARG NODE_VERSION=14
 FROM node:${NODE_VERSION} AS pnpm-installed
-ARG PNPM_VERSION=^7.1.7
+ARG PNPM_VERSION=^7.9.0
 RUN npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /opt/sensejs
 COPY pnpm-lock.yaml .
