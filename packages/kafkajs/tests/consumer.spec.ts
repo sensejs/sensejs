@@ -2,7 +2,7 @@ import '@sensejs/testing-utility/lib/mock-console';
 import {jest} from '@jest/globals';
 jest.mock('@sensejs/kafkajs-standalone');
 
-import {Batch, EachBatchPayload} from 'kafkajs';
+import {Batch, EachBatchPayload, KafkaMessage} from 'kafkajs';
 import {ApplicationRunner, createModule, Inject, ProcessManager} from '@sensejs/core';
 import {BatchSubscribeOption, MessageConsumer} from '@sensejs/kafkajs-standalone';
 import {
@@ -98,7 +98,6 @@ describe('Subscriber', () => {
                   value: Buffer.from('value'),
                   key: Buffer.from('key'),
                   timestamp: new Date().toISOString(),
-                  size: 0,
                   attributes: 0,
                   headers: {},
                   offset: '0',
@@ -107,6 +106,10 @@ describe('Subscriber', () => {
               partition: 0,
               firstOffset: () => '0',
               lastOffset: () => '1',
+              highWatermark: '0',
+              isEmpty: () => false,
+              offsetLag: () => '0',
+              offsetLagLow: () => '0',
             } as Batch,
             heartbeat: jest.fn(),
             resolveOffset: jest.fn(),

@@ -97,7 +97,8 @@ test('MessageConsumer', async () => {
     const batch1 = createFakeMessageBatch('topic1', 1);
     await payload.eachBatch(batch1);
     const batch2 = createFakeMessageBatch('topic1', 2);
-    batch2.heartbeat.mockRejectedValue({type: 'REBALANCE_IN_PROGRESS'});
+    // @ts-ignore
+    batch2.heartbeat.mockRejectedValue({type: 'REBALANCE_IN_PROGRESS'} as any);
     await payload.eachBatch(batch2);
     // TODO: More assertion here
     allFakeBatchConsumed.complete();
