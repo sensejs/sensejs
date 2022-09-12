@@ -15,7 +15,6 @@ module.exports = {
   extensionsToTreatAsEsm: ['.ts'],
   coveragePathIgnorePatterns: ['/node_modules/', '/packages/*/lib'],
   setupFiles: [__dirname+'/jest-setup.cjs'],
-  resolver: path.resolve(__dirname, './jest-resolver.cjs'),
   resetMocks: true,
   restoreMocks: true,
   globals: {
