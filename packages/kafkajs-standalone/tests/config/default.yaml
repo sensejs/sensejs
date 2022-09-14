@@ -8,6 +8,4 @@ kafka:
       retries: 10
   producerOption:
     allowAutoTopicCreation: true
-    retry:
-      retries: 10
 
