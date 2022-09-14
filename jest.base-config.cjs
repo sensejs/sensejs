@@ -16,6 +16,7 @@ module.exports = {
   coveragePathIgnorePatterns: ['/node_modules/', '/packages/*/lib'],
   setupFiles: [__dirname+'/jest-setup.cjs'],
   resetMocks: true,
+  resolver: 'jest-ts-webcompat-resolver',
   restoreMocks: true,
   globals: {
     'ts-jest': {
