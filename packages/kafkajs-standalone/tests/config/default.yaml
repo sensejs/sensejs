@@ -4,5 +4,10 @@ kafka:
       - kafka-1:9092
       - kafka-2:9092
       - kafka-3:9092
+    retry:
+      retries: 10
   producerOption:
     allowAutoTopicCreation: true
+    retry:
+      retries: 10
+
