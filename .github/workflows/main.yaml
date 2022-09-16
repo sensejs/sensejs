@@ -17,9 +17,10 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Start services hosted by docker-compose
-        run: |-
-          docker-compose up -d zookeeper kafka-1 kafka-2 kafka-3
+      - run: docker-compose pull
+
+      - uses: satackey/action-docker-layer-caching@v0.0.11
+        continue-on-error: true
 
       - name: Build
         env:
