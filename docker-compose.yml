@@ -12,7 +12,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka-1:
-    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:6.2.4
+    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1
     hostname: kafka-1
     labels:
       - "custom.project=kafkajs"
@@ -38,7 +38,7 @@ services:
       KAFKA_HEAP_OPTS: '-Xmx256M -Xms16M'
 
   kafka-2:
-    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:6.2.4
+    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1
     hostname: kafka-2
     labels:
       - "custom.project=kafkajs"
@@ -63,7 +63,7 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_HEAP_OPTS: '-Xmx256M -Xms16M'
   kafka-3:
-    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:6.2.4
+    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1
     hostname: kafka-3
     labels:
       - "custom.project=kafkajs"
