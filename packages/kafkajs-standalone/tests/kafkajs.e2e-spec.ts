@@ -12,6 +12,9 @@ test('message producer e2e test', async () => {
   const transactionalId = 'transactionalId' + Date.now();
   const provider = new SimpleKafkaJsProducerProvider({
     ...config.get('kafka'),
+    producerOption: {
+      allowAutoTopicCreation: true,
+    },
   });
 
   const firstMessage = new Date().toString();
@@ -48,6 +51,7 @@ test('message producer e2e test', async () => {
     ...config.get('kafka'),
     fetchOption: {
       groupId: 'e2etest-latest',
+      allowAutoTopicCreation: true,
       retry: {
         retries: 1,
         initialRetryTime: 100,
