@@ -10,7 +10,11 @@ module.exports = {
   testRegex,
   testEnvironment: 'node',
   transform: {
-    '^.+\\.tsx?$': 'ts-jest',
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: '<rootDir>/tsconfig.test.json',
+      diagnostics: 'pretty',
+      useESM: true
+    }],
   },
   extensionsToTreatAsEsm: ['.ts'],
   coveragePathIgnorePatterns: ['/node_modules/', '/packages/*/lib'],
@@ -18,11 +22,4 @@ module.exports = {
   resetMocks: true,
   resolver: 'jest-ts-webcompat-resolver',
   restoreMocks: true,
-  globals: {
-    'ts-jest': {
-      tsconfig: '<rootDir>/tsconfig.test.json',
-      diagnostics: 'pretty',
-      useESM: true
-    },
-  },
 };
