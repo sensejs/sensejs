@@ -14,6 +14,7 @@ test('message producer e2e test', async () => {
     ...config.get('kafka'),
     producerOption: {
       allowAutoTopicCreation: true,
+      maxInFlightRequests: 1,
     },
   });
 
