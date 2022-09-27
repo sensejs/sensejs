@@ -21,12 +21,10 @@ test('message producer e2e test', async () => {
   const firstMessage = new Date().toString();
   let stopped = false;
 
-  async function sendBatch() {
-    const producerA = await provider.create();
-    await producerA.sendMessage(TOPIC, {value: firstMessage});
-    while (!stopped) {
-      await new Promise((done) => setTimeout(done, 1000));
-      await producerA.sendMessageBatch([
+  const producerCreated = provider.create();
+  const firstMessageSent = producerCreated.then((producerA) => {
+    return producerA
+      .sendMessageBatch([
         {
           topic: TOPIC,
           messages: [{value: new Date().toString()}],
@@ -35,7 +33,16 @@ test('message producer e2e test', async () => {
           topic: BATCH_TOPIC,
           messages: [{value: new Date().toString()}],
         },
-      ]);
+      ])
+      .finally(() => producerA.release());
+  });
+  async function sendBatch() {
+    await firstMessageSent;
+    const producerA = await provider.create();
+    while (!stopped) {
+      await new Promise((done) => setTimeout(done, 1000));
+      await producerA.sendMessage(TOPIC, {value: new Date().toString()});
+      await producerA.sendMessage(BATCH_TOPIC, {value: new Date().toString()});
     }
     await producerA.release();
   }
@@ -44,6 +51,7 @@ test('message producer e2e test', async () => {
   const observableA = new Subject(),
     observableBatchA = new Subject(),
     observableB = new Subject();
+  await firstMessageSent;
 
   const consumerStubA = jest.fn().mockImplementationOnce(() => observableA.complete());
   const batchedConsumerStubA = jest.fn().mockImplementationOnce(() => observableBatchA.complete());
@@ -54,8 +62,8 @@ test('message producer e2e test', async () => {
       groupId: 'e2etest-latest',
       allowAutoTopicCreation: true,
       retry: {
-        retries: 1,
-        initialRetryTime: 100,
+        retries: 10,
+        initialRetryTime: 3000,
       },
     },
     logOption: {
@@ -81,6 +89,10 @@ test('message producer e2e test', async () => {
     fetchOption: {
       groupId: 'e2etest-earliest',
       allowAutoTopicCreation: true,
+      retry: {
+        retries: 10,
+        initialRetryTime: 3000,
+      },
     },
   });
 
@@ -119,4 +131,4 @@ test('message producer e2e test', async () => {
   await provider.destroy();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));
   expect(consumerStubB).toHaveBeenCalledWith(firstMessage);
-}, 60000);
+}, 120000);
