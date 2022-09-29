@@ -15,6 +15,10 @@ test('message producer e2e test', async () => {
     producerOption: {
       allowAutoTopicCreation: true,
       maxInFlightRequests: 1,
+      retry: {
+        retries: 10,
+        initialRetryTime: 3000,
+      },
     },
   });
 
