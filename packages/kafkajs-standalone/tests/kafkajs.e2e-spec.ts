@@ -25,10 +25,19 @@ test('message producer e2e test', async () => {
   const firstMessage = new Date().toString();
   let stopped = false;
 
-  const producerCreated = provider.create();
-  const firstMessageSent = producerCreated.then((producerA) => {
-    return producerA
-      .sendMessageBatch([
+  const initialProducer = await provider.create();
+  try {
+    await initialProducer.sendMessage(TOPIC, {value: firstMessage});
+    await initialProducer.sendMessage(BATCH_TOPIC, {value: firstMessage});
+  } finally {
+    await initialProducer.release();
+  }
+
+  async function sendBatch() {
+    const producerA = await provider.create();
+    while (!stopped) {
+      await new Promise((done) => setTimeout(done, 1000));
+      await producerA.sendMessageBatch([
         {
           topic: TOPIC,
           messages: [{value: new Date().toString()}],
@@ -37,16 +46,7 @@ test('message producer e2e test', async () => {
           topic: BATCH_TOPIC,
           messages: [{value: new Date().toString()}],
         },
-      ])
-      .finally(() => producerA.release());
-  });
-  async function sendBatch() {
-    await firstMessageSent;
-    const producerA = await provider.create();
-    while (!stopped) {
-      await new Promise((done) => setTimeout(done, 1000));
-      await producerA.sendMessage(TOPIC, {value: new Date().toString()});
-      await producerA.sendMessage(BATCH_TOPIC, {value: new Date().toString()});
+      ]);
     }
     await producerA.release();
   }
@@ -55,7 +55,6 @@ test('message producer e2e test', async () => {
   const observableA = new Subject(),
     observableBatchA = new Subject(),
     observableB = new Subject();
-  await firstMessageSent;
 
   const consumerStubA = jest.fn().mockImplementationOnce(() => observableA.complete());
   const batchedConsumerStubA = jest.fn().mockImplementationOnce(() => observableBatchA.complete());
