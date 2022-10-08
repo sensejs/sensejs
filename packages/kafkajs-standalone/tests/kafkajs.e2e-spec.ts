@@ -1,5 +1,4 @@
 import {jest} from '@jest/globals';
-import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src/index.js';
 import {Subject} from 'rxjs';
 import config from 'config';
@@ -31,7 +30,9 @@ test('message producer e2e test', async () => {
     },
   });
   await admin.connect();
+  console.log('Creating test topic: ', TOPIC, BATCH_TOPIC);
   await admin.createTopics({waitForLeaders: true, topics: [{topic: TOPIC}, {topic: BATCH_TOPIC}]});
+  console.log('Topic created');
   await admin.disconnect();
 
   const firstMessage = new Date().toString();
