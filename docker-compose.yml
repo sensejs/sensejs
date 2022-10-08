@@ -1,7 +1,7 @@
 version: '2.4'
 services:
   zookeeper:
-    image: zookeeper
+    image: ghcr.io/arm64-compat/confluentinc/cp-zookeeper:7.1.1
     hostname: zookeeper
     ports:
       - "2181:2181"
