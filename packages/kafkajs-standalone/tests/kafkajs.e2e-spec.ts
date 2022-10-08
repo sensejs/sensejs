@@ -3,6 +3,7 @@ import '@sensejs/testing-utility/lib/mock-console';
 import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src/index.js';
 import {Subject} from 'rxjs';
 import config from 'config';
+import {Kafka} from 'kafkajs';
 
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
@@ -21,6 +22,17 @@ test('message producer e2e test', async () => {
       },
     },
   });
+
+  const kafka = new Kafka((config.get('kafka') as any).connectOption);
+  const admin = kafka.admin({
+    retry: {
+      retries: 10,
+      initialRetryTime: 3000,
+    },
+  });
+  await admin.connect();
+  await admin.createTopics({waitForLeaders: true, topics: [{topic: TOPIC}, {topic: BATCH_TOPIC}]});
+  await admin.disconnect();
 
   const firstMessage = new Date().toString();
   let stopped = false;
@@ -134,4 +146,4 @@ test('message producer e2e test', async () => {
   await provider.destroy();
   expect(consumerStubA).toHaveBeenCalledWith(expect.not.stringMatching(firstMessage));
   expect(consumerStubB).toHaveBeenCalledWith(firstMessage);
-}, 120000);
+}, 300000);
