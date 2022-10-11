@@ -1,3 +1,4 @@
+import '@sensejs/testing-utility/lib/mock-console';
 import {jest} from '@jest/globals';
 import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src/index.js';
 import {Subject} from 'rxjs';
@@ -7,21 +8,9 @@ import {Kafka} from 'kafkajs';
 const TOPIC = 'e2e-topic-' + Date.now();
 const TX_TOPIC = 'e2e-tx-topic-' + Date.now();
 const BATCH_TOPIC = 'e2e-batch-topic' + Date.now();
+const firstMessage = new Date().toString();
 
-test('message producer e2e test', async () => {
-  const transactionalId = 'transactionalId' + Date.now();
-  const provider = new SimpleKafkaJsProducerProvider({
-    ...config.get('kafka'),
-    producerOption: {
-      allowAutoTopicCreation: true,
-      maxInFlightRequests: 1,
-      retry: {
-        retries: 10,
-        initialRetryTime: 3000,
-      },
-    },
-  });
-
+async function setupProducerProvider() {
   const kafka = new Kafka((config.get('kafka') as any).connectOption);
   const admin = kafka.admin({
     retry: {
@@ -30,21 +19,33 @@ test('message producer e2e test', async () => {
     },
   });
   await admin.connect();
-  console.log('Creating test topic: ', TOPIC, BATCH_TOPIC);
-  await admin.createTopics({waitForLeaders: true, topics: [{topic: TOPIC}, {topic: BATCH_TOPIC}]});
-  console.log('Topic created');
+  await admin.createTopics({
+    waitForLeaders: true,
+    topics: [
+      {topic: TOPIC, numPartitions: 1}, // so that the test can reply on the order of messages
+      {topic: BATCH_TOPIC},
+      {topic: TX_TOPIC},
+    ],
+  });
   await admin.disconnect();
+  const provider = new SimpleKafkaJsProducerProvider({
+    ...config.get('kafka'),
+    producerOption: {
+      allowAutoTopicCreation: true,
+      maxInFlightRequests: 1,
+    },
+  });
+  const firstMessageProducer = await provider.create();
+  await firstMessageProducer.sendMessage(TOPIC, {value: firstMessage});
+  await firstMessageProducer.release();
+  return provider;
+}
 
-  const firstMessage = new Date().toString();
+test('message producer e2e test', async () => {
+  const transactionalId = 'transactionalId' + Date.now();
+  const provider = await setupProducerProvider();
+
   let stopped = false;
-
-  const initialProducer = await provider.create();
-  try {
-    await initialProducer.sendMessage(TOPIC, {value: firstMessage});
-    await initialProducer.sendMessage(BATCH_TOPIC, {value: firstMessage});
-  } finally {
-    await initialProducer.release();
-  }
 
   async function sendBatch() {
     const producerA = await provider.create();
@@ -76,14 +77,10 @@ test('message producer e2e test', async () => {
     ...config.get('kafka'),
     fetchOption: {
       groupId: 'e2etest-latest',
-      allowAutoTopicCreation: true,
       retry: {
         retries: 10,
         initialRetryTime: 3000,
       },
-    },
-    logOption: {
-      level: 'NOTHING',
     },
   });
 
@@ -95,7 +92,7 @@ test('message producer e2e test', async () => {
   messageConsumerA.subscribeBatched({
     topic: BATCH_TOPIC,
     fromBeginning: false,
-    consumer: async () => {
+    consumer: async (message) => {
       batchedConsumerStubA();
     },
   });
@@ -104,7 +101,6 @@ test('message producer e2e test', async () => {
     ...config.get('kafka'),
     fetchOption: {
       groupId: 'e2etest-earliest',
-      allowAutoTopicCreation: true,
       retry: {
         retries: 10,
         initialRetryTime: 3000,
@@ -119,6 +115,7 @@ test('message producer e2e test', async () => {
         return;
       }
       stopped = true;
+      consumerStubB(message.value?.toString());
       const {topic, partition, offset} = message;
       const producer = await provider.createTransactional(transactionalId);
       await producer.sendMessageBatch([
@@ -130,7 +127,6 @@ test('message producer e2e test', async () => {
       await producer.sendOffset('e2etest-earliest', {topics: [{topic, partitions: [{partition, offset}]}]});
       await producer.commit();
       await producer.release();
-      consumerStubB(message.value?.toString());
     },
     true,
   );

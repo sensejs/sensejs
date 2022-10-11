@@ -6,7 +6,5 @@ kafka:
       - kafka-3:9092
     retry:
       retries: 10
-      initialRetryTime: 3000,
-  producerOption:
-    allowAutoTopicCreation: true
+      initialRetryTime: 500
 
