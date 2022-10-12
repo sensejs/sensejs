@@ -1,7 +1,7 @@
 version: '2.4'
 services:
   zookeeper:
-    image: zookeeper
+    image: ghcr.io/arm64-compat/confluentinc/cp-zookeeper:7.1.1
     hostname: zookeeper
     ports:
       - "2181:2181"
@@ -12,7 +12,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   kafka-1:
-    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:6.2.4
+    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1
     hostname: kafka-1
     labels:
       - "custom.project=kafkajs"
@@ -31,15 +31,18 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
       # suppress verbosity
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_HEAP_OPTS: '-Xmx256M -Xms16M'
+
   kafka-2:
-    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:6.2.4
+    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1
     hostname: kafka-2
     labels:
       - "custom.project=kafkajs"
-      - "custom.service=kafka1"
+      - "custom.service=kafka2"
     depends_on:
       - zookeeper
     ports:
@@ -54,15 +57,17 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
       # suppress verbosity
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_HEAP_OPTS: '-Xmx256M -Xms16M'
   kafka-3:
-    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:6.2.4
+    image: ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1
     hostname: kafka-3
     labels:
       - "custom.project=kafkajs"
-      - "custom.service=kafka1"
+      - "custom.service=kafka3"
     depends_on:
       - zookeeper
     ports:
@@ -77,9 +82,12 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_DELETE_TOPIC_ENABLE: 'true'
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
       # suppress verbosity
       # https://github.com/confluentinc/cp-docker-images/blob/master/debian/kafka/include/etc/confluent/docker/log4j.properties.template
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
+      KAFKA_HEAP_OPTS: '-Xmx256M -Xms16M'
+
   workspace-test:
     build:
       context: .
