@@ -1,7 +1,7 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {jest} from '@jest/globals';
 import {MessageConsumer, SimpleKafkaJsProducerProvider} from '../src/index.js';
-import {Subject} from 'rxjs';
+import {lastValueFrom, Subject} from 'rxjs';
 import config from 'config';
 import {Kafka} from 'kafkajs';
 
@@ -39,6 +39,10 @@ async function setupProducerProvider() {
   await firstMessageProducer.sendMessage(TOPIC, {value: firstMessage});
   await firstMessageProducer.release();
   return provider;
+}
+
+function toPromise<T>(observable: Subject<T>) {
+  return lastValueFrom(observable, {defaultValue: undefined});
 }
 
 test('message producer e2e test', async () => {
@@ -131,7 +135,7 @@ test('message producer e2e test', async () => {
     true,
   );
 
-  const p = Promise.all([observableA.toPromise(), observableBatchA.toPromise(), observableB.toPromise()]);
+  const p = Promise.all([toPromise(observableA), toPromise(observableBatchA), toPromise(observableB)]);
   await messageConsumerA.start();
   await messageConsumerA.start(); // safe to call start multiple times
   await messageConsumerB.start();
