@@ -223,7 +223,10 @@ export class ApplicationRunner {
     });
   }
 
-  private getBoostrapObservable<M, T>(moduleRoot: EntryModule<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
+  private getBoostrapObservable<M extends {}, T>(
+    moduleRoot: EntryModule<M>,
+    runOption: RunnerOption<T>,
+  ): Observable<ExitOption> {
     return defer(() => this.runOnNextTick(() => moduleRoot.bootstrap())).pipe(
       catchError((e) => {
         runOption.logger.error('Error occurred while bootstrapping:', e);
@@ -232,7 +235,10 @@ export class ApplicationRunner {
     );
   }
 
-  private getStartupObservable<M, T>(moduleRoot: EntryModule<M>, runOption: RunnerOption<T>): Observable<ExitOption> {
+  private getStartupObservable<M extends {}, T>(
+    moduleRoot: EntryModule<M>,
+    runOption: RunnerOption<T>,
+  ): Observable<ExitOption> {
     return defer(() => this.runOnNextTick(() => moduleRoot.start())).pipe(
       mergeMap(() => EMPTY),
       catchError((e) => {
@@ -242,7 +248,11 @@ export class ApplicationRunner {
     );
   }
 
-  private performShutdown<M, T>(moduleRoot: EntryModule<M>, exitOption: ExitOption, runOption: RunnerOption<T>) {
+  private performShutdown<M extends {}, T>(
+    moduleRoot: EntryModule<M>,
+    exitOption: ExitOption,
+    runOption: RunnerOption<T>,
+  ) {
     return merge(
       from(moduleRoot.shutdown()).pipe(
         map(() => exitOption.exitCode),

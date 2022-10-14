@@ -1,4 +1,4 @@
-import {Injectable, Scope, InjectScope} from '@sensejs/container';
+import {Injectable, Scope, InjectScope, ServiceId, ClassServiceId} from '@sensejs/container';
 import {Class, ComponentMetadata, Constructor} from './interfaces.js';
 import {InvalidComponentError, InvalidComponentIdError} from './error.js';
 export {InjectScope as ComponentScope, Scope} from '@sensejs/container';
@@ -8,7 +8,7 @@ const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
 export interface ComponentOption<T extends {} = {}> {
   /** @deprecated */
   scope?: InjectScope;
-  id?: string | symbol | Class<T>;
+  id?: ClassServiceId<T>;
   /** @deprecated Use of this option is not recommended, decorate base with `@Injectable()` instead */
   bindParentConstructor?: boolean;
 }

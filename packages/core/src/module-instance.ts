@@ -26,20 +26,20 @@ function bindComponent(container: Container, constructor: Constructor, metadata:
 
 export class DynamicModuleLoader {
   components: Constructor[] = [];
-  factories: FactoryProvider<any>[] = [];
-  constants: ConstantProvider<any>[] = [];
+  factories: FactoryProvider[] = [];
+  constants: ConstantProvider[] = [];
 
   addComponent(constructor: Constructor): this {
     this.components.push(constructor);
     return this;
   }
 
-  addFactory(provider: FactoryProvider<any>): this {
+  addFactory(provider: FactoryProvider): this {
     this.factories.push(provider);
     return this;
   }
 
-  addConstant(provider: ConstantProvider<any>): this {
+  addConstant(provider: ConstantProvider): this {
     this.constants.push(provider);
     return this;
   }
@@ -48,11 +48,11 @@ export class DynamicModuleLoader {
     return this.components;
   }
 
-  getConstants(): ConstantProvider<any>[] {
+  getConstants(): ConstantProvider[] {
     return this.constants;
   }
 
-  getFactories(): FactoryProvider<any>[] {
+  getFactories(): FactoryProvider[] {
     return this.factories;
   }
 }
@@ -138,7 +138,7 @@ export class ModuleInstance<T extends {} = {}> {
     this.bindComponents(components);
   }
 
-  private bindDynamicFactories(providers: FactoryProvider<any>[]) {
+  private bindDynamicFactories(providers: FactoryProvider[]) {
     if (providers.length <= 0) {
       return;
     }
@@ -147,7 +147,7 @@ export class ModuleInstance<T extends {} = {}> {
     this.bindFactories(providers);
   }
 
-  private bindDynamicConstants(providers: ConstantProvider<any>[]) {
+  private bindDynamicConstants(providers: ConstantProvider[]) {
     if (providers.length <= 0) {
       return;
     }
@@ -162,8 +162,8 @@ export class ModuleInstance<T extends {} = {}> {
     });
   }
 
-  private bindFactories(factories: FactoryProvider<unknown>[]) {
-    factories.forEach((factoryProvider: FactoryProvider<unknown>) => {
+  private bindFactories(factories: FactoryProvider[]) {
+    factories.forEach((factoryProvider: FactoryProvider) => {
       const {provide, factory, scope = InjectScope.SESSION, ...rest} = factoryProvider;
       this.container.add(factory);
       this.container.addBinding({
@@ -178,7 +178,7 @@ export class ModuleInstance<T extends {} = {}> {
     });
   }
 
-  private bindConstants(constants: ConstantProvider<unknown>[]) {
+  private bindConstants(constants: ConstantProvider[]) {
     constants.forEach((constantProvider) => {
       this.container.addBinding({
         type: BindingType.CONSTANT,

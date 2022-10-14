@@ -1,9 +1,9 @@
-import {ComponentFactory, Constructor, FactoryProvider, ServiceIdentifier} from './interfaces.js';
+import {ClassFactoryProvider, ComponentFactory, Constructor, ServiceIdentifier} from './interfaces.js';
 import {Component} from './component.js';
 import {Inject} from './decorators.js';
-import {InjectScope} from '@sensejs/container';
+import {ClassServiceId, InjectScope} from '@sensejs/container';
 
-export interface ConnectionFactoryProvider<T, Option> extends FactoryProvider<T> {
+export interface ConnectionFactoryProvider<T extends {}, Option> extends ClassFactoryProvider<T> {
   factory: Constructor<AbstractConnectionFactory<T, Option>>;
 }
 
@@ -49,10 +49,10 @@ export function createConnectionFactory<T, Option>(
   return ConnectionFactory;
 }
 
-export function provideConnectionFactory<T, Option>(
+export function provideConnectionFactory<T extends {}, Option>(
   init: (option: Option) => Promise<T>,
   destroy: (conn: T) => Promise<void>,
-  exportSymbol: ServiceIdentifier<T> = Symbol(),
+  exportSymbol: ClassServiceId<T> = Symbol(),
 ): ConnectionFactoryProvider<T, Option> {
   return {
     provide: exportSymbol,
@@ -86,12 +86,12 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
   return ConfigFactory;
 }
 
-export function provideOptionInjector<Result, Fallback = Partial<Result>, Injected = Partial<Result>>(
+export function provideOptionInjector<Result extends {}, Fallback = Partial<Result>, Injected = Partial<Result>>(
   fallback: Fallback | undefined,
   injectOptionFrom: ServiceIdentifier | undefined,
   configMerger: (fallback?: Fallback, injected?: Injected) => Result,
   exportSymbol: symbol = Symbol(),
-): FactoryProvider<Result> {
+): ClassFactoryProvider<Result> {
   return {
     provide: exportSymbol,
     factory: createConfigHelperFactory(fallback, injectOptionFrom, configMerger),

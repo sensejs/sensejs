@@ -18,7 +18,11 @@ export enum BindingType {
   ALIAS = 'ALIAS',
 }
 
-export type ServiceId<T = any> = Class<T> | string | symbol;
+export type ClassServiceId<T extends {}> = string | symbol | Class<T>;
+
+export type GeneralServiceId<T> = string | symbol;
+
+export type ServiceId<T = any> = T extends {} ? ClassServiceId<T> : GeneralServiceId<T>;
 
 export enum InjectScope {
   SINGLETON = 'SINGLETON',
@@ -39,7 +43,7 @@ export interface ConstantBinding<T> {
   value: T;
 }
 
-export interface InstanceBinding<T> {
+export interface InstanceBinding<T extends {}> {
   type: BindingType.INSTANCE;
   id: ServiceId<T>;
   constructor: Constructor<T>;
@@ -63,10 +67,12 @@ export interface AsyncInterceptProvider<T extends any[] = any[]> {
 export interface AliasBinding<T> {
   type: BindingType.ALIAS;
   id: ServiceId<T>;
-  canonicalId: ServiceId;
+  canonicalId: ServiceId<T>;
 }
 
-export type Binding<T> = ConstantBinding<T> | InstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>;
+export type Binding<T> = T extends {}
+  ? ConstantBinding<T> | InstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>
+  : ConstantBinding<T> | FactoryBinding<T> | AliasBinding<T>;
 
 export type InvokeResult<T extends {}, K extends keyof T> = T[K] extends (...args: any[]) => Promise<infer R>
   ? R
