@@ -161,12 +161,12 @@ importers:
       '@types/uuid': ^8.3.4
       rxjs: ^7.5.6
       tslib: ^2.4.0
-      uuid: ^8.3.2
+      uuid: ^9.0.0
     dependencies:
       '@sensejs/utility': link:../utility
       rxjs: 7.5.6
       tslib: 2.4.0
-      uuid: 8.3.2
+      uuid: 9.0.0
     devDependencies:
       '@sensejs/container': link:../container
       '@sensejs/testing-utility': link:../../tools/testing-utility
@@ -307,10 +307,10 @@ importers:
     specifiers:
       '@sensejs/testing-utility': workspace:*
       tslib: ^2.4.0
-      uuid: ^8.3.2
+      uuid: ^9.0.0
     dependencies:
       tslib: 2.4.0
-      uuid: 8.3.2
+      uuid: 9.0.0
     devDependencies:
       '@sensejs/testing-utility': link:../../tools/testing-utility
 
@@ -12045,6 +12045,12 @@ packages:
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
+    dev: true
+
+  /uuid/9.0.0:
+    resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
+    dev: false
 
   /v8-compile-cache-lib/3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
