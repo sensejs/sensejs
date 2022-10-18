@@ -2,8 +2,10 @@ import {
   Binding,
   BindingType,
   Class,
+  ClassServiceId,
   ConstantBinding,
   Constructor,
+  GeneralServiceId,
   InjectScope,
   InvokeResult,
   ServiceId,
@@ -36,11 +38,13 @@ export class ResolveSession {
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
-    const self = this.resolve(target) as T;
+    const self = this.resolve(target as unknown as ServiceId<T>) as T;
     const proxyInstance = this.construct(proxy);
     return proxyInstance.call(fn, self);
   }
 
+  public addTemporaryConstantBinding<T>(serviceId: GeneralServiceId<T>, value: T): this;
+  public addTemporaryConstantBinding<T extends {}>(serviceId: ClassServiceId<T>, value: T): this;
   public addTemporaryConstantBinding<T>(serviceId: ServiceId<T>, value: T): this {
     this.temporaryBinding.set(serviceId, {
       type: BindingType.CONSTANT,
@@ -56,7 +60,7 @@ export class ResolveSession {
     return this.evalInstructions();
   }
 
-  construct<T>(target: Constructor<T>): T {
+  construct<T extends {}>(target: Constructor<T>): T {
     this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true}, true);
     return this.evalInstructions();
   }

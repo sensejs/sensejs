@@ -77,7 +77,7 @@ function getSubscribeOption(
   return {topic, fromBeginning};
 }
 
-function getSimpleConsumeCallback<T>(
+function getSimpleConsumeCallback<T extends {}>(
   container: Container,
   interceptProviders: Constructor<AsyncInterceptProvider>[],
   consumerGroupId: string,
@@ -97,7 +97,7 @@ function getSimpleConsumeCallback<T>(
   };
 }
 
-function getBatchedConsumeCallback<T>(
+function getBatchedConsumeCallback<T extends {}>(
   container: Container,
   interceptProviders: Constructor<AsyncInterceptProvider>[],
   consumerGroupId: string,

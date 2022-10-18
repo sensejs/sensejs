@@ -19,12 +19,12 @@ export interface ModuleOption {
   /**
    * Factories provided by this module
    */
-  factories?: FactoryProvider<unknown>[];
+  factories?: FactoryProvider[];
 
   /**
    * Constants provided by this module
    */
-  constants?: ConstantProvider<unknown>[];
+  constants?: ConstantProvider[];
 
   /**
    * Custom properties, useful for custom component discovery
@@ -35,8 +35,8 @@ export interface ModuleOption {
 export interface ModuleMetadata<T = {}> extends Required<ModuleOption> {
   requires: Constructor[];
   dynamicComponents?: Constructor[];
-  dynamicFactories?: FactoryProvider<any>[];
-  dynamicConstants?: ConstantProvider<any>[];
+  dynamicFactories?: FactoryProvider[];
+  dynamicConstants?: ConstantProvider[];
   onModuleCreate: (keyof T)[];
   onModuleStart: (keyof T)[];
   onModuleStop: (keyof T)[];
@@ -48,7 +48,7 @@ const MODULE_REFLECT_SYMBOL: unique symbol = Symbol('MODULE_REFLECT_SYMBOL');
 /**
  * @private
  */
-export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> {
+export function getModuleMetadata<T extends {}>(target: Constructor<T>): ModuleMetadata<T> {
   const result = Reflect.getOwnMetadata(MODULE_REFLECT_SYMBOL, target);
   if (!result) {
     throw new Error(`"${target.name}"is not decorated with @Module annotation`);
@@ -59,7 +59,7 @@ export function getModuleMetadata<T>(target: Constructor<T>): ModuleMetadata<T> 
 /**
  * @private
  */
-export function setModuleMetadata<T>(module: Constructor<T>, metadata: ModuleMetadata<T>): void {
+export function setModuleMetadata<T extends {}>(module: Constructor<T>, metadata: ModuleMetadata<T>): void {
   Injectable()(module);
 
   for (const dependency of metadata.requires) {
@@ -80,7 +80,7 @@ const ON_MODULE_DESTROY = Symbol();
  * @param constructor Constructor of a module
  * @param metadataKey Metadata key of lifecycle function, must be ON_MODULE_CREATE or ON_MODULE_CREATE
  */
-function getModuleLifecycleMethod<T>(constructor: Constructor<T>, metadataKey: symbol): (keyof T)[] {
+function getModuleLifecycleMethod<T extends {}>(constructor: Constructor<T>, metadataKey: symbol): (keyof T)[] {
   const lifecycleMethods = Reflect.getMetadata(metadataKey, constructor.prototype);
   return Array.isArray(lifecycleMethods) ? lifecycleMethods : [];
 }
@@ -166,7 +166,7 @@ export function OnModuleDestroy(): ModuleLifecycleMethodDecorator {
 }
 
 /**
- * Create an simple module for given module option
+ * Create a simple module for given module option
  * @param option
  */
 export function createModule(option: ModuleOption = {}): Constructor {

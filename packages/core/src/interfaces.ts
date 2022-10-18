@@ -1,4 +1,4 @@
-import {InjectScope, Constructor, ServiceId as ServiceIdentifier} from '@sensejs/container';
+import {InjectScope, Constructor, ClassServiceId, GeneralServiceId, ServiceId} from '@sensejs/container';
 export {Class, Constructor, Transformer, ServiceId as ServiceIdentifier} from '@sensejs/container';
 
 export abstract class ComponentFactory<T> {
@@ -9,30 +9,50 @@ export interface BindingSpec {
   scope?: InjectScope;
 }
 
+export interface ClassFactoryProvider<T extends {}> extends BindingSpec {
+  provide: ClassServiceId<T>;
+  factory: Constructor<ComponentFactory<T>>;
+}
+
+export interface ConstantFactoryProvider<T extends {}> extends BindingSpec {
+  provide: GeneralServiceId<T>;
+  factory: Constructor<ComponentFactory<T>>;
+}
+
 /**
  *
  */
-export interface FactoryProvider<T> extends BindingSpec {
-  provide: ServiceIdentifier<T>;
-  factory: Constructor<ComponentFactory<T>>;
+export type FactoryProvider = ClassFactoryProvider<any> | ConstantFactoryProvider<any>;
+
+/**
+ * Provide an constant in singleton scope
+ */
+export interface ClassConstantProvider<T extends {}> {
+  provide: ClassServiceId<T>;
+  value: T;
 }
 
 /**
  * Provide an constant in singleton scope
  */
-export interface ConstantProvider<T> {
-  provide: ServiceIdentifier<T>;
+export interface GenericConstantProvider<T> {
+  provide: GeneralServiceId<T>;
   value: T;
 }
 
 /**
+ * Provide an constant in singleton scope
+ */
+export type ConstantProvider = ClassConstantProvider<any> | GenericConstantProvider<any>;
+
+/**
  * Component metadata
  *
- * Specify how to register an component into IoC Container, as well as its scope
+ * Specify how to register a component into IoC Container, as well as its scope
  */
 export interface ComponentMetadata<T extends {} = {}> extends BindingSpec {
   target: Constructor<T>;
   /** @deprecated */
   bindParentConstructor: boolean;
-  id?: ServiceIdentifier<T>;
+  id?: ClassServiceId<T>;
 }

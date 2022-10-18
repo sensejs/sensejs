@@ -62,7 +62,11 @@ export class EntryModule<T extends {} = {}> {
     this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, loader, this.moduleInstanceMap);
   }
 
-  static async run<T>(entryModule: Constructor<T>, method: keyof T, option: EntryModuleExecOption = {}): Promise<void> {
+  static async run<T extends {}>(
+    entryModule: Constructor<T>,
+    method: keyof T,
+    option: EntryModuleExecOption = {},
+  ): Promise<void> {
     let error: unknown = undefined;
     const moduleRoot = new EntryModule(entryModule, new ProcessManager((e) => (error = e)), option.moduleLoader);
     await moduleRoot.bootstrap();
@@ -83,7 +87,7 @@ export class EntryModule<T extends {} = {}> {
     }
   }
 
-  static async start<T>(
+  static async start<T extends {}>(
     entryModule: Constructor<T>,
     method?: keyof T,
     option: EntryModuleExecOption = {},
@@ -126,7 +130,7 @@ export class EntryModule<T extends {} = {}> {
     }
   }
 
-  private static async bootstrapModule<T>(moduleInstance: ModuleInstance<T>) {
+  private static async bootstrapModule<T extends {}>(moduleInstance: ModuleInstance<T>) {
     for (const dependency of moduleInstance.dependencies) {
       await EntryModule.bootstrapModule(dependency);
     }
@@ -140,7 +144,7 @@ export class EntryModule<T extends {} = {}> {
     }
   }
 
-  private static async shutdownModule<T>(moduleInstance: ModuleInstance<T>) {
+  private static async shutdownModule<T extends {}>(moduleInstance: ModuleInstance<T>) {
     if (--moduleInstance.referencedCounter > 0) {
       return;
     }

@@ -175,7 +175,7 @@ export abstract class HttpContext {
   abstract readonly response: HttpResponse;
 }
 
-export interface MethodRouteSpec<T = any> {
+export interface MethodRouteSpec<T extends {} = any> {
   path: string;
   httpMethod: HttpMethod;
   interceptProviders: Constructor<AsyncInterceptProvider>[];
@@ -255,7 +255,7 @@ export abstract class AbstractHttpApplicationBuilder {
 
 const ControllerMetadataKey = Symbol('ControllerMetadataKey');
 
-function setHttpControllerMetadata<T>(target: Constructor<T>, controllerMetadata: ControllerMetadata<T>) {
+function setHttpControllerMetadata<T extends {}>(target: Constructor<T>, controllerMetadata: ControllerMetadata<T>) {
   if (Reflect.getMetadata(ControllerMetadataKey, target)) {
     throw new Error('Target constructor is already has controller metadata');
   }
@@ -273,7 +273,10 @@ const HTTP_PARAM_MAPPING_KEY = Symbol();
  * @param defaultValue - Default value that will set to target, if not provided, this function will throws Error
  * if target has no metadata
  */
-export function ensureMetadataOnPrototype<T>(target: T, defaultValue?: HttpMappingMetadata<T>): HttpMappingMetadata<T> {
+export function ensureMetadataOnPrototype<T extends {}>(
+  target: T,
+  defaultValue?: HttpMappingMetadata<T>,
+): HttpMappingMetadata<T> {
   let metadata = Reflect.getMetadata(HTTP_PARAM_MAPPING_KEY, target);
   if (typeof metadata === 'undefined') {
     if (defaultValue) {

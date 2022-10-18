@@ -105,11 +105,15 @@ export function SubscribeEventController(option: SubscribeEventControllerOption 
 }
 
 /**
- * Mark an method as event subscriber
+ * Mark a method as event subscriber
  * @decorator
  */
 export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubscriptionOption = {}) {
   return <P extends {}>(prototype: P, name: keyof P & (string | symbol)): void => {
+    const targetMethod = prototype[name];
+    if (typeof targetMethod !== 'function') {
+      throw new TypeError('SubscribeEvent cannot be apply to non-function types');
+    }
     const metadata: SubscribeEventMetadata<P> = {
       prototype,
       name,
@@ -117,7 +121,7 @@ export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubsc
       interceptProviders: option.interceptProviders ?? [],
       filter: option.filter ?? (() => true),
     };
-    Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, prototype[name]);
+    Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, targetMethod);
   };
 }
 

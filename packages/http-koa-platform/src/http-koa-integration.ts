@@ -175,7 +175,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
     return globalRouter;
   }
 
-  protected defineRouter<T>(
+  protected defineRouter<T extends {}>(
     methodRouteSpec: MethodRouteSpec<T>,
     controllerRouter: KoaRouter,
     container: Container,

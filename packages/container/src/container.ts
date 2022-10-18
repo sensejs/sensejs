@@ -137,7 +137,7 @@ export class Container {
     ]);
   }
 
-  private compileInstanceBinding<T>(binding: InstanceBinding<T>) {
+  private compileInstanceBinding<T extends {}>(binding: InstanceBinding<T>) {
     const {scope, paramInjectionMetadata, constructor, id} = binding;
     this.compiledInstructionMap.set(id, [
       {

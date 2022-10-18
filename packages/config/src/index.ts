@@ -15,10 +15,10 @@ function escape(x: string) {
  * @note It will be deprecated in next release end finally removed, use createStaticConfigModule instead
  */
 export function createConfigModule(option: ConfigModuleOption) {
-  function buildConfigMap(option: ConfigModuleOption): ConstantProvider<unknown>[] {
+  function buildConfigMap(option: ConfigModuleOption): ConstantProvider[] {
     return traverse(option.config).reduce(function OptionsReducer(
       this: traverse.TraverseContext,
-      acc: ConstantProvider<unknown>[],
+      acc: ConstantProvider[],
       value: unknown,
     ) {
       if (this.circular) {

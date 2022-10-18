@@ -128,14 +128,14 @@ describe('Module resolve', () => {
     @Component()
     class X {}
 
-    const dynamicConstant: ConstantProvider<any> = {provide: 'constant', value: 'value'};
+    const dynamicConstant: ConstantProvider = {provide: 'constant', value: 'value'};
     @Component()
     class Factory extends ComponentFactory<void> {
       build() {
         return 'factory';
       }
     }
-    const dynamicFactory: FactoryProvider<any> = {provide: 'factory', factory: Factory, scope: InjectScope.SINGLETON};
+    const dynamicFactory: FactoryProvider = {provide: 'factory', factory: Factory, scope: InjectScope.SINGLETON};
 
     const stub = jest.fn();
 

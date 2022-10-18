@@ -1,4 +1,13 @@
-import {AsyncInterceptProvider, Class, Constructor, InjectScope, ServiceId, Transformer} from './types.js';
+import {
+  AsyncInterceptProvider,
+  Class,
+  ClassServiceId,
+  Constructor,
+  GeneralServiceId,
+  InjectScope,
+  ServiceId,
+  Transformer,
+} from './types.js';
 import {
   assignParamInjectMetadata,
   ensureConstructorParamInjectMetadata,
@@ -18,6 +27,11 @@ export interface InjectOption<T, R> {
   transform?: Transformer<T, R>;
 }
 
+export function Inject<T, R = T>(serviceId: GeneralServiceId<T>, option?: InjectOption<T, R>): InjectionDecorator;
+export function Inject<T extends {}, R = T>(
+  serviceId: ClassServiceId<T>,
+  option?: InjectOption<T, R>,
+): InjectionDecorator;
 export function Inject<T, R = T>(serviceId: ServiceId<T>, option: InjectOption<T, R> = {}): InjectionDecorator {
   return (ctor: Class | {}, name: keyof any, index: number): void => {
     if (typeof ctor !== 'function') {

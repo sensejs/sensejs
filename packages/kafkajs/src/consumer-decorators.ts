@@ -22,7 +22,7 @@ export interface SubscribeTopicOption {
   fromBeginning?: boolean;
 }
 
-export interface SubscribeControllerMetadata<T = any> {
+export interface SubscribeControllerMetadata<T extends {} = any> {
   interceptProviders: Constructor<AsyncInterceptProvider>[];
   target: Constructor<T>;
   labels: Set<string | symbol>;
