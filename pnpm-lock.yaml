@@ -252,13 +252,13 @@ importers:
       '@sensejs/testing-utility': workspace:*
       '@sensejs/utility': workspace:^0.9.0
       config: ^3.3.7
-      lightning-pool: ^3.1.4
+      lightning-pool: ^4.0.0
       long: ^4.0.0
       rxjs: ^7.5.6
       tslib: ^2.4.0
     dependencies:
       '@sensejs/utility': link:../utility
-      lightning-pool: 3.1.4
+      lightning-pool: 4.2.0
       long: 4.0.0
       rxjs: 7.5.6
       tslib: 2.4.0
@@ -8546,9 +8546,8 @@ packages:
       type-check: 0.4.0
     dev: true
 
-  /lightning-pool/3.1.4:
-    resolution: {integrity: sha512-qiAPuCHEu60af6sWeZUu4VnWOxs7Carf7xHQXlklAg0rORzhqn15aZSo0XTAgMAdUdKhuEzecEi5LR47WcdB8w==}
-    engines: {node: '>= 10.0'}
+  /lightning-pool/4.2.0:
+    resolution: {integrity: sha512-7w7hk6blwkqouMYDfl7A24sj9n++p3x5cW7WCOPazvAFX14UOhUS50tdQCSRc0Kuy1BADeHnP/wjJIHHs++ttQ==}
     dependencies:
       doublylinked: 2.5.1
       putil-promisify: 1.8.5
