@@ -180,7 +180,7 @@ describe('Deprecate instance method', () => {
     });
     container.add(X);
     try {
-      expect(invokeMethod(container.createResolveContext(), X, 'foo')).toBe(result);
+      expect(invokeMethod(container.createResolveSession(), X, 'foo')).toBe(result);
     } catch (e) {
       console.error(e);
       throw e;

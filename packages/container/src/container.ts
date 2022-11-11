@@ -20,26 +20,11 @@ import {MethodInvoker} from './method-invoker.js';
 import {ResolveSession} from './resolve-session.js';
 import {compileParamInjectInstruction, internalValidateDependencies} from './utils.js';
 
-/**
- * @deprecated
- */
-export class ResolveContext extends ResolveSession {}
-
 export class Container {
   private validatedBindings: Set<ServiceId> = new Set();
   private bindingMap: Map<ServiceId, Binding<any>> = new Map();
   private compiledInstructionMap: Map<ServiceId, Instruction[]> = new Map();
   private singletonCache: Map<ServiceId, any> = new Map();
-
-  /** @deprecated */
-  createResolveContext(): ResolveContext {
-    return new ResolveContext(
-      this.bindingMap,
-      this.compiledInstructionMap,
-      this.singletonCache,
-      this.validatedBindings,
-    );
-  }
 
   createResolveSession(): ResolveSession {
     return new ResolveSession(
