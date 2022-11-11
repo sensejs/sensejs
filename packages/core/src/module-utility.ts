@@ -1,5 +1,5 @@
 import {ClassFactoryProvider, ComponentFactory, Constructor, ServiceIdentifier} from './interfaces.js';
-import {Component} from './component.js';
+import {Component, Scope} from './component.js';
 import {Inject} from './decorators.js';
 import {ClassServiceId, InjectScope} from '@sensejs/container';
 
@@ -17,7 +17,8 @@ export function createConnectionFactory<T, Option>(
   init: (option: Option) => Promise<T>,
   destroy: (conn: T) => Promise<void>,
 ): Constructor<AbstractConnectionFactory<T, Option>> {
-  @Component({scope: InjectScope.SINGLETON})
+  @Component()
+  @Scope(Scope.SINGLETON)
   class ConnectionFactory extends AbstractConnectionFactory<T, Option> {
     private connection?: T;
 
@@ -66,7 +67,8 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
   injectedSymbol: ServiceIdentifier | undefined,
   configMerger: (fallback?: Fallback, injected?: Injected) => Result,
 ): Constructor<ComponentFactory<Result>> {
-  @Component({scope: InjectScope.SINGLETON})
+  @Component()
+  @Scope(Scope.SINGLETON)
   class ConfigFactory extends ComponentFactory<Result> {
     private readonly injectedConfig?: Injected;
 

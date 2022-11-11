@@ -52,7 +52,5 @@ export type ConstantProvider = ClassConstantProvider<any> | GenericConstantProvi
  */
 export interface ComponentMetadata<T extends {} = {}> extends BindingSpec {
   target: Constructor<T>;
-  /** @deprecated */
-  bindParentConstructor: boolean;
   id?: ClassServiceId<T>;
 }

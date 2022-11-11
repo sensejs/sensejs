@@ -1,8 +1,8 @@
-import {Component, ComponentScope} from './component.js';
+import {Component, ComponentScope, Scope} from './component.js';
 import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces.js';
 import {Subject} from 'rxjs';
 import {createModule, ModuleClass, ModuleOption, OnModuleStart, OnModuleStop} from './module.js';
-import {AsyncInterceptProvider, Container} from '@sensejs/container';
+import {AsyncInterceptProvider, Container, InjectScope} from '@sensejs/container';
 import {Inject} from './decorators.js';
 import {ModuleScanner} from './module-scanner.js';
 import {matchLabels} from './utils/match-labels.js';
@@ -19,7 +19,8 @@ interface AcknowledgeAwareEventMessenger extends EventMessenger {
   acknowledge: (processPromise: Promise<unknown>) => void;
 }
 
-@Component({scope: ComponentScope.SINGLETON})
+@Component()
+@Scope(InjectScope.SINGLETON)
 class EventBusImplement {
   private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger>> = new Map();
 
@@ -157,7 +158,8 @@ export abstract class EventPublisher {
   abstract publish(channel: ServiceIdentifier, payload: any): Promise<void>;
 }
 
-@Component({scope: ComponentScope.SINGLETON})
+@Component()
+@Scope(Scope.SINGLETON)
 class EventPublisherFactory extends ComponentFactory<EventPublisher> {
   private static EventPublisher = class extends EventPublisher {
     constructor(private readonly container: Container, private readonly eventBus: EventBusImplement) {

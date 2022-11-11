@@ -1,4 +1,4 @@
-import {Component, ComponentScope, getComponentMetadata} from '../src/index.js';
+import {Component, ComponentScope, getComponentMetadata, Scope} from '../src/index.js';
 
 describe('Component', () => {
   test('getComponent', async () => {
@@ -59,13 +59,6 @@ describe('Component', () => {
       @Component()
       class MyComponent {}
     });
-  });
-
-  test('Component scope', () => {
-    @Component({scope: ComponentScope.SINGLETON})
-    class MyComponent {}
-
-    expect(getComponentMetadata(MyComponent)).toEqual(expect.objectContaining({scope: ComponentScope.SINGLETON}));
   });
 
   test('Component explicit using self as component id', async () => {

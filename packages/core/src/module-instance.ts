@@ -5,22 +5,10 @@ import {ComponentFactory, ComponentMetadata, ConstantProvider, Constructor, Fact
 import {getComponentMetadata} from './component.js';
 
 function bindComponent(container: Container, constructor: Constructor, metadata: ComponentMetadata) {
-  const {target, id, bindParentConstructor} = metadata;
+  const {target, id} = metadata;
   container.add(constructor);
   if (id !== target) {
     container.addBinding({type: BindingType.ALIAS, id: id as ServiceId, canonicalId: constructor});
-  }
-
-  if (!bindParentConstructor) {
-    return;
-  }
-
-  let parentConstructor = Object.getPrototypeOf(target);
-  while (parentConstructor.prototype) {
-    if (parentConstructor !== id) {
-      container.addBinding({type: BindingType.ALIAS, id: parentConstructor, canonicalId: constructor});
-    }
-    parentConstructor = Object.getPrototypeOf(parentConstructor);
   }
 }
 

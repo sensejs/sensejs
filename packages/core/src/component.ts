@@ -6,11 +6,7 @@ export {InjectScope as ComponentScope, Scope} from '@sensejs/container';
 const COMPONENT_METADATA_KEY = Symbol('ComponentSpec');
 
 export interface ComponentOption<T extends {} = {}> {
-  /** @deprecated */
-  scope?: InjectScope;
   id?: ClassServiceId<T>;
-  /** @deprecated Use of this option is not recommended, decorate base with `@Injectable()` instead */
-  bindParentConstructor?: boolean;
 }
 
 export function getComponentMetadata<T extends {}>(target: Class<T>): ComponentMetadata<T> {
@@ -25,12 +21,10 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
   if (Reflect.hasOwnMetadata(COMPONENT_METADATA_KEY, target)) {
     throw new Error(`Decorator @${Component.name} cannot applied multiple times to "${target.name}`);
   }
-  const {id = target, scope = Scope.TRANSIENT, bindParentConstructor = false} = option;
+  const {id = target} = option;
   const metadata: ComponentMetadata<T> = {
     target,
     id,
-    scope,
-    bindParentConstructor,
   };
 
   Reflect.defineMetadata(COMPONENT_METADATA_KEY, metadata, target);
@@ -43,10 +37,6 @@ export function setComponentMetadata<T extends {}>(target: Constructor<T>, optio
  */
 export function Component(option: ComponentOption = {}) {
   return (target: Constructor): void => {
-    const {scope} = option;
-    if (scope) {
-      Scope(scope)(target);
-    }
     Injectable()(target);
     if (typeof option.id === 'function') {
       if (!(target.prototype instanceof option.id) && option.id !== target) {

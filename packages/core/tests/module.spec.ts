@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {Container, DuplicatedBindingError, InjectScope} from '@sensejs/container';
+import {Container, DuplicatedBindingError, Injectable, InjectScope} from '@sensejs/container';
 import {
   Component,
   ComponentFactory,
@@ -42,19 +42,21 @@ describe('Module resolve', () => {
     @Component({id})
     class StubComponent {}
 
+    @Injectable()
     abstract class GrantParent {
       bar() {
         return 'bar';
       }
     }
 
+    @Injectable()
     abstract class Parent extends GrantParent {
       foo() {
         return 'foo';
       }
     }
 
-    @Component({bindParentConstructor: true})
+    @Component()
     class Child extends Parent {}
 
     @ModuleClass({

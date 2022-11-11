@@ -5,13 +5,14 @@ import {
   ModuleClass,
   OnModuleCreate,
   Component,
-  ComponentScope,
   createModule,
   Inject,
   OnModuleDestroy,
+  Scope,
 } from '@sensejs/core';
 
-@Component({scope: ComponentScope.SINGLETON})
+@Component()
+@Scope(Scope.SINGLETON)
 class Timer {
   private timestamp = Date.now();
 
