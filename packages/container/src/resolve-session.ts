@@ -38,7 +38,7 @@ export class ResolveSession {
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
-    const self = this.resolve(target as unknown as ServiceId<T>) as T;
+    const self = this.resolve(target) as T;
     const proxyInstance = this.construct(proxy);
     return proxyInstance.call(fn, self);
   }
@@ -55,6 +55,8 @@ export class ResolveSession {
     return this;
   }
 
+  resolve<T>(target: GeneralServiceId<T>): T;
+  resolve<T extends {}>(target: ClassServiceId<T>): T;
   resolve<T>(target: ServiceId<T>): T {
     this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true});
     return this.evalInstructions();
