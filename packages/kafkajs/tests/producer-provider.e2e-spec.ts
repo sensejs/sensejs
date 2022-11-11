@@ -1,10 +1,11 @@
-import {createModule, Inject, ModuleClass, EntryModule, uuidV1} from '@sensejs/core';
+import {createModule, Inject, ModuleClass, EntryModule} from '@sensejs/core';
 import config from 'config';
-import {createPooledProducerModule, createSimpleProducerModule} from '../src/producer-provider-module.js';
+import {createPooledProducerModule, createSimpleProducerModule} from '../src/index.js';
 import {MessageProducerProvider} from '@sensejs/kafkajs-standalone';
+import {randomUUID} from 'crypto';
 
 test('createSimpleProducerModule', async () => {
-  const txId = uuidV1();
+  const txId = randomUUID();
   @ModuleClass({
     requires: [
       createSimpleProducerModule({
@@ -31,7 +32,7 @@ test('createSimpleProducerModule', async () => {
 });
 
 test('createPooledProducerModule', async () => {
-  const txId = uuidV1();
+  const txId = randomUUID();
   @ModuleClass({
     requires: [
       createPooledProducerModule({
