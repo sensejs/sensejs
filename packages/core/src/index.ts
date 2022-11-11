@@ -13,4 +13,3 @@ export * from './module-utility.js';
 export * from './module-scanner.js';
 export * from './utils/index.js';
 export * from './method-invoker.js';
-export * from './uuid.js';
