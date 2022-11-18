@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/testing",
-  "version": "0.9.0",
+  "version": "0.10.0-alpha.0",
   "description": "Experimental testing support for SenseJS framework",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -28,13 +28,13 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "tslib": "^2.4.0"
+    "tslib": "^2.4.1"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:*",
-    "@sensejs/testing-utility": "workspace:*"
+    "@sensejs/core": "workspace:0.10.0-alpha.0",
+    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.9.0"
+    "@sensejs/core": "workspace:^0.10.0-alpha.0"
   }
 }

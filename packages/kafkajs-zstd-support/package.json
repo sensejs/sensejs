@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs-zstd-support",
-  "version": "0.9.2",
+  "version": "0.10.0-alpha.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -28,14 +28,14 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "tslib": "^2.4.0",
+    "tslib": "^2.4.1",
     "zstd-napi": "^0.0.6"
   },
   "devDependencies": {
-    "config": "^3.3.7",
-    "kafkajs": "^2.2.0"
+    "config": "^3.3.8",
+    "kafkajs": "^2.2.2"
   },
   "peerDependencies": {
-    "kafkajs": "^1.16.0 || ^2.0.2"
+    "kafkajs": "^2.0.2"
   }
 }

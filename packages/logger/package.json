@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/logger",
-  "version": "0.9.1",
+  "version": "0.10.0-alpha.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -30,12 +30,12 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "moment": "^2.29.4",
-    "tslib": "^2.4.0"
+    "tslib": "^2.4.1"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:*"
+    "@sensejs/core": "workspace:0.10.0-alpha.0"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.9.0"
+    "@sensejs/core": "workspace:^0.10.0-alpha.0"
   }
 }

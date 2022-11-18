@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/container",
-  "version": "0.9.0",
+  "version": "0.10.0-alpha.0",
   "description": "The dependency injection library used by sensejs framework.",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -28,12 +28,12 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:*"
+    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.1.13"
   },
   "dependencies": {
-    "tslib": "^2.4.0"
+    "tslib": "^2.4.1"
   }
 }
