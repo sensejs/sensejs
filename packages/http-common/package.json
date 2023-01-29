@@ -26,8 +26,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.10.0-alpha.0",
-    "tslib": "^2.4.1"
+    "@sensejs/utility": "workspace:0.10.0-alpha.0",
+    "tslib": "^2.5.0"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:0.10.0-alpha.0",

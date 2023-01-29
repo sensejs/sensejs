@@ -28,17 +28,17 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.10.0-alpha.0",
-    "lightning-pool": "^4.2.0",
+    "@sensejs/utility": "workspace:0.10.0-alpha.0",
+    "lightning-pool": "^4.2.1",
     "long": "^4.0.0",
-    "rxjs": "^7.5.7",
-    "tslib": "^2.4.1"
+    "rxjs": "^7.8.0",
+    "tslib": "^2.5.0"
   },
   "peerDependencies": {
     "kafkajs": "^2.0.2"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:^0.10.0-alpha.0",
-    "config": "^3.3.8"
+    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0",
+    "config": "^3.3.9"
   }
 }

@@ -28,12 +28,12 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "tslib": "^2.4.1",
+    "tslib": "^2.5.0",
     "zstd-napi": "^0.0.6"
   },
   "devDependencies": {
-    "config": "^3.3.8",
-    "kafkajs": "^2.2.2"
+    "config": "^3.3.9",
+    "kafkajs": "^2.2.3"
   },
   "peerDependencies": {
     "kafkajs": "^2.0.2"
