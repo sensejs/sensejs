@@ -13,6 +13,18 @@ to make end-user fit their own need.
 See [Documentation](https://sensejs.io)
 
 ## BREAKING CHANGES
+-   0.10.x
+
+    Several deprecated classes, functions and parameters are removed
+
+      - In `@sensejs/core`, the following deprecated functions and parameters are removed
+
+        - `uuidV1`
+        - `ComponentOption.scope`
+        - `ComponentOption.bindParentConstructor`
+
+      - `ResolveContext` are removed from `@sensejs/container`
+
 -   0.9.x
 
     This version introduces many breaking changes due to the IoC container has been rewritten.
