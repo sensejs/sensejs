@@ -6,7 +6,6 @@ const testRegex = performEndToEndTest
   : './tests/.+\\.(test|spec).ts$';
 
 module.exports = {
-  collectCoverageFrom: ['./src/**/*.ts'],
   testRegex,
   testEnvironment: 'node',
   transform: {
