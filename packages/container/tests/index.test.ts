@@ -466,6 +466,7 @@ describe('Container', () => {
           stub();
         }
       }
+      async bar() {}
     }
     container.add(GlobalA);
     container.add(GlobalB);
@@ -475,9 +476,12 @@ describe('Container', () => {
     container.createResolveSession().invoke(B, 'foo');
     expect(stub).toHaveBeenCalledTimes(1);
     expect(stub).toHaveBeenLastCalledWith();
-    container.createResolveSession().addTemporaryConstantBinding(GlobalB, temporaryGlobalB).invoke(B, 'foo');
+    expect(
+      container.createResolveSession().addTemporaryConstantBinding(GlobalB, temporaryGlobalB).invoke(B, 'foo'),
+    ).toBeUndefined();
     expect(stub).toHaveBeenCalledTimes(2);
     expect(stub).toHaveBeenLastCalledWith(singletonB);
+    expect(container.createResolveSession().invoke(B, 'bar').then).toBeInstanceOf(Function);
   });
 
   test('aliased by injectable parent', () => {

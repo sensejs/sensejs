@@ -74,8 +74,4 @@ export type Binding<T> = T extends {}
   ? ConstantBinding<T> | InstanceBinding<T> | FactoryBinding<T> | AliasBinding<T>
   : ConstantBinding<T> | FactoryBinding<T> | AliasBinding<T>;
 
-export type InvokeResult<T extends {}, K extends keyof T> = T[K] extends (...args: any[]) => Promise<infer R>
-  ? R
-  : T[K] extends (...args: any[]) => infer R
-  ? R
-  : never;
+export type InvokeResult<T extends {}, K extends keyof T> = T[K] extends (...args: any[]) => infer R ? R : never;
