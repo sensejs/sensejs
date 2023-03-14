@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "config": "^3.3.9",
-    "kafkajs": "^2.2.3"
+    "kafkajs": "^2.2.4"
   },
   "peerDependencies": {
     "kafkajs": "^2.0.2"
