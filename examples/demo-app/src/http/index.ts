@@ -1,10 +1,10 @@
 import {createHttpModule} from '@sensejs/http-koa-platform';
 import {ExampleController} from './example.controller';
-import {RequestTimingInterceptor} from './request-timing.interceptor';
+import {RequestTimingMiddleware} from './request-timing.middleware.js';
 import PublishingModule from '../example';
-import {TracingInterceptor} from './tracing-interceptor';
-import {ErrorHandlerInterceptor} from './error-handler.interceptor';
-import {DatabaseTransactionInterceptor} from '../database';
+import {TracingMiddleware} from './tracing.middleware.js';
+import {ErrorHandlerMiddleware} from './error-handler.middleware.js';
+import {DatabaseTransactionMiddleware} from '../database/index.js';
 
 export default createHttpModule({
   httpOption: {
@@ -13,11 +13,6 @@ export default createHttpModule({
   },
   requires: [PublishingModule],
   components: [ExampleController],
-  globalInterceptProviders: [
-    TracingInterceptor,
-    ErrorHandlerInterceptor,
-    RequestTimingInterceptor,
-    DatabaseTransactionInterceptor,
-  ],
+  middlewares: [TracingMiddleware, ErrorHandlerMiddleware, RequestTimingMiddleware, DatabaseTransactionMiddleware],
   injectOptionFrom: 'config.http',
 });

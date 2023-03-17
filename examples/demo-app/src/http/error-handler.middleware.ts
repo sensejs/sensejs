@@ -1,14 +1,14 @@
-import {Component, Inject, InjectLogger, Logger} from '@sensejs/core';
+import {Inject, InjectLogger, Logger} from '@sensejs/core';
 import {HttpContext} from '@sensejs/http-common';
 import {HttpError} from './http-error';
-import {InterceptProviderClass} from '@sensejs/container';
+import {MiddlewareClass} from '@sensejs/container';
 import {ValidationError} from 'suretype';
 
-@InterceptProviderClass()
-export class ErrorHandlerInterceptor {
+@MiddlewareClass()
+export class ErrorHandlerMiddleware {
   constructor(@InjectLogger() private logger: Logger, @Inject(HttpContext) private context: HttpContext) {}
 
-  async intercept(next: () => Promise<void>): Promise<void> {
+  async handle(next: () => Promise<void>): Promise<void> {
     try {
       await next();
     } catch (e) {
