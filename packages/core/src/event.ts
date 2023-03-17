@@ -2,7 +2,7 @@ import {Component, ComponentScope, Scope} from './component.js';
 import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces.js';
 import {Subject} from 'rxjs';
 import {createModule, ModuleClass, ModuleOption, OnModuleStart, OnModuleStop} from './module.js';
-import {AsyncInterceptProvider, Container, InjectScope} from '@sensejs/container';
+import {AsyncInterceptProvider, CompatMiddleware, Container, InjectScope, Middleware} from '@sensejs/container';
 import {Inject} from './decorators.js';
 import {ModuleScanner} from './module-scanner.js';
 import {matchLabels} from './utils/match-labels.js';
@@ -63,20 +63,27 @@ export interface SubscribeEventMetadata<P extends {} = {}> {
   name: keyof P & (string | symbol);
   identifier: ServiceIdentifier;
   filter: (message: any) => boolean;
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
+  middlewares: Constructor<CompatMiddleware>[];
 }
 
 export interface EventSubscriptionOption {
+  middlewares?: Constructor<Middleware>[];
+
+  /** @deprecated Use middlewares instead */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
   filter?: (message: any) => boolean;
 }
 
 export interface SubscribeEventControllerMetadata {
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
+  middlewares: Constructor<CompatMiddleware>[];
+
   labels: Set<symbol | string>;
 }
 
 export interface SubscribeEventControllerOption {
+  middlewares?: Constructor<Middleware>[];
+
+  /** @deprecated Use middlewares instead */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
   labels?: (string | symbol)[] | Set<symbol | string>;
 }
@@ -99,7 +106,7 @@ export function SubscribeEventController(option: SubscribeEventControllerOption 
   return (constructor: Constructor): void => {
     Component()(constructor);
     setSubscribeEventControllerMetadata(constructor, {
-      interceptProviders: option.interceptProviders ?? [],
+      middlewares: option.middlewares ?? option.interceptProviders ?? [],
       labels: new Set(option.labels),
     });
   };
@@ -119,7 +126,7 @@ export function SubscribeEvent(identifier: ServiceIdentifier, option: EventSubsc
       prototype,
       name,
       identifier,
-      interceptProviders: option.interceptProviders ?? [],
+      middlewares: option.middlewares ?? option.interceptProviders ?? [],
       filter: option.filter ?? (() => true),
     };
     Reflect.defineMetadata(SUBSCRIBE_EVENT_KEY, metadata, targetMethod);
@@ -133,6 +140,9 @@ export function getEventSubscriptionMetadata<P extends {} = {}>(
 }
 
 export interface EventSubscriptionModuleOption extends ModuleOption {
+  middlewares?: Constructor<Middleware>[];
+
+  /** @deprecated Use middlewares instead */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
   matchLabels?: Set<string | symbol> | (string | symbol)[] | ((labels: Set<string | symbol>) => boolean);
 }
@@ -245,8 +255,8 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         name,
         [
           ...(option.interceptProviders ?? []),
-          ...controllerMetadata.interceptProviders,
-          ...subscribeEventMetadata.interceptProviders,
+          ...controllerMetadata.middlewares,
+          ...subscribeEventMetadata.middlewares,
         ],
         EventSubscriptionContext,
       );
