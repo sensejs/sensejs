@@ -15,15 +15,47 @@ See [Documentation](https://sensejs.io)
 ## BREAKING CHANGES
 -   0.10.x
 
-    Several deprecated classes, functions and parameters are removed
+    1. Several deprecated classes, functions and parameters are removed
 
-      - In `@sensejs/core`, the following deprecated functions and parameters are removed
+        - In `@sensejs/core`, the following deprecated functions and parameters are removed
 
-        - `uuidV1`
-        - `ComponentOption.scope`
-        - `ComponentOption.bindParentConstructor`
+            - `uuidV1`
+            - `ComponentOption.scope`
+            - `ComponentOption.bindParentConstructor`
 
-      - `ResolveContext` are removed from `@sensejs/container`
+        - `ResolveContext` are removed from `@sensejs/container`
+
+    2. The Concept of `InterceptProvider` are renamed to `Middleware`, results in plenty of changes:
+
+        - Decorator `@InterceptProviderClass` is deprecated, and its usage should be replaced
+          by `@MiddlewareClass`. And note that hape of a `Middleware` is different from `InterceptProvider`,
+          the `intercept` method need to be renamed to `handle`.
+
+          ```typescript
+          @InterceptProviderClass(ServiceId1, ServiceId2)
+          class MyInterceptor {
+              async intercept(next: (value1: any, value2: any)=> Promise<void>) {
+                  await next(value1, value2);
+              }
+          }
+          ```
+
+          Now:
+
+          ```typescript
+
+          @MiddlewareClass()
+          class MyInterceptor {
+              async handle(next: (value1: any, value2: any)=> Promise<void>) {
+                  await next(value1, value2);
+              }
+          }
+          ```
+
+        - Field named `interceptProviders` in many types are deprecated, and its usage should
+        be replaced by `middlewares`.
+
+
 
 -   0.9.x
 

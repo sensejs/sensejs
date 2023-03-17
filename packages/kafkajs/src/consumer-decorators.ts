@@ -1,17 +1,17 @@
-import {AsyncInterceptProvider} from '@sensejs/container';
+import {AsyncInterceptProvider, CompatMiddleware, Middleware} from '@sensejs/container';
 import {Component, Constructor, ServiceIdentifier} from '@sensejs/core';
 
 export interface BatchedSubscribeTopicMetadata {
   type: 'batched';
   fallbackOption?: SubscribeTopicOption;
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
+  middlewares: Constructor<CompatMiddleware>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
 export interface SimpleSubscribeTopicMetadata {
   type: 'simple';
   fallbackOption?: SubscribeTopicOption;
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
+  middlewares: Constructor<CompatMiddleware>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
@@ -23,13 +23,19 @@ export interface SubscribeTopicOption {
 }
 
 export interface SubscribeControllerMetadata<T extends {} = any> {
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
+  middlewares: Constructor<CompatMiddleware>[];
   target: Constructor<T>;
   labels: Set<string | symbol>;
 }
 
 export interface SubscribeControllerOption {
+  middlewares?: Constructor<Middleware>[];
+
+  /**
+   * @deprecated Use middlewares instead
+   */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
+
   labels?: (string | symbol)[] | Set<string | symbol>;
 }
 
@@ -61,11 +67,22 @@ export function getSubscribeControllerMetadata(constructor: {}): SubscribeContro
 export interface SimpleSubscribeTopicDecoratorOption {
   option?: SubscribeTopicOption;
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
+
+  middlewares?: Constructor<Middleware>[];
+
+  /**
+   * @deprecated Use middlewares instead
+   */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 export interface BatchedSubscribeTopicDecoratorOption {
   option?: SubscribeTopicOption;
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
+  middlewares?: Constructor<Middleware>[];
+
+  /**
+   * @deprecated Use middlewares instead
+   */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 
@@ -75,11 +92,11 @@ export function SubscribeTopic(option: SimpleSubscribeTopicDecoratorOption) {
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    const {option: fallbackOption, injectOptionFrom, interceptProviders = []} = option;
+    const {option: fallbackOption, injectOptionFrom} = option;
     const metadata: SimpleSubscribeTopicMetadata = {
       type: 'simple',
       fallbackOption,
-      interceptProviders,
+      middlewares: option.middlewares ?? option.interceptProviders ?? [],
       injectOptionFrom,
     };
     setSubscribeTopicMetadata(targetMethod, metadata);
@@ -92,11 +109,11 @@ export function BatchedSubscribeTopic(option: BatchedSubscribeTopicDecoratorOpti
     if (typeof targetMethod !== 'function') {
       throw new Error('Request mapping decorator must be applied to a function');
     }
-    const {option: fallbackOption, injectOptionFrom, interceptProviders = []} = option;
+    const {option: fallbackOption, injectOptionFrom} = option;
     const metadata: BatchedSubscribeTopicMetadata = {
       type: 'batched',
       fallbackOption,
-      interceptProviders,
+      middlewares: option.middlewares ?? option.interceptProviders ?? [],
       injectOptionFrom,
     };
     setSubscribeTopicMetadata(targetMethod, metadata);
@@ -105,10 +122,10 @@ export function BatchedSubscribeTopic(option: BatchedSubscribeTopicDecoratorOpti
 
 export function SubscribeController(option: SubscribeControllerOption = {}) {
   return (constructor: Constructor<{}>): void => {
-    const {interceptProviders = [], labels} = option;
+    const {labels} = option;
     const metadata: SubscribeControllerMetadata = {
       target: constructor,
-      interceptProviders,
+      middlewares: option.middlewares ?? option.interceptProviders ?? [],
       labels: new Set(labels),
     };
     setSubscribeControllerMetadata(constructor, metadata);

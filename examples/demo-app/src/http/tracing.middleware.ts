@@ -1,13 +1,13 @@
 import {Inject, LoggerBuilder} from '@sensejs/core';
 import {SenseLoggerBuilder} from '@sensejs/logger';
-import {InterceptProviderClass} from '@sensejs/container';
+import {MiddlewareClass} from '@sensejs/container';
 import {randomUUID} from 'crypto';
 
-@InterceptProviderClass(LoggerBuilder)
-export class TracingInterceptor {
+@MiddlewareClass(LoggerBuilder)
+export class TracingMiddleware {
   constructor(@Inject(SenseLoggerBuilder) private loggerBuilder: SenseLoggerBuilder) {}
 
-  async intercept(next: (loggerBuilder: LoggerBuilder) => Promise<void>): Promise<void> {
+  async handle(next: (loggerBuilder: LoggerBuilder) => Promise<void>): Promise<void> {
     return next(this.loggerBuilder.setTraceId(randomUUID()));
   }
 }

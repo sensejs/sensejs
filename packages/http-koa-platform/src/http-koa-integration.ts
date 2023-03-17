@@ -180,8 +180,8 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
     controllerRouter: KoaRouter,
     container: Container,
   ): void {
-    const {httpMethod, path, targetConstructor, targetMethod, interceptProviders} = methodRouteSpec;
-    const invoker = container.createMethodInvoker(targetConstructor, targetMethod, interceptProviders, HttpContext);
+    const {httpMethod, path, targetConstructor, targetMethod, middlewares} = methodRouteSpec;
+    const invoker = container.createMethodInvoker(targetConstructor, targetMethod, middlewares, HttpContext);
 
     controllerRouter[httpMethod](path, async (ctx) => {
       const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);

@@ -1,10 +1,11 @@
 import {
-  AsyncInterceptProvider,
   Binding,
   Class,
+  CompatMiddleware,
   Constructor,
   InjectScope,
   InvokeResult,
+  Middleware,
   ParamInjectionMetadata,
   ServiceId,
 } from './types.js';
@@ -15,7 +16,7 @@ import {
   ensureValidatedMethodInvokeProxy,
   MethodInvokeProxy,
 } from './metadata.js';
-import {getInterceptProviderMetadata, Scope, ServiceTypeOf} from './decorator.js';
+import {getMiddlewareMetadata, Scope, ServiceTypeOf} from './decorator.js';
 import {ResolveSession} from './resolve-session.js';
 import {BindingNotFoundError} from './errors.js';
 import {compileParamInjectInstruction} from './utils.js';
@@ -78,9 +79,10 @@ export class AsyncMethodInvokeSession<
           return;
         }
         const [instructions, metadata] = this.interceptProviderAndMetadata[index];
-        const instance = this.evalInstructions(instructions) as AsyncInterceptProvider<any>;
+        const instance = this.evalInstructions(instructions) as CompatMiddleware<any>;
+        const fn = (instance.handle ?? instance.intercept).bind(instance);
 
-        return instance.intercept(async (...args: any[]) => {
+        return fn(async (...args: any[]) => {
           for (let i = 0; i < metadata.length; i++) {
             this.addTemporaryConstantBinding(metadata[i], args[i]);
           }
@@ -107,7 +109,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     private validatedSet: Set<ServiceId>,
     private targetConstructor: Constructor<T>,
     private targetMethod: K,
-    private interceptors: Constructor<AsyncInterceptProvider<any>>[],
+    private interceptors: Constructor<CompatMiddleware<any>>[],
     ...contextIds: ContextIds
   ) {
     this.contextIds = contextIds;
@@ -147,7 +149,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     for (const interceptor of this.interceptors) {
       const pim = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(interceptor));
       validateParamInjectMetadata(pim, interceptor.name, validatedSet);
-      const metadata = getInterceptProviderMetadata(interceptor);
+      const metadata = getMiddlewareMetadata(interceptor);
       metadata.forEach((x) => validatedSet.add(x));
       this.interceptorProviderAndMetadata.push([
         [

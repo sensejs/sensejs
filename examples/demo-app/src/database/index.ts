@@ -1,17 +1,15 @@
 import {DynamicModuleLoader, Inject, ModuleClass, ModuleScanner, OnModuleCreate, OnModuleDestroy} from '@sensejs/core';
 import {SqliteDriver} from '@mikro-orm/sqlite';
-import {Constructor, EntityManager, MikroORM, Options} from '@mikro-orm/core';
-import {AuthorEntity} from '../example/author.entity';
-import {BookEntity} from '../example/book.entity';
-import {InterceptProviderClass} from '@sensejs/container';
+import {Constructor, EntityManager, MikroORM} from '@mikro-orm/core';
+import {MiddlewareClass} from '@sensejs/container';
 import PublishingModule from '../example';
 import {EXPORT_ENTITY} from '../constants';
 
-@InterceptProviderClass(EntityManager)
-export class DatabaseTransactionInterceptor {
+@MiddlewareClass(EntityManager)
+export class DatabaseTransactionMiddleware {
   constructor(@Inject(EntityManager) private globalEntityManager: EntityManager) {}
 
-  async intercept(next: (em: EntityManager) => Promise<any>) {
+  async handle(next: (em: EntityManager) => Promise<any>) {
     const em = this.globalEntityManager.fork({clear: true});
     await next(em);
     await em.flush();

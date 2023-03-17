@@ -13,7 +13,7 @@ import {
   Transformer,
 } from '@sensejs/core';
 import {IncomingHttpHeaders, RequestListener} from 'http';
-import {AsyncInterceptProvider, Container} from '@sensejs/container';
+import {AsyncInterceptProvider, CompatMiddleware, Container, Middleware} from '@sensejs/container';
 import http from 'http';
 import {promisify} from 'util';
 
@@ -67,6 +67,11 @@ export interface FunctionParamMappingMeta {
 type HttpMappingMetadata<T> = Map<keyof T, FunctionParamMappingMeta>;
 
 export interface ControllerOption {
+  middlewares?: Constructor<Middleware>[];
+
+  /**
+   * @deprecated Use middlewares instead
+   */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
 
   /**
@@ -82,8 +87,7 @@ export interface ControllerMetadata<T extends {} = {}> {
   path: string;
   target: Constructor;
   prototype: object;
-  // interceptors: Constructor<HttpInterceptor>[];
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
+  middlewares: Constructor<CompatMiddleware>[];
   labels: Set<string | symbol>;
 }
 
@@ -103,12 +107,17 @@ export interface HttpApplicationOption {
 }
 
 export interface RequestMappingMetadata {
-  interceptProviders?: Constructor<AsyncInterceptProvider>[];
+  middlewares?: Constructor<CompatMiddleware>[];
   httpMethod: HttpMethod;
   path: string;
 }
 
 export interface RequestMappingOption {
+  middlewares?: Constructor<Middleware>[];
+
+  /**
+   * @deprecated Use middlewares instead
+   */
   interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 
@@ -178,7 +187,9 @@ export abstract class HttpContext {
 export interface MethodRouteSpec<T extends {} = any> {
   path: string;
   httpMethod: HttpMethod;
-  interceptProviders: Constructor<AsyncInterceptProvider>[];
+
+  middlewares: Constructor<CompatMiddleware>[];
+  // interceptProviders: Constructor<AsyncInterceptProvider>[];
   targetConstructor: Constructor<T>;
   targetMethod: keyof T;
 }
@@ -189,7 +200,8 @@ export interface ControllerRouteSpec {
 }
 
 export abstract class AbstractHttpApplicationBuilder {
-  private readonly globalInterceptProviders: Constructor<AsyncInterceptProvider>[] = [];
+  // private readonly globalInterceptProviders: Constructor<AsyncInterceptProvider>[] = [];
+  private readonly middlewares: Constructor<CompatMiddleware>[] = [];
   protected readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   protected errorHandler?: (e: unknown) => any;
 
@@ -217,7 +229,12 @@ export abstract class AbstractHttpApplicationBuilder {
   }
 
   addGlobalInterceptProvider(...interceptProvider: Constructor<AsyncInterceptProvider>[]): this {
-    this.globalInterceptProviders.push(...interceptProvider);
+    this.middlewares.push(...interceptProvider);
+    return this;
+  }
+
+  addMiddlewares(...middlewares: Constructor<CompatMiddleware>[]): this {
+    this.middlewares.push(...middlewares);
     return this;
   }
 
@@ -237,16 +254,12 @@ export abstract class AbstractHttpApplicationBuilder {
       return;
     }
 
-    const {httpMethod, path, interceptProviders = []} = requestMappingMetadata;
+    const {httpMethod, path, middlewares = []} = requestMappingMetadata;
 
     methodRoutSpecs.push({
       path,
       httpMethod,
-      interceptProviders: [
-        ...this.globalInterceptProviders,
-        ...controllerMetadata.interceptProviders,
-        ...interceptProviders,
-      ],
+      middlewares: [...this.middlewares, ...controllerMetadata.middlewares, ...middlewares],
       targetConstructor: controllerMetadata.target,
       targetMethod: method,
     });
@@ -406,7 +419,7 @@ export function RequestMapping(
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,
-      interceptProviders: option.interceptProviders ?? [],
+      middlewares: option.middlewares ?? option.interceptProviders ?? [],
     });
     const metadata = ensureMetadataOnMethod(prototype, method, {params: new Map()});
     metadata.path = path;
@@ -477,7 +490,7 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
       target,
       path,
       prototype: target.prototype,
-      interceptProviders: controllerOption.interceptProviders ?? [],
+      middlewares: controllerOption.middlewares ?? controllerOption.interceptProviders ?? [],
       labels: labels instanceof Set ? labels : new Set(labels),
     });
   };
@@ -495,6 +508,12 @@ const defaultHttpConfig = {
 };
 export interface HttpModuleOption<O extends HttpOption = HttpOption> {
   /**
+   * Middlewares applied to all requests handled by this http server
+   */
+  middlewares?: Constructor<Middleware>[];
+
+  /**
+   * @deprecated Use middlewares instead
    * Intercept providers applied by this http server
    */
   globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
@@ -537,9 +556,8 @@ export abstract class AbstractHttpModule {
   @OnModuleStart()
   async onStart(@Inject(ModuleScanner) moduleScanner: ModuleScanner, @Inject(Container) container: Container) {
     const httpAdaptor = this.getAdaptor();
-    for (const ip of this.httpModuleOption.globalInterceptProviders || []) {
-      httpAdaptor.addGlobalInterceptProvider(ip);
-    }
+    const middlewares = this.httpModuleOption.middlewares ?? this.httpModuleOption.globalInterceptProviders ?? [];
+    httpAdaptor.addMiddlewares(...middlewares);
     this.scanControllers(httpAdaptor, moduleScanner);
     await this.setupHttpServer(httpAdaptor, this.httpServer, container);
   }
