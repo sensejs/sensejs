@@ -1,65 +1,9 @@
 import 'reflect-metadata';
-import {createKoaHttpModule, Controller, GET} from '@sensejs/http-koa-platform';
-import {
-  EntryPoint,
-  ModuleClass,
-  OnModuleCreate,
-  Component,
-  createModule,
-  Inject,
-  OnModuleDestroy,
-  Scope,
-} from '@sensejs/core';
-
-@Component()
-@Scope(Scope.SINGLETON)
-class Timer {
-  private timestamp = Date.now();
-
-  reset() {
-    this.timestamp = Date.now();
-  }
-
-  getDuration() {
-    return Date.now() - this.timestamp;
-  }
-}
-const TimerModule = createModule({
-  components: [Timer],
-});
-
-@Controller('/')
-class HelloWorldController {
-  constructor(@Inject(Timer) private timer: Timer) {}
-
-  @GET('/')
-  helloWorld() {
-    console.log(`Received request at ${this.timer.getDuration()} milliseconds`);
-    return 'hello world';
-  }
-}
+import {EntryPoint, ModuleClass} from '@sensejs/core';
+import {HttpModule} from './http.js';
 
 @EntryPoint()
 @ModuleClass({
-  requires: [
-    createKoaHttpModule({
-      requires: [TimerModule],
-      components: [HelloWorldController],
-      httpOption: {
-        listenAddress: 'localhost',
-        listenPort: 8080,
-      },
-    }),
-  ],
+  requires: [HttpModule],
 })
-class HelloWorldApp {
-  @OnModuleCreate()
-  onModuleCreate() {
-    console.log('service started');
-  }
-
-  @OnModuleDestroy()
-  onModuleDestroy(@Inject(Timer) timeMeasure: Timer) {
-    console.log(`service stopped at ${timeMeasure.getDuration()} milliseconds`);
-  }
-}
+class App {}
