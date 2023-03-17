@@ -19,7 +19,7 @@ import {
   PUT,
   Query,
 } from '../src/index.js';
-import {Container, Inject, InterceptProviderClass} from '@sensejs/container';
+import {Container, Inject, InterceptProviderClass, MiddlewareClass} from '@sensejs/container';
 import {RequestListener} from 'http';
 import {Component, ModuleClass, EntryModule, ProcessManager} from '@sensejs/core';
 
@@ -36,14 +36,20 @@ describe('Http annotations', () => {
       return Interceptor;
     };
 
-    const I1 = generateInterceptorClass(),
-      I2 = generateInterceptorClass();
+    @InterceptProviderClass()
+    class I1 {
+      async intercept(cb: () => Promise<void>) {}
+    }
 
+    @MiddlewareClass()
+    class I2 {
+      async handle(cb: () => Promise<void>) {}
+    }
     const L1 = Symbol();
 
     @Controller('/', {interceptProviders: [I1], labels: [L1]})
     class FooController {
-      @GET('/get', {interceptProviders: [I2]})
+      @GET('/get', {middlewares: [I2]})
       handleGet() {}
 
       @POST('/:id')
@@ -69,7 +75,7 @@ describe('Http annotations', () => {
       expect.objectContaining({
         target: FooController,
         path: '/',
-        interceptProviders: expect.arrayContaining([I1]),
+        middlewares: expect.arrayContaining([I1]),
         prototype: FooController.prototype,
       }),
     );
@@ -78,7 +84,7 @@ describe('Http annotations', () => {
     expect(rm).toEqual(
       expect.objectContaining({
         httpMethod: HttpMethod.GET,
-        interceptProviders: expect.arrayContaining([I2]),
+        middlewares: expect.arrayContaining([I2]),
         path: '/get',
       }),
     );
