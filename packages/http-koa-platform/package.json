@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/http-koa-platform",
-  "version": "0.10.0-alpha.0",
+  "version": "0.10.0-alpha.1",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -47,8 +47,8 @@
     "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.10.0-alpha.1",
-    "@sensejs/core": "workspace:^0.10.0-alpha.0",
+    "@sensejs/container": "workspace:^0.10.0-alpha.2",
+    "@sensejs/core": "workspace:^0.10.0-alpha.1",
     "@sensejs/http-common": "workspace:^0.10.0-alpha.0",
     "reflect-metadata": "^0.1.13"
   },

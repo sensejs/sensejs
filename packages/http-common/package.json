@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/http-common",
-  "version": "0.10.0-alpha.0",
+  "version": "0.10.0-alpha.1",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -35,8 +35,8 @@
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.10.0-alpha.1",
-    "@sensejs/core": "workspace:^0.10.0-alpha.0",
+    "@sensejs/container": "workspace:^0.10.0-alpha.2",
+    "@sensejs/core": "workspace:^0.10.0-alpha.1",
     "reflect-metadata": "^0.1.13"
   },
   "author": "LAN Xingcan",
