@@ -1,7 +1,7 @@
 import {Inject, InjectLogger, Logger} from '@sensejs/core';
 import {HttpContext} from '@sensejs/http-common';
-import {HttpError} from './http-error';
 import {MiddlewareClass} from '@sensejs/container';
+import {HttpError} from './http-error.js';
 import {ValidationError} from 'suretype';
 
 @MiddlewareClass()

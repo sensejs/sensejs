@@ -1,6 +1,6 @@
 import {TypeOf, v} from 'suretype';
-import {createTransformer} from '../utils/validation';
-import {HttpError} from './http-error';
+import {createTransformer} from '../utils/validation.js';
+import {HttpError} from './http-error.js';
 
 function throwValidationError(e: object): never {
   throw new HttpError(400, 'VALIDATION_ERROR', 'Validation Error', e);

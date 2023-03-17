@@ -1,5 +1,5 @@
 import {Entity, ManyToOne, Property} from '@mikro-orm/core';
-import {AuthorEntity} from './author.entity';
+import {AuthorEntity} from './author.entity.js';
 import crypto from 'crypto';
 
 @Entity()
