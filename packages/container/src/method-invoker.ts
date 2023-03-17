@@ -1,10 +1,10 @@
 import {
-  AsyncInterceptProvider,
   Binding,
   Class,
   Constructor,
   InjectScope,
   InvokeResult,
+  Middleware,
   ParamInjectionMetadata,
   ServiceId,
 } from './types.js';
@@ -78,9 +78,10 @@ export class AsyncMethodInvokeSession<
           return;
         }
         const [instructions, metadata] = this.interceptProviderAndMetadata[index];
-        const instance = this.evalInstructions(instructions) as AsyncInterceptProvider<any>;
+        const instance = this.evalInstructions(instructions) as Middleware<any>;
+        const fn = (instance.handle ?? instance.intercept).bind(instance);
 
-        return instance.intercept(async (...args: any[]) => {
+        return fn(async (...args: any[]) => {
           for (let i = 0; i < metadata.length; i++) {
             this.addTemporaryConstantBinding(metadata[i], args[i]);
           }
@@ -107,7 +108,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     private validatedSet: Set<ServiceId>,
     private targetConstructor: Constructor<T>,
     private targetMethod: K,
-    private interceptors: Constructor<AsyncInterceptProvider<any>>[],
+    private interceptors: Constructor<Middleware<any>>[],
     ...contextIds: ContextIds
   ) {
     this.contextIds = contextIds;

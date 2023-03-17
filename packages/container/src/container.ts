@@ -1,11 +1,11 @@
 import {
-  AsyncInterceptProvider,
   Binding,
   BindingType,
   Constructor,
   FactoryBinding,
   InjectScope,
   InstanceBinding,
+  Middleware,
   ServiceId,
 } from './types.js';
 import {DuplicatedBindingError} from './errors.js';
@@ -38,7 +38,7 @@ export class Container {
   createMethodInvoker<T extends {}, K extends keyof T, ServiceIds extends any[] = []>(
     targetConstructor: Constructor<T>,
     targetMethod: K,
-    asyncInterceptProviders: Constructor<AsyncInterceptProvider<any>>[],
+    asyncInterceptProviders: Constructor<Middleware<any>>[],
     ...contextIds: ServiceIds
   ): MethodInvoker<T, K, ServiceIds> {
     this.validate();
