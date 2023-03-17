@@ -30,8 +30,8 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@sensejs/container": "workspace:0.10.0-alpha.1",
-    "@sensejs/core": "workspace:0.10.0-alpha.0",
+    "@sensejs/container": "workspace:*",
+    "@sensejs/core": "workspace:*",
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {

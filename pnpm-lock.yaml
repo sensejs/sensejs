@@ -153,13 +153,13 @@ importers:
   examples/hello-world:
     dependencies:
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/core
       '@sensejs/http-common':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/http-common
       '@sensejs/http-koa-platform':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/http-koa-platform
       reflect-metadata:
         specifier: ^0.1.13
@@ -212,7 +212,7 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/testing-utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../tools/testing-utility
 
   packages/core:
@@ -250,10 +250,10 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.1
+        specifier: workspace:*
         version: link:../container
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../core
       reflect-metadata:
         specifier: ^0.1.13
@@ -302,16 +302,16 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.1
+        specifier: workspace:*
         version: link:../container
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../core
       '@sensejs/http-common':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../http-common
       '@sensejs/testing-utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../tools/testing-utility
 
   packages/kafkajs:
@@ -330,13 +330,13 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/container':
-        specifier: workspace:0.10.0-alpha.1
+        specifier: workspace:*
         version: link:../container
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../core
       '@sensejs/testing-utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../tools/testing-utility
       config:
         specifier: ^3.3.9
@@ -361,7 +361,7 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/testing-utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../tools/testing-utility
       config:
         specifier: ^3.3.9
@@ -396,7 +396,7 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../core
 
   packages/testing:
@@ -406,10 +406,10 @@ importers:
         version: 2.5.0
     devDependencies:
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../core
       '@sensejs/testing-utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../tools/testing-utility
 
   packages/utility:

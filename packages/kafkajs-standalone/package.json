@@ -38,7 +38,7 @@
     "kafkajs": "^2.0.2"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0",
+    "@sensejs/testing-utility": "workspace:*",
     "config": "^3.3.9"
   }
 }

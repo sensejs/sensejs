@@ -28,7 +28,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0"
+    "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
     "reflect-metadata": "^0.1.13"

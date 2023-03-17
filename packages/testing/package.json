@@ -31,8 +31,8 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@sensejs/core": "workspace:0.10.0-alpha.0",
-    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0"
+    "@sensejs/core": "workspace:*",
+    "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
     "@sensejs/core": "workspace:^0.10.0-alpha.0"

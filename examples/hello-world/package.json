@@ -16,9 +16,9 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@sensejs/core": "workspace:0.10.0-alpha.0",
-    "@sensejs/http-common": "workspace:0.10.0-alpha.0",
-    "@sensejs/http-koa-platform": "workspace:0.10.0-alpha.0",
+    "@sensejs/core": "workspace:*",
+    "@sensejs/http-common": "workspace:*",
+    "@sensejs/http-koa-platform": "workspace:*",
     "reflect-metadata": "^0.1.13"
   }
 }

@@ -41,10 +41,10 @@
     "tslib": "^2.5.0"
   },
   "devDependencies": {
-    "@sensejs/container": "workspace:0.10.0-alpha.1",
-    "@sensejs/core": "workspace:0.10.0-alpha.0",
-    "@sensejs/http-common": "workspace:0.10.0-alpha.0",
-    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0"
+    "@sensejs/container": "workspace:*",
+    "@sensejs/core": "workspace:*",
+    "@sensejs/http-common": "workspace:*",
+    "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.10.0-alpha.1",
