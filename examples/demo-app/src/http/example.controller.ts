@@ -8,9 +8,7 @@ export class ExampleController {
   constructor(
     @Inject(PublishingFacade) private writingFacade: PublishingFacade,
     @InjectLogger(ExampleController) private logger: Logger,
-  ) {
-    this.logger.info('Exmaple created');
-  }
+  ) {}
 
   @GET('/')
   handleGetRequest(@Query() query: object) {
