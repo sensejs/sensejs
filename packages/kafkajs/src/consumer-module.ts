@@ -13,13 +13,13 @@ import {
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {AsyncInterceptProvider, Container} from '@sensejs/container';
+import {AsyncInterceptProvider, CompatMiddleware, Container, Middleware} from '@sensejs/container';
 import {
   KafkaBatchConsumeMessageParam,
+  KafkaLogAdapterOption,
   KafkaReceivedMessage,
   MessageConsumer,
   MessageConsumerOption,
-  KafkaLogAdapterOption,
 } from '@sensejs/kafkajs-standalone';
 import {
   BatchedMessageConsumeContext,
@@ -40,6 +40,7 @@ export interface ConfigurableMessageConsumerOption extends Omit<MessageConsumerO
 }
 
 export interface MessageConsumerModuleOption {
+  middlewares?: Constructor<Middleware>[];
   globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
   messageConsumerOption?: Partial<ConfigurableMessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier<ConfigurableMessageConsumerOption>;
@@ -79,7 +80,7 @@ function getSubscribeOption(
 
 function getSimpleConsumeCallback<T extends {}>(
   container: Container,
-  interceptProviders: Constructor<AsyncInterceptProvider>[],
+  middlewares: Constructor<CompatMiddleware>[],
   consumerGroupId: string,
   target: Constructor<T>,
   method: keyof T,
@@ -87,7 +88,7 @@ function getSimpleConsumeCallback<T extends {}>(
   const invoker = container.createMethodInvoker(
     target,
     method,
-    interceptProviders,
+    middlewares,
     SimpleMessageConsumeContext,
     MessageConsumeContext,
   );
@@ -99,7 +100,7 @@ function getSimpleConsumeCallback<T extends {}>(
 
 function getBatchedConsumeCallback<T extends {}>(
   container: Container,
-  interceptProviders: Constructor<AsyncInterceptProvider>[],
+  middlewares: Constructor<CompatMiddleware>[],
   consumerGroupId: string,
   target: Constructor<T>,
   method: keyof T,
@@ -107,7 +108,7 @@ function getBatchedConsumeCallback<T extends {}>(
   const invoker = container.createMethodInvoker(
     target,
     method,
-    interceptProviders,
+    middlewares,
     BatchedMessageConsumeContext,
     MessageConsumeContext,
   );
@@ -132,10 +133,10 @@ function scanPrototypeMethod(
       continue;
     }
     const {topic, fromBeginning} = getSubscribeOption(subscribeMetadata, container);
-    const interceptProviders = [
-      ...(option.globalInterceptProviders ?? []),
-      ...controllerMetadata.interceptProviders,
-      ...subscribeMetadata.interceptProviders,
+    const middlewares = [
+      ...((option.middlewares ?? option.globalInterceptProviders ?? []) as Constructor<CompatMiddleware>[]),
+      ...controllerMetadata.middlewares,
+      ...subscribeMetadata.middlewares,
     ];
 
     switch (subscribeMetadata.type) {
@@ -145,7 +146,7 @@ function scanPrototypeMethod(
             topic,
             getSimpleConsumeCallback(
               container,
-              interceptProviders,
+              middlewares,
               messageConsumer.consumerGroupId,
               controllerMetadata.target,
               methodKey,
@@ -159,7 +160,7 @@ function scanPrototypeMethod(
           topic,
           consumer: getBatchedConsumeCallback(
             container,
-            interceptProviders,
+            middlewares,
             messageConsumer.consumerGroupId,
             controllerMetadata.target,
             methodKey,
