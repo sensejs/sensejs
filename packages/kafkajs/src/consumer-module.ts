@@ -19,6 +19,7 @@ import {
   KafkaReceivedMessage,
   MessageConsumer,
   MessageConsumerOption,
+  KafkaLogAdapterOption,
 } from '@sensejs/kafkajs-standalone';
 import {
   BatchedMessageConsumeContext,
@@ -33,7 +34,6 @@ import {
   SubscribeTopicMetadata,
   SubscribeTopicOption,
 } from './consumer-decorators.js';
-import {KafkaLogAdapterOption} from '@sensejs/kafkajs-standalone/src/logging';
 
 export interface ConfigurableMessageConsumerOption extends Omit<MessageConsumerOption, 'logOption'> {
   logOption?: KafkaLogAdapterOption;
