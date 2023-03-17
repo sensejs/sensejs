@@ -1,12 +1,12 @@
-import {createHttpModule} from '@sensejs/http-koa-platform';
-import {ExampleController} from './example.controller';
+import {createKoaHttpModule} from '@sensejs/http-koa-platform';
 import {RequestTimingMiddleware} from './request-timing.middleware.js';
-import PublishingModule from '../example';
 import {TracingMiddleware} from './tracing.middleware.js';
 import {ErrorHandlerMiddleware} from './error-handler.middleware.js';
 import {DatabaseTransactionMiddleware} from '../database/index.js';
+import {ExampleController} from './example.controller.js';
+import PublishingModule from '../example/index.js';
 
-export default createHttpModule({
+export default createKoaHttpModule({
   httpOption: {
     listenPort: 3000,
     listenAddress: '0.0.0.0',

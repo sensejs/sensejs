@@ -35,11 +35,26 @@ To install SenseJS, you need to at least install the following packages,
 - `@sensejs/container`
 - `@sensejs/core`
 
+and you need to enable `experimentalDecorators` and `emitDecoratorMetadata` in `tsconfig.json` of your project.
+
+```json5
+
+{
+  "compileOptions": {
+    //...
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    //...
+  }
+}
+
+```
+
+
 There are also some extra packages available based on your need,
 
-- `@sensejs/http`, can be used when you're building an HTTP service.
+- `@sensejs/http`, an injection based Http framework.
 - `@sensejs/kafkajs`, that integrates `@sensejs/kafkajs-standalone` to SenseJS, which is a high-level encapsulation of `kafkajs`.
-- `@sensejs/typeorm`, integrates `typeorm` to SenseJS.
 - `@sensejs/config`, integrates `config` to SenseJS.
 
 

@@ -6,22 +6,25 @@ sidebar_position: 2
 
 Let us started with a boring hello world app to see how a SenseJS application looks like.
 
+The code of the example in this articles can be found at the directory
+[./examples/hello-world](https://github.com/sensejs/sensejs/tree/master/examples/hello-world)
+in the [SenseJs repository].
+
 ## Prerequisites
 
-You shall set up a Node.js workspace with the following package installed.
+However, if you would like to write the code from scratch, you need to set up a Node.js workspace with the following
+package installed.
 
-- `ts-node`. we'll use it to run the demo. you can also install `typescript` instead and compile the source file
-  manually before running.
+- Install `reflect-metadata`, `@sensejs/http`, `@sensejs/core`. These package are required by this demo.
 
-- `reflect-metadata`, `@sensejs/http`, `@sensejs/core`. These package are required by this demo.
+- Install `typescript`, if you don't have one installed globally.
 
-You can also find the complete source code in `examples/hello-world` of [SenseJS repository].
+- Optionally `ts-node`, we'll use it to run the demo. you can also compile the source file
+  manually before running the app.
 
-## Setup
+## The code
 
-Create a file named, say `main.ts`, with the following content.
-
-If you don't want to do it by hand, you can also
+There is only a single file named `main.ts` in this example, with the following content.
 
 ```typescript
 import 'reflect-metadata';

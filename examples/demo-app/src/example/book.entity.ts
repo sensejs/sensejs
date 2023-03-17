@@ -1,5 +1,5 @@
-import {Entity, ManyToOne, Property} from '@mikro-orm/core';
-import {AuthorEntity} from './author.entity';
+import {Entity, ManyToOne, Property, Rel} from '@mikro-orm/core';
+import {AuthorEntity} from './author.entity.js';
 import crypto from 'crypto';
 
 @Entity()
@@ -11,9 +11,9 @@ export class BookEntity {
   name: string;
 
   @ManyToOne(() => AuthorEntity)
-  author: AuthorEntity;
+  author: Rel<AuthorEntity>;
 
-  constructor(name: string, author: AuthorEntity) {
+  constructor(name: string, author: Rel<AuthorEntity>) {
     this.name = name;
     this.author = author;
   }

@@ -1,5 +1,5 @@
-import {AuthorEntity} from './author.entity';
-import {BookEntity} from './book.entity';
+import {AuthorEntity} from './author.entity.js';
+import {BookEntity} from './book.entity.js';
 import {Component, Inject} from '@sensejs/core';
 import {EntityManager} from '@mikro-orm/core';
 

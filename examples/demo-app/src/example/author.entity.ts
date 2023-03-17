@@ -1,5 +1,5 @@
 import {Entity, Property} from '@mikro-orm/core';
-import {BookEntity} from './book.entity';
+import {BookEntity} from './book.entity.js';
 import crypto from 'crypto';
 
 @Entity()

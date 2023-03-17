@@ -167,15 +167,21 @@ importers:
 
   examples/injection:
     dependencies:
+      '@sensejs/container':
+        specifier: workspace:*
+        version: link:../../packages/container
       '@sensejs/core':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/core
       '@sensejs/http-common':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/http-common
       '@sensejs/http-koa-platform':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../packages/http-koa-platform
+      '@sensejs/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       reflect-metadata:
         specifier: ^0.1.13
         version: 0.1.13

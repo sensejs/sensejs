@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2018",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
