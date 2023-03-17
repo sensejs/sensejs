@@ -1,6 +1,8 @@
 import {
+  AsyncInterceptProvider,
   Class,
   ClassServiceId,
+  CompatMiddleware,
   Constructor,
   GeneralServiceId,
   InjectScope,
@@ -101,9 +103,16 @@ export function MiddlewareClass<T extends ServiceId[]>(...serviceIds: T) {
 /**
  * @deprecated Use MiddlewareClass instead
  */
-export const InterceptProviderClass = MiddlewareClass;
+export function InterceptProviderClass<T extends ServiceId[]>(...serviceIds: T) {
+  return <U extends Constructor<AsyncInterceptProvider<ServiceTypeOf<T>>>>(constructor: U): U => {
+    const proxy = new Proxy<U>(constructor, {});
+    Reflect.defineMetadata(METADATA_KEY, serviceIds, constructor);
+    Injectable()(constructor);
+    return constructor;
+  };
+}
 
-export function getInterceptProviderMetadata(constructor: Constructor): ServiceId[] {
+export function getMiddlewareMetadata(constructor: Constructor): ServiceId<CompatMiddleware>[] {
   const metadata = Reflect.getOwnMetadata(METADATA_KEY, constructor);
   if (!Array.isArray(metadata)) {
     throw new Error('missing metadata');

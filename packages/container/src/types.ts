@@ -67,7 +67,11 @@ export interface AsyncInterceptProvider<T extends any[] = any[]> {
   intercept(next: (...values: T) => Promise<void>): Promise<void>;
 }
 
-export type Middleware<T extends any[] = any[]> =
+export interface Middleware<T extends any[] = any[]> {
+  handle(next: (...values: T) => Promise<void>): Promise<void>;
+}
+
+export type CompatMiddleware<T extends any[] = any[]> =
   | {
       handle?: undefined;
       /**
