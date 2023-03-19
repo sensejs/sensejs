@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/utility",
-  "version": "0.10.0-alpha.0",
+  "version": "0.10.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -32,6 +32,6 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:0.10.0-alpha.0"
+    "@sensejs/testing-utility": "workspace:*"
   }
 }

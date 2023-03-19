@@ -218,7 +218,7 @@ importers:
   packages/core:
     dependencies:
       '@sensejs/utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:^0.10.0
         version: link:../utility
       rxjs:
         specifier: ^7.8.0
@@ -243,7 +243,7 @@ importers:
   packages/http-common:
     dependencies:
       '@sensejs/utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:^0.10.0
         version: link:../utility
       tslib:
         specifier: ^2.5.0
@@ -268,7 +268,7 @@ importers:
         specifier: ^12.0.0
         version: 12.0.0
       '@sensejs/utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:0.10.0
         version: link:../utility
       '@types/koa':
         specifier: ^2.13.5
@@ -317,10 +317,10 @@ importers:
   packages/kafkajs:
     dependencies:
       '@sensejs/kafkajs-standalone':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:^0.10.0
         version: link:../kafkajs-standalone
       '@sensejs/utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:^0.10.0
         version: link:../utility
       lodash:
         specifier: ^4.17.21
@@ -345,7 +345,7 @@ importers:
   packages/kafkajs-standalone:
     dependencies:
       '@sensejs/utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:^0.10.0
         version: link:../utility
       lightning-pool:
         specifier: ^4.2.1
@@ -422,7 +422,7 @@ importers:
         version: 9.0.0
     devDependencies:
       '@sensejs/testing-utility':
-        specifier: workspace:0.10.0-alpha.0
+        specifier: workspace:*
         version: link:../../tools/testing-utility
 
   tools/testing-utility: {}

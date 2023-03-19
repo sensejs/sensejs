@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/kafkajs-standalone",
-  "version": "0.10.0-alpha.0",
+  "version": "0.10.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -28,7 +28,7 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:0.10.0-alpha.0",
+    "@sensejs/utility": "workspace:^0.10.0",
     "lightning-pool": "^4.2.1",
     "long": "^4.0.0",
     "rxjs": "^7.8.0",

@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/http-common",
-  "version": "0.10.0-alpha.1",
+  "version": "0.10.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -26,7 +26,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@sensejs/utility": "workspace:0.10.0-alpha.0",
+    "@sensejs/utility": "workspace:^0.10.0",
     "tslib": "^2.5.0"
   },
   "devDependencies": {
@@ -35,8 +35,8 @@
     "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.10.0-alpha.2",
-    "@sensejs/core": "workspace:^0.10.0-alpha.1",
+    "@sensejs/container": "workspace:^0.10.0",
+    "@sensejs/core": "workspace:^0.10.0",
     "reflect-metadata": "^0.1.13"
   },
   "author": "LAN Xingcan",
