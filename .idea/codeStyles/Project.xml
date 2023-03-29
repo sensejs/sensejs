@@ -22,6 +22,7 @@
       <option name="ENFORCE_TRAILING_COMMA" value="WhenMultiline" />
       <option name="USE_EXPLICIT_JS_EXTENSION" value="TRUE" />
       <option name="SPACES_WITHIN_OBJECT_TYPE_BRACES" value="false" />
+      <option name="BLACKLIST_IMPORTS" value="rxjs/Rx,node_modules/**,**/node_modules/**,@angular/material,@angular/material/typings/**,@sensejs/*/src/**" />
       <option name="IMPORT_USE_NODE_RESOLUTION" value="GLOBAL" />
       <option name="USE_PATH_MAPPING" value="DIFFERENT_PATHS" />
     </TypeScriptCodeStyleSettings>
