@@ -6,17 +6,17 @@ export class KafkaJsTransactionalMessageProducer
   extends BaseKafkaJsMessageProducer
   implements TransactionalMessageProducer
 {
-  private tx?: Transaction = undefined;
+  #tx: Transaction | null = null;
   constructor(option: KafkaSendOption, private producer: Producer, onRelease: (e?: Error) => Promise<void>) {
     super(option, onRelease);
   }
 
   protected async sender() {
-    if (this.tx) {
-      return this.tx;
+    if (this.#tx) {
+      return this.#tx;
     }
-    this.tx = await this.producer.transaction();
-    return this.tx;
+    this.#tx = await this.producer.transaction();
+    return this.#tx;
   }
 
   async sendOffset(consumerGroupId: string, offsets: Offsets) {
@@ -31,29 +31,29 @@ export class KafkaJsTransactionalMessageProducer
 
   async abort() {
     this.checkReleased();
-    const tx = this.tx;
+    const tx = this.#tx;
     if (tx) {
       await tx.abort();
-      this.tx = undefined;
+      this.#tx = null;
     }
   }
 
   async commit() {
     this.checkReleased();
-    const tx = this.tx;
-    this.tx = undefined;
+    const tx = this.#tx;
+    this.#tx = null;
     if (tx) {
       await tx.commit();
-      this.tx = undefined;
+      this.#tx = null;
     }
   }
 
   protected async internalRelease(e?: Error): Promise<unknown> {
-    const tx = this.tx;
-    this.tx = undefined;
+    const tx = this.#tx;
+    this.#tx = null;
     if (tx) {
       await tx.commit();
-      this.tx = undefined;
+      this.#tx = null;
     }
     return super.internalRelease(e);
   }

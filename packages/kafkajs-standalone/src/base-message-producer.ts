@@ -5,7 +5,7 @@ export abstract class BaseKafkaJsMessageProducer implements SimpleMessageProduce
   protected allMessageSend?: Promise<unknown>;
   protected onRelease?: (e?: Error) => void;
 
-  constructor(private option: KafkaSendOption, onRelease: (e?: Error) => Promise<void>) {
+  protected constructor(private option: KafkaSendOption, onRelease: (e?: Error) => Promise<void>) {
     this.onRelease = onRelease;
   }
 
