@@ -14,7 +14,7 @@ import {
 } from '@sensejs/core';
 import {IncomingHttpHeaders, RequestListener} from 'http';
 import {AsyncInterceptProvider, CompatMiddleware, Container, Middleware} from '@sensejs/container';
-import http from 'http';
+import * as http from 'http';
 import {promisify} from 'util';
 
 export enum HttpMethod {
