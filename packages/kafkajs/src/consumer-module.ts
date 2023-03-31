@@ -198,10 +198,12 @@ function scanComponents(
 }
 
 export class AbstractKafkaConsumerGroupModule {
-  private readonly messageConsumer;
+  readonly #messageConsumer;
+  readonly #moduleOption;
 
-  constructor(option: ConfigurableMessageConsumerOption, private moduleOption: MessageConsumerModuleOption) {
-    this.messageConsumer = new MessageConsumer(option);
+  constructor(option: ConfigurableMessageConsumerOption, moduleOption: MessageConsumerModuleOption) {
+    this.#messageConsumer = new MessageConsumer(option);
+    this.#moduleOption = moduleOption;
   }
 
   @OnModuleStart()
@@ -211,16 +213,16 @@ export class AbstractKafkaConsumerGroupModule {
     @Inject(ProcessManager) pm: ProcessManager,
   ): Promise<void> {
     moduleScanner.scanModule((moduleMetadata) => {
-      scanComponents(container, this.messageConsumer, moduleMetadata, this.moduleOption);
+      scanComponents(container, this.#messageConsumer, moduleMetadata, this.#moduleOption);
     });
-    const promise = this.messageConsumer.start();
-    this.messageConsumer.wait().catch((e) => pm.shutdown(e));
+    const promise = this.#messageConsumer.start();
+    this.#messageConsumer.wait().catch((e) => pm.shutdown(e));
     return promise;
   }
 
   @OnModuleStop()
   async onStop(): Promise<void> {
-    return this.messageConsumer.stop();
+    return this.#messageConsumer.stop();
   }
 }
 

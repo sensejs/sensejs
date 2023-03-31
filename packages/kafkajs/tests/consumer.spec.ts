@@ -145,14 +145,19 @@ describe('Subscriber', () => {
         middlewares: [MiddlewareC],
       })
       simple(
-        @Inject(SimpleMessageConsumeContext) ctx: MessageConsumeContext,
+        @Inject(SimpleMessageConsumeContext) ctx: SimpleMessageConsumeContext,
         @Inject(symbolA) global: any,
         @Inject(symbolB) controller: any,
         @Inject(symbolC) fromTopic: any,
         @Inject(ProcessManager) processManager: ProcessManager,
       ) {
-        // TODO: Perform e2e test to make following assert possible
         emitBatchMessage();
+        expect(ctx.topic).toBe(topic);
+        expect(ctx.consumerGroup).toBe(groupId);
+        expect(ctx.partition).toBe(0);
+        expect(ctx.firstOffset).toBe('0');
+        expect(ctx.lastOffset).toBe('0');
+        expect(ctx.offset).toBe('0');
       }
 
       @BatchedSubscribeTopic({
@@ -163,9 +168,15 @@ describe('Subscriber', () => {
         @Inject(BatchedMessageConsumeContext) ctx: BatchedMessageConsumeContext,
         @Inject(ProcessManager) processManager: ProcessManager,
       ) {
-        // TODO: Perform e2e test to make following assert possible
-        // expect(ctx.consumerGroup).toBe(groupId);
-        // expect(ctx.partition);
+        expect(ctx.consumerGroup).toBe(groupId);
+        expect(ctx.topic).toBe(batchedTopic);
+        expect(ctx.partition).toBe(0);
+        expect(ctx.messageInfo().messages.length).toBe(1);
+        expect(ctx.firstOffset).toBe('0');
+        expect(ctx.lastOffset).toBe('1');
+        expect(ctx.offset).toBe('1');
+        ctx.resolveOffset(ctx.lastOffset);
+        ctx.heartbeat();
         processManager.shutdown();
       }
     }
