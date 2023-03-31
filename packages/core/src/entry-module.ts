@@ -19,47 +19,47 @@ export interface EntryModuleExecOption {
 }
 
 export class EntryModule<T extends {} = {}> {
-  readonly container: Container;
-  private readonly moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
-  private readonly entryModuleInstance: ModuleInstance<T>;
-  private readonly backgroundTaskQueue = new BackgroundTaskQueue();
-  private readonly moduleScanner: ModuleScanner;
-  private bootstrapPromise?: Promise<void>;
-  private startPromise?: Promise<void>;
-  private stopPromise?: Promise<void>;
-  private shutdownPromise?: Promise<void>;
+  readonly #container: Container;
+  readonly #moduleInstanceMap: Map<Constructor, ModuleInstance> = new Map();
+  readonly #entryModuleInstance: ModuleInstance<T>;
+  readonly #backgroundTaskQueue = new BackgroundTaskQueue();
+  readonly #moduleScanner: ModuleScanner;
+  #bootstrapPromise?: Promise<void>;
+  #startPromise?: Promise<void>;
+  #stopPromise?: Promise<void>;
+  #shutdownPromise?: Promise<void>;
 
   public constructor(
     entryModule: Constructor<T>,
     processManager?: ProcessManager,
     loader: ModuleMetadataLoader = new ModuleMetadataLoader(),
   ) {
-    this.moduleScanner = new ModuleScanner(entryModule, loader);
-    this.container = new Container();
-    this.container.addBinding({
+    this.#moduleScanner = new ModuleScanner(entryModule, loader);
+    this.#container = new Container();
+    this.#container.addBinding({
       type: BindingType.CONSTANT,
-      value: this.container,
+      value: this.#container,
       id: Container,
     });
     if (processManager) {
-      this.container.addBinding({
+      this.#container.addBinding({
         type: BindingType.CONSTANT,
         value: processManager,
         id: ProcessManager,
       });
     }
-    this.container.addBinding({
+    this.#container.addBinding({
       type: BindingType.CONSTANT,
-      value: this.backgroundTaskQueue,
+      value: this.#backgroundTaskQueue,
       id: BackgroundTaskQueue,
     });
-    this.container.addBinding({
+    this.#container.addBinding({
       type: BindingType.CONSTANT,
-      value: this.moduleScanner,
+      value: this.#moduleScanner,
       id: ModuleScanner,
     });
 
-    this.entryModuleInstance = new ModuleInstance<T>(entryModule, this.container, loader, this.moduleInstanceMap);
+    this.#entryModuleInstance = new ModuleInstance<T>(entryModule, this.#container, loader, this.#moduleInstanceMap);
   }
 
   static async run<T extends {}>(
@@ -130,21 +130,21 @@ export class EntryModule<T extends {} = {}> {
     }
   }
 
-  private static async bootstrapModule<T extends {}>(moduleInstance: ModuleInstance<T>) {
+  static async #bootstrapModule<T extends {}>(moduleInstance: ModuleInstance<T>) {
     for (const dependency of moduleInstance.dependencies) {
-      await EntryModule.bootstrapModule(dependency);
+      await EntryModule.#bootstrapModule(dependency);
     }
     try {
       await moduleInstance.bootstrap();
     } catch (e) {
       for (const dependency of moduleInstance.dependencies) {
-        await EntryModule.shutdownModule(dependency);
+        await EntryModule.#shutdownModule(dependency);
       }
       throw e;
     }
   }
 
-  private static async shutdownModule<T extends {}>(moduleInstance: ModuleInstance<T>) {
+  static async #shutdownModule<T extends {}>(moduleInstance: ModuleInstance<T>) {
     if (--moduleInstance.referencedCounter > 0) {
       return;
     }
@@ -154,56 +154,56 @@ export class EntryModule<T extends {} = {}> {
       if (!dependency) {
         return;
       }
-      await this.shutdownModule(dependency);
+      await this.#shutdownModule(dependency);
     }
   }
 
   public async start(): Promise<void> {
-    if (this.startPromise) {
-      return this.startPromise;
+    if (this.#startPromise) {
+      return this.#startPromise;
     }
-    this.startPromise = this.bootstrap().then(() => {
-      this.container.validate();
-      return this.entryModuleInstance.start();
+    this.#startPromise = this.bootstrap().then(() => {
+      this.#container.validate();
+      return this.#entryModuleInstance.start();
     });
-    return this.startPromise;
+    return this.#startPromise;
   }
 
   public async bootstrap() {
-    if (this.bootstrapPromise) {
-      return this.bootstrapPromise;
+    if (this.#bootstrapPromise) {
+      return this.#bootstrapPromise;
     }
-    this.bootstrapPromise = EntryModule.bootstrapModule(this.entryModuleInstance);
-    return this.bootstrapPromise;
+    this.#bootstrapPromise = EntryModule.#bootstrapModule(this.#entryModuleInstance);
+    return this.#bootstrapPromise;
   }
 
   public async stop(): Promise<void> {
-    if (this.stopPromise) {
-      return this.stopPromise;
+    if (this.#stopPromise) {
+      return this.#stopPromise;
     }
-    this.stopPromise = this.startPromise
-      ? this.startPromise.catch(() => {}).then(() => this.entryModuleInstance.stop())
+    this.#stopPromise = this.#startPromise
+      ? this.#startPromise.catch(() => {}).then(() => this.#entryModuleInstance.stop())
       : Promise.resolve();
-    return this.stopPromise;
+    return this.#stopPromise;
   }
 
   public async shutdown() {
-    if (this.shutdownPromise) {
-      return this.shutdownPromise;
+    if (this.#shutdownPromise) {
+      return this.#shutdownPromise;
     }
-    this.shutdownPromise = this.stop()
+    this.#shutdownPromise = this.stop()
       .finally(() => {
-        return EntryModule.shutdownModule(this.entryModuleInstance);
+        return EntryModule.#shutdownModule(this.#entryModuleInstance);
       })
-      .finally(() => this.backgroundTaskQueue.waitAllTaskFinished());
-    return this.shutdownPromise;
+      .finally(() => this.#backgroundTaskQueue.waitAllTaskFinished());
+    return this.#shutdownPromise;
   }
 
   public exec<K extends keyof T>(method: K): InvokeResult<T, K> {
-    return invokeMethod(this.container.createResolveSession(), this.entryModuleInstance.moduleClass, method);
+    return invokeMethod(this.#container.createResolveSession(), this.#entryModuleInstance.moduleClass, method);
   }
 
   public run<K extends keyof T>(method: K): InvokeResult<T, K> {
-    return invokeMethod(this.container.createResolveSession(), this.entryModuleInstance.moduleClass, method);
+    return invokeMethod(this.#container.createResolveSession(), this.#entryModuleInstance.moduleClass, method);
   }
 }
