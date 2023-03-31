@@ -36,11 +36,10 @@ export class AsyncMethodInvokeSession<
   K extends keyof T,
   ContextIds extends any[] = [],
 > extends ResolveSession {
-  private readonly contextIds: ContextIds;
-  private readonly performInvoke;
-  private readonly result: Promise<InvokeResult<T, K>>;
+  readonly #contextIds: ContextIds;
+  readonly #performInvoke;
+  readonly #result: Promise<InvokeResult<T, K>>;
 
-  // private promise: Promise<InvokeResult<T, K>>
 
   constructor(
     bindingMap: Map<ServiceId, Binding<any>>,
@@ -54,10 +53,10 @@ export class AsyncMethodInvokeSession<
     ...contextIds: ContextIds
   ) {
     super(bindingMap, compiledInstructionMap, globalCache, validatedBindings);
-    this.contextIds = contextIds;
+    this.#contextIds = contextIds;
     let resolveCallback: (value: InvokeResult<T, K>) => void;
     let rejectCallback: (reason?: any) => void;
-    this.result = new Promise<InvokeResult<T, K>>((resolve, reject) => {
+    this.#result = new Promise<InvokeResult<T, K>>((resolve, reject) => {
       resolveCallback = resolve;
       rejectCallback = reject;
     });
@@ -91,78 +90,94 @@ export class AsyncMethodInvokeSession<
         });
       };
     }
-    this.performInvoke = func;
+    this.#performInvoke = func;
   }
 
   async invokeTargetMethod(...ctx: ServiceTypeOf<ContextIds>): Promise<InvokeResult<T, K>> {
-    for (let i = 0; i < ctx.length && i < this.contextIds.length; i++) {
-      this.addTemporaryConstantBinding(this.contextIds[i], ctx[i]);
+    for (let i = 0; i < ctx.length && i < this.#contextIds.length; i++) {
+      this.addTemporaryConstantBinding(this.#contextIds[i], ctx[i]);
     }
     return new Promise<InvokeResult<T, K>>((resolve, reject) => {
-      this.performInvoke()
-        .then(() => this.result.then(resolve))
+      this.#performInvoke()
+        .then(() => this.#result.then(resolve))
         .catch(reject);
     });
   }
 }
 
 export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends any[]> {
-  private readonly proxyConstructInstructions: Instruction[];
-  private readonly targetFunction: Function;
-  private readonly metadataOfMiddlewares: [Instruction[], ServiceId[]][] = [];
-  private readonly proxyConstructorInjectionMetadata;
-  private readonly contextIds;
+  readonly #proxyConstructInstructions: Instruction[];
+  readonly #targetFunction: Function;
+  readonly #interceptorProviderAndMetadata: [Instruction[], ServiceId[]][] = [];
+  readonly #proxyConstructorInjectionMetadata;
+  readonly #contextIds;
+  readonly #bindingMap;
+  readonly #compiledInstructionMap;
+  readonly #globalCache;
+  readonly #validatedSet;
+  readonly #targetConstructor;
+  readonly #targetMethod;
+  readonly middlewares;
 
   constructor(
-    readonly bindingMap: Map<ServiceId, Binding<any>>,
-    readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
-    private globalCache: Map<ServiceId, any>,
-    private validatedSet: Set<ServiceId>,
-    private targetConstructor: Constructor<T>,
-    private targetMethod: K,
-    private middlewares: Constructor<Middleware<any>>[],
+    bindingMap: Map<ServiceId, Binding<any>>,
+    compiledInstructionMap: Map<ServiceId, Instruction[]>,
+    globalCache: Map<ServiceId, any>,
+    validatedSet: Set<ServiceId>,
+    targetConstructor: Constructor<T>,
+    targetMethod: K,
+    middlewares: Constructor<Middleware<any>>[],
     ...contextIds: ContextIds
   ) {
-    this.contextIds = contextIds;
+    this.#bindingMap = bindingMap;
+    this.#compiledInstructionMap = compiledInstructionMap;
+    this.#globalCache = globalCache;
+    this.#validatedSet = validatedSet;
+    this.#targetConstructor = targetConstructor;
+    this.#targetMethod = targetMethod;
+    this.middlewares = middlewares;
+    this.#contextIds = contextIds;
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(targetConstructor, targetMethod);
-    this.proxyConstructorInjectionMetadata = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(proxy));
-    this.validate();
-    this.proxyConstructInstructions = [
+    this.#proxyConstructorInjectionMetadata = convertParamInjectionMetadata(
+      ensureConstructorParamInjectMetadata(proxy),
+    );
+    this.#validate();
+    this.#proxyConstructInstructions = [
       {
         code: InstructionCode.BUILD,
         cacheScope: InjectScope.TRANSIENT,
         factory: constructorToFactory(proxy),
-        paramCount: this.proxyConstructorInjectionMetadata.length,
+        paramCount: this.#proxyConstructorInjectionMetadata.length,
         serviceId: proxy,
       },
-      ...compileParamInjectInstruction(this.proxyConstructorInjectionMetadata, true),
+      ...compileParamInjectInstruction(this.#proxyConstructorInjectionMetadata, true),
     ];
-    this.targetFunction = fn;
+    this.#targetFunction = fn;
   }
 
   createInvokeSession() {
     return new AsyncMethodInvokeSession(
-      this.bindingMap,
-      this.compiledInstructionMap,
-      this.globalCache,
-      this.validatedSet,
-      this.metadataOfMiddlewares,
-      this.proxyConstructInstructions,
-      this.targetConstructor,
-      this.targetFunction,
-      ...this.contextIds,
+      this.#bindingMap,
+      this.#compiledInstructionMap,
+      this.#globalCache,
+      this.#validatedSet,
+      this.#interceptorProviderAndMetadata,
+      this.#proxyConstructInstructions,
+      this.#targetConstructor,
+      this.#targetFunction,
+      ...this.#contextIds,
     );
   }
 
-  private validate() {
-    const validatedSet = new Set(new Map(this.bindingMap).keys());
-    this.contextIds.forEach((id) => validatedSet.add(id));
+  #validate() {
+    const validatedSet = new Set(new Map(this.#bindingMap).keys());
+    this.#contextIds.forEach((id) => validatedSet.add(id));
     for (const middleware of this.middlewares) {
       const pim = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(middleware));
       validateParamInjectMetadata(pim, middleware.name, validatedSet);
       const metadata = getMiddlewareMetadata(middleware);
       metadata.forEach((x) => validatedSet.add(x));
-      this.metadataOfMiddlewares.push([
+      this.#interceptorProviderAndMetadata.push([
         [
           {
             code: InstructionCode.BUILD,
@@ -177,8 +192,8 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
       ]);
     }
     validateParamInjectMetadata(
-      this.proxyConstructorInjectionMetadata,
-      `${this.targetConstructor.name}.${String(this.targetMethod)}`,
+      this.#proxyConstructorInjectionMetadata,
+      `${this.#targetConstructor.name}.${String(this.#targetMethod)}`,
       validatedSet,
     );
   }
