@@ -52,13 +52,13 @@ export class ModuleInstance<T extends {} = {}> {
   public readonly dependencies: ModuleInstance[] = [];
   public readonly moduleMetadata: ModuleMetadata<T>;
   public referencedCounter = 0;
-  private isBootstrapped = false;
-  private isStarted = false;
-  private startPromise?: Promise<void>;
-  private bootstrapPromise?: Promise<void>;
-  private stopPromise?: Promise<void>;
-  private destroyPromise?: Promise<void>;
-  private moduleInstance?: any;
+  #isBootstrapped = false;
+  #isStarted = false;
+  #startPromise?: Promise<void>;
+  #bootstrapPromise?: Promise<void>;
+  #stopPromise?: Promise<void>;
+  #destroyPromise?: Promise<void>;
+  #moduleInstance?: any;
 
   constructor(
     readonly moduleClass: Constructor<T>,
@@ -79,78 +79,78 @@ export class ModuleInstance<T extends {} = {}> {
   }
 
   async bootstrap(): Promise<void> {
-    if (this.bootstrapPromise) {
-      return this.bootstrapPromise;
+    if (this.#bootstrapPromise) {
+      return this.#bootstrapPromise;
     }
-    this.bootstrapPromise = this.performBootstrap();
-    return this.bootstrapPromise;
+    this.#bootstrapPromise = this.#performBootstrap();
+    return this.#bootstrapPromise;
   }
 
   async start(): Promise<void> {
-    if (this.startPromise) {
-      return this.startPromise;
+    if (this.#startPromise) {
+      return this.#startPromise;
     }
-    this.startPromise = this.performStart();
-    return this.startPromise;
+    this.#startPromise = this.#performStart();
+    return this.#startPromise;
   }
 
   async stop(): Promise<void> {
-    if (this.stopPromise) {
-      return this.stopPromise;
+    if (this.#stopPromise) {
+      return this.#stopPromise;
     }
-    this.stopPromise = this.startPromise
-      ? this.startPromise.catch(() => {}).then(() => this.performStop())
+    this.#stopPromise = this.#startPromise
+      ? this.#startPromise.catch(() => {}).then(() => this.#performStop())
       : Promise.resolve();
-    return this.stopPromise;
+    return this.#stopPromise;
   }
 
   async destroy(): Promise<void> {
-    if (!this.bootstrapPromise) {
+    if (!this.#bootstrapPromise) {
       return;
     }
-    if (this.destroyPromise) {
-      return this.destroyPromise;
+    if (this.#destroyPromise) {
+      return this.#destroyPromise;
     }
-    this.destroyPromise = (this.startPromise ? this.startPromise : this.bootstrapPromise)
+    this.#destroyPromise = (this.#startPromise ? this.#startPromise : this.#bootstrapPromise)
       .catch(() => {})
-      .then(() => this.performDestroy());
-    return this.destroyPromise;
+      .then(() => this.#performDestroy());
+    return this.#destroyPromise;
   }
 
-  private bindDynamicComponents(components: Constructor[]) {
+  #bindDynamicComponents(components: Constructor[]) {
     if (components.length <= 0) {
       return;
     }
 
     this.moduleMetadata.dynamicComponents = components;
-    this.bindComponents(components);
+    this.#bindComponents(components);
   }
 
-  private bindDynamicFactories(providers: FactoryProvider[]) {
+  #bindDynamicFactories(providers: FactoryProvider[]) {
     if (providers.length <= 0) {
       return;
     }
 
     this.moduleMetadata.dynamicFactories = providers;
-    this.bindFactories(providers);
+    this.#bindFactories(providers);
   }
 
-  private bindDynamicConstants(providers: ConstantProvider[]) {
+  #bindDynamicConstants(providers: ConstantProvider[]) {
     if (providers.length <= 0) {
       return;
     }
 
     this.moduleMetadata.dynamicConstants = providers;
-    this.bindConstants(providers);
+    this.#bindConstants(providers);
   }
 
-  private bindComponents(components: Constructor[]) {
+  #bindComponents(components: Constructor[]) {
     components.forEach((component) => {
       bindComponent(this.container, component, getComponentMetadata(component));
     });
   }
 
-  private bindFactories(factories: FactoryProvider[]) {
+  #bindFactories(factories: FactoryProvider[]) {
     factories.forEach((factoryProvider: FactoryProvider) => {
       const {provide, factory, scope = InjectScope.SESSION, ...rest} = factoryProvider;
       this.container.add(factory);
@@ -166,7 +166,7 @@ export class ModuleInstance<T extends {} = {}> {
     });
   }
 
-  private bindConstants(constants: ConstantProvider[]) {
+  #bindConstants(constants: ConstantProvider[]) {
     constants.forEach((constantProvider) => {
       this.container.addBinding({
         type: BindingType.CONSTANT,
@@ -176,12 +176,12 @@ export class ModuleInstance<T extends {} = {}> {
     });
   }
 
-  private async performBootstrap() {
+  async #performBootstrap() {
     this.container.add(this.moduleClass);
-    this.bindComponents(this.moduleMetadata.components);
-    this.bindConstants(this.moduleMetadata.constants);
-    this.bindFactories(this.moduleMetadata.factories);
-    this.moduleInstance = this.container.resolve<object>(this.moduleClass);
+    this.#bindComponents(this.moduleMetadata.components);
+    this.#bindConstants(this.moduleMetadata.constants);
+    this.#bindFactories(this.moduleMetadata.factories);
+    this.#moduleInstance = this.container.resolve<object>(this.moduleClass);
     const dynamicComponentLoader = new DynamicModuleLoader();
     for (const method of this.moduleMetadata.onModuleCreate) {
       await invokeMethod(
@@ -190,24 +190,24 @@ export class ModuleInstance<T extends {} = {}> {
         method,
       );
     }
-    this.bindDynamicComponents(dynamicComponentLoader.getComponents());
-    this.bindDynamicConstants(dynamicComponentLoader.getConstants());
-    this.bindDynamicFactories(dynamicComponentLoader.getFactories());
-    this.isBootstrapped = true;
+    this.#bindDynamicComponents(dynamicComponentLoader.getComponents());
+    this.#bindDynamicConstants(dynamicComponentLoader.getConstants());
+    this.#bindDynamicFactories(dynamicComponentLoader.getFactories());
+    this.#isBootstrapped = true;
   }
 
-  private async performStart() {
+  async #performStart() {
     await Promise.all(this.dependencies.map((x) => x.start()));
     await Promise.all(
       this.moduleMetadata.onModuleStart.map(async (method) => {
         await invokeMethod(this.container.createResolveSession(), this.moduleClass, method);
       }),
     );
-    this.isStarted = true;
+    this.#isStarted = true;
   }
 
-  private async performStop() {
-    if (!this.isStarted) {
+  async #performStop() {
+    if (!this.#isStarted) {
       return;
     }
     await Promise.all(
@@ -218,11 +218,11 @@ export class ModuleInstance<T extends {} = {}> {
     await Promise.all(this.dependencies.map((x) => x.stop()));
   }
 
-  private async performDestroy() {
-    if (!this.isBootstrapped) {
+  async #performDestroy() {
+    if (!this.#isBootstrapped) {
       return;
     }
-    if (this.moduleInstance) {
+    if (this.#moduleInstance) {
       for (const method of this.moduleMetadata.onModuleDestroy.reverse()) {
         await invokeMethod(this.container.createResolveSession(), this.moduleClass, method);
       }

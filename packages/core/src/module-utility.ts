@@ -13,35 +13,35 @@ export abstract class AbstractConnectionFactory<T, Option> extends ComponentFact
   abstract disconnect(): Promise<void>;
 }
 
-export function createConnectionFactory<T, Option>(
+export function createConnectionFactory<T extends {}, Option>(
   init: (option: Option) => Promise<T>,
   destroy: (conn: T) => Promise<void>,
 ): Constructor<AbstractConnectionFactory<T, Option>> {
   @Component()
   @Scope(Scope.SINGLETON)
   class ConnectionFactory extends AbstractConnectionFactory<T, Option> {
-    private connection?: T;
+    #connection: T | undefined = undefined;
 
     constructor() {
       super();
     }
 
     build(): T {
-      if (this.connection) {
-        return this.connection;
+      if (this.#connection) {
+        return this.#connection;
       }
       throw new Error('Requested connection not created yet');
     }
 
     async connect(option: Option): Promise<T> {
-      this.connection = await init(option);
-      return this.connection;
+      this.#connection = await init(option);
+      return this.#connection;
     }
 
     async disconnect() {
-      if (this.connection) {
-        const connection = this.connection;
-        this.connection = undefined;
+      if (this.#connection) {
+        const connection = this.#connection;
+        this.#connection = undefined;
         await destroy(connection);
       }
     }
@@ -70,15 +70,15 @@ export function createConfigHelperFactory<Result, Fallback = Partial<Result>, In
   @Component()
   @Scope(Scope.SINGLETON)
   class ConfigFactory extends ComponentFactory<Result> {
-    private readonly injectedConfig?: Injected;
+    readonly #injectedConfig: Injected | undefined;
 
     constructor(...args: any[]) {
       super();
-      this.injectedConfig = args[0];
+      this.#injectedConfig = args[0];
     }
 
     build(): Result {
-      return configMerger(fallback, this.injectedConfig);
+      return configMerger(fallback, this.#injectedConfig);
     }
   }
 
