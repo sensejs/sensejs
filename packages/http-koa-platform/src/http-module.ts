@@ -53,22 +53,23 @@ export function createKoaHttpModule(option: CreateKoaHttpModuleOption = {}): Con
     requires,
   })
   class KoaHttpModule extends AbstractHttpModule {
-    constructor(
-      @InjectLogger() private logger: Logger,
-      @Inject(optionProvider.provide) private httpOption: KoaHttpOption,
-    ) {
+    #logger;
+    #httpOption;
+    constructor(@InjectLogger() logger: Logger, @Inject(optionProvider.provide) httpOption: KoaHttpOption) {
       super({
         httpOption,
         ...rest,
       });
+      this.#logger = logger;
+      this.#httpOption = httpOption;
     }
 
     protected getAdaptor(): AbstractHttpApplicationBuilder {
       const builder = new KoaHttpApplicationBuilder().setErrorHandler((e) => {
-        this.logger.error('Error occurred when handling http request: ', e);
+        this.#logger.error('Error occurred when handling http request: ', e);
       });
-      if (this.httpOption.queryStringParsingMode) {
-        builder.setQueryStringParsingMode(this.httpOption.queryStringParsingMode);
+      if (this.#httpOption.queryStringParsingMode) {
+        builder.setQueryStringParsingMode(this.#httpOption.queryStringParsingMode);
       }
       return builder;
     }
