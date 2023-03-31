@@ -47,26 +47,26 @@ export interface BatchSubscribeOption {
 type ConsumeOption = SimpleConsumeOption | BatchConsumeOption;
 
 export class MessageConsumer {
-  private client: kafkajs.Kafka;
-  private consumer: kafkajs.Consumer;
-  private consumeOptions: Map<string, ConsumeOption> = new Map();
-  private crashPromise?: Promise<void>;
-  private lastBatchConsumed: Promise<unknown> = Promise.resolve();
-  private workerController = new WorkerController<boolean>();
-  private startedPromise?: Promise<void>;
-  private stoppedPromise?: Promise<void>;
-  private commitOption?: KafkaCommitOption;
+  #client: kafkajs.Kafka;
+  #consumer: kafkajs.Consumer;
+  #consumeOptions: Map<string, ConsumeOption> = new Map();
+  #crashPromise: Promise<void> | null = null;
+  #lastBatchConsumed: Promise<unknown> = Promise.resolve();
+  #workerController = new WorkerController<boolean>();
+  #startedPromise: Promise<void> | null = null;
+  #stoppedPromise: Promise<void> | null = null;
+  #commitOption: KafkaCommitOption | null = null;
   public readonly consumerGroupId;
 
   constructor(option: MessageConsumerOption) {
-    this.client = createKafkaClient(option);
+    this.#client = createKafkaClient(option);
     const {retry, ...rest} = option.fetchOption;
     let crashed!: (e: Error) => void;
-    this.crashPromise = new Promise<void>((resolve, reject) => {
+    this.#crashPromise = new Promise<void>((resolve, reject) => {
       crashed = reject;
     });
 
-    this.consumer = this.client.consumer({
+    this.#consumer = this.#client.consumer({
       retry: {
         ...retry,
         restartOnFailure: async (e) => {
@@ -76,57 +76,57 @@ export class MessageConsumer {
       },
       ...rest,
     });
-    this.commitOption = option.commitOption;
+    this.#commitOption = option.commitOption ?? null;
     this.consumerGroupId = option.fetchOption.groupId;
   }
 
   subscribe(topic: string, consumer: MessageConsumeCallback, fromBeginning: boolean = false): this {
-    this.consumeOptions.set(topic, {type: 'simple', consumer, fromBeginning});
+    this.#consumeOptions.set(topic, {type: 'simple', consumer, fromBeginning});
     return this;
   }
 
   subscribeBatched(option: BatchSubscribeOption): this {
     const {topic, ...rest} = option;
-    this.consumeOptions.set(topic, {type: 'batch', ...rest});
+    this.#consumeOptions.set(topic, {type: 'batch', ...rest});
     return this;
   }
 
   async wait(): Promise<void> {
-    if (!this.startedPromise) {
+    if (!this.#startedPromise) {
       throw new Error('The message consumer is not started');
     }
-    await this.startedPromise;
-    await Promise.race([this.lastBatchConsumed, this.crashPromise]);
+    await this.#startedPromise;
+    await Promise.race([this.#lastBatchConsumed, this.#crashPromise]);
   }
 
   async start(): Promise<void> {
-    if (this.startedPromise) {
-      return this.startedPromise;
+    if (this.#startedPromise) {
+      return this.#startedPromise;
     }
-    this.startedPromise = this.performStart();
-    return this.startedPromise;
+    this.#startedPromise = this.performStart();
+    return this.#startedPromise;
   }
 
   async stop(): Promise<void> {
-    if (this.stoppedPromise) {
-      return this.stoppedPromise;
+    if (this.#stoppedPromise) {
+      return this.#stoppedPromise;
     }
-    this.stoppedPromise = new Promise((resolve, reject) => {
-      this.workerController.synchronize(async () => {
-        setImmediate(() => this.consumer.stop().then(resolve, reject));
+    this.#stoppedPromise = new Promise((resolve, reject) => {
+      this.#workerController.synchronize(async () => {
+        setImmediate(() => this.#consumer.stop().then(resolve, reject));
         return true;
       });
-    }).then(() => this.consumer.disconnect());
-    return this.stoppedPromise;
+    }).then(() => this.#consumer.disconnect());
+    return this.#stoppedPromise;
   }
 
   private async performStart() {
-    const topics = Array.from(this.consumeOptions.keys());
-    const admin = this.client.admin();
+    const topics = Array.from(this.#consumeOptions.keys());
+    const admin = this.#client.admin();
     try {
-      await this.consumer.connect();
-      for (const [topic, option] of this.consumeOptions) {
-        await this.consumer.subscribe({topic, fromBeginning: option.fromBeginning});
+      await this.#consumer.connect();
+      for (const [topic, option] of this.#consumeOptions) {
+        await this.#consumer.subscribe({topic, fromBeginning: option.fromBeginning});
       }
 
       await admin.connect();
@@ -137,14 +137,14 @@ export class MessageConsumer {
         0,
       );
 
-      await this.consumer.run({
+      await this.#consumer.run({
         autoCommit: true,
-        autoCommitInterval: this.commitOption?.commitInterval,
+        autoCommitInterval: this.#commitOption?.commitInterval,
         eachBatchAutoResolve: false,
         partitionsConsumedConcurrently: totalPartitions,
         eachBatch: async (payload) => {
           const promise = this.eachBatch(payload);
-          this.lastBatchConsumed = this.lastBatchConsumed.then(() => promise);
+          this.#lastBatchConsumed = this.#lastBatchConsumed.then(() => promise);
           return promise;
         },
       });
@@ -155,7 +155,7 @@ export class MessageConsumer {
 
   private async eachBatch(payload: kafkajs.EachBatchPayload) {
     const {topic, partition} = payload.batch;
-    const consumeOption = this.consumeOptions.get(topic);
+    const consumeOption = this.#consumeOptions.get(topic);
     if (!consumeOption) {
       throw new Error('Message received from unsubscribed topic');
     } else if (consumeOption.type === 'batch') {
@@ -176,7 +176,7 @@ export class MessageConsumer {
         await payload.heartbeat();
       } catch (e: any) {
         if (e.type === 'REBALANCE_IN_PROGRESS' || e.type === 'NOT_COORDINATOR_FOR_GROUP') {
-          this.workerController.synchronize(async () => true);
+          this.#workerController.synchronize(async () => true);
         }
       }
     };
@@ -201,7 +201,7 @@ export class MessageConsumer {
     commitOffset: (forced?: boolean) => Promise<void>,
     messages: kafkajs.KafkaMessage[],
   ) {
-    const synchronizer = this.workerController.createSynchronizer(false);
+    const synchronizer = this.#workerController.createSynchronizer(false);
     try {
       for (const message of messages) {
         await consumer(message);

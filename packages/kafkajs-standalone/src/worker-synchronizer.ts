@@ -1,61 +1,58 @@
 import {firstValueFrom, from, Observable, Subject, Subscriber, Subscription, zip} from 'rxjs';
 
 export class WorkerSynchronizer<T = void> {
-  private subscription: Subscription;
-  private cancellationSubscriber?: Subscriber<void>;
-  private synchronizer: Promise<T>;
+  #subscription: Subscription;
+  #cancellationSubscriber: Subscriber<void> | null = null;
+  #synchronizer: Promise<T>;
 
-  constructor(
-    private cancellationSubject: Subject<(observable: Observable<void>) => Observable<T>>,
-    private defaultValue: T,
-  ) {
-    this.subscription = cancellationSubject.subscribe({
+  constructor(cancellationSubject: Subject<(observable: Observable<void>) => Observable<T>>, defaultValue: T) {
+    this.#subscription = cancellationSubject.subscribe({
       next: (acknowledgeCallback: (cancellationObservable: Observable<void>) => Observable<T>) => {
-        this.subscription.unsubscribe();
-        this.synchronizer = firstValueFrom(
+        this.#subscription.unsubscribe();
+        this.#synchronizer = firstValueFrom(
           acknowledgeCallback(
             new Observable<void>((subscriber) => {
-              this.cancellationSubscriber = subscriber;
+              this.#cancellationSubscriber = subscriber;
             }),
           ),
         );
       },
     });
-    this.synchronizer = Promise.resolve(defaultValue);
+    this.#synchronizer = Promise.resolve(defaultValue);
   }
 
   async checkSynchronized(onSynchronized: () => Promise<void>): Promise<T | void> {
-    if (this.cancellationSubscriber) {
+    if (this.#cancellationSubscriber) {
       await onSynchronized();
-      this.cancellationSubscriber.complete();
+      this.#cancellationSubscriber.complete();
     }
-    return this.synchronizer;
+    return this.#synchronizer;
   }
 
   detach(): void {
-    this.subscription.unsubscribe();
+    this.#subscription.unsubscribe();
   }
 }
 
 export class WorkerController<T = void> {
-  private subject = new Subject<(observable: Observable<void>) => Observable<T>>();
+  #subject = new Subject<(observable: Observable<void>) => Observable<T>>();
 
-  private inFlightSynchronization?: Function;
+  #inFlightSynchronization?: Function;
 
   createSynchronizer(defaultValue: T): WorkerSynchronizer<T> {
-    return new WorkerSynchronizer(this.subject, defaultValue);
+    return new WorkerSynchronizer(this.#subject, defaultValue);
   }
 
   synchronize(onSynchronize: () => Promise<T>): boolean {
-    if (this.inFlightSynchronization) {
+    if (this.#inFlightSynchronization) {
       return false;
     }
-    this.inFlightSynchronization = onSynchronize;
+    this.#inFlightSynchronization = onSynchronize;
 
     const allCancelSynchronized = new Subject<T>();
     allCancelSynchronized.subscribe({
       complete: () => {
-        this.inFlightSynchronization = undefined;
+        this.#inFlightSynchronization = undefined;
       },
     });
     const allCancellationProcess: Observable<void>[] = [];
@@ -63,7 +60,7 @@ export class WorkerController<T = void> {
       allCancellationProcess.push(cancellationObserver);
       return allCancelSynchronized;
     };
-    this.subject.next(fn);
+    this.#subject.next(fn);
     zip(...allCancellationProcess).subscribe({
       complete: () => {
         from(onSynchronize()).subscribe(allCancelSynchronized);
