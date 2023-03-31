@@ -24,17 +24,26 @@ function constructorToFactory(constructor: Class) {
 }
 
 export class ResolveSession {
-  private readonly instructions: Instruction[] = [];
-  private readonly sessionCache: Map<any, any> = new Map();
-  private readonly temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
-  protected readonly stack: any[] = [];
+  readonly #instructions: Instruction[] = [];
+  readonly #sessionCache: Map<any, any> = new Map();
+  readonly #temporaryBinding: Map<ServiceId, ConstantBinding<any>> = new Map();
+  readonly #bindingMap: Map<ServiceId, Binding<any>>;
+  readonly #compiledInstructionMap: Map<ServiceId, Instruction[]>;
+  readonly #globalCache: Map<any, any>;
+  readonly #validatedSet: Set<ServiceId>;
+  readonly #stack: any[] = [];
 
   constructor(
-    readonly bindingMap: Map<ServiceId, Binding<any>>,
-    readonly compiledInstructionMap: Map<ServiceId, Instruction[]>,
-    readonly globalCache: Map<any, any>,
-    readonly validatedSet: Set<ServiceId>,
-  ) {}
+    bindingMap: Map<ServiceId, Binding<any>>,
+    compiledInstructionMap: Map<ServiceId, Instruction[]>,
+    globalCache: Map<any, any>,
+    validatedSet: Set<ServiceId>,
+  ) {
+    this.#bindingMap = bindingMap;
+    this.#compiledInstructionMap = compiledInstructionMap;
+    this.#globalCache = globalCache;
+    this.#validatedSet = validatedSet;
+  }
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
     const [proxy, fn] = ensureValidatedMethodInvokeProxy(target, key);
@@ -46,50 +55,50 @@ export class ResolveSession {
   public addTemporaryConstantBinding<T>(serviceId: GeneralServiceId<T>, value: T): this;
   public addTemporaryConstantBinding<T extends {}>(serviceId: ClassServiceId<T>, value: T): this;
   public addTemporaryConstantBinding<T>(serviceId: ServiceId<T>, value: T): this {
-    this.temporaryBinding.set(serviceId, {
+    this.#temporaryBinding.set(serviceId, {
       type: BindingType.CONSTANT,
       id: serviceId,
       value,
     });
-    this.sessionCache.set(serviceId, value);
+    this.#sessionCache.set(serviceId, value);
     return this;
   }
 
   resolve<T>(target: GeneralServiceId<T>): T;
   resolve<T extends {}>(target: ClassServiceId<T>): T;
   resolve<T>(target: ServiceId<T>): T {
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true});
+    this.#performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true});
     return this.evalInstructions();
   }
 
   construct<T extends {}>(target: Constructor<T>): T {
-    this.performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true}, true);
+    this.#performPlan({code: InstructionCode.PLAN, optional: false, target, allowTemporary: true}, true);
     return this.evalInstructions();
   }
 
   protected evalInstructions(instruction: Instruction[] = []): any {
-    this.instructions.push(...instruction);
+    this.#instructions.push(...instruction);
     for (;;) {
-      const instruction = this.instructions.pop();
+      const instruction = this.#instructions.pop();
       if (!instruction) {
-        return this.stack.pop();
+        return this.#stack.pop();
       }
 
       switch (instruction.code) {
         case InstructionCode.PLAN:
-          this.performPlan(instruction, false);
+          this.#performPlan(instruction, false);
           break;
         case InstructionCode.TRANSFORM:
-          this.performTransform(instruction);
+          this.#performTransform(instruction);
           break;
         case InstructionCode.BUILD:
-          this.performBuild(instruction);
+          this.#performBuild(instruction);
           break;
       }
     }
   }
 
-  protected performPlan(instruction: PlanInstruction, allowUnbound = false): void {
+  #performPlan(instruction: PlanInstruction, allowUnbound = false): void {
     const {target, optional, allowTemporary} = instruction;
     /**
      * Middlewares may directly put something into session cache, we need to
@@ -107,16 +116,16 @@ export class ResolveSession {
     }
     switch (binding.type) {
       case BindingType.CONSTANT:
-        this.stack.push(binding.value);
+        this.#stack.push(binding.value);
         break;
       case BindingType.INSTANCE:
       case BindingType.FACTORY:
         {
-          const instructions = this.compiledInstructionMap.get(binding.id);
+          const instructions = this.#compiledInstructionMap.get(binding.id);
           if (!instructions) {
             throw new Error('BUG: No compiled instruction found');
           }
-          this.instructions.push(...instructions);
+          this.#instructions.push(...instructions);
         }
         break;
     }
@@ -131,12 +140,12 @@ export class ResolveSession {
   private internalGetBinding(target: ServiceId, allowTemporary: boolean) {
     for (;;) {
       if (allowTemporary) {
-        const temporaryBinding = this.temporaryBinding.get(target);
+        const temporaryBinding = this.#temporaryBinding.get(target);
         if (temporaryBinding) {
           return temporaryBinding;
         }
       }
-      const binding = this.bindingMap.get(target);
+      const binding = this.#bindingMap.get(target);
       if (!binding) {
         return;
       }
@@ -148,11 +157,11 @@ export class ResolveSession {
   }
 
   private resolveFromCache(target: ServiceId) {
-    if (this.globalCache.has(target)) {
-      this.stack.push(this.globalCache.get(target));
+    if (this.#globalCache.has(target)) {
+      this.#stack.push(this.#globalCache.get(target));
       return true;
-    } else if (this.sessionCache.has(target)) {
-      this.stack.push(this.sessionCache.get(target));
+    } else if (this.#sessionCache.has(target)) {
+      this.#stack.push(this.#sessionCache.get(target));
       return true;
     }
     return false;
@@ -164,19 +173,19 @@ export class ResolveSession {
     allowUnbound: boolean,
     allowTemporary: boolean,
   ) {
-    if (!this.validatedSet) {
-      internalValidateDependencies(target, this.bindingMap, [], this.validatedSet);
+    if (!this.#validatedSet) {
+      internalValidateDependencies(target, this.#bindingMap, [], this.#validatedSet);
     }
     const binding = this.internalGetBinding(target, allowTemporary);
     if (binding) {
       return binding;
     }
     if (optionalInject) {
-      this.stack.push(undefined);
+      this.#stack.push(undefined);
       return;
     } else if (allowUnbound && typeof target === 'function') {
       const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(target));
-      this.instructions.push(
+      this.#instructions.push(
         {
           code: InstructionCode.BUILD,
           cacheScope: InjectScope.TRANSIENT,
@@ -191,24 +200,24 @@ export class ResolveSession {
     throw new BindingNotFoundError(target);
   }
 
-  private performTransform(instruction: TransformInstruction) {
+  #performTransform(instruction: TransformInstruction) {
     const {transformer} = instruction;
-    this.stack[this.stack.length - 1] = transformer(this.stack[this.stack.length - 1]);
+    this.#stack[this.#stack.length - 1] = transformer(this.#stack[this.#stack.length - 1]);
   }
 
-  private performBuild(instruction: BuildInstruction) {
+  #performBuild(instruction: BuildInstruction) {
     const {paramCount, factory, cacheScope, serviceId} = instruction;
-    const args = this.stack.splice(this.stack.length - paramCount);
+    const args = this.#stack.splice(this.#stack.length - paramCount);
     const result = factory(...args);
-    this.cacheIfNecessary(cacheScope, serviceId, result);
-    this.stack.push(result);
+    this.#cacheIfNecessary(cacheScope, serviceId, result);
+    this.#stack.push(result);
   }
 
-  private cacheIfNecessary(cacheScope: InjectScope, serviceId: ServiceId, result: any) {
+  #cacheIfNecessary(cacheScope: InjectScope, serviceId: ServiceId, result: any) {
     if (cacheScope === InjectScope.SESSION) {
-      this.sessionCache.set(serviceId, result);
+      this.#sessionCache.set(serviceId, result);
     } else if (cacheScope === InjectScope.SINGLETON) {
-      this.globalCache.set(serviceId, result);
+      this.#globalCache.set(serviceId, result);
     }
   }
 }

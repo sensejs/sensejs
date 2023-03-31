@@ -32,6 +32,12 @@ function validateParamInjectMetadata(metadata: ParamInjectionMetadata[], name: s
 }
 
 class AsyncMethodInvokeSession<T extends {}, K extends keyof T, ContextIds extends any[] = []> extends ResolveSession {
+
+  readonly #resolveCallback: (value: InvokeResult<T, K>) => void;
+
+  get resolveCallback() {
+    return this.#resolveCallback;
+  }
   constructor(
     bindingMap: Map<ServiceId, Binding<any>>,
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
@@ -39,9 +45,10 @@ class AsyncMethodInvokeSession<T extends {}, K extends keyof T, ContextIds exten
     validatedBindings: Set<ServiceId>,
     contextIds: ContextIds,
     context: ServiceTypeOf<ContextIds>,
-    readonly resolveCallback: (value: InvokeResult<T, K>) => void,
+    resolveCallback: (value: InvokeResult<T, K>) => void,
   ) {
     super(bindingMap, compiledInstructionMap, globalCache, validatedBindings);
+    this.#resolveCallback = resolveCallback;
     contextIds.forEach((ctxId, idx) => {
       this.addTemporaryConstantBinding(ctxId, context[idx]);
     });
@@ -168,7 +175,7 @@ function buildInvoker<T extends {}, K extends keyof T, ContextIds extends any[]>
 }
 
 export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends any[]> {
-  private readonly invokeFunction: (...ctx: ServiceTypeOf<ContextIds>) => Promise<InvokeResult<T, K>>;
+  readonly #invokeFunction: (...ctx: ServiceTypeOf<ContextIds>) => Promise<InvokeResult<T, K>>;
 
   constructor(
     bindingMap: Map<ServiceId, Binding<any>>,
@@ -180,7 +187,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     middlewares: Constructor<Middleware<any>>[],
     ...contextIds: ContextIds
   ) {
-    this.invokeFunction = buildInvoker(
+    this.#invokeFunction = buildInvoker(
       bindingMap,
       compiledInstructionMap,
       globalCache,
@@ -193,6 +200,6 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
   }
 
   invoke(...ctx: ServiceTypeOf<ContextIds>) {
-    return this.invokeFunction(...ctx);
+    return this.#invokeFunction(...ctx);
   }
 }
