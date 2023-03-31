@@ -2,35 +2,35 @@ import {ApplicationRunner, Constructor, ModuleMetadata, ModuleMetadataLoader} fr
 import {EventEmitter} from 'events';
 
 export class MockModuleMetadataLoader extends ModuleMetadataLoader {
-  private mockedResult: Map<Constructor, ModuleMetadata> = new Map();
+  #mockedResult: Map<Constructor, ModuleMetadata> = new Map();
 
   mockModule(module: Constructor, fn: (m: ModuleMetadata) => ModuleMetadata) {
-    this.mockedResult.set(module, fn(super.get(module)));
+    this.#mockedResult.set(module, fn(super.get(module)));
     return this;
   }
 
   get(module: Constructor): ModuleMetadata {
-    return this.mockedResult.get(module) ?? super.get(module);
+    return this.#mockedResult.get(module) ?? super.get(module);
   }
 }
 
 export class MockApplicationRunner extends ApplicationRunner {
-  private readonly mockedProcess;
-  private readonly mockedModuleLoader;
+  readonly #mockedProcess;
+  readonly #mockedModuleLoader;
 
   constructor() {
     const mockedProcess = new EventEmitter();
     const mockedModuleLoader = new MockModuleMetadataLoader();
     super(mockedProcess, mockedModuleLoader);
-    this.mockedProcess = mockedProcess;
-    this.mockedModuleLoader = mockedModuleLoader;
+    this.#mockedProcess = mockedProcess;
+    this.#mockedModuleLoader = mockedModuleLoader;
   }
 
   emitSignal(signal: NodeJS.Signals) {
-    this.mockedProcess.emit(signal, signal);
+    this.#mockedProcess.emit(signal, signal);
   }
 
   loader(): MockModuleMetadataLoader {
-    return this.mockedModuleLoader;
+    return this.#mockedModuleLoader;
   }
 }
