@@ -268,7 +268,7 @@ const HTTP_PARAM_MAPPING_KEY = Symbol();
 /**
  * Ensure Http mapping metadata on target prototype
  * @param target - on which metadata need to be ensured
- * @param defaultValue - Default value that will set to target, if not provided, this function will throws Error
+ * @param defaultValue - Default value that will set to target, if not provided, this function will throw Error
  * if target has no metadata
  */
 export function ensureMetadataOnPrototype<T extends {}>(
@@ -291,7 +291,7 @@ export function ensureMetadataOnPrototype<T extends {}>(
  * Ensure Http mapping metadata on target prototype method
  * @param prototype - on which the method is attached
  * @param name - name of the function
- * @param defaultValue - Default value that will set to target, if not provided, this function will throws Error
+ * @param defaultValue - Default value that will set to target, if not provided, this function will throw Error
  * if target has no metadata
  */
 export function ensureMetadataOnMethod<T extends {}>(
