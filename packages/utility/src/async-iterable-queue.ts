@@ -34,16 +34,16 @@ export type ControllerState<T> =
   | ControllerClosed;
 
 export class AsyncIterableQueue<T> implements AsyncIterator<T> {
-  private state: ControllerState<T> = {state: State.IDLE};
-  private promiseQueue: Promise<void> = Promise.resolve();
-  private onClose: () => Promise<void> = () => Promise.resolve();
+  #state: ControllerState<T> = {state: State.IDLE};
+  #promiseQueue: Promise<void> = Promise.resolve();
+  #onClose: () => Promise<void> = () => Promise.resolve();
 
   /**
    * Provides a callback to be called when the iterator is closed.
    * @param onClose
    */
   setOnClose(onClose: () => Promise<void>) {
-    this.onClose = onClose;
+    this.#onClose = onClose;
     return this;
   }
 
@@ -53,12 +53,12 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
    * @returns A promise that resolves to true if the value was pushed, or false if the iterator was closed.
    */
   async push(valuePromise: Promise<T>) {
-    await this.promiseQueue;
+    await this.#promiseQueue;
 
-    switch (this.state.state) {
+    switch (this.#state.state) {
       case State.IDLE: {
-        this.promiseQueue = new Promise((resolve, reject) => {
-          this.state = {
+        this.#promiseQueue = new Promise((resolve, reject) => {
+          this.#state = {
             state: State.AWAITING_PULL,
             valuePromise,
             resolve,
@@ -68,10 +68,10 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
         return true;
       }
       case State.AWAITING_PUSH: {
-        const resolve = this.state.resolve;
-        const reject = this.state.reject;
-        this.promiseQueue = valuePromise.then(resolve, reject).finally(() => {
-          this.state = {state: State.IDLE};
+        const resolve = this.#state.resolve;
+        const reject = this.#state.reject;
+        this.#promiseQueue = valuePromise.then(resolve, reject).finally(() => {
+          this.#state = {state: State.IDLE};
         });
         return true;
       }
@@ -89,16 +89,16 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
    * @returns Returns true when this call aborted the iterator, or false if the iterator was already closed or aborted.
    */
   async abort(e?: Error) {
-    await this.promiseQueue;
-    switch (this.state.state) {
+    await this.#promiseQueue;
+    switch (this.#state.state) {
       case State.IDLE: {
-        this.state = {state: State.CLOSED, reason: e};
+        this.#state = {state: State.CLOSED, reason: e};
         return true;
       }
 
       case State.AWAITING_PUSH: {
-        this.state.reject(e);
-        this.state = {state: State.CLOSED, reason: e};
+        this.#state.reject(e);
+        this.#state = {state: State.CLOSED, reason: e};
         return true;
       }
 
@@ -117,15 +117,15 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
    * @returns Returns true when this call closed the iterator, or false if the iterator was already closed or aborted.
    */
   async finish() {
-    await this.promiseQueue;
-    switch (this.state.state) {
+    await this.#promiseQueue;
+    switch (this.#state.state) {
       case State.IDLE: {
-        this.state = {state: State.CLOSED};
+        this.#state = {state: State.CLOSED};
         return true;
       }
       case State.AWAITING_PUSH: {
-        const reject = this.state.reject;
-        this.state = {state: State.CLOSED};
+        const reject = this.#state.reject;
+        this.#state = {state: State.CLOSED};
         reject(null);
         return true;
       }
@@ -144,10 +144,10 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
   }
 
   async next(...args: [] | [undefined]): Promise<IteratorResult<T, any>> {
-    switch (this.state.state) {
+    switch (this.#state.state) {
       case State.IDLE: {
         return new Promise<T>((resolve, reject) => {
-          this.state = {
+          this.#state = {
             state: State.AWAITING_PUSH,
             resolve,
             reject,
@@ -160,11 +160,11 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
             };
           },
           (e) => {
-            if (this.state.state !== State.CLOSED) {
+            if (this.#state.state !== State.CLOSED) {
               // istanbul ignore next
               throw new Error('BUG: Invalid State');
             }
-            if (this.state.reason === e) {
+            if (this.#state.reason === e) {
               throw e;
             }
             return {
@@ -175,14 +175,14 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
         );
       }
       case State.AWAITING_PULL: {
-        const value = await this.state.valuePromise;
-        this.state.resolve();
-        this.state = {state: State.IDLE};
+        const value = await this.#state.valuePromise;
+        this.#state.resolve();
+        this.#state = {state: State.IDLE};
         return {value, done: false};
       }
       case State.CLOSED: {
-        if (this.state.reason) {
-          throw this.state.reason;
+        if (this.#state.reason) {
+          throw this.#state.reason;
         }
         return {value: undefined, done: true};
       }
@@ -193,23 +193,23 @@ export class AsyncIterableQueue<T> implements AsyncIterator<T> {
   }
 
   async return(value?: any): Promise<IteratorResult<T, any>> {
-    switch (this.state.state) {
+    switch (this.#state.state) {
       case State.CLOSED:
       case State.IDLE:
       case State.AWAITING_PUSH: {
-        this.state = {state: State.CLOSED};
-        await this.onClose();
+        this.#state = {state: State.CLOSED};
+        await this.#onClose();
         return {value: undefined, done: true};
       }
 
       case State.AWAITING_PULL: {
-        const valuePromise = this.state.valuePromise;
-        this.state = {state: State.CLOSED};
+        const valuePromise = this.#state.valuePromise;
+        this.#state = {state: State.CLOSED};
         try {
           const value = await valuePromise;
           return {value, done: false};
         } finally {
-          await this.onClose();
+          await this.#onClose();
         }
       }
     }
