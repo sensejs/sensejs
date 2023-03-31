@@ -214,4 +214,7 @@ temp/
 # typeorm test use temp.db for sqlite3 driver
 temp.*
 
+dist-types/
+lib/
+
 

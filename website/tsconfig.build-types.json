@@ -1,9 +1,10 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
-    "module": "esnext",
     "noEmit": false,
-    "outDir": "lib",
+    "emitDeclarationOnly": true,
+    "outDir": "dist-esm/types",
+    "declarationDir": "dist-esm/types",
     "baseUrl": ".",
     "paths": {}
   }

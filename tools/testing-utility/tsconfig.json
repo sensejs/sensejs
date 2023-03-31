@@ -2,6 +2,8 @@
   "extends": "../../tsconfig",
   "compilerOptions": {
     "noEmit": false,
+    "declarationMap": true,
+    "declaration": true,
     "outDir": "lib",
     "types": ["node", "reflect-metadata", "jest"]
   },

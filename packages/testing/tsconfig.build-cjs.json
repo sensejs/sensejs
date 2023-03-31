@@ -4,7 +4,6 @@
     "noEmit": false,
     "module": "CommonJS",
     "outDir": "dist-cjs/lib",
-    "declarationDir": "dist-cjs/lib",
     "baseUrl": ".",
     "paths": {}
   }
