@@ -16,54 +16,57 @@ function defaultLogFormatter(writeStream: NodeJS.WritableStream): LogTransformer
 }
 
 export class StreamLogTransport implements LogTransport {
-  private _whenLastWriteFlushed = Promise.resolve();
-  private _whenStreamDrained = Promise.resolve();
-  private _streamWritable: boolean = true;
+  #whenLastWriteFlushed = Promise.resolve();
+  #whenStreamDrained = Promise.resolve();
+  #streamWritable: boolean = true;
+  readonly #writeStream: NodeJS.WritableStream;
+  readonly #levels: LogLevel[];
+  readonly #transformer; // = defaultLogFormatter(_writeStream);
 
-  constructor(
-    private readonly _writeStream: NodeJS.WritableStream,
-    private readonly _levels: LogLevel[],
-    private readonly _transformer = defaultLogFormatter(_writeStream),
-  ) {}
+  constructor(writeStream: NodeJS.WritableStream, levels: LogLevel[], transformer = defaultLogFormatter(writeStream)) {
+    this.#writeStream = writeStream;
+    this.#levels = levels;
+    this.#transformer = transformer;
+  }
 
   async write(content: RawLogData): Promise<void> {
-    if (this._levels.indexOf(content.level) < 0) {
+    if (this.#levels.indexOf(content.level) < 0) {
       return Promise.resolve();
     }
-    const formattedContent = this._transformer.format(content);
-    while (!this._streamWritable) {
-      await this._whenStreamDrained;
+    const formattedContent = this.#transformer.format(content);
+    while (!this.#streamWritable) {
+      await this.#whenStreamDrained;
     }
-    this._whenLastWriteFlushed = this.flushLogDirectly(formattedContent);
-    return this._whenLastWriteFlushed;
+    this.#whenLastWriteFlushed = this.#flushLogDirectly(formattedContent);
+    return this.#whenLastWriteFlushed;
   }
 
   async flush(): Promise<void> {
-    while (!this._streamWritable) {
-      await this._whenStreamDrained;
-      await this._whenLastWriteFlushed;
+    while (!this.#streamWritable) {
+      await this.#whenStreamDrained;
+      await this.#whenLastWriteFlushed;
     }
-    return this._whenLastWriteFlushed;
+    return this.#whenLastWriteFlushed;
   }
 
-  private flushLogDirectly(buffer: Buffer) {
+  #flushLogDirectly(buffer: Buffer) {
     return new Promise<void>((resolve, reject) => {
-      this._streamWritable = this._writeStream.write(buffer, (e) => {
+      this.#streamWritable = this.#writeStream.write(buffer, (e) => {
         if (e) {
           return reject(e);
         }
         return resolve();
       });
-      if (!this._streamWritable) {
-        this.checkStreamWritable();
+      if (!this.#streamWritable) {
+        this.#checkStreamWritable();
       }
     });
   }
 
-  private checkStreamWritable() {
-    this._whenStreamDrained = new Promise((resolve) =>
-      this._writeStream.once('drain', () => {
-        this._streamWritable = true;
+  #checkStreamWritable() {
+    this.#whenStreamDrained = new Promise((resolve) =>
+      this.#writeStream.once('drain', () => {
+        this.#streamWritable = true;
         resolve();
       }),
     );
