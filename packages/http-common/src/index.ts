@@ -178,7 +178,7 @@ export interface ControllerRouteSpec {
 }
 
 export abstract class AbstractHttpApplicationBuilder {
-  private readonly middlewares: Constructor<Middleware>[] = [];
+  readonly #middlewares: Constructor<Middleware>[] = [];
   protected readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   protected errorHandler?: (e: unknown) => any;
 
@@ -202,7 +202,7 @@ export abstract class AbstractHttpApplicationBuilder {
   }
 
   addMiddlewares(...middlewares: Constructor<Middleware>[]): this {
-    this.middlewares.push(...middlewares);
+    this.#middlewares.push(...middlewares);
     return this;
   }
 
@@ -227,7 +227,7 @@ export abstract class AbstractHttpApplicationBuilder {
     methodRoutSpecs.push({
       path,
       httpMethod,
-      middlewares: [...this.middlewares, ...controllerMetadata.middlewares, ...middlewares],
+      middlewares: [...this.#middlewares, ...controllerMetadata.middlewares, ...middlewares],
       targetConstructor: controllerMetadata.target,
       targetMethod: method,
       multipartBody,
@@ -517,12 +517,12 @@ export interface HttpModuleOption<O extends HttpOption = HttpOption> {
 }
 
 export abstract class AbstractHttpModule {
-  private readonly httpServer: http.Server;
-  private readonly serviceId;
+  readonly #httpServer: http.Server;
+  readonly #serviceId;
 
   protected constructor(protected readonly httpModuleOption: HttpModuleOption) {
-    this.serviceId = this.httpModuleOption.serverIdentifier ?? Symbol();
-    this.httpServer = http.createServer();
+    this.#serviceId = this.httpModuleOption.serverIdentifier ?? Symbol();
+    this.#httpServer = http.createServer();
   }
 
   protected abstract getAdaptor(): AbstractHttpApplicationBuilder;
@@ -530,8 +530,8 @@ export abstract class AbstractHttpModule {
   @OnModuleCreate()
   async onCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
     loader.addConstant({
-      provide: this.serviceId,
-      value: this.httpServer,
+      provide: this.#serviceId,
+      value: this.#httpServer,
     });
   }
 
@@ -540,21 +540,21 @@ export abstract class AbstractHttpModule {
     const httpAdaptor = this.getAdaptor();
     const middlewares = this.httpModuleOption.middlewares ?? [];
     httpAdaptor.addMiddlewares(...middlewares);
-    this.scanControllers(httpAdaptor, moduleScanner);
-    await this.setupHttpServer(httpAdaptor, this.httpServer, container);
+    this.#scanControllers(httpAdaptor, moduleScanner);
+    await this.#setupHttpServer(httpAdaptor, this.#httpServer, container);
   }
 
   @OnModuleStop()
   async onStop() {
-    if (this.httpServer && this.httpServer.listening) {
-      const httpServer = this.httpServer;
+    if (this.#httpServer && this.#httpServer.listening) {
+      const httpServer = this.#httpServer;
       await promisify((done: (e?: Error) => void) => {
         return httpServer.close(done);
       })();
     }
   }
 
-  private scanControllers(httpAdaptor: AbstractHttpApplicationBuilder, moduleScanner: ModuleScanner) {
+  #scanControllers(httpAdaptor: AbstractHttpApplicationBuilder, moduleScanner: ModuleScanner) {
     moduleScanner.scanModule((metadata) => {
       metadata.components.forEach((component) => {
         const httpControllerMetadata = getHttpControllerMetadata(component);
@@ -569,7 +569,7 @@ export abstract class AbstractHttpModule {
     });
   }
 
-  private setupHttpServer(httpAdaptor: AbstractHttpApplicationBuilder, httpServer: http.Server, container: Container) {
+  #setupHttpServer(httpAdaptor: AbstractHttpApplicationBuilder, httpServer: http.Server, container: Container) {
     const {httpOption: {listenPort = 3000, listenAddress = 'localhost'} = defaultHttpConfig} = this.httpModuleOption;
     return new Promise<http.Server>((resolve, reject) => {
       httpServer.on('request', httpAdaptor.build(container));
