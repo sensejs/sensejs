@@ -77,15 +77,17 @@ export const defaultRunOption: RunnerOption<any> = {
 
 export class ApplicationRunner {
   static instance = new ApplicationRunner(process);
-  private runSubscription?: Subscription;
+  private runSubscription: Subscription | null = null;
 
   private stoppedSubject = new Subject<ExitOption>();
-  private uncaughtErrorObservable = merge(
-    fromEvent(this.process, 'uncaughtException'),
-    fromEvent(this.process, 'unhandledRejection'),
-  );
+  private uncaughtErrorObservable;
 
-  protected constructor(private process: NodeJS.EventEmitter, private moduleLoader = new ModuleMetadataLoader()) {}
+  protected constructor(private process: NodeJS.EventEmitter, private moduleLoader = new ModuleMetadataLoader()) {
+    this.uncaughtErrorObservable = merge(
+      fromEvent(this.process, 'uncaughtException'),
+      fromEvent(this.process, 'unhandledRejection'),
+    );
+  }
 
   run<M extends {}, K extends keyof M, T = never>(
     entryModule: Constructor<M>,
