@@ -1,5 +1,4 @@
 ---
 exclude_paths:
-  - "**/dist/**/*.js"
-  - "**/README.*
+  - "**/README.*"
   - "**/config/*"
