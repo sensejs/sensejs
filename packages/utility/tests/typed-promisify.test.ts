@@ -73,19 +73,19 @@ test('resolve overload', async () => {
   const pf = await aggregatedPromisify(overload2);
 
   let result1 = await aggregatedPromisifiedCall(overload2);
-  expect(typeof result1[0]! === 'number');
-  expect(typeof result1[1]! === 'boolean');
+  expect(typeof result1[0] === 'number');
+  expect(typeof result1[1] === 'boolean');
 
   result1 = await pf();
-  expect(typeof result1[0]! === 'number');
-  expect(typeof result1[1]! === 'boolean');
+  expect(typeof result1[0] === 'number');
+  expect(typeof result1[1] === 'boolean');
 
   let result2 = await aggregatedPromisifiedCall(overload2, true);
-  expect(typeof result2[0]! === 'boolean');
-  expect(typeof result2[1]! === 'number');
+  expect(typeof result2[0] === 'boolean');
+  expect(typeof result2[1] === 'number');
   result2 = await pf(false);
-  expect(typeof result2[0]! === 'boolean');
-  expect(typeof result2[1]! === 'number');
+  expect(typeof result2[0] === 'boolean');
+  expect(typeof result2[1] === 'number');
 });
 
 test('promisify', async () => {
