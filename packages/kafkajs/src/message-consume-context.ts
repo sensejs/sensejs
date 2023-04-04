@@ -1,5 +1,6 @@
 import {Constructor} from '@sensejs/core';
 import {KafkaBatchConsumeMessageParam, KafkaReceivedMessage} from '@sensejs/kafkajs-standalone';
+import type {Batch} from 'kafkajs';
 
 export abstract class MessageConsumeContext {
   abstract readonly targetConstructor: Constructor;
@@ -55,7 +56,7 @@ export class BatchedMessageConsumeContext extends MessageConsumeContext {
     return this.batchedConsumeParam.heartbeat();
   }
 
-  messageInfo() {
+  messageInfo(): Batch {
     return this.batchedConsumeParam.batch;
   }
 
