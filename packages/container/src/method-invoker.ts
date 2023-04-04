@@ -5,7 +5,6 @@ import {
   Constructor,
   InjectScope,
   InvokeResult,
-  Middleware,
   ParamInjectionMetadata,
   ServiceId,
 } from './types.js';
@@ -45,53 +44,59 @@ export class AsyncMethodInvokeSession<
   K extends keyof T,
   ContextIds extends any[] = [],
 > extends ResolveSession {
-  private result?: InvokeResult<T, K>;
   private readonly contextIds: ContextIds;
+  private readonly performInvoke;
 
   constructor(
     bindingMap: Map<ServiceId, Binding<any>>,
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
     globalCache: Map<any, any>,
     validatedBindings: Set<ServiceId>,
-    readonly interceptProviderAndMetadata: [Instruction[], ServiceId[]][],
-    private readonly proxyConstructInstructions: Instruction[],
-    private readonly targetConstructor: Constructor,
-    private readonly targetFunction: Function,
+    middlewareAndMetadata: [Instruction[], ServiceId[]][],
+    proxyConstructInstructions: Instruction[],
+    targetConstructor: Constructor,
+    targetFunction: Function,
     ...contextIds: ContextIds
   ) {
     super(bindingMap, compiledInstructionMap, globalCache, validatedBindings);
     this.contextIds = contextIds;
+
+    // let idx = this.interceptProviderAndMetadata.length - 1;
+
+    let func = async (): Promise<InvokeResult<T, K>> => {
+      const self = this.resolve(targetConstructor) as T;
+      const proxyInstance = this.evalInstructions(proxyConstructInstructions) as MethodInvokeProxy;
+      return proxyInstance.call(targetFunction, self);
+    };
+
+    for (;;) {
+      const mam = middlewareAndMetadata.pop();
+      if (typeof mam === 'undefined') break;
+      const [instructions, metadata] = mam;
+      const next = func;
+      func = async (): Promise<InvokeResult<T, K>> => {
+        const instance = this.evalInstructions(instructions) as CompatMiddleware<any>;
+        const fn = (instance.handle ?? instance.intercept).bind(instance);
+
+        return new Promise<InvokeResult<T, K>>((resolve, reject) =>
+          fn(async (...args: any[]) => {
+            for (let i = 0; i < metadata.length; i++) {
+              this.addTemporaryConstantBinding(metadata[i], args[i]);
+            }
+
+            next().then(resolve, reject);
+          }),
+        );
+      };
+    }
+    this.performInvoke = func;
   }
 
   async invokeTargetMethod(...ctx: ServiceTypeOf<ContextIds>): Promise<InvokeResult<T, K>> {
     for (let i = 0; i < ctx.length && i < this.contextIds.length; i++) {
       this.addTemporaryConstantBinding(this.contextIds[i], ctx[i]);
     }
-    const performInvoke = (): Promise<InvokeResult<T, K>> => {
-      const self = this.resolve(this.targetConstructor) as T;
-      const proxyInstance = this.evalInstructions(this.proxyConstructInstructions) as MethodInvokeProxy;
-      return proxyInstance.call(this.targetFunction, self);
-    };
-    return new Promise<InvokeResult<T, K>>((resolve, reject) => {
-      const intercept = async (index: number): Promise<void> => {
-        if (index === this.interceptProviderAndMetadata.length) {
-          this.result = await performInvoke();
-          return;
-        }
-        const [instructions, metadata] = this.interceptProviderAndMetadata[index];
-        const instance = this.evalInstructions(instructions) as CompatMiddleware<any>;
-        const fn = (instance.handle ?? instance.intercept).bind(instance);
-
-        return fn(async (...args: any[]) => {
-          for (let i = 0; i < metadata.length; i++) {
-            this.addTemporaryConstantBinding(metadata[i], args[i]);
-          }
-
-          await intercept(index + 1);
-        });
-      };
-      intercept(0).then(() => resolve(this.result!), reject);
-    });
+    return this.performInvoke();
   }
 }
 
@@ -100,7 +105,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
   private readonly targetFunction: Function;
   private readonly interceptorProviderAndMetadata: [Instruction[], ServiceId[]][] = [];
   private readonly proxyConstructorInjectionMetadata;
-  private contextIds;
+  private readonly contextIds;
 
   constructor(
     readonly bindingMap: Map<ServiceId, Binding<any>>,
