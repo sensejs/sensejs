@@ -54,7 +54,6 @@ export class ColorTtyTextLogTransformer extends BasicTextLogTransformer {
   }
 
   contentFormatter(...messages: [unknown, ...unknown[]]): string {
-    // @ts-ignore
     return formatWithOptions({colors: true}, ...messages);
   }
 }

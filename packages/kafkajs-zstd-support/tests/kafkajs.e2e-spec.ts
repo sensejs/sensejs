@@ -16,7 +16,7 @@ test('ZSTD E2E test', async () => {
     consumer
       .run({
         eachMessage: async (param) => {
-          expect(param.message.value!.toString()).toBe(data);
+          expect(param.message.value?.toString()).toBe(data);
           consumer.stop().then(resolve);
         },
       })

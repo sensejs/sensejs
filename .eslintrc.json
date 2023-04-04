@@ -4,12 +4,23 @@
     "project": "./tsconfig.json"
   },
   "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "@typescript-eslint/no-use-before-define": "off"
+      }
+    }
+  ],
   "rules": {
     "no-empty-function": "off",
     "quotes": "off",
     "semi": "off",
     "no-undef": "off",
-    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/ban-ts-comment": "error",
+    "@typescript-eslint/no-non-null-assertion": "error",
     "@typescript-eslint/one-variable-per-declaration": "off",
     "@typescript-eslint/object-literal-sort-keys": "off",
     "@typescript-eslint/trailing-comma": "off",

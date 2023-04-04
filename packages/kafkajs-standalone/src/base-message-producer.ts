@@ -39,7 +39,7 @@ export abstract class BaseKafkaJsMessageProducer implements SimpleMessageProduce
     this.allMessageSend = Promise.resolve(this.allMessageSend).then(() =>
       promise.catch((e) => this.internalRelease(e)),
     );
-    return promise.then(([recordMetadata]) => recordMetadata!);
+    return promise.then(([recordMetadata]) => recordMetadata);
   }
 
   /**
