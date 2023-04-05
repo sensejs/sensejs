@@ -55,7 +55,7 @@ export class AsyncMethodInvokeSession<
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
     globalCache: Map<any, any>,
     validatedBindings: Set<ServiceId>,
-    middlewareAndMetadata: [Instruction[], ServiceId[]][],
+    metadataOfMiddlewares: [Instruction[], ServiceId[]][],
     proxyConstructInstructions: Instruction[],
     targetConstructor: Constructor,
     targetFunction: Function,
@@ -79,7 +79,7 @@ export class AsyncMethodInvokeSession<
     };
 
     for (;;) {
-      const mam = middlewareAndMetadata.pop();
+      const mam = metadataOfMiddlewares.pop();
       if (typeof mam === 'undefined') {
         break;
       }
@@ -116,7 +116,7 @@ export class AsyncMethodInvokeSession<
 export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends any[]> {
   private readonly proxyConstructInstructions: Instruction[];
   private readonly targetFunction: Function;
-  private readonly interceptorProviderAndMetadata: [Instruction[], ServiceId[]][] = [];
+  private readonly metadataOfMiddlewares: [Instruction[], ServiceId[]][] = [];
   private readonly proxyConstructorInjectionMetadata;
   private readonly contextIds;
 
@@ -127,7 +127,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     private validatedSet: Set<ServiceId>,
     private targetConstructor: Constructor<T>,
     private targetMethod: K,
-    private interceptors: Constructor<CompatMiddleware<any>>[],
+    private middlewares: Constructor<CompatMiddleware<any>>[],
     ...contextIds: ContextIds
   ) {
     this.contextIds = contextIds;
@@ -153,7 +153,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
       this.compiledInstructionMap,
       this.globalCache,
       this.validatedSet,
-      this.interceptorProviderAndMetadata,
+      this.metadataOfMiddlewares,
       this.proxyConstructInstructions,
       this.targetConstructor,
       this.targetFunction,
@@ -164,17 +164,17 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
   private validate() {
     const validatedSet = new Set(new Map(this.bindingMap).keys());
     this.contextIds.forEach((id) => validatedSet.add(id));
-    for (const interceptor of this.interceptors) {
-      const pim = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(interceptor));
-      validateParamInjectMetadata(pim, interceptor.name, validatedSet);
-      const metadata = getMiddlewareMetadata(interceptor);
+    for (const middleware of this.middlewares) {
+      const pim = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(middleware));
+      validateParamInjectMetadata(pim, middleware.name, validatedSet);
+      const metadata = getMiddlewareMetadata(middleware);
       metadata.forEach((x) => validatedSet.add(x));
-      this.interceptorProviderAndMetadata.push([
+      this.metadataOfMiddlewares.push([
         [
           {
             code: InstructionCode.BUILD,
             paramCount: pim.length,
-            factory: (...args) => Reflect.construct(interceptor, args),
+            factory: (...args) => Reflect.construct(middleware, args),
             serviceId: Symbol(),
             cacheScope: Scope.SINGLETON,
           },
