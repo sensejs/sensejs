@@ -46,6 +46,9 @@ export class AsyncMethodInvokeSession<
 > extends ResolveSession {
   private readonly contextIds: ContextIds;
   private readonly performInvoke;
+  private readonly result: Promise<InvokeResult<T, K>>;
+
+  // private promise: Promise<InvokeResult<T, K>>
 
   constructor(
     bindingMap: Map<ServiceId, Binding<any>>,
@@ -60,33 +63,39 @@ export class AsyncMethodInvokeSession<
   ) {
     super(bindingMap, compiledInstructionMap, globalCache, validatedBindings);
     this.contextIds = contextIds;
+    let resolveCallback: (value: InvokeResult<T, K>) => void;
+    let rejectCallback: (reason?: any) => void;
+    this.result = new Promise<InvokeResult<T, K>>((resolve, reject) => {
+      resolveCallback = resolve;
+      rejectCallback = reject;
+    });
 
-    // let idx = this.interceptProviderAndMetadata.length - 1;
-
-    let func = async (): Promise<InvokeResult<T, K>> => {
+    let func = async (): Promise<void> => {
       const self = this.resolve(targetConstructor) as T;
       const proxyInstance = this.evalInstructions(proxyConstructInstructions) as MethodInvokeProxy;
-      return proxyInstance.call(targetFunction, self);
+      const promise = Promise.resolve<InvokeResult<T, K>>(proxyInstance.call(targetFunction, self));
+      promise.then(resolveCallback, rejectCallback);
+      await promise;
     };
 
     for (;;) {
       const mam = middlewareAndMetadata.pop();
-      if (typeof mam === 'undefined') break;
+      if (typeof mam === 'undefined') {
+        break;
+      }
       const [instructions, metadata] = mam;
       const next = func;
-      func = async (): Promise<InvokeResult<T, K>> => {
+      func = async (): Promise<void> => {
         const instance = this.evalInstructions(instructions) as CompatMiddleware<any>;
         const fn = (instance.handle ?? instance.intercept).bind(instance);
 
-        return new Promise<InvokeResult<T, K>>((resolve, reject) =>
-          fn(async (...args: any[]) => {
-            for (let i = 0; i < metadata.length; i++) {
-              this.addTemporaryConstantBinding(metadata[i], args[i]);
-            }
+        return fn((...args: any[]) => {
+          for (let i = 0; i < metadata.length; i++) {
+            this.addTemporaryConstantBinding(metadata[i], args[i]);
+          }
 
-            next().then(resolve, reject);
-          }),
-        );
+          return next();
+        });
       };
     }
     this.performInvoke = func;
@@ -96,7 +105,11 @@ export class AsyncMethodInvokeSession<
     for (let i = 0; i < ctx.length && i < this.contextIds.length; i++) {
       this.addTemporaryConstantBinding(this.contextIds[i], ctx[i]);
     }
-    return this.performInvoke();
+    return new Promise<InvokeResult<T, K>>((resolve, reject) => {
+      this.performInvoke()
+        .then(() => this.result.then(resolve))
+        .catch(reject);
+    });
   }
 }
 

@@ -51,7 +51,9 @@ describe('MethodInvoker', () => {
     class MyInterceptor {
       async handle(next: (value: MyComponent) => Promise<void>): Promise<void> {
         f(1);
+        await new Promise(setImmediate);
         await next(new MyComponent());
+        await new Promise(setImmediate);
         f(3);
       }
     }
@@ -88,7 +90,9 @@ describe('MethodInvoker', () => {
     class MyInterceptor {
       async intercept(next: (value: MyComponent) => Promise<void>): Promise<void> {
         f(1);
+        await new Promise(setImmediate);
         await next(new MyComponent());
+        await new Promise(setImmediate);
         f(3);
       }
     }
