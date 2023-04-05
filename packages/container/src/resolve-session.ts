@@ -92,7 +92,7 @@ export class ResolveSession {
   protected performPlan(instruction: PlanInstruction, allowUnbound = false): void {
     const {target, optional, allowTemporary} = instruction;
     /**
-     * Interceptor may directly put something into session cache, we need to
+     * Middlewares may directly put something into session cache, we need to
      * check the cache first, otherwise a BindingNotFoundError may be thrown
      */
     if (this.resolveFromCache(target)) {
