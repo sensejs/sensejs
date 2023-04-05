@@ -15,7 +15,7 @@ class CustomContext<T extends {} = any, K extends keyof T = any> {
 }
 
 describe('MethodInvoker', () => {
-  test('Without interceptor', async () => {
+  test('Without middleware', async () => {
     const container = new Container();
 
     @Injectable()
@@ -41,7 +41,7 @@ describe('MethodInvoker', () => {
     expect(f).toHaveBeenCalled();
   });
 
-  test('With intercept providers', async () => {
+  test('With middleware', async () => {
     const container = new Container();
 
     class MyComponent {}
@@ -83,6 +83,34 @@ describe('MethodInvoker', () => {
     expect(f).toHaveBeenNthCalledWith(1, 1);
     expect(f).toHaveBeenNthCalledWith(2, 2);
     expect(f).toHaveBeenNthCalledWith(3, 3);
+  });
+
+  test('Invoke with middleware multiple times', async () => {
+    const container = new Container();
+
+    const f = jest.fn();
+
+    @Middleware()
+    class MyInterceptor {
+      async handle(next: () => Promise<void>): Promise<void> {
+        f();
+        await next();
+      }
+    }
+    @Injectable()
+    class MyFoo {
+      foo() {}
+    }
+    const mi = container
+      .add(MyInterceptor)
+      .add(MyFoo)
+      .createMethodInvoker(MyFoo, 'foo', [MyInterceptor], CustomContext);
+
+    await mi.createInvokeSession().invokeTargetMethod(new CustomContext(MyFoo, 'foo'));
+    expect(f).toHaveBeenCalledTimes(1);
+
+    await mi.createInvokeSession().invokeTargetMethod(new CustomContext(MyFoo, 'foo'));
+    expect(f).toHaveBeenCalledTimes(2);
   });
 });
 

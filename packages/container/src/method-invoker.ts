@@ -70,6 +70,8 @@ export class AsyncMethodInvokeSession<
       await promise;
     };
 
+    metadataOfMiddlewares = metadataOfMiddlewares.slice();
+
     for (;;) {
       const mam = metadataOfMiddlewares.pop();
       if (typeof mam === 'undefined') {
