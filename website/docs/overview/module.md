@@ -26,7 +26,7 @@ application:
 You can create a module by decorating a class with `@ModuleClass`.
 
 ```typescript
-@ModuleClass({
+@Module({
     requires: [],   // Other modules that required by this module
     components: [], // Component injectable provided by this module
     factories: [],  // Dynamic injectable provided by this module
@@ -78,7 +78,7 @@ are automatically injected by the framework.
         async query() { }
     }
 
-    @ModuleClass({components: [DatabaseConnection]})
+    @Module({components: [DatabaseConnection]})
     class DatabaseModule {
 
         @OnModuleCreated()
@@ -98,7 +98,7 @@ are automatically injected by the framework.
     When a module is designed to handle requests, it needs`@OnModuleStart` and `@OnModuleStop` hooks.
 
     ```typescript
-    @ModuleClass()
+    @Module()
     class TcpEchoServerModule {
         tcpServer?: net.Server;
 
@@ -152,7 +152,7 @@ However, it is still a good practice to carefully consider the relationship betw
 
 There ought to be an entry point for an app. In SenseJS, your app can be started through:
 ```typescript
-@ModuleClass({ requires: [OtherModules] })
+@Module({ requires: [OtherModules] })
 class MyApp {
     main() {
     }
@@ -166,7 +166,7 @@ Some app may not have any explicit entry function, but establish a listener in `
 wait for requests. In this case, you can use `ApplicationRunner.instance.start` to start your app.
 
 ```typescript
-@ModuleClass({ requires: [OtherModules] })
+@Module({ requires: [OtherModules] })
 class MyApp {
     @OnModuleStart()
     onModuleStart() {
