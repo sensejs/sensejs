@@ -457,8 +457,8 @@ importers:
         specifier: ^2.4.0
         version: 2.4.0(@algolia/client-search@4.15.0)(@types/react@17.0.53)(eslint@8.36.0)(react-dom@17.0.2)(react@17.0.2)(typescript@4.9.5)
       '@mdx-js/react':
-        specifier: ^1.6.22
-        version: 1.6.22(react@17.0.2)
+        specifier: ^2.0.0
+        version: 2.0.0(react@17.0.2)
       '@svgr/webpack':
         specifier: ^6.5.1
         version: 6.5.1
@@ -3385,6 +3385,16 @@ packages:
       react: 17.0.2
     dev: true
 
+  /@mdx-js/react@2.0.0(react@17.0.2):
+    resolution: {integrity: sha512-icpMd43xqORnHSVRwALZv3ELN3IS7VS3BL+FyH2FFergQPSQ21FX0lN+OMIs0X+3dGY1L0DLhBCkMfPO+yDG7Q==}
+    peerDependencies:
+      react: '>=16'
+    dependencies:
+      '@types/mdx': 2.0.4
+      '@types/react': 17.0.53
+      react: 17.0.2
+    dev: true
+
   /@mdx-js/util@1.6.22:
     resolution: {integrity: sha512-H1rQc1ZOHANWBvPcW+JpGwr+juXSxM8Q8YCkm3GhZd8REu1fHR3z99CErO1p9pkcfcxZnMdIZdIsXkOHY0NilA==}
     dev: true
@@ -4056,6 +4066,10 @@ packages:
     resolution: {integrity: sha512-W864tg/Osz1+9f4lrGTZpCSO5/z4608eUp19tbozkq2HJK6i3z1kT0H9tlADXuYIb1YYOBByU4Jsqkk75q48qA==}
     dependencies:
       '@types/unist': 2.0.6
+    dev: true
+
+  /@types/mdx@2.0.4:
+    resolution: {integrity: sha512-qCYrNdpKwN6YO6FVnx+ulfqifKlE3lQGsNhvDaW9Oxzyob/cRLBJWow8GHBBD4NxQ7BVvtsATgLsX0vZAWmtrg==}
     dev: true
 
   /@types/mime@3.0.1:
