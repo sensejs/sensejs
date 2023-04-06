@@ -5,22 +5,24 @@
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
     "dist-esm/**/!(*.tsbuildinfo)",
+    "dist-dts/**/!(*.tsbuildinfo)",
     "src/**/*.ts",
     "README.md"
   ],
   "type": "module",
-  "types": "./dist-esm/lib/index.d.ts",
+  "types": "./dist-dts/lib/index.d.ts",
   "main": "./dist-cjs/lib/index.js",
   "module": "./dist-esm/lib/index.js",
   "exports": {
-    "import": "./dist-esm/lib/index.js",
+    "types": "./dist-dts/index.d.ts",
+    "module": "./dist-esm/lib/index.js",
     "require": "./dist-cjs/lib/index.js"
   },
   "scripts": {
     "test": "jest",
-    "build": "tsc -p tsconfig.build-cjs.json && tsc -p tsconfig.build-esm.json",
+    "build": "tsc -p tsconfig.build-cjs.json && tsc -p tsconfig.build-esm.json && tsc -p tsconfig.build-dts.json",
     "prepublishOnly": "npm run clean && npm run build",
-    "clean": "rm -rf ./dist-esm/lib dist-cjs/lib"
+    "clean": "rm -rf ./dist-esm/lib dist-cjs/lib dist-dts"
   },
   "publishConfig": {
     "access": "public"

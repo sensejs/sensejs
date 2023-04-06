@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig",
+  "extends": "../../tsconfig.baseline",
   "compilerOptions": {
     "noEmit": false,
     "outDir": "lib",

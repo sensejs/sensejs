@@ -1,8 +1,8 @@
-import {Class, Transformer} from './interfaces.js';
-import {Inject, InjectionDecorator, Optional} from './decorators.js';
-import {consoleLogger, DecoratorBuilder, Logger} from '@sensejs/utility';
+import type {Class, Transformer} from './interfaces.js';
+import {Inject, type InjectionDecorator, Optional} from './decorators.js';
+import {consoleLogger, DecoratorBuilder, type Logger} from '@sensejs/utility';
 
-export {consoleLogger, Logger} from '@sensejs/utility';
+export {consoleLogger, type Logger} from '@sensejs/utility';
 
 export abstract class LoggerBuilder {
   abstract build(loggerLabel: string): Logger;
