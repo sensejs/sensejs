@@ -1,5 +1,5 @@
 import {createKoaHttpModule} from '../src/index.js';
-import {Component, createModule, Inject, ModuleClass, EntryModule, ProcessManager} from '@sensejs/core';
+import {Component, createModule, Inject, Module, EntryModule, ProcessManager} from '@sensejs/core';
 import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
@@ -47,7 +47,7 @@ test('HttpModule', async () => {
     }
   }
 
-  @ModuleClass({
+  @Module({
     requires: [
       createKoaHttpModule({
         requires: [createModule({components: [MyComponent, FooController]})],
@@ -62,7 +62,7 @@ test('HttpModule', async () => {
       }),
     ],
   })
-  class Module {
+  class TestModule {
     async test(@Inject(serverIdentifier) server: Server, @Inject(ProcessManager) pm: ProcessManager) {
       const port = (server.address() as AddressInfo).port;
       const baseUrl = `http://localhost:${port}`;
@@ -81,5 +81,5 @@ test('HttpModule', async () => {
     }
   }
 
-  return await EntryModule.start(Module, 'test');
+  return await EntryModule.start(TestModule, 'test');
 });

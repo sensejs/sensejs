@@ -1,4 +1,4 @@
-import {createModule, Inject, ModuleClass, EntryModule} from '@sensejs/core';
+import {createModule, Inject, Module, EntryModule} from '@sensejs/core';
 import config from 'config';
 import {createPooledProducerModule, createSimpleProducerModule} from '../src/index.js';
 import {MessageProducerProvider} from '@sensejs/kafkajs-standalone';
@@ -6,7 +6,7 @@ import {randomUUID} from 'crypto';
 
 test('createSimpleProducerModule', async () => {
   const txId = randomUUID();
-  @ModuleClass({
+  @Module({
     requires: [
       createSimpleProducerModule({
         requires: [
@@ -33,7 +33,7 @@ test('createSimpleProducerModule', async () => {
 
 test('createPooledProducerModule', async () => {
   const txId = randomUUID();
-  @ModuleClass({
+  @Module({
     requires: [
       createPooledProducerModule({
         requires: [

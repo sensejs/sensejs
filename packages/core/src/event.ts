@@ -1,7 +1,7 @@
 import {Component, ComponentScope, Scope} from './component.js';
 import {ComponentFactory, Constructor, ServiceIdentifier} from './interfaces.js';
 import {Subject} from 'rxjs';
-import {createModule, ModuleClass, ModuleOption, OnModuleStart, OnModuleStop} from './module.js';
+import {createModule, Module, ModuleOption, OnModuleStart, OnModuleStop} from './module.js';
 import {Container, InjectScope, Middleware} from '@sensejs/container';
 import {Inject} from './decorators.js';
 import {ModuleScanner} from './module-scanner.js';
@@ -190,7 +190,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
     components: [EventBusImplement],
     factories: [{provide: EventPublisher, factory: EventPublisherFactory, scope: ComponentScope.SINGLETON}],
   });
-  @ModuleClass({requires: [createModule(option), eventBusModule]})
+  @Module({requires: [createModule(option), eventBusModule]})
   class EventSubscriptionModule {
     private subscriptions: EventChannelSubscription[] = [];
 

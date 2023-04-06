@@ -1,6 +1,6 @@
 import {jest} from '@jest/globals';
-import {ModuleClass, EntryModule, Inject} from '@sensejs/core';
-import {createConfigModule, Config, createStaticConfigModule, MissingConfigError} from '../src/index.js';
+import {EntryModule, Inject, Module} from '@sensejs/core';
+import {Config, createConfigModule, createStaticConfigModule, MissingConfigError} from '../src/index.js';
 
 describe('ConfigModule', () => {
   test('circurlar dependency', () => {
@@ -23,7 +23,7 @@ describe('ConfigModule', () => {
 
     const spy = jest.fn();
 
-    @ModuleClass({requires: [createConfigModule({config: root, prefix: 'config'})]})
+    @Module({requires: [createConfigModule({config: root, prefix: 'config'})]})
     class MyModule {
       constructor(
         @Inject('config') config: object,
@@ -51,7 +51,7 @@ test('InjectConfig', async () => {
     a: 'a',
     b: 'b',
   };
-  @ModuleClass({
+  @Module({
     requires: [createStaticConfigModule(staticConfig)],
   })
   class A {

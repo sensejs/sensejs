@@ -21,7 +21,7 @@ import {
 } from '../src/index.js';
 import {Container, Inject, Middleware} from '@sensejs/container';
 import {RequestListener} from 'http';
-import {Component, ModuleClass, EntryModule, ProcessManager} from '@sensejs/core';
+import {Component, Module, EntryModule, ProcessManager} from '@sensejs/core';
 
 describe('Http annotations', () => {
   test('metadata', () => {
@@ -161,7 +161,7 @@ test('Adaptor and abstract module', async () => {
   @Component()
   class NonController {}
 
-  @ModuleClass({
+  @Module({
     components: [TestController, Test1Controller, NonController],
   })
   class TestHttpModule extends AbstractHttpModule {

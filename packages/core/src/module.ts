@@ -176,10 +176,10 @@ export function OnModuleDestroy(): ModuleLifecycleMethodDecorator {
  * @param option
  */
 export function createModule(option: ModuleOption = {}): Constructor {
-  @ModuleClass(option)
-  class Module {}
-
-  return Module;
+  // This way we keep its name to be "Module", without conflicting with Module decorator
+  const module = class Module {};
+  Module(option)(module);
+  return module;
 }
 
 export class ModuleMetadataLoader {

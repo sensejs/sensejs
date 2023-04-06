@@ -3,7 +3,7 @@ import {
   Inject,
   InjectLogger,
   Logger,
-  ModuleClass,
+  Module,
   ModuleMetadata,
   ModuleOption,
   ModuleScanner,
@@ -236,7 +236,7 @@ export function createMessageConsumerModule(option: CreateMessageConsumerModuleO
     mergeConnectOption,
   );
 
-  @ModuleClass({
+  @Module({
     factories: [optionProvider, ...(factories ?? [])],
     constants,
     components,

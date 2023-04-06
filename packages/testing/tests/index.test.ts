@@ -1,12 +1,12 @@
 import '@sensejs/testing-utility/lib/mock-console.js';
-import {Component, Inject, ModuleClass, OnModuleCreate} from '@sensejs/core';
+import {Component, Inject, Module, OnModuleCreate} from '@sensejs/core';
 import {MockApplicationRunner} from '../src/index.js';
 
 test('MockAppRunner', () => {
   @Component()
   class MyComponent {}
 
-  @ModuleClass()
+  @Module()
   class MyApp {
     @OnModuleCreate()
     onInit(@Inject(MyComponent) myComponent: MyComponent) {

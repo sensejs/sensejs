@@ -4,7 +4,7 @@ import {
   EventPublisher,
   EventSubscriptionContext,
   Inject,
-  ModuleClass,
+  Module,
   EntryModule,
   ProcessManager,
   SubscribeEvent,
@@ -68,7 +68,7 @@ describe('Event subscribe and announce', () => {
       }
     }
 
-    @ModuleClass({
+    @Module({
       requires: [
         createEventSubscriptionModule({
           middlewares: [MockMiddleware],

@@ -4,7 +4,7 @@ import {Constructor} from './interfaces.js';
 import {BackgroundTaskQueue, ProcessManager} from './builtins.js';
 import {invokeMethod} from './method-invoker.js';
 import {ModuleScanner} from './module-scanner.js';
-import {ModuleClass, ModuleMetadataLoader} from './module.js';
+import {Module, ModuleMetadataLoader} from './module.js';
 import {firstValueFrom, Subject} from 'rxjs';
 
 export class ModuleShutdownError extends Error {
@@ -96,7 +96,7 @@ export class EntryModule<T extends {} = {}> {
     const exitSubject = new Subject<void>();
     const exitPromise = firstValueFrom(exitSubject);
 
-    @ModuleClass({requires: [entryModule]})
+    @Module({requires: [entryModule]})
     class EntrypointWrapperModule {
       async main(@Inject(Container) container: Container, @Inject(entryModule) entryModuleInstance: T) {
         if (method) {

@@ -3,7 +3,7 @@ import {
   EntryPoint,
   getModuleMetadata,
   Inject,
-  ModuleClass,
+  Module,
   ModuleScanner,
   OnModuleCreate,
   OnModuleDestroy,
@@ -30,7 +30,7 @@ test('EntryPoint decorator', async () => {
   });
 
   @EntryPoint()
-  @ModuleClass()
+  @Module()
   class GlobalEntryPoint {
     @OnModuleCreate()
     async onCreate(@Inject(ProcessManager) pm: ProcessManager, @Inject(ModuleScanner) moduleScanner: ModuleScanner) {
@@ -42,7 +42,7 @@ test('EntryPoint decorator', async () => {
       // will be ignored by jest and trigger an "unhandledRejection" event
       expect(() => {
         @EntryPoint()
-        @ModuleClass()
+        @Module()
         class B {}
       }).toThrow();
 

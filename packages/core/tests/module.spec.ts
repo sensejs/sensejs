@@ -7,7 +7,7 @@ import {
   DynamicModuleLoader,
   FactoryProvider,
   Inject,
-  ModuleClass,
+  Module,
   ModuleInstance,
   ModuleOption,
   EntryModule,
@@ -24,7 +24,7 @@ describe('Module resolve', () => {
   const id = Symbol();
 
   function createStubModule(option: ModuleOption, injectId: ServiceIdentifier = id) {
-    @ModuleClass(option)
+    @Module(option)
     class StubModule {
       constructor(@Inject(injectId) unnamed: unknown) {}
 
@@ -59,7 +59,7 @@ describe('Module resolve', () => {
     @Component()
     class Child extends Parent {}
 
-    @ModuleClass({
+    @Module({
       components: [Child],
     })
     class MyModule {
@@ -141,7 +141,7 @@ describe('Module resolve', () => {
 
     const stub = jest.fn();
 
-    @ModuleClass()
+    @Module()
     class DynamicModule {
       @OnModuleCreate()
       onModuleCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
@@ -170,7 +170,7 @@ describe('Module Root', () => {
 
     @Component()
     class MyComponent {}
-    @ModuleClass({
+    @Module({
       components: [MyComponent],
     })
     class MyModuleA {
@@ -182,7 +182,7 @@ describe('Module Root', () => {
 
     const onDestroy = jest.fn();
 
-    @ModuleClass({
+    @Module({
       requires: [MyModuleA],
     })
     class BadApp {
@@ -204,7 +204,7 @@ describe('Module Root', () => {
   });
 
   test('shutdown during on create', async () => {
-    @ModuleClass()
+    @Module()
     class MyModuleB {
       main() {}
 
@@ -222,14 +222,14 @@ describe('Module Root', () => {
   test('duplicate binding', async () => {
     @Component()
     class MyComponent {}
-    @ModuleClass({
+    @Module({
       components: [MyComponent],
     })
     class MyModuleA {}
     const entrySpy = jest.fn();
     const onDestroySpy = jest.fn();
 
-    @ModuleClass({
+    @Module({
       components: [MyComponent],
       requires: [MyModuleA],
     })
@@ -251,7 +251,7 @@ describe('Module Root', () => {
     const onDestroySpy = jest.fn();
     @Component()
     class MyComponent {}
-    @ModuleClass({
+    @Module({
       components: [MyComponent],
     })
     class MyModule {
@@ -275,7 +275,7 @@ describe('Module Root', () => {
   });
 
   test('startup error', async () => {
-    @ModuleClass()
+    @Module()
     class A {
       @OnModuleCreate()
       onModuleCreate() {
@@ -289,7 +289,7 @@ describe('Module Root', () => {
   });
 
   test('run error', async () => {
-    @ModuleClass()
+    @Module()
     class A {
       main() {
         throw new MyError();
@@ -304,7 +304,7 @@ describe('Module Root', () => {
       onStop = jest.fn(),
       main = jest.fn();
 
-    @ModuleClass()
+    @Module()
     class A {
       @OnModuleStart()
       onStart() {
@@ -333,7 +333,7 @@ describe('Module Root', () => {
   test('shutdown error', async () => {
     class ShutdownError extends Error {}
 
-    @ModuleClass()
+    @Module()
     class A {
       main() {
         throw new MyError();
@@ -381,7 +381,7 @@ describe('Module Root', () => {
       expect(zOnDestroySpy).not.toHaveBeenCalled();
     };
 
-    @ModuleClass({
+    @Module({
       components: [A],
     })
     class X {
@@ -416,7 +416,7 @@ describe('Module Root', () => {
       }
     }
 
-    @ModuleClass({
+    @Module({
       requires: [X],
     })
     class Y {
@@ -451,7 +451,7 @@ describe('Module Root', () => {
       }
     }
 
-    @ModuleClass({
+    @Module({
       requires: [X, Y],
     })
     class Z {

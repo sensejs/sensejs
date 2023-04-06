@@ -4,7 +4,7 @@ import {
   Inject,
   InjectLogger,
   Logger,
-  ModuleClass,
+  Module,
   ModuleOption,
   provideOptionInjector,
   ServiceIdentifier,
@@ -46,7 +46,7 @@ export function createKoaHttpModule(option: CreateKoaHttpModuleOption = {}): Con
     },
   );
 
-  @ModuleClass({
+  @Module({
     factories: [optionProvider, ...(factories ?? [])],
     components,
     constants,

@@ -1,7 +1,7 @@
 import {jest} from '@jest/globals';
 import {
   createConnectionFactory,
-  ModuleClass,
+  Module,
   EntryModule,
   provideConnectionFactory,
   provideOptionInjector,
@@ -35,7 +35,7 @@ test('createConnectionFactory', async () => {
 
   const foo = `foo_${Date.now()}`;
 
-  @ModuleClass({factories: [factoryProvider]})
+  @Module({factories: [factoryProvider]})
   class MyFactoryModule {
     constructor(@Inject(factoryProvider.factory) private factory: InstanceType<typeof factoryProvider.factory>) {}
 
@@ -50,7 +50,7 @@ test('createConnectionFactory', async () => {
     }
   }
 
-  @ModuleClass({requires: [MyFactoryModule]})
+  @Module({requires: [MyFactoryModule]})
   class MyModule {
     constructor(@Inject(MockConn) conn: MockConn) {}
   }
@@ -92,7 +92,7 @@ test('createConfigHelperFactory', async () => {
   const optionProvider = provideOptionInjector<Foo, typeof defaultValue>(defaultValue, injectSymbol, merger);
   const factories = [optionProvider];
 
-  @ModuleClass({
+  @Module({
     constants: [{provide: injectSymbol, value: {foo: {y: 'x'}, bar: false}}],
     factories,
   })
@@ -102,7 +102,7 @@ test('createConfigHelperFactory', async () => {
 
   await new EntryModule(CorrectModule).start();
 
-  @ModuleClass({
+  @Module({
     constants: [{provide: injectSymbol, value: {foo: {x: 'x'}}}],
     factories,
   })

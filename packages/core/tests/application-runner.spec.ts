@@ -5,7 +5,7 @@ import {
   Constructor,
   createModule,
   Inject,
-  ModuleClass,
+  Module,
   OnModuleCreate,
   OnModuleDestroy,
   OnModuleStart,
@@ -123,7 +123,7 @@ describe('Application', () => {
     const onModuleCreate = jest.fn(),
       onModuleDestroy = jest.fn();
 
-    @ModuleClass()
+    @Module()
     class TargetModule {
       @OnModuleCreate()
       async onModuleCreate() {
@@ -162,7 +162,7 @@ describe('Application', () => {
   });
 
   test('run module method fails', async () => {
-    @ModuleClass()
+    @Module()
     class TargetModule {
       async entryPoint() {
         await new Promise((resolve, reject) => setImmediate(reject, new Error()));
@@ -176,7 +176,7 @@ describe('Application', () => {
   test('error occurred before run module method', async () => {
     const fn = jest.fn();
 
-    @ModuleClass()
+    @Module()
     class TargetModule {
       @OnModuleCreate()
       async onModuleCreate() {
@@ -201,7 +201,7 @@ describe('Application', () => {
       constructor(@Inject('anything') anything: any) {}
     }
 
-    @ModuleClass({components: [BadComponent]})
+    @Module({components: [BadComponent]})
     class TargetModule {}
 
     const exitCode = await runModuleForTest(TargetModule);
@@ -217,7 +217,7 @@ describe('Application', () => {
       foo(@Inject('anything') anything: any) {}
     }
 
-    @ModuleClass({components: [BadComponent]})
+    @Module({components: [BadComponent]})
     class TargetModule {
       @OnModuleStart()
       onStart(@Inject(Container) container: Container) {
@@ -243,7 +243,7 @@ describe('Application', () => {
     @Component()
     class MyComponent {}
 
-    @ModuleClass({
+    @Module({
       components: [MyComponent],
     })
     class MyModuleA {
@@ -253,7 +253,7 @@ describe('Application', () => {
       }
     }
 
-    @ModuleClass({
+    @Module({
       components: [MyComponent],
       requires: [MyModuleA],
     })
@@ -267,7 +267,7 @@ describe('Application', () => {
   });
 
   test('failed on start', async () => {
-    @ModuleClass()
+    @Module()
     class BadModule {
       @OnModuleCreate()
       async onCreate() {
@@ -283,7 +283,7 @@ describe('Application', () => {
   });
 
   test('failed on stop', async () => {
-    @ModuleClass()
+    @Module()
     class BadModule {
       @OnModuleDestroy()
       async onDestroy() {
@@ -297,7 +297,7 @@ describe('Application', () => {
   });
 
   test('on caught error', async () => {
-    @ModuleClass()
+    @Module()
     class BadModule {
       @OnModuleCreate()
       async onCreate() {
@@ -313,7 +313,7 @@ describe('Application', () => {
   });
 
   test('on timeout', async () => {
-    @ModuleClass()
+    @Module()
     class BadModule {
       @OnModuleDestroy()
       async onDestroy() {
@@ -328,7 +328,7 @@ describe('Application', () => {
   });
 
   test('on repeated', async () => {
-    @ModuleClass()
+    @Module()
     class BadModule {
       @OnModuleDestroy()
       async onDestroy() {
