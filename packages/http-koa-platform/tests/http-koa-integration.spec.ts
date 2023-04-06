@@ -1,7 +1,7 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {jest} from '@jest/globals';
 import {Constructor, Inject} from '@sensejs/core';
-import {AsyncInterceptProvider, Container, InterceptProviderClass} from '@sensejs/container';
+import {Container, Middleware, MiddlewareClass} from '@sensejs/container';
 import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/index.js';
 import {
@@ -20,12 +20,12 @@ import {
 } from '@sensejs/http-common';
 
 describe('KoaHttpApplicationBuilder', () => {
-  const makeMockInterceptor = (stub: jest.Mock<any>, symbol: symbol): Constructor<AsyncInterceptProvider> => {
-    @InterceptProviderClass(symbol)
-    class MockHttpInterceptProvider {
+  const makeMockMiddleware = (stub: jest.Mock<any>, symbol: symbol): Constructor<Middleware> => {
+    @MiddlewareClass(symbol)
+    class MockHttpMiddleware {
       constructor(@Inject(HttpContext) readonly context: HttpContext) {}
 
-      async intercept(next: (value: number) => Promise<void>) {
+      async handle(next: (value: number) => Promise<void>) {
         stub('before');
         expect(this.context.nativeRequest).toBeDefined();
         expect(this.context.nativeResponse).toBeDefined();
@@ -44,7 +44,7 @@ describe('KoaHttpApplicationBuilder', () => {
       }
     }
 
-    return MockHttpInterceptProvider;
+    return MockHttpMiddleware;
   };
 
   test('http context', async () => {
@@ -134,17 +134,15 @@ describe('KoaHttpApplicationBuilder', () => {
       symbolB = Symbol('B'),
       symbolC = Symbol('C');
 
-    const InterceptorA = makeMockInterceptor(stubForA as any, symbolA);
-    const InterceptorB = makeMockInterceptor(stubForB as any, symbolB);
-    // const InterceptorC = makeMockInterceptor(stubForC, symbolC);
+    const MiddlewareA = makeMockMiddleware(stubForA as any, symbolA);
+    const MiddlewareB = makeMockMiddleware(stubForB as any, symbolB);
 
     @Controller('/', {
-      interceptProviders: [InterceptorB],
+      middlewares: [MiddlewareB],
     })
     class FooController {
       unusedMethod() {}
 
-      // @GET('/', {interceptors: [InterceptorC]})
       @GET('/')
       get(
         @Inject(HttpContext) ctx: HttpContext,
@@ -185,7 +183,7 @@ describe('KoaHttpApplicationBuilder', () => {
     const container = new Container();
     container.add(FooController);
     const koaHttpApplicationBuilder = new KoaHttpApplicationBuilder();
-    koaHttpApplicationBuilder.addGlobalInterceptProvider(InterceptorA);
+    koaHttpApplicationBuilder.addMiddlewares(MiddlewareA);
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build(container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));

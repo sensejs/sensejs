@@ -1,7 +1,7 @@
 import {
   Binding,
   BindingType,
-  CompatMiddleware,
+  Middleware,
   Constructor,
   FactoryBinding,
   InjectScope,
@@ -38,7 +38,7 @@ export class Container {
   createMethodInvoker<T extends {}, K extends keyof T, ServiceIds extends any[] = []>(
     targetConstructor: Constructor<T>,
     targetMethod: K,
-    middlewares: Constructor<CompatMiddleware<any>>[],
+    middlewares: Constructor<Middleware<any>>[],
     ...contextIds: ServiceIds
   ): MethodInvoker<T, K, ServiceIds> {
     this.validate();

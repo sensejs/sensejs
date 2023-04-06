@@ -1,12 +1,4 @@
-import {
-  InterceptProviderClass,
-  BindingType,
-  Constructor,
-  Container,
-  Inject,
-  Injectable,
-  MiddlewareClass,
-} from '../src/index.js';
+import {BindingType, Constructor, Container, Inject, Injectable, MiddlewareClass} from '../src/index.js';
 import {jest} from '@jest/globals';
 
 class CustomContext<T extends {} = any, K extends keyof T = any> {
@@ -50,45 +42,6 @@ describe('MethodInvoker', () => {
     @MiddlewareClass(MyComponent)
     class MyInterceptor {
       async handle(next: (value: MyComponent) => Promise<void>): Promise<void> {
-        f(1);
-        await new Promise(setImmediate);
-        await next(new MyComponent());
-        await new Promise(setImmediate);
-        f(3);
-      }
-    }
-
-    @Injectable()
-    class MyFoo {
-      foo(@Inject(MyComponent) mc: MyComponent) {
-        expect(mc).toBeInstanceOf(MyComponent);
-        f(2);
-        return new Promise(setImmediate);
-      }
-    }
-
-    await container
-      .add(MyInterceptor)
-      .add(MyFoo)
-      .createMethodInvoker(MyFoo, 'foo', [MyInterceptor], CustomContext)
-      .createInvokeSession()
-      .invokeTargetMethod(new CustomContext(MyFoo, 'foo'));
-
-    expect(f).toHaveBeenNthCalledWith(1, 1);
-    expect(f).toHaveBeenNthCalledWith(2, 2);
-    expect(f).toHaveBeenNthCalledWith(3, 3);
-  });
-
-  test('legacy', async () => {
-    const container = new Container();
-
-    class MyComponent {}
-
-    const f = jest.fn();
-
-    @InterceptProviderClass(MyComponent)
-    class MyInterceptor {
-      async intercept(next: (value: MyComponent) => Promise<void>): Promise<void> {
         f(1);
         await new Promise(setImmediate);
         await next(new MyComponent());

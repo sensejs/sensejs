@@ -60,29 +60,9 @@ export interface FactoryBinding<T> {
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
-/**
- * @deprecated Use Middleware instead
- */
-export interface AsyncInterceptProvider<T extends any[] = any[]> {
-  intercept(next: (...values: T) => Promise<void>): Promise<void>;
-}
-
 export interface Middleware<T extends any[] = any[]> {
   handle(next: (...values: T) => Promise<void>): Promise<void>;
 }
-
-export type CompatMiddleware<T extends any[] = any[]> =
-  | {
-      handle?: undefined;
-      /**
-       * @deprecated Exists for compatibility reason
-       * @todo Remove in future version
-       */
-      intercept(next: (...values: T) => Promise<void>): Promise<void>;
-    }
-  | {
-      handle(next: (...values: T) => Promise<void>): Promise<void>;
-    };
 
 export interface AliasBinding<T> {
   type: BindingType.ALIAS;

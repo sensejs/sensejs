@@ -4,14 +4,14 @@ import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
 import {Controller, GET, Query} from '@sensejs/http-common';
-import {InterceptProviderClass} from '@sensejs/container';
+import {MiddlewareClass} from '@sensejs/container';
 
 test('HttpModule', async () => {
   const serverIdentifier = Symbol();
 
-  @InterceptProviderClass()
-  class MockInterceptor {
-    intercept(next: () => Promise<void>): Promise<void> {
+  @MiddlewareClass()
+  class MockMiddleware {
+    handle(next: () => Promise<void>): Promise<void> {
       return next();
     }
   }
@@ -32,7 +32,7 @@ test('HttpModule', async () => {
     bar() {}
   }
 
-  @Controller('/foo', {interceptProviders: [MockInterceptor], labels: ['foo']})
+  @Controller('/foo', {middlewares: [MockMiddleware], labels: ['foo']})
   class FooController {
     constructor(@Inject(MyComponent) private myComponent: MyComponent) {}
 

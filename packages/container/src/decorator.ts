@@ -1,8 +1,6 @@
 import {
-  AsyncInterceptProvider,
   Class,
   ClassServiceId,
-  CompatMiddleware,
   Constructor,
   GeneralServiceId,
   InjectScope,
@@ -86,7 +84,7 @@ export function MiddlewareClass<T extends ServiceId[]>(...serviceIds: T) {
   };
 }
 
-export function getMiddlewareMetadata(constructor: Constructor): ServiceId<CompatMiddleware>[] {
+export function getMiddlewareMetadata(constructor: Constructor): ServiceId<Middleware>[] {
   const metadata = Reflect.getOwnMetadata(METADATA_KEY, constructor);
   if (!Array.isArray(metadata)) {
     throw new Error('missing metadata');
