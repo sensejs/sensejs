@@ -1,27 +1,33 @@
-import {Constructor, ServiceId} from './types.js';
+import {Class, ClassServiceId, Constructor, GeneralServiceId, ServiceId} from './types.js';
 import {Injectable} from './decorator.js';
 
 export const METADATA_KEY = Symbol();
 
-export interface Middleware<T extends any[] = any[]> {
-  handle(next: (...values: T) => Promise<void>): Promise<void>;
+/**
+ * @private
+ */
+export type ServiceTypeOf<T extends any[]> = T extends [Class<infer P>, ...infer Q]
+  ? [P, ...ServiceTypeOf<Q>]
+  : T extends [GeneralServiceId<any>, ...infer Q]
+  ? [unknown, ...ServiceTypeOf<Q>]
+  : [];
+
+export type Next<T extends any[] = []> = (...args: T) => Promise<void>;
+
+export type Middleware<T extends any[] = any[]> = {
+  handle(next: Next<ServiceTypeOf<T>>): Promise<void>;
+};
+
+export interface MiddlewareOption<T extends ServiceId[]> {
+  provides: [...T];
 }
 
 export function Middleware<T extends ServiceId[]>(option?: MiddlewareOption<T>) {
-  return <U extends Constructor<Middleware<ServiceTypeOf<T>>>>(constructor: U): U => {
+  return <U extends Constructor<Middleware<T>>>(constructor: U): U => {
     Reflect.defineMetadata(METADATA_KEY, option?.provides ?? [], constructor);
     Injectable()(constructor);
     return constructor;
   };
-}
-
-/**
- * @private
- */
-export type ServiceTypeOf<T extends any[]> = T extends [ServiceId<infer P>, ...infer Q] ? [P, ...ServiceTypeOf<Q>] : [];
-
-export interface MiddlewareOption<T extends ServiceId[]> {
-  provides?: T;
 }
 
 /**
