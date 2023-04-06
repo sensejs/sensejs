@@ -1,6 +1,6 @@
 import {ConstantProvider, Constructor, FactoryProvider} from './interfaces.js';
 import {Injectable, InjectScope, Scope} from '@sensejs/container';
-import _ from 'lodash';
+import {deprecate} from './utils/index.js';
 
 /**
  * Options to define a module
@@ -89,13 +89,19 @@ export interface ModuleClassDecorator {
   <T extends {}>(constructor: Constructor<T>): Constructor<T>;
 }
 
+export const ModuleClass = deprecate(
+  function ModuleClass(option: ModuleOption = {}) {
+    return Module(option);
+  },
+  {replacedBy: Module},
+);
 /**
  * Decorator for marking a constructor as a module
  *
  * @param option
  * @decorator
  */
-export function ModuleClass(option: ModuleOption = {}): ModuleClassDecorator {
+export function Module(option: ModuleOption = {}): ModuleClassDecorator {
   return <T extends {}>(constructor: Constructor<T>): Constructor<T> => {
     const onModuleCreate = getModuleLifecycleMethod(constructor, ON_MODULE_CREATE);
     const onModuleStart = getModuleLifecycleMethod(constructor, ON_MODULE_START);
