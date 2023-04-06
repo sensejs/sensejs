@@ -132,7 +132,9 @@ import {randomUUID} from 'crypto';
 
 const REQUEST_ID = Symbol('REQUEST_ID');
 
-@MiddlewareClass(REQUEST_ID)
+@Middleware({
+  provides: [REQUEST_ID]
+})
 class RequestIdProviderInterceptor {
 
   async intercept(next: (requestId: string) => Promise<void>) {
@@ -146,7 +148,9 @@ And then we'll attach the request id to a traceable logger,
 
 ```typescript
 
-@MiddlewareClass(LoggerBuilder)
+@Middleware({
+  provides: [LoggerBuilder]
+})
 class ContextualLoggingInterceptProvider {
 
   constructor(

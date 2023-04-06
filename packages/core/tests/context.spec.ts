@@ -1,6 +1,6 @@
 import {jest} from '@jest/globals';
 import {EventEmitter} from 'events';
-import {Component, ModuleClass, EntryModule, OnModuleCreate, OnModuleDestroy} from '../src/index.js';
+import {Component, Module, EntryModule, OnModuleCreate, OnModuleDestroy} from '../src/index.js';
 import {Inject} from '@sensejs/container';
 
 describe('ModuleRoot', () => {
@@ -16,7 +16,7 @@ describe('ModuleRoot', () => {
     const stubForCreateB = jest.fn();
     const stubForDestroyA = jest.fn();
 
-    @ModuleClass()
+    @Module()
     class ModuleA {
       @OnModuleCreate()
       async onCreate(): Promise<void> {
@@ -29,7 +29,7 @@ describe('ModuleRoot', () => {
       }
     }
 
-    @ModuleClass({requires: [ModuleA]})
+    @Module({requires: [ModuleA]})
     class ModuleB {
       @OnModuleCreate()
       async onCreate(): Promise<void> {
@@ -40,7 +40,7 @@ describe('ModuleRoot', () => {
       async onDestroy(): Promise<void> {}
     }
 
-    @ModuleClass({requires: [ModuleA, ModuleB]})
+    @Module({requires: [ModuleA, ModuleB]})
     class ModuleC {}
 
     const app = new EntryModule(ModuleC);
@@ -63,7 +63,7 @@ describe('ModuleRoot', () => {
     @Component()
     class FooComponent {}
 
-    @ModuleClass({components: [FooComponent]})
+    @Module({components: [FooComponent]})
     class FooModule {}
 
     const barComponentStub = jest.fn();
@@ -75,7 +75,7 @@ describe('ModuleRoot', () => {
       }
     }
 
-    @ModuleClass({requires: [FooModule], components: [BarComponent]})
+    @Module({requires: [FooModule], components: [BarComponent]})
     class BarModule {}
 
     const moduleRoot = new EntryModule(BarModule);

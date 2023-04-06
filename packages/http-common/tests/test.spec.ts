@@ -19,35 +19,26 @@ import {
   PUT,
   Query,
 } from '../src/index.js';
-import {Container, Inject, InterceptProviderClass, MiddlewareClass} from '@sensejs/container';
+import {Container, Inject, Middleware} from '@sensejs/container';
 import {RequestListener} from 'http';
-import {Component, ModuleClass, EntryModule, ProcessManager} from '@sensejs/core';
+import {Component, Module, EntryModule, ProcessManager} from '@sensejs/core';
 
 describe('Http annotations', () => {
   test('metadata', () => {
     const handlePut = Symbol();
 
-    const generateInterceptorClass = () => {
-      @InterceptProviderClass()
-      class Interceptor {
-        async intercept(cb: () => Promise<void>) {}
-      }
-
-      return Interceptor;
-    };
-
-    @InterceptProviderClass()
+    @Middleware()
     class I1 {
-      async intercept(cb: () => Promise<void>) {}
+      async handle(cb: () => Promise<void>) {}
     }
 
-    @MiddlewareClass()
+    @Middleware()
     class I2 {
       async handle(cb: () => Promise<void>) {}
     }
     const L1 = Symbol();
 
-    @Controller('/', {interceptProviders: [I1], labels: [L1]})
+    @Controller('/', {middlewares: [I1], labels: [L1]})
     class FooController {
       @GET('/get', {middlewares: [I2]})
       handleGet() {}
@@ -145,32 +136,32 @@ test('Adaptor and abstract module', async () => {
   const addControllerSpy = jest.spyOn(TestAdaptor.prototype, 'addControllerWithMetadata');
   const addRouterSpy = jest.spyOn(TestAdaptor.prototype, 'addRouterSpec');
 
-  const createInterceptor = () => {
-    @InterceptProviderClass()
-    class I {
-      intercept(next: () => Promise<void>) {
+  const createMiddleware = () => {
+    @Middleware()
+    class M {
+      handle(next: () => Promise<void>) {
         return next();
       }
     }
-    return I;
+    return M;
   };
 
-  @Controller('/', {interceptProviders: [createInterceptor()]})
+  @Controller('/', {middlewares: [createMiddleware()]})
   class TestController {
-    @GET('/', {interceptProviders: [createInterceptor()]})
+    @GET('/', {middlewares: [createMiddleware()]})
     foo() {}
   }
 
-  @Controller('/', {interceptProviders: [createInterceptor()], labels: ['foobar']})
+  @Controller('/', {middlewares: [createMiddleware()], labels: ['foobar']})
   class Test1Controller {
-    @GET('/', {interceptProviders: [createInterceptor()]})
+    @GET('/', {middlewares: [createMiddleware()]})
     foo() {}
   }
 
   @Component()
   class NonController {}
 
-  @ModuleClass({
+  @Module({
     components: [TestController, Test1Controller, NonController],
   })
   class TestHttpModule extends AbstractHttpModule {
@@ -180,7 +171,7 @@ test('Adaptor and abstract module', async () => {
           listenPort: 0,
         },
         matchLabels: (labels) => labels.size == 0,
-        globalInterceptProviders: [createInterceptor()],
+        middlewares: [createMiddleware()],
       });
     }
 
@@ -205,7 +196,7 @@ test('Adaptor and abstract module', async () => {
     }
 
     protected getAdaptor(): AbstractHttpApplicationBuilder {
-      return new TestAdaptor().addGlobalInterceptProvider(createInterceptor());
+      return new TestAdaptor().addMiddlewares(createMiddleware());
     }
   }
 

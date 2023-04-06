@@ -17,6 +17,7 @@ import {jest} from '@jest/globals';
 function untransformed(input: any) {
   return input;
 }
+
 describe('Container', () => {
   test('simple resolve', () => {
     const container = new Container();
@@ -199,7 +200,9 @@ describe('Container', () => {
 
   test('invalid param injection metadata', () => {
     const container = new Container();
+
     class Foo {}
+
     expect(() =>
       container
         .addBinding({
@@ -296,6 +299,7 @@ describe('Container', () => {
 
       method(@Inject('const2') param1: number, param2: number) {}
     }
+
     container.add(Foo);
     expect(() => container.createResolveSession().invoke(Foo, 'method')).toThrow(NoEnoughInjectMetadataError);
   });
@@ -308,6 +312,7 @@ describe('Container', () => {
 
       method(@Optional() @Inject('const') param1?: number) {}
     }
+
     container.add(Foo);
 
     container.createResolveSession().invoke(Foo, 'method');
@@ -466,8 +471,10 @@ describe('Container', () => {
           stub();
         }
       }
+
       async bar() {}
     }
+
     container.add(GlobalA);
     container.add(GlobalB);
     container.add(A);
@@ -491,6 +498,7 @@ describe('Container', () => {
     class ParentB {}
 
     class ChildA extends ParentA {}
+
     class ChildB extends ParentB {}
 
     const container = new Container();

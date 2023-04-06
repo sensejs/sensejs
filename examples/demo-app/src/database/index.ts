@@ -1,11 +1,13 @@
-import {DynamicModuleLoader, Inject, ModuleClass, ModuleScanner, OnModuleCreate, OnModuleDestroy} from '@sensejs/core';
+import {DynamicModuleLoader, Inject, Module, ModuleScanner, OnModuleCreate, OnModuleDestroy} from '@sensejs/core';
 import {SqliteDriver} from '@mikro-orm/sqlite';
 import {Constructor, EntityManager, MikroORM} from '@mikro-orm/core';
-import {MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 import PublishingModule from '../example/index.js';
 import {EXPORT_ENTITY} from '../constants.js';
 
-@MiddlewareClass(EntityManager)
+@Middleware({
+  provides: [EntityManager],
+})
 export class DatabaseTransactionMiddleware {
   constructor(@Inject(EntityManager) private globalEntityManager: EntityManager) {}
 
@@ -16,7 +18,7 @@ export class DatabaseTransactionMiddleware {
   }
 }
 
-@ModuleClass({
+@Module({
   requires: [PublishingModule],
 })
 export class MikroOrmConnectionModule {

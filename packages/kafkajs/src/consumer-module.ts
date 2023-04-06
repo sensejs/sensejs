@@ -3,7 +3,7 @@ import {
   Inject,
   InjectLogger,
   Logger,
-  ModuleClass,
+  Module,
   ModuleMetadata,
   ModuleOption,
   ModuleScanner,
@@ -13,7 +13,7 @@ import {
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {AsyncInterceptProvider, CompatMiddleware, Container, Middleware} from '@sensejs/container';
+import {MiddlewareClass, Container, Middleware} from '@sensejs/container';
 import {
   KafkaBatchConsumeMessageParam,
   KafkaLogAdapterOption,
@@ -41,7 +41,6 @@ export interface ConfigurableMessageConsumerOption extends Omit<MessageConsumerO
 
 export interface MessageConsumerModuleOption {
   middlewares?: Constructor<Middleware>[];
-  globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
   messageConsumerOption?: Partial<ConfigurableMessageConsumerOption>;
   injectOptionFrom?: ServiceIdentifier<ConfigurableMessageConsumerOption>;
   matchLabels?: (string | symbol)[] | Set<string | symbol> | ((labels: Set<string | symbol>) => boolean);
@@ -80,7 +79,7 @@ function getSubscribeOption(
 
 function getSimpleConsumeCallback<T extends {}>(
   container: Container,
-  middlewares: Constructor<CompatMiddleware>[],
+  middlewares: Constructor<Middleware>[],
   consumerGroupId: string,
   target: Constructor<T>,
   method: keyof T,
@@ -100,7 +99,7 @@ function getSimpleConsumeCallback<T extends {}>(
 
 function getBatchedConsumeCallback<T extends {}>(
   container: Container,
-  middlewares: Constructor<CompatMiddleware>[],
+  middlewares: Constructor<Middleware>[],
   consumerGroupId: string,
   target: Constructor<T>,
   method: keyof T,
@@ -134,7 +133,7 @@ function scanPrototypeMethod(
     }
     const {topic, fromBeginning} = getSubscribeOption(subscribeMetadata, container);
     const middlewares = [
-      ...((option.middlewares ?? option.globalInterceptProviders ?? []) as Constructor<CompatMiddleware>[]),
+      ...((option.middlewares ?? []) as Constructor<Middleware>[]),
       ...controllerMetadata.middlewares,
       ...subscribeMetadata.middlewares,
     ];
@@ -237,7 +236,7 @@ export function createMessageConsumerModule(option: CreateMessageConsumerModuleO
     mergeConnectOption,
   );
 
-  @ModuleClass({
+  @Module({
     factories: [optionProvider, ...(factories ?? [])],
     constants,
     components,

@@ -1,9 +1,11 @@
 import {Inject, LoggerBuilder} from '@sensejs/core';
 import {SenseLoggerBuilder} from '@sensejs/logger';
-import {MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 import {randomUUID} from 'crypto';
 
-@MiddlewareClass(LoggerBuilder)
+@Middleware({
+  provides: [LoggerBuilder],
+})
 export class TracingMiddleware {
   constructor(@Inject(SenseLoggerBuilder) private loggerBuilder: SenseLoggerBuilder) {}
 

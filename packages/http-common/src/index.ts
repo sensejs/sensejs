@@ -13,7 +13,7 @@ import {
   Transformer,
 } from '@sensejs/core';
 import {IncomingHttpHeaders, RequestListener} from 'http';
-import {AsyncInterceptProvider, CompatMiddleware, Container, Middleware} from '@sensejs/container';
+import {Container, Middleware} from '@sensejs/container';
 import http from 'http';
 import {promisify} from 'util';
 
@@ -70,11 +70,6 @@ export interface ControllerOption {
   middlewares?: Constructor<Middleware>[];
 
   /**
-   * @deprecated Use middlewares instead
-   */
-  interceptProviders?: Constructor<AsyncInterceptProvider>[];
-
-  /**
    * Label of controller
    *
    * @see HttpModuleOption
@@ -87,7 +82,7 @@ export interface ControllerMetadata<T extends {} = {}> {
   path: string;
   target: Constructor;
   prototype: object;
-  middlewares: Constructor<CompatMiddleware>[];
+  middlewares: Constructor<Middleware>[];
   labels: Set<string | symbol>;
 }
 
@@ -107,18 +102,13 @@ export interface HttpApplicationOption {
 }
 
 export interface RequestMappingMetadata {
-  middlewares?: Constructor<CompatMiddleware>[];
+  middlewares?: Constructor<Middleware>[];
   httpMethod: HttpMethod;
   path: string;
 }
 
 export interface RequestMappingOption {
   middlewares?: Constructor<Middleware>[];
-
-  /**
-   * @deprecated Use middlewares instead
-   */
-  interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 
 export interface HttpRequest {
@@ -188,7 +178,7 @@ export interface MethodRouteSpec<T extends {} = any> {
   path: string;
   httpMethod: HttpMethod;
 
-  middlewares: Constructor<CompatMiddleware>[];
+  middlewares: Constructor<Middleware>[];
   // interceptProviders: Constructor<AsyncInterceptProvider>[];
   targetConstructor: Constructor<T>;
   targetMethod: keyof T;
@@ -201,7 +191,7 @@ export interface ControllerRouteSpec {
 
 export abstract class AbstractHttpApplicationBuilder {
   // private readonly globalInterceptProviders: Constructor<AsyncInterceptProvider>[] = [];
-  private readonly middlewares: Constructor<CompatMiddleware>[] = [];
+  private readonly middlewares: Constructor<Middleware>[] = [];
   protected readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   protected errorHandler?: (e: unknown) => any;
 
@@ -228,12 +218,7 @@ export abstract class AbstractHttpApplicationBuilder {
     return this;
   }
 
-  addGlobalInterceptProvider(...interceptProvider: Constructor<AsyncInterceptProvider>[]): this {
-    this.middlewares.push(...interceptProvider);
-    return this;
-  }
-
-  addMiddlewares(...middlewares: Constructor<CompatMiddleware>[]): this {
+  addMiddlewares(...middlewares: Constructor<Middleware>[]): this {
     this.middlewares.push(...middlewares);
     return this;
   }
@@ -419,7 +404,7 @@ export function RequestMapping(
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,
-      middlewares: option.middlewares ?? option.interceptProviders ?? [],
+      middlewares: option.middlewares ?? [],
     });
     const metadata = ensureMetadataOnMethod(prototype, method, {params: new Map()});
     metadata.path = path;
@@ -490,7 +475,7 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
       target,
       path,
       prototype: target.prototype,
-      middlewares: controllerOption.middlewares ?? controllerOption.interceptProviders ?? [],
+      middlewares: controllerOption.middlewares ?? [],
       labels: labels instanceof Set ? labels : new Set(labels),
     });
   };
@@ -511,12 +496,6 @@ export interface HttpModuleOption<O extends HttpOption = HttpOption> {
    * Middlewares applied to all requests handled by this http server
    */
   middlewares?: Constructor<Middleware>[];
-
-  /**
-   * @deprecated Use middlewares instead
-   * Intercept providers applied by this http server
-   */
-  globalInterceptProviders?: Constructor<AsyncInterceptProvider>[];
 
   /**
    * If specified, http server instance will be bound to container with this as service identifier
@@ -556,7 +535,7 @@ export abstract class AbstractHttpModule {
   @OnModuleStart()
   async onStart(@Inject(ModuleScanner) moduleScanner: ModuleScanner, @Inject(Container) container: Container) {
     const httpAdaptor = this.getAdaptor();
-    const middlewares = this.httpModuleOption.middlewares ?? this.httpModuleOption.globalInterceptProviders ?? [];
+    const middlewares = this.httpModuleOption.middlewares ?? [];
     httpAdaptor.addMiddlewares(...middlewares);
     this.scanControllers(httpAdaptor, moduleScanner);
     await this.setupHttpServer(httpAdaptor, this.httpServer, container);

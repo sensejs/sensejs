@@ -8,7 +8,7 @@ import {
   Logger,
   LOGGER_BUILDER_SYMBOL,
   LoggerBuilder,
-  ModuleClass,
+  Module,
   EntryModule,
 } from '../src/index.js';
 import '@sensejs/testing-utility/lib/mock-console';
@@ -67,7 +67,7 @@ describe('Logger', () => {
       }
     }
 
-    @ModuleClass({
+    @Module({
       requires: [
         createModule({
           constants: [{provide: LOGGER_BUILDER_SYMBOL, value: new MockLoggerBuilder()}],

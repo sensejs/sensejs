@@ -1,14 +1,14 @@
 import {
   createModule,
   getModuleMetadata,
-  ModuleClass,
+  Module,
   OnModuleCreate,
   OnModuleDestroy,
   OnModuleStart,
   OnModuleStop,
 } from '../src/index.js';
 
-describe('@ModuleClass', () => {
+describe('@Module', () => {
   test('created module metadata', () => {
     const dependency = createModule();
     const key = Symbol();
@@ -34,10 +34,10 @@ describe('@ModuleClass', () => {
   });
 
   test('decorated module metadata', () => {
-    @ModuleClass()
+    @Module()
     class Y {}
 
-    @ModuleClass({
+    @Module({
       requires: [Y],
     })
     class X {

@@ -1,7 +1,6 @@
 import {validateBindings} from '../src/utils.js';
 import {Binding, BindingType, InjectScope, ServiceId} from '../src/types.js';
-import {InterceptProviderClass, BindingNotFoundError, CircularDependencyError} from '../src/index.js';
-import {jest} from '@jest/globals';
+import {BindingNotFoundError, CircularDependencyError} from '../src/index.js';
 
 describe('validateBinding', () => {
   class A {}

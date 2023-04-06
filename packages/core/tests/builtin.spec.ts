@@ -1,5 +1,5 @@
 import {jest} from '@jest/globals';
-import {Inject, ModuleClass, EntryModule, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src/index.js';
+import {Inject, Module, EntryModule, OnModuleCreate, BackgroundTaskQueue, ModuleScanner} from '../src/index.js';
 
 describe('BuiltinModule', () => {
   test('QueuedTask', async () => {
@@ -23,7 +23,7 @@ describe('BuiltinModule', () => {
 
     const moduleScannerStub = jest.fn();
 
-    @ModuleClass()
+    @Module()
     class MyModule {
       @OnModuleCreate()
       onCreate(

@@ -16,7 +16,7 @@ import {catchError, first, mapTo, mergeMap, skip, tap, timeout} from 'rxjs/opera
 import {EntryModule} from './entry-module.js';
 import {consoleLogger, Logger} from './logger.js';
 import {Constructor} from './interfaces.js';
-import {ModuleClass, ModuleMetadataLoader} from './module.js';
+import {Module, ModuleMetadataLoader} from './module.js';
 import {ProcessManager} from './builtins.js';
 import _ from 'lodash';
 import {Container} from '@sensejs/container';
@@ -133,7 +133,7 @@ export class ApplicationRunner {
       throw new Error('run() or runModule() ApplicationRunner can only be executed once in a process');
     }
     const stoppedPromise = firstValueFrom(this.stoppedSubject);
-    @ModuleClass({
+    @Module({
       requires: [entryModuleConstructor],
     })
     class RunnerWrapperModule {

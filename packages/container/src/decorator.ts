@@ -1,15 +1,4 @@
-import {
-  AsyncInterceptProvider,
-  Class,
-  ClassServiceId,
-  CompatMiddleware,
-  Constructor,
-  GeneralServiceId,
-  InjectScope,
-  Middleware,
-  ServiceId,
-  Transformer,
-} from './types.js';
+import {Class, ClassServiceId, Constructor, GeneralServiceId, InjectScope, ServiceId, Transformer} from './types.js';
 import {
   assignParamInjectMetadata,
   ensureConstructorParamInjectMetadata,
@@ -45,13 +34,6 @@ export function Inject<T, R = T>(serviceId: ServiceId<T>, option: InjectOption<T
   };
 }
 
-/**
- * @deprecated
- */
-export function inject<T, R = T>(serviceId: ServiceId<T>, transform?: Transformer<T, R>): InjectionDecorator {
-  return Inject(serviceId, {transform});
-}
-
 export function Optional(value = true): InjectionDecorator {
   return (ctor: Class | {}, name: keyof any, index: number): void => {
     if (typeof ctor !== 'function') {
@@ -61,13 +43,6 @@ export function Optional(value = true): InjectionDecorator {
       assignParamInjectMetadata(ctor, index, {optional: value});
     }
   };
-}
-
-/**
- * @deprecated
- */
-export function optional(value = true): InjectionDecorator {
-  return Optional(value);
 }
 
 export function Injectable() {
@@ -87,35 +62,4 @@ export namespace Scope {
   export const SESSION = InjectScope.SESSION;
   export const TRANSIENT = InjectScope.TRANSIENT;
   export const SINGLETON = InjectScope.SINGLETON;
-}
-
-export const METADATA_KEY = Symbol();
-export type ServiceTypeOf<T extends any[]> = T extends [ServiceId<infer P>, ...infer Q] ? [P, ...ServiceTypeOf<Q>] : [];
-
-export function MiddlewareClass<T extends ServiceId[]>(...serviceIds: T) {
-  return <U extends Constructor<Middleware<ServiceTypeOf<T>>>>(constructor: U): U => {
-    Reflect.defineMetadata(METADATA_KEY, serviceIds, constructor);
-    Injectable()(constructor);
-    return constructor;
-  };
-}
-
-/**
- * @deprecated Use MiddlewareClass instead
- */
-export function InterceptProviderClass<T extends ServiceId[]>(...serviceIds: T) {
-  return <U extends Constructor<AsyncInterceptProvider<ServiceTypeOf<T>>>>(constructor: U): U => {
-    const proxy = new Proxy<U>(constructor, {});
-    Reflect.defineMetadata(METADATA_KEY, serviceIds, constructor);
-    Injectable()(constructor);
-    return constructor;
-  };
-}
-
-export function getMiddlewareMetadata(constructor: Constructor): ServiceId<CompatMiddleware>[] {
-  const metadata = Reflect.getOwnMetadata(METADATA_KEY, constructor);
-  if (!Array.isArray(metadata)) {
-    throw new Error('missing metadata');
-  }
-  return metadata;
 }

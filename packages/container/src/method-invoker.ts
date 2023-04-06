@@ -1,13 +1,4 @@
-import {
-  Binding,
-  Class,
-  CompatMiddleware,
-  Constructor,
-  InjectScope,
-  InvokeResult,
-  ParamInjectionMetadata,
-  ServiceId,
-} from './types.js';
+import {Binding, Class, Constructor, InjectScope, InvokeResult, ParamInjectionMetadata, ServiceId} from './types.js';
 import {Instruction, InstructionCode} from './instructions.js';
 import {
   convertParamInjectionMetadata,
@@ -15,7 +6,8 @@ import {
   ensureValidatedMethodInvokeProxy,
   MethodInvokeProxy,
 } from './metadata.js';
-import {getMiddlewareMetadata, Scope, ServiceTypeOf} from './decorator.js';
+import {Scope} from './decorator.js';
+import {getMiddlewareMetadata, Middleware, ServiceTypeOf} from './middleware.js';
 import {ResolveSession} from './resolve-session.js';
 import {BindingNotFoundError} from './errors.js';
 import {compileParamInjectInstruction} from './utils.js';
@@ -86,10 +78,9 @@ export class AsyncMethodInvokeSession<
       const [instructions, metadata] = mam;
       const next = func;
       func = async (): Promise<void> => {
-        const instance = this.evalInstructions(instructions) as CompatMiddleware<any>;
-        const fn = (instance.handle ?? instance.intercept).bind(instance);
+        const instance = this.evalInstructions(instructions) as Middleware<any>;
 
-        return fn((...args: any[]) => {
+        return instance.handle((...args: any[]) => {
           for (let i = 0; i < metadata.length; i++) {
             this.addTemporaryConstantBinding(metadata[i], args[i]);
           }
@@ -127,7 +118,7 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     private validatedSet: Set<ServiceId>,
     private targetConstructor: Constructor<T>,
     private targetMethod: K,
-    private middlewares: Constructor<CompatMiddleware<any>>[],
+    private middlewares: Constructor<Middleware<any>>[],
     ...contextIds: ContextIds
   ) {
     this.contextIds = contextIds;

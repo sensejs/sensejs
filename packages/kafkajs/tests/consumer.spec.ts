@@ -15,7 +15,7 @@ import {
   SubscribeTopic,
 } from '../src/index.js';
 import {lastValueFrom, Subject} from 'rxjs';
-import {InterceptProviderClass, MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 
 describe('Subscribe decorators', () => {
   test('Duplicated @SubscribeTopic', () => {
@@ -60,14 +60,16 @@ describe('Subscriber', () => {
   });
 
   const makeMiddleware = (symbol: symbol) => {
-    @MiddlewareClass(symbol)
-    class Interceptor {
+    @Middleware({
+      provides: [symbol],
+    })
+    class TestMiddleware {
       async handle(next: (value: any) => Promise<void>): Promise<void> {
         await next(Math.random());
       }
     }
 
-    return Interceptor;
+    return TestMiddleware;
   };
 
   test('consume message', async () => {
@@ -126,9 +128,11 @@ describe('Subscriber', () => {
       symbolC = Symbol();
     const interceptorA = makeMiddleware(symbolA),
       interceptorB = makeMiddleware(symbolB);
-    @InterceptProviderClass(symbolC)
-    class InterceptorC {
-      async intercept(next: (value: any) => Promise<void>): Promise<void> {
+    @Middleware({
+      provides: [symbolC],
+    })
+    class MiddlewareC {
+      async handle(next: (value: any) => Promise<void>): Promise<void> {
         await next(Math.random());
       }
     }
@@ -138,7 +142,7 @@ describe('Subscriber', () => {
       @SubscribeTopic({
         injectOptionFrom: 'config.consumer.topic',
         option: {fromBeginning: true},
-        interceptProviders: [InterceptorC],
+        middlewares: [MiddlewareC],
       })
       simple(
         @Inject(SimpleMessageConsumeContext) ctx: MessageConsumeContext,
@@ -153,7 +157,7 @@ describe('Subscriber', () => {
 
       @BatchedSubscribeTopic({
         option: {fromBeginning: true, topic: batchedTopic},
-        interceptProviders: [InterceptorC],
+        middlewares: [MiddlewareC],
       })
       batched(
         @Inject(BatchedMessageConsumeContext) ctx: BatchedMessageConsumeContext,

@@ -1,9 +1,9 @@
 import 'reflect-metadata';
-import {EntryPoint, ModuleClass} from '@sensejs/core';
+import {EntryPoint, Module} from '@sensejs/core';
 import {HttpModule} from './http.js';
 
 @EntryPoint()
-@ModuleClass({
+@Module({
   requires: [HttpModule],
 })
 class App {}

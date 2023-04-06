@@ -3,7 +3,7 @@ import {
   DynamicModuleLoader,
   Inject,
   InjectLogger,
-  ModuleClass,
+  Module,
   ModuleOption,
   OnModuleCreate,
   OnModuleDestroy,
@@ -65,7 +65,7 @@ export function createPooledProducerModule(option: PooledProducerModuleOption): 
     _.merge({}, fallback, injected),
   );
 
-  @ModuleClass({factories: [configurationFactory, ...(factories ?? [])], ...rest})
+  @Module({factories: [configurationFactory, ...(factories ?? [])], ...rest})
   class PooledProducerModule extends AbstractPooledProducerModule {
     constructor(@InjectLogger() logger: Logger, @Inject(configurationFactory.provide) option: MessageProducerOption) {
       super({...option, logger});
@@ -81,7 +81,7 @@ export function createSimpleProducerModule(option: SimpleProducerModuleOption): 
     _.merge({}, fallback, injected),
   );
 
-  @ModuleClass({factories: [configurationFactory, ...(factories ?? [])], ...rest})
+  @Module({factories: [configurationFactory, ...(factories ?? [])], ...rest})
   class SimpleProducerModule extends AbstractSimpleProducerModule {
     constructor(@InjectLogger() logger: Logger, @Inject(configurationFactory.provide) option: MessageProducerOption) {
       super({...option, logger});

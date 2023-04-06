@@ -1,7 +1,7 @@
 import {InjectLogger, Logger} from '@sensejs/core';
-import {MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 
-@MiddlewareClass()
+@Middleware()
 export class RequestTimingMiddleware {
   constructor(@InjectLogger(RequestTimingMiddleware) private logger: Logger) {}
 

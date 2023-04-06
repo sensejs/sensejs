@@ -4,13 +4,13 @@ import {
   EventPublisher,
   EventSubscriptionContext,
   Inject,
-  ModuleClass,
+  Module,
   EntryModule,
   ProcessManager,
   SubscribeEvent,
   SubscribeEventController,
 } from '../src/index.js';
-import {InterceptProviderClass, MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 
 describe('Event subscribe and announce', () => {
   test('Subscribe', async () => {
@@ -20,19 +20,21 @@ describe('Event subscribe and announce', () => {
     const filterSpy = jest.fn();
 
     // This one keeps legacy format for compatibility test
-    @InterceptProviderClass()
-    class MockInterceptor {
+    @Middleware()
+    class MockMiddleware {
       constructor(@Inject(EventSubscriptionContext) readonly context: EventSubscriptionContext) {}
 
-      intercept(next: () => Promise<void>): Promise<void> {
+      handle(next: () => Promise<void>): Promise<void> {
         expect(this.context.targetConstructor).toBe(SubscribeController);
         expect(typeof this.context.targetMethodKey).toBe('string');
         return next();
       }
     }
 
-    @MiddlewareClass('a', 'b')
-    class MockChannelInterceptor {
+    @Middleware({
+      provides: ['a', 'b'],
+    })
+    class MockChannelMiddleware {
       constructor(@Inject(EventSubscriptionContext) readonly context: EventSubscriptionContext) {}
 
       handle(next: (a: any, b: any) => Promise<void>): Promise<void> {
@@ -59,17 +61,17 @@ describe('Event subscribe and announce', () => {
           filterSpy(x);
           return true;
         },
-        middlewares: [MockChannelInterceptor],
+        middlewares: [MockChannelMiddleware],
       })
       channel(@Inject('a') a: any, @Inject('b') b: any) {
         spy3(a, b);
       }
     }
 
-    @ModuleClass({
+    @Module({
       requires: [
         createEventSubscriptionModule({
-          interceptProviders: [MockInterceptor],
+          middlewares: [MockMiddleware],
           components: [SubscribeController],
         }),
       ],

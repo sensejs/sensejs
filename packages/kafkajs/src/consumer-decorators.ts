@@ -1,17 +1,17 @@
-import {AsyncInterceptProvider, CompatMiddleware, Middleware} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 import {Component, Constructor, ServiceIdentifier} from '@sensejs/core';
 
 export interface BatchedSubscribeTopicMetadata {
   type: 'batched';
   fallbackOption?: SubscribeTopicOption;
-  middlewares: Constructor<CompatMiddleware>[];
+  middlewares: Constructor<Middleware>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
 export interface SimpleSubscribeTopicMetadata {
   type: 'simple';
   fallbackOption?: SubscribeTopicOption;
-  middlewares: Constructor<CompatMiddleware>[];
+  middlewares: Constructor<Middleware>[];
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 }
 
@@ -23,19 +23,13 @@ export interface SubscribeTopicOption {
 }
 
 export interface SubscribeControllerMetadata<T extends {} = any> {
-  middlewares: Constructor<CompatMiddleware>[];
+  middlewares: Constructor<Middleware>[];
   target: Constructor<T>;
   labels: Set<string | symbol>;
 }
 
 export interface SubscribeControllerOption {
   middlewares?: Constructor<Middleware>[];
-
-  /**
-   * @deprecated Use middlewares instead
-   */
-  interceptProviders?: Constructor<AsyncInterceptProvider>[];
-
   labels?: (string | symbol)[] | Set<string | symbol>;
 }
 
@@ -69,21 +63,11 @@ export interface SimpleSubscribeTopicDecoratorOption {
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
 
   middlewares?: Constructor<Middleware>[];
-
-  /**
-   * @deprecated Use middlewares instead
-   */
-  interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 export interface BatchedSubscribeTopicDecoratorOption {
   option?: SubscribeTopicOption;
   injectOptionFrom?: ServiceIdentifier<SubscribeTopicOption>;
   middlewares?: Constructor<Middleware>[];
-
-  /**
-   * @deprecated Use middlewares instead
-   */
-  interceptProviders?: Constructor<AsyncInterceptProvider>[];
 }
 
 export function SubscribeTopic(option: SimpleSubscribeTopicDecoratorOption) {
@@ -96,7 +80,7 @@ export function SubscribeTopic(option: SimpleSubscribeTopicDecoratorOption) {
     const metadata: SimpleSubscribeTopicMetadata = {
       type: 'simple',
       fallbackOption,
-      middlewares: option.middlewares ?? option.interceptProviders ?? [],
+      middlewares: option.middlewares ?? [],
       injectOptionFrom,
     };
     setSubscribeTopicMetadata(targetMethod, metadata);
@@ -113,7 +97,7 @@ export function BatchedSubscribeTopic(option: BatchedSubscribeTopicDecoratorOpti
     const metadata: BatchedSubscribeTopicMetadata = {
       type: 'batched',
       fallbackOption,
-      middlewares: option.middlewares ?? option.interceptProviders ?? [],
+      middlewares: option.middlewares ?? [],
       injectOptionFrom,
     };
     setSubscribeTopicMetadata(targetMethod, metadata);
@@ -125,7 +109,7 @@ export function SubscribeController(option: SubscribeControllerOption = {}) {
     const {labels} = option;
     const metadata: SubscribeControllerMetadata = {
       target: constructor,
-      middlewares: option.middlewares ?? option.interceptProviders ?? [],
+      middlewares: option.middlewares ?? [],
       labels: new Set(labels),
     };
     setSubscribeControllerMetadata(constructor, metadata);
