@@ -1,5 +1,5 @@
 {
-  "name": "sensejs-doc",
+  "name": "@sensejs/sensejs-doc",
   "version": "0.0.0",
   "private": true,
   "scripts": {

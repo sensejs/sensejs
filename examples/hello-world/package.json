@@ -1,6 +1,6 @@
 {
-  "name": "@sensejs/hello-world",
-  "version": "0.0.8",
+  "name": "@sensejs/example-hello-world",
+  "version": "0.0.1",
   "description": "Hello world demo of SenseJS",
   "files": [
     "src"
