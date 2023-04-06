@@ -60,10 +60,6 @@ export interface FactoryBinding<T> {
   paramInjectionMetadata: ParamInjectionMetadata[];
 }
 
-export interface Middleware<T extends any[] = any[]> {
-  handle(next: (...values: T) => Promise<void>): Promise<void>;
-}
-
 export interface AliasBinding<T> {
   type: BindingType.ALIAS;
   id: ServiceId<T>;

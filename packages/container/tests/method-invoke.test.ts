@@ -1,4 +1,4 @@
-import {BindingType, Constructor, Container, Inject, Injectable, MiddlewareClass} from '../src/index.js';
+import {BindingType, Constructor, Container, Inject, Injectable, Middleware, MiddlewareClass} from '../src/index.js';
 import {jest} from '@jest/globals';
 
 class CustomContext<T extends {} = any, K extends keyof T = any> {
@@ -39,7 +39,9 @@ describe('MethodInvoker', () => {
 
     const f = jest.fn();
 
-    @MiddlewareClass(MyComponent)
+    @Middleware({
+      provides: [MyComponent],
+    })
     class MyInterceptor {
       async handle(next: (value: MyComponent) => Promise<void>): Promise<void> {
         f(1);
@@ -143,6 +145,7 @@ test('Performance test', async () => {
       const deps = symbol;
       symbol = Symbol(`${index}`);
 
+      // Keep using legacy style for coverage
       @MiddlewareClass(symbol)
       class Interceptor {
         constructor(@Inject(deps) dep: any, @Inject(CustomContext) context: CustomContext) {}

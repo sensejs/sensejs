@@ -1,13 +1,4 @@
-import {
-  Binding,
-  BindingType,
-  Middleware,
-  Constructor,
-  FactoryBinding,
-  InjectScope,
-  InstanceBinding,
-  ServiceId,
-} from './types.js';
+import {Binding, BindingType, Constructor, FactoryBinding, InjectScope, InstanceBinding, ServiceId} from './types.js';
 import {DuplicatedBindingError} from './errors.js';
 import {Instruction, InstructionCode} from './instructions.js';
 import {
@@ -18,6 +9,7 @@ import {
 } from './metadata.js';
 import {MethodInvoker} from './method-invoker.js';
 import {ResolveSession} from './resolve-session.js';
+import {Middleware} from './middleware.js';
 import {compileParamInjectInstruction, internalValidateDependencies} from './utils.js';
 
 export class Container {

@@ -1,13 +1,4 @@
-import {
-  Binding,
-  Class,
-  Constructor,
-  InjectScope,
-  InvokeResult,
-  Middleware,
-  ParamInjectionMetadata,
-  ServiceId,
-} from './types.js';
+import {Binding, Class, Constructor, InjectScope, InvokeResult, ParamInjectionMetadata, ServiceId} from './types.js';
 import {Instruction, InstructionCode} from './instructions.js';
 import {
   convertParamInjectionMetadata,
@@ -15,7 +6,8 @@ import {
   ensureValidatedMethodInvokeProxy,
   MethodInvokeProxy,
 } from './metadata.js';
-import {getMiddlewareMetadata, Scope, ServiceTypeOf} from './decorator.js';
+import {Scope} from './decorator.js';
+import {getMiddlewareMetadata, Middleware, ServiceTypeOf} from './middleware.js';
 import {ResolveSession} from './resolve-session.js';
 import {BindingNotFoundError} from './errors.js';
 import {compileParamInjectInstruction} from './utils.js';
