@@ -1,4 +1,13 @@
-import {BindingType, Constructor, Container, Inject, Injectable, Middleware, MiddlewareClass} from '../src/index.js';
+import {
+  BindingType,
+  Constructor,
+  Container,
+  Inject,
+  Injectable,
+  Middleware,
+  MiddlewareClass,
+  Next,
+} from '../src/index.js';
 import {jest} from '@jest/globals';
 
 class CustomContext<T extends {} = any, K extends keyof T = any> {
@@ -43,14 +52,17 @@ describe('MethodInvoker', () => {
       provides: [MyComponent],
     })
     class MyInterceptor {
-      async handle(next: (value: MyComponent) => Promise<void>): Promise<void> {
+      async handle(next: Next<[MyComponent]>): Promise<void> {
         f(1);
+        // let a: MyComponent = 5;
         await new Promise(setImmediate);
         await next(new MyComponent());
         await new Promise(setImmediate);
         f(3);
       }
     }
+
+    const m: Constructor<Middleware<any[]>> = MyInterceptor;
 
     @Injectable()
     class MyFoo {

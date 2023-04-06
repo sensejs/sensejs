@@ -30,7 +30,7 @@ export class Container {
   createMethodInvoker<T extends {}, K extends keyof T, ServiceIds extends any[] = []>(
     targetConstructor: Constructor<T>,
     targetMethod: K,
-    middlewares: Constructor<Middleware<any>>[],
+    middlewares: Constructor<Middleware<any[]>>[],
     ...contextIds: ServiceIds
   ): MethodInvoker<T, K, ServiceIds> {
     this.validate();
