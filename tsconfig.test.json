@@ -1,9 +1,7 @@
 {
-  "extends": "./tsconfig",
+  "extends": "./tsconfig.baseline",
   "compilerOptions": {
     "types": ["node", "jest", "reflect-metadata"],
-    "noEmitHelpers": false,
-    "importHelpers": false,
     "module": "ESNext",
     "incremental": false,
     "paths": {

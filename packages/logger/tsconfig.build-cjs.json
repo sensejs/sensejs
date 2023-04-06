@@ -1,11 +1,9 @@
 {
-  "extends": "./tsconfig",
+  "extends": "./src/tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
     "module": "CommonJS",
     "outDir": "dist-cjs/lib",
-    "declarationDir": "dist-cjs/lib",
-    "baseUrl": ".",
     "paths": {}
   }
 }

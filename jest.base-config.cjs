@@ -10,7 +10,7 @@ module.exports = {
   testEnvironment: 'node',
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: '<rootDir>/tsconfig.test.json',
+      tsconfig: '<rootDir>/tsconfig.json',
       diagnostics: 'pretty',
       useESM: true
     }],
