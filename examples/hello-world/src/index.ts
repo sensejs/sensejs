@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import {createKoaHttpModule, Controller, GET} from '@sensejs/http-koa-platform';
-import {EntryPoint, ModuleClass, OnModuleCreate} from '@sensejs/core';
+import {Controller, createKoaHttpModule, GET} from '@sensejs/http-koa-platform';
+import {EntryPoint, Module, OnModuleCreate} from '@sensejs/core';
 
 @Controller('/')
 class HelloWorldController {
@@ -11,7 +11,7 @@ class HelloWorldController {
 }
 
 @EntryPoint()
-@ModuleClass({
+@Module({
   requires: [
     createKoaHttpModule({
       components: [HelloWorldController],
