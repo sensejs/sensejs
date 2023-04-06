@@ -21,11 +21,11 @@ handle requests, like HTTP, and dispatch them to an appropriate handler.
 Your application will be a collection of modules, and the framework will take care of the graceful setup and shutdown
 based on the dependency graph among modules.
 
-### Interceptor based contextual injection
+### Middleware based contextual injection
 
-Requests can be intercepted when handled. In SenseJS, an interceptor can not only blocking requests or handling errors,
-but also able to provide injectables that can be used by the dispatch target as
-well as succeeded interceptors.
+Requests can be intercepted when handled by middlewares. In SenseJS, middleware can not only blocking requests or
+handling errors, but also able to provide injectables that can be used by the dispatch target as well as succeeded
+middlewares.
 
 ## Installation
 
