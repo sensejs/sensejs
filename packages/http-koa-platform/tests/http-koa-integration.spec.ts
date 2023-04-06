@@ -1,7 +1,7 @@
 import '@sensejs/testing-utility/lib/mock-console';
 import {jest} from '@jest/globals';
 import {Constructor, Inject} from '@sensejs/core';
-import {Container, Middleware, MiddlewareClass} from '@sensejs/container';
+import {Container, Middleware} from '@sensejs/container';
 import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/index.js';
 import {
@@ -21,7 +21,9 @@ import {
 
 describe('KoaHttpApplicationBuilder', () => {
   const makeMockMiddleware = (stub: jest.Mock<any>, symbol: symbol): Constructor<Middleware> => {
-    @MiddlewareClass(symbol)
+    @Middleware({
+      provides: [symbol],
+    })
     class MockHttpMiddleware {
       constructor(@Inject(HttpContext) readonly context: HttpContext) {}
 

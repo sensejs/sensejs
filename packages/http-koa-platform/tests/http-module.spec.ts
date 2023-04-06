@@ -4,12 +4,12 @@ import supertest from 'supertest';
 import {Server} from 'http';
 import {AddressInfo} from 'net';
 import {Controller, GET, Query} from '@sensejs/http-common';
-import {MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 
 test('HttpModule', async () => {
   const serverIdentifier = Symbol();
 
-  @MiddlewareClass()
+  @Middleware()
   class MockMiddleware {
     handle(next: () => Promise<void>): Promise<void> {
       return next();

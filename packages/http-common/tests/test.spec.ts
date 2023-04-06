@@ -19,7 +19,7 @@ import {
   PUT,
   Query,
 } from '../src/index.js';
-import {Container, Inject, MiddlewareClass} from '@sensejs/container';
+import {Container, Inject, Middleware} from '@sensejs/container';
 import {RequestListener} from 'http';
 import {Component, ModuleClass, EntryModule, ProcessManager} from '@sensejs/core';
 
@@ -27,12 +27,12 @@ describe('Http annotations', () => {
   test('metadata', () => {
     const handlePut = Symbol();
 
-    @MiddlewareClass()
+    @Middleware()
     class I1 {
       async handle(cb: () => Promise<void>) {}
     }
 
-    @MiddlewareClass()
+    @Middleware()
     class I2 {
       async handle(cb: () => Promise<void>) {}
     }
@@ -137,7 +137,7 @@ test('Adaptor and abstract module', async () => {
   const addRouterSpy = jest.spyOn(TestAdaptor.prototype, 'addRouterSpec');
 
   const createMiddleware = () => {
-    @MiddlewareClass()
+    @Middleware()
     class M {
       handle(next: () => Promise<void>) {
         return next();

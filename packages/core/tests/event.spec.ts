@@ -10,7 +10,7 @@ import {
   SubscribeEvent,
   SubscribeEventController,
 } from '../src/index.js';
-import {MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 
 describe('Event subscribe and announce', () => {
   test('Subscribe', async () => {
@@ -20,7 +20,7 @@ describe('Event subscribe and announce', () => {
     const filterSpy = jest.fn();
 
     // This one keeps legacy format for compatibility test
-    @MiddlewareClass()
+    @Middleware()
     class MockMiddleware {
       constructor(@Inject(EventSubscriptionContext) readonly context: EventSubscriptionContext) {}
 
@@ -31,7 +31,9 @@ describe('Event subscribe and announce', () => {
       }
     }
 
-    @MiddlewareClass('a', 'b')
+    @Middleware({
+      provides: ['a', 'b'],
+    })
     class MockChannelMiddleware {
       constructor(@Inject(EventSubscriptionContext) readonly context: EventSubscriptionContext) {}
 

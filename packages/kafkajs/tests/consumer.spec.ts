@@ -15,7 +15,7 @@ import {
   SubscribeTopic,
 } from '../src/index.js';
 import {lastValueFrom, Subject} from 'rxjs';
-import {MiddlewareClass} from '@sensejs/container';
+import {Middleware} from '@sensejs/container';
 
 describe('Subscribe decorators', () => {
   test('Duplicated @SubscribeTopic', () => {
@@ -60,7 +60,9 @@ describe('Subscriber', () => {
   });
 
   const makeMiddleware = (symbol: symbol) => {
-    @MiddlewareClass(symbol)
+    @Middleware({
+      provides: [symbol],
+    })
     class TestMiddleware {
       async handle(next: (value: any) => Promise<void>): Promise<void> {
         await next(Math.random());
@@ -126,7 +128,9 @@ describe('Subscriber', () => {
       symbolC = Symbol();
     const interceptorA = makeMiddleware(symbolA),
       interceptorB = makeMiddleware(symbolB);
-    @MiddlewareClass(symbolC)
+    @Middleware({
+      provides: [symbolC],
+    })
     class MiddlewareC {
       async handle(next: (value: any) => Promise<void>): Promise<void> {
         await next(Math.random());
