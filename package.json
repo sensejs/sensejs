@@ -7,6 +7,7 @@
   "license": "ISC",
   "private": true,
   "devDependencies": {
+    "@changesets/cli": "^2.26.1",
     "@commitlint/cli": "^17.4.4",
     "@commitlint/config-conventional": "^17.4.4",
     "@jest/globals": "^29.5.0",
@@ -19,7 +20,6 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
     "@typescript-eslint/parser": "^5.55.0",
-    "@changesets/cli": "^2.26.1",
     "enhanced-resolve": "^5.12.0",
     "enquirer": "^2.3.6",
     "eslint": "^8.36.0",
