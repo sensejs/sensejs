@@ -13,7 +13,6 @@ to make end-user fit their own need.
 See [Documentation](https://sensejs.io)
 
 
-
 # LICENSE:
 
 ISC
