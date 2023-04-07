@@ -1,13 +1,17 @@
 ---
-'@sensejs/http-koa-platform': major
-'@sensejs/http-common': major
-'@sensejs/container': major
-'@sensejs/kafkajs': major
-'@sensejs/core': major
+'@sensejs/http-koa-platform': minor
+'@sensejs/http-common': minor
+'@sensejs/container': minor
+'@sensejs/kafkajs': minor
+'@sensejs/core': minor
 ---
 
 Introduce new decorator @Module for retiring @ModuleClass and @Middleware
 for retiring @MiddlewareClass, to make names of decorators more consist
+
+**Note that this is a breaking change**, the reason to mark itas **minor**
+change is that we're still in pre-1.0 era, and semantic versioning also
+allows breaking changes happens on minor change in pre-1.0 versions.
 
 -   Migration from @ModuleClass to @ModuleClass will be an easily replace.
 
