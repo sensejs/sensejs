@@ -4,7 +4,6 @@
     "module": "esnext",
     "noEmit": false,
     "outDir": "lib",
-    "declarationDir": "lib",
     "baseUrl": ".",
     "paths": {}
   }
