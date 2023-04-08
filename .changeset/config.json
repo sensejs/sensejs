@@ -3,9 +3,24 @@
   "changelog": "@changesets/changelog-git",
   "commit": false,
   "fixed": [],
-  "linked": [],
+  "linked": [
+    [
+      "@sensejs/container",
+      "@sensejs/utility",
+      "@sensejs/kafkajs-standalone",
+      "@sensejs/core",
+      "@sensejs/http-common",
+      "@sensejs/http-koa-platform",
+      "@sensejs/kafkajs",
+      "@sensejs/config",
+      "@sensejs/logger",
+      "@sensejs/kafkajs-zstd-support",
+      "@sensejs/testing"
+    ]
+  ],
   "access": "public",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
+  "updatePeerDependencies": "follow",
   "ignore": ["@sensejs/example-*", "@sensejs/sensejs-doc", "@sensejs/root"]
 }
