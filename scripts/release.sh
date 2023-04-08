@@ -1,2 +1,2 @@
 #!/bin/sh
-pnpm recursive publish $@
+pnpm -r publish $@
