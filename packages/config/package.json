@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/config",
-  "version": "0.10.0",
+  "version": "0.11.0-alpha.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -36,7 +36,7 @@
     "@types/traverse": "^0.6.32"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.10.0",
-    "@sensejs/core": "workspace:^0.10.0"
+    "@sensejs/container": "workspace:^0.11.0-alpha.0",
+    "@sensejs/core": "workspace:^0.11.0-alpha.0"
   }
 }

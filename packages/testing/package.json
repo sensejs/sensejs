@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/testing",
-  "version": "0.10.0",
+  "version": "0.11.0-alpha.0",
   "description": "Experimental testing support for SenseJS framework",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -37,6 +37,6 @@
     "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/core": "workspace:^0.10.0"
+    "@sensejs/core": "workspace:^0.11.0-alpha.0"
   }
 }

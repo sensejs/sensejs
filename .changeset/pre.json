@@ -1,0 +1,27 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@sensejs/root": "0.0.0",
+    "@sensejs/example-demo-app": "0.0.1",
+    "@sensejs/example-hello-world": "0.0.1",
+    "@sensejs/example-injection": "0.0.1",
+    "@sensejs/config": "0.10.0",
+    "@sensejs/container": "0.10.0",
+    "@sensejs/core": "0.10.0",
+    "@sensejs/http-common": "0.10.0",
+    "@sensejs/http-koa-platform": "0.10.0",
+    "@sensejs/kafkajs": "0.10.0",
+    "@sensejs/kafkajs-standalone": "0.10.0",
+    "@sensejs/kafkajs-zstd-support": "0.10.0",
+    "@sensejs/logger": "0.10.0",
+    "@sensejs/testing": "0.10.0",
+    "@sensejs/utility": "0.10.0",
+    "@sensejs/testing-utility": "0.10.0",
+    "@sensejs/sensejs-doc": "0.0.0"
+  },
+  "changesets": [
+    "nervous-paws-camp",
+    "thick-glasses-change"
+  ]
+}

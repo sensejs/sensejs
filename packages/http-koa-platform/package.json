@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/http-koa-platform",
-  "version": "0.10.0",
+  "version": "0.11.0-alpha.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -30,7 +30,7 @@
   "dependencies": {
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
-    "@sensejs/utility": "workspace:0.10.0",
+    "@sensejs/utility": "workspace:^0.11.0-alpha.0",
     "@types/koa": "^2.13.5",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-qs": "^2.0.0",
@@ -49,9 +49,9 @@
     "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.10.0",
-    "@sensejs/core": "workspace:^0.10.0",
-    "@sensejs/http-common": "workspace:^0.10.0",
+    "@sensejs/container": "workspace:^0.11.0-alpha.0",
+    "@sensejs/core": "workspace:^0.11.0-alpha.0",
+    "@sensejs/http-common": "workspace:^0.11.0-alpha.0",
     "reflect-metadata": "^0.1.13"
   },
   "author": "LAN Xingcan",

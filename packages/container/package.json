@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/container",
-  "version": "0.10.0",
+  "version": "0.11.0-alpha.0",
   "description": "The dependency injection library used by sensejs framework.",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
