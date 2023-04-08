@@ -13,21 +13,21 @@ const FeatureList = [
     )
   },
   {
+    title: 'Blazing Fast',
+    // Svg: require('../../static/img/undraw_docusaurus_mountain.svg').default,
+    description: (
+      <>
+        To make the IoC performance as fast as possible, the IoC Container is developed from scratch and highly
+        optimized for the usage of SenseJS.
+      </>
+    ),
+  },
+  {
     title: 'Graceful startup & shutdown',
     // Svg: require('../../static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
         SenseJS take care of graceful setup and shutdown, based on the dependency graph of modules in your application.
-      </>
-    ),
-  },
-  {
-    title: 'Out of box integrations',
-    // Svg: require('../../static/img/undraw_docusaurus_mountain.svg').default,
-    description: (
-      <>
-        SenseJS currently provides integrations of <a href="https://koajs.com">koa</a>, <a href="https://kafka.js.org">
-        kafkajs</a> and <a href="https://typeorm.io">TypeORM</a> out of box.
       </>
     ),
   },
