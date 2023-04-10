@@ -1,5 +1,19 @@
 # @sensejs/core
 
+## 0.11.0-alpha.1
+
+### Patch Changes
+
+- 88a823c6: Fix packages.json for all packages:
+
+  - fix incorrect packages exports for `@sensejs/http-koa-platform`
+  - include CHANGELOG.md when publishing contents to npm registry
+
+- 1c62befc: Get rid of deprecated rxjs functions
+- Updated dependencies [88a823c6]
+  - @sensejs/container@0.11.0-alpha.1
+  - @sensejs/utility@0.11.0-alpha.1
+
 ## 0.11.0-alpha.0
 
 ### Minor Changes

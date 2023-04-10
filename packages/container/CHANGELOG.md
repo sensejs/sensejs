@@ -1,5 +1,14 @@
 # @sensejs/container
 
+## 0.11.0-alpha.1
+
+### Patch Changes
+
+- 88a823c6: Fix packages.json for all packages:
+
+  - fix incorrect packages exports for `@sensejs/http-koa-platform`
+  - include CHANGELOG.md when publishing contents to npm registry
+
 ## 0.11.0-alpha.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # @sensejs/http-common
 
+## 0.11.0-alpha.1
+
+### Patch Changes
+
+- 88a823c6: Fix packages.json for all packages:
+
+  - fix incorrect packages exports for `@sensejs/http-koa-platform`
+  - include CHANGELOG.md when publishing contents to npm registry
+
+- Updated dependencies [88a823c6]
+- Updated dependencies [1c62befc]
+  - @sensejs/container@0.11.0-alpha.1
+  - @sensejs/core@0.11.0-alpha.1
+  - @sensejs/utility@0.11.0-alpha.1
+
 ## 0.11.0-alpha.0
 
 ### Minor Changes

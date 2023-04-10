@@ -1,4 +1,63 @@
 
+## 2023-04-10
+
+
+### Releases
+
+
+| Package | Released Version | Released Type |
+|---------|------------------|---------------|
+| `@sensejs/config` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/container` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/core` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/http-common` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/http-koa-platform` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/kafkajs` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/kafkajs-standalone` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/kafkajs-zstd-support` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/logger` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/testing` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/utility` | `0.11.0-alpha.1 ` | patch |
+| `@sensejs/testing-utility` | `0.10.1-alpha.1 ` | patch |
+| `@sensejs/example-demo-app` | `0.0.1 ` | none |
+| `@sensejs/example-injection` | `0.0.1 ` | none |
+| `@sensejs/example-hello-world` | `0.0.1 ` | none |
+
+
+
+### Notable Changes
+
+- **Summary**: 
+
+  Fix packages.json for all packages:
+  
+  - fix incorrect packages exports for `@sensejs/http-koa-platform`
+  - include CHANGELOG.md when publishing contents to npm registry
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/config`
+     - `@sensejs/container`
+     - `@sensejs/core`
+     - `@sensejs/http-common`
+     - `@sensejs/http-koa-platform`
+     - `@sensejs/kafkajs-standalone`
+     - `@sensejs/kafkajs-zstd-support`
+     - `@sensejs/kafkajs`
+     - `@sensejs/logger`
+     - `@sensejs/testing-utility`
+     - `@sensejs/testing`
+     - `@sensejs/utility`
+- **Summary**: 
+
+  Get rid of deprecated rxjs functions
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/core`
+
+
+
 ## 2023-04-08
 
 

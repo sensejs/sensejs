@@ -21,7 +21,9 @@
     "@sensejs/sensejs-doc": "0.0.0"
   },
   "changesets": [
+    "angry-adults-jam",
     "nervous-paws-camp",
+    "sweet-moles-clap",
     "thick-glasses-change"
   ]
 }

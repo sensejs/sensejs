@@ -1,5 +1,14 @@
 # @sensejs/testing-utility
 
+## 0.10.1-alpha.1
+
+### Patch Changes
+
+- 88a823c6: Fix packages.json for all packages:
+
+  - fix incorrect packages exports for `@sensejs/http-koa-platform`
+  - include CHANGELOG.md when publishing contents to npm registry
+
 ## 0.10.1-alpha.0
 
 ### Patch Changes
