@@ -188,7 +188,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
 
     controllerRouter[httpMethod](path, async (ctx) => {
       const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
-      const result = await invoker.createInvokeSession().invokeTargetMethod(context);
+      const result = await invoker.invoke(context);
 
       ctx.response.body = context.response.data ?? result;
       if (typeof context.response.statusCode === 'number') {

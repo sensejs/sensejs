@@ -260,10 +260,7 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
             acknowledge(Promise.reject(e));
             return;
           }
-          const invokeSession = invoker.createInvokeSession();
-          acknowledge(
-            invokeSession.invokeTargetMethod(new EventSubscriptionContext(identifier, constructor, name, payload)),
-          );
+          acknowledge(invoker.invoke(new EventSubscriptionContext(identifier, constructor, name, payload)));
         }),
       );
     }
