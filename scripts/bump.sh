@@ -1,6 +1,8 @@
 #/bin/sh
 # Generate changelog from changeset status, this need to be run before bumping the version
-./global-changelog.js
+cd `dirname $0`/..
+
+./scripts/global-changelog.js
 
 # Bump the version
 changeset version
