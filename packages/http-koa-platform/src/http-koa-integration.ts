@@ -8,7 +8,6 @@ import KoaCors from '@koa/cors';
 import koaQs from 'koa-qs';
 import {
   AbstractHttpApplicationBuilder,
-  CrossOriginResourceShareOption,
   HttpContext,
   HttpRequest,
   HttpResponse,
@@ -16,6 +15,8 @@ import {
 } from '@sensejs/http-common';
 
 export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
+export type CrossOriginResourceShareOption = KoaCors.Options;
+export type BodyParserOption = KoaBodyParserOption;
 
 class KoaHttpRequest implements HttpRequest {
   get query() {

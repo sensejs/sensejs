@@ -1,4 +1,9 @@
-import {KoaHttpApplicationBuilder, QueryStringParsingMode} from './http-koa-integration.js';
+import {
+  BodyParserOption,
+  CrossOriginResourceShareOption,
+  KoaHttpApplicationBuilder,
+  QueryStringParsingMode,
+} from './http-koa-integration.js';
 import {
   Constructor,
   Inject,
@@ -12,7 +17,19 @@ import {
 import {AbstractHttpApplicationBuilder, AbstractHttpModule, HttpModuleOption, HttpOption} from '@sensejs/http-common';
 
 export interface KoaHttpOption extends HttpOption {
+  /**
+   * Whether the http server trust `X-Forwarded-For` and `X-Forwarded-Proto` headers, default to `false`
+   */
+  trustProxy?: boolean;
+
+  /**
+   * Controlling how CORS requests are handled, by default CORS is disabled
+   */
+  corsOption?: CrossOriginResourceShareOption;
+
   queryStringParsingMode?: QueryStringParsingMode;
+
+  bodyParserOption?: BodyParserOption;
 }
 
 export interface CreateKoaHttpModuleOption extends HttpModuleOption<KoaHttpOption>, ModuleOption {
@@ -21,11 +38,6 @@ export interface CreateKoaHttpModuleOption extends HttpModuleOption<KoaHttpOptio
    */
   injectOptionFrom?: ServiceIdentifier<Partial<HttpOption>>;
 }
-
-/**
- * @deprecated
- */
-export const createHttpModule = createKoaHttpModule;
 
 /**
  *
@@ -67,8 +79,17 @@ export function createKoaHttpModule(option: CreateKoaHttpModuleOption = {}): Con
       const builder = new KoaHttpApplicationBuilder().setErrorHandler((e) => {
         this.logger.error('Error occurred when handling http request: ', e);
       });
-      if (this.httpOption.queryStringParsingMode) {
+      if (typeof this.httpOption.queryStringParsingMode !== 'undefined') {
         builder.setQueryStringParsingMode(this.httpOption.queryStringParsingMode);
+      }
+      if (typeof this.httpOption.bodyParserOption !== 'undefined') {
+        builder.setKoaBodyParserOption(this.httpOption.bodyParserOption);
+      }
+      if (typeof this.httpOption.corsOption !== 'undefined') {
+        builder.setCorsOption(this.httpOption.corsOption);
+      }
+      if (typeof this.httpOption.trustProxy !== 'undefined') {
+        builder.setTrustProxy(this.httpOption.trustProxy);
       }
       return builder;
     }

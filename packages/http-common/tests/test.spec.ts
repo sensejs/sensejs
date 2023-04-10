@@ -4,7 +4,6 @@ import {
   AbstractHttpModule,
   Body,
   Controller,
-  CrossOriginResourceShareOption,
   DELETE,
   ensureMetadataOnPrototype,
   GET,
@@ -29,12 +28,12 @@ describe('Http annotations', () => {
 
     @Middleware()
     class I1 {
-      async handle(cb: () => Promise<void>) {}
+      async handle() {}
     }
 
     @Middleware()
     class I2 {
-      async handle(cb: () => Promise<void>) {}
+      async handle() {}
     }
     const L1 = Symbol();
 
@@ -119,17 +118,9 @@ describe('Http annotations', () => {
 test('Adaptor and abstract module', async () => {
   class TestAdaptor extends AbstractHttpApplicationBuilder {
     build(container: Container): RequestListener {
-      return (req, res) => {
+      return () => {
         throw new Error();
       };
-    }
-
-    setCorsOption(corsOption: CrossOriginResourceShareOption): this {
-      return this;
-    }
-
-    setTrustProxy(trustProxy: boolean): this {
-      return this;
     }
   }
 
@@ -160,7 +151,6 @@ test('Adaptor and abstract module', async () => {
 
   @Component()
   class NonController {}
-
   @Module({
     components: [TestController, Test1Controller, NonController],
   })

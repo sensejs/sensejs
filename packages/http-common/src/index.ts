@@ -85,21 +85,6 @@ export interface ControllerMetadata<T extends {} = {}> {
   labels: Set<string | symbol>;
 }
 
-export interface CrossOriginResourceShareOption {
-  origin?: string | ((origin: string) => boolean);
-  allowedMethods?: string | string[];
-  exposeHeaders?: string | string[];
-  allowedHeaders?: string | string[];
-  maxAge?: number;
-  credentials?: boolean;
-  keepHeadersOnError?: boolean;
-}
-
-export interface HttpApplicationOption {
-  trustProxy?: boolean;
-  corsOption?: CrossOriginResourceShareOption;
-}
-
 export interface RequestMappingMetadata {
   middlewares?: Constructor<Middleware>[];
   httpMethod: HttpMethod;
@@ -194,10 +179,6 @@ export abstract class AbstractHttpApplicationBuilder {
   protected errorHandler?: (e: unknown) => any;
 
   abstract build(container: Container): RequestListener;
-
-  abstract setTrustProxy(trustProxy: boolean): this;
-
-  abstract setCorsOption(corsOption: CrossOriginResourceShareOption): this;
 
   addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
     const controllerRouteSpec: ControllerRouteSpec = {
@@ -479,10 +460,9 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
   };
 }
 
-export interface HttpOption extends HttpApplicationOption {
+export interface HttpOption {
   listenAddress?: string;
   listenPort: number;
-  trustProxy?: boolean;
 }
 
 const defaultHttpConfig = {
