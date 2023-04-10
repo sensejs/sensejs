@@ -12,7 +12,7 @@ import {
   Subject,
   Subscription,
 } from 'rxjs';
-import {catchError, first, mapTo, mergeMap, skip, tap, timeout} from 'rxjs/operators';
+import {catchError, first, mergeMap, skip, tap, timeout} from 'rxjs/operators';
 import {EntryModule} from './entry-module.js';
 import {consoleLogger, Logger} from './logger.js';
 import {Constructor} from './interfaces.js';
@@ -152,7 +152,7 @@ export class ApplicationRunner {
       tap((e) => {
         runOption.logger.error('Going to quit due to uncaught error:', e);
       }),
-      mapTo(runOption.errorExitOption),
+      map(() => runOption.errorExitOption),
     );
 
     const warningSubscriber = this.getWarningSubscriber(runOption);
@@ -181,7 +181,7 @@ export class ApplicationRunner {
           ? this.getStartupObservable(entryModule, runOption)
           : this.getBoostrapObservable(entryModule, runOption),
         defer(async () => entryModule.run('main')).pipe(
-          mapTo(runOption.normalExitOption),
+          map(() => runOption.normalExitOption),
           catchError((e) => {
             runOption.logger.error('Error occurred while running:', e);
             runOption.logger.error('Going to quit.');
@@ -208,7 +208,7 @@ export class ApplicationRunner {
 
   private getExitSignalObservables<T>(runOption: RunnerOption<T>): Observable<NodeJS.Signals>[] {
     return Object.entries(runOption.exitSignals).map(([signal]) => {
-      return fromEvent(this.process, signal).pipe(mapTo(signal as NodeJS.Signals));
+      return fromEvent(this.process, signal).pipe(map(() => signal as NodeJS.Signals));
     });
   }
 
