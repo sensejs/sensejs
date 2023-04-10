@@ -7,7 +7,8 @@
     "dist-esm/**/!(*.tsbuildinfo)",
     "dist-dts/**/!(*.tsbuildinfo)",
     "src/**/*.ts",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "type": "module",
   "types": "./dist-dts/lib/index.d.ts",
@@ -15,7 +16,7 @@
   "module": "./dist-esm/lib/index.js",
   "exports": {
     "types": "./dist-dts/index.d.ts",
-    "module": "./dist-esm/lib/index.js",
+    "import": "./dist-esm/lib/index.js",
     "require": "./dist-cjs/lib/index.js"
   },
   "scripts": {

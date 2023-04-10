@@ -5,9 +5,10 @@
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
     "dist-esm/**/!(*.tsbuildinfo)",
-    "dist-dts/**/*",
+    "dist-dts/**/!(*.tsbuildinfo)",
     "src/**/*.ts",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "type": "module",
   "types": "./dist-dts/lib/index.d.ts",
