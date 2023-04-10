@@ -15,7 +15,7 @@
   "module": "./dist-esm/lib/index.js",
   "exports": {
     "types": "./dist-dts/index.d.ts",
-    "module": "./dist-esm/lib/index.js",
+    "import": "./dist-esm/lib/index.js",
     "require": "./dist-cjs/lib/index.js"
   },
   "scripts": {
