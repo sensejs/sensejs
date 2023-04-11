@@ -32,17 +32,19 @@
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "@sensejs/utility": "workspace:^0.11.0-alpha.1",
+    "@types/busboy": "^1.5.0",
     "@types/koa": "^2.13.5",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-qs": "^2.0.0",
     "@types/koa__cors": "^4.0.0",
     "@types/koa__router": "^12.0.0",
     "koa": "^2.14.1",
-    "formidable": "^2.1.2",
     "koa-bodyparser": "^4.3.0",
     "koa-qs": "^3.0.0",
+    "busboy": "^1.6.0",
     "lodash": "^4.17.21",
-    "tslib": "^2.5.0"
+    "tslib": "^2.5.0",
+    "event-iterator": "^2.0.0"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",
