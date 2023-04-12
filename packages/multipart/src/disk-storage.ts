@@ -6,6 +6,7 @@ import path from 'path';
 import {randomUUID} from 'crypto';
 import fs from 'fs';
 import stream from 'stream';
+import {MultipartLimitExceededError} from './error.js';
 
 export interface DiskStorageOption extends MultipartFileStorageOption {
   /**
@@ -19,30 +20,31 @@ export interface DiskStorageOption extends MultipartFileStorageOption {
   removeFilesOnClean?: boolean;
 }
 
-class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.ReadableStream> {
+export class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.ReadableStream> {
   static readonly fileSizeLimit = 32 * 1024 * 1024;
   static readonly fileCountLimit = 128;
-  readonly #maxFileSize: number;
-  readonly #maxFileCount: number;
+  readonly #fileSizeLimit: number;
+  readonly #fileCountLimit: number;
   readonly #removeFilesOnClean: boolean;
   readonly #dir: string;
-  readonly #fds: fsp.FileHandle[] = [];
+  readonly #fileEntries: {fd: fsp.FileHandle; filePath: string}[] = [];
+  #fileCount = 0;
   #ensureTempDirPromise: Promise<string> | null = null;
 
   constructor(option: DiskStorageOption = {}) {
     super();
-    this.#maxFileSize = option.fileSizeLimit ?? MultipartFileDiskStorage.fileSizeLimit;
-    this.#maxFileCount = option.fileCountLimit ?? MultipartFileDiskStorage.fileCountLimit;
+    this.#fileSizeLimit = option.fileSizeLimit ?? MultipartFileDiskStorage.fileSizeLimit;
+    this.#fileCountLimit = option.fileCountLimit ?? MultipartFileDiskStorage.fileCountLimit;
     this.#dir = option.diskDir ?? os.tmpdir();
     this.#removeFilesOnClean = option.removeFilesOnClean ?? true;
   }
 
   get fileSizeLimit() {
-    return this.#maxFileSize;
+    return this.#fileSizeLimit;
   }
 
   get fileCountLimit() {
-    return this.#maxFileCount;
+    return this.#fileCountLimit;
   }
 
   async saveMultipartFile(
@@ -50,6 +52,9 @@ class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.ReadableStrea
     file: NodeJS.ReadableStream,
     info: busboy.FileInfo,
   ): Promise<MultipartFileEntry<NodeJS.ReadableStream>> {
+    if (this.#fileCount++ >= this.#fileCountLimit) {
+      throw new MultipartLimitExceededError('Too many files');
+    }
     const filePath = path.join(await this.#ensureTempDir(), randomUUID());
     return new Promise<MultipartFileEntry<NodeJS.ReadableStream>>((resolve, reject) => {
       const diskFile = fs.createWriteStream(filePath);
@@ -64,7 +69,7 @@ class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.ReadableStrea
           fsp
             .open(filePath, 'r')
             .then((fd) => {
-              this.#fds.push(fd);
+              this.#fileEntries.push({fd, filePath});
               return fd.stat().then((stat) => {
                 const file = fs.createReadStream(filePath, {
                   fd: fd.fd,
@@ -87,8 +92,11 @@ class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.ReadableStrea
 
   async clean() {
     await Promise.all(
-      this.#fds.map(async (fd) => {
-        await fd.close();
+      this.#fileEntries.map(async (entry) => {
+        await entry.fd.close();
+        if (this.#removeFilesOnClean) {
+          await fsp.rm(entry.filePath);
+        }
       }),
     );
     if (this.#removeFilesOnClean) {
