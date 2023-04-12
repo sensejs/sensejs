@@ -7,6 +7,8 @@ import type http from 'http';
 import {randomUUID} from 'crypto';
 import path from 'path';
 import {backpressureAsyncIterator} from './backpressure-async-iterator.js';
+import {InvalidMultipartBodyError, MultipartLimitExceededError} from './error.js';
+export * from './error.js';
 
 /**
  * A multipart file entry
@@ -61,22 +63,10 @@ abstract class MultipartFileStorage<Content> {
   abstract clean(): Promise<void>;
 }
 
-export class MultipartError implements Error {
-  readonly name;
-  constructor(readonly message: string) {
-    this.name = new.target.name;
-  }
-}
-
-export class MultipartLimitExceededError extends MultipartError {}
-
-export class InvalidMultipartBodyError extends MultipartError {}
-
 export interface MultipartFileStorageOption {
   fileSizeLimit?: number;
   fileCountLimit?: number;
 }
-
 /**
  *
  */

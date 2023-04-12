@@ -429,6 +429,25 @@ importers:
         specifier: workspace:*
         version: link:../core
 
+  packages/multipart:
+    dependencies:
+      '@types/busboy':
+        specifier: ^1.5.0
+        version: 1.5.0
+      busboy:
+        specifier: ^1.6.0
+        version: 1.6.0
+      event-iterator:
+        specifier: ^2.0.0
+        version: 2.0.0
+      tslib:
+        specifier: ^2.5.0
+        version: 2.5.0
+    devDependencies:
+      '@sensejs/testing-utility':
+        specifier: workspace:*
+        version: link:../../tools/testing-utility
+
   packages/testing:
     dependencies:
       tslib:
