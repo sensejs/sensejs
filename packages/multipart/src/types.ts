@@ -22,6 +22,8 @@ export interface MultipartFileEntry<Content> {
    */
   content: Content;
 
+  mimeType: string;
+
   size: number;
 }
 

@@ -75,6 +75,7 @@ class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.ReadableStrea
                   filename: info.filename,
                   content: file,
                   size: stat.size,
+                  mimeType: info.mimeType,
                 });
               });
             })

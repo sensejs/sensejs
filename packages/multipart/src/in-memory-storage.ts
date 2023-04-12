@@ -1,4 +1,6 @@
 import {MultipartFileEntry, MultipartFileStorage, MultipartFileStorageOption} from './types.js';
+import busboy from 'busboy';
+import {MultipartLimitExceededError} from './error.js';
 
 /**
  *
@@ -8,6 +10,7 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
   static readonly fileCountLimit = 1;
   readonly #fileSizeLimit: number;
   readonly #fileCountLimit: number;
+  #fileCount = 0;
 
   /**
    * Create a new in-memory storage
@@ -29,21 +32,28 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
   }
 
   get fileCountLimit() {
-    return 1;
+    return this.#fileCountLimit;
   }
 
   async clean() {
     // for an in-memory storage, there is nothing to clean
   }
 
-  saveMultipartFile(filename: string, file: NodeJS.ReadableStream): Promise<MultipartFileEntry<Buffer>> {
+  saveMultipartFile(
+    name: string,
+    file: NodeJS.ReadableStream,
+    info: busboy.FileInfo,
+  ): Promise<MultipartFileEntry<Buffer>> {
+    if (this.#fileCount++ >= this.#fileCountLimit) {
+      return Promise.reject(new MultipartLimitExceededError('Too many files'));
+    }
     return new Promise<MultipartFileEntry<Buffer>>((resolve, reject) => {
       let lastBufferCapacity = 16;
       let buffer: Buffer = Buffer.alloc(Math.min(this.#fileSizeLimit, lastBufferCapacity * 2));
       let size = 0;
       file.on('data', (chunk: Buffer) => {
         if (size + chunk.length > this.#fileSizeLimit) {
-          reject(new Error('File too large'));
+          reject(new MultipartLimitExceededError('File too large'));
           return;
         }
         if (size + chunk.length > buffer.length) {
@@ -62,10 +72,11 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
         buffer = buffer.slice(0, size);
         resolve({
           type: 'file',
-          name: filename,
-          filename: filename,
+          name,
+          filename: info.filename,
           content: buffer,
           size: size,
+          mimeType: info.mimeType,
         });
       });
 
@@ -73,9 +84,7 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
         reject(err);
       });
 
-      if (file.isPaused()) {
-        file.resume();
-      }
+      file.resume();
     });
   }
 }
