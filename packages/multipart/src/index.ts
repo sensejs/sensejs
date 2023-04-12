@@ -16,10 +16,12 @@ export class MultipartReader {
   static readonly maxFileCount = 5;
 
   // #fileHandler: MultipartFileStorage = new MultipartFileMemoryHandler(MultipartReader.maxFileSize);
-  #inputStream: http.IncomingMessage;
+  readonly #inputStream: stream.Readable;
+  readonly #headers: http.IncomingHttpHeaders;
 
-  constructor(inputStream: http.IncomingMessage) {
+  constructor(inputStream: stream.Readable, headers: http.IncomingHttpHeaders) {
     this.#inputStream = inputStream;
+    this.#headers = headers;
   }
 
   read(): AsyncIterable<MultipartEntry<Buffer>>;
@@ -31,7 +33,7 @@ export class MultipartReader {
 
     return backpressureAsyncIterator((controller) => {
       const b = busboy({
-        headers: this.#inputStream.headers,
+        headers: this.#headers,
         limits: {
           files: fileHandler.fileCountLimit,
           fileSize: fileHandler.fileSizeLimit,
@@ -42,17 +44,21 @@ export class MultipartReader {
       b.on('file', (name, file, info) => {
         // We need to invoke `controller.push` immediately to ensure the order of the entries,
         // but we need to wait for previous work to complete before we can handle the file.
-        promiseQueue = controller.push(promiseQueue.then(() => fileHandler.saveMultipartFile(name, file, info)));
+        promiseQueue = promiseQueue.then(() => {
+          return controller.push(fileHandler.saveMultipartFile(name, file, info));
+        });
       });
 
       b.on('field', (name, value) => {
-        promiseQueue = controller.push(
-          Promise.resolve({
-            type: 'field',
-            name,
-            value,
-          }),
-        );
+        promiseQueue = promiseQueue.then(() => {
+          return controller.push(
+            Promise.resolve({
+              type: 'field',
+              name,
+              value,
+            }),
+          );
+        });
       });
 
       b.on('partsLimit', () => {

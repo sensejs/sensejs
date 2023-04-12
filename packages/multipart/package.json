@@ -35,7 +35,8 @@
     "event-iterator": "^2.0.0"
   },
   "devDependencies": {
-    "@sensejs/testing-utility": "workspace:*"
+    "@sensejs/testing-utility": "workspace:*",
+    "form-data": "^4.0.0"
   },
   "author": "LAN Xingcan",
   "license": "ISC"

@@ -279,9 +279,6 @@ importers:
       '@sensejs/utility':
         specifier: workspace:^0.11.0-alpha.1
         version: link:../utility
-      '@types/busboy':
-        specifier: ^1.5.0
-        version: 1.5.0
       '@types/koa':
         specifier: ^2.13.5
         version: 2.13.5
@@ -297,12 +294,6 @@ importers:
       '@types/koa__router':
         specifier: ^12.0.0
         version: 12.0.0
-      busboy:
-        specifier: ^1.6.0
-        version: 1.6.0
-      event-iterator:
-        specifier: ^2.0.0
-        version: 2.0.0
       koa:
         specifier: ^2.14.1
         version: 2.14.1
@@ -447,6 +438,9 @@ importers:
       '@sensejs/testing-utility':
         specifier: workspace:*
         version: link:../../tools/testing-utility
+      form-data:
+        specifier: ^4.0.0
+        version: 4.0.0
 
   packages/testing:
     dependencies:
