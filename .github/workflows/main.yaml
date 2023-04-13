@@ -22,15 +22,17 @@ jobs:
           docker-compose pull
           docker-compose up -d kafka-1 kafka-2 kafka-3
 
-      - uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
-
-      - name: Build
+      - name: BuildAndPush
+        uses: docker/build-push-action@v4
         env:
           NODE_VERSION: ${{ matrix.node-version }}
-        run: |-
-          echo "Building docker image for workspace with NODE_VERSION=${NODE_VERSION}"
-          docker-compose build --build-arg=NODE_VERSION=$NODE_VERSION workspace-test
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: NODE_VERSION=${{ matrix.node-version }}
+          tags: workspace-test
 
       - name: Test
         env:
