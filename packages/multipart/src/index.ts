@@ -56,6 +56,13 @@ export class MultipartReader {
     this.#options = option;
   }
 
+  static testContentType(contentType: string) {
+    // RFC 7231 Section 3.1.1.1 Media Type
+    // media-type = type "/" subtype *( OWS ";" OWS parameter )
+    // We need to take care about optional whitespace around semicolon
+    return /^multipart\/form-data(\s*;.+)?$/i.test(contentType);
+  }
+
   read(): AsyncIterable<MultipartEntry<Buffer>>;
   read<Content>(handler: MultipartFileStorage<Content>): AsyncIterable<MultipartEntry<Content>>;
 

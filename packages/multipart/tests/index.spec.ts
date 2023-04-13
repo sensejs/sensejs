@@ -226,4 +226,13 @@ describe('MultipartReader', () => {
       });
     });
   });
+
+  test('Detect content type', () => {
+    expect(MultipartReader.testContentType('application/x-www-form-urlencoded')).toBeFalsy();
+    expect(MultipartReader.testContentType('multipart/form-data')).toBeTruthy();
+    expect(MultipartReader.testContentType('multipart/form-data; boundary=aBoundaryString')).toBeTruthy();
+    expect(MultipartReader.testContentType('multipart/form-data;boundary=aBoundaryString')).toBeTruthy();
+    expect(MultipartReader.testContentType('multipart/form-data ;boundary=aBoundaryString')).toBeTruthy();
+    expect(MultipartReader.testContentType('multipart/form-data ; boundary=aBoundaryString')).toBeTruthy();
+  });
 });
