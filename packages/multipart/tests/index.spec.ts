@@ -44,13 +44,13 @@ async function streamToString(stream: stream.Readable) {
 describe('MultipartReader', () => {
   const stub = jest.fn();
   const serverPromise = createStubHttpServer(async (req, res) => {
+    const reader = new MultipartReader(req, req.headers, {
+      fieldCountLimit: 4,
+      fieldSizeLimit: 16,
+      partCountLimit: 5,
+      fieldNameLimit: 10,
+    });
     try {
-      const reader = new MultipartReader(req, req.headers, {
-        fieldCountLimit: 4,
-        fieldSizeLimit: 16,
-        partCountLimit: 5,
-        fieldNameLimit: 10,
-      });
       for await (const entry of reader.read(
         new MultipartFileInMemoryStorage({
           fileSizeLimit: 16,
@@ -69,6 +69,8 @@ describe('MultipartReader', () => {
       res.statusCode = 500;
       res.end(String(err));
       return;
+    } finally {
+      await reader.destroy();
     }
     res.statusCode = 200;
     res.end('OK');

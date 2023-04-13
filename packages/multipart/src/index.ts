@@ -44,6 +44,8 @@ export class MultipartReader {
   readonly #inputStream: stream.Readable;
   readonly #headers: busboy.BusboyHeaders;
   readonly #options: MultipartReaderOptions;
+  #promiseQueue: Promise<any> = Promise.resolve();
+  #cleanup: (() => Promise<void>) | null = null;
 
   constructor(inputStream: stream.Readable, headers: http.IncomingHttpHeaders, option: MultipartReaderOptions = {}) {
     this.#inputStream = inputStream;
@@ -59,7 +61,15 @@ export class MultipartReader {
 
   // read(): Promise<AsyncIterator<MultipartEntry<Buffer>>>;
   read(multipartFileHandler?: MultipartFileStorage<any>): AsyncIterable<MultipartEntry<any>> {
+    if (this.#cleanup) {
+      throw new Error('Cannot read multipart body twice');
+    }
+
     const fileHandler = multipartFileHandler ?? new MultipartFileInMemoryStorage();
+
+    this.#cleanup = () => {
+      return fileHandler.clean();
+    };
 
     return backpressureAsyncIterator((controller) => {
       const limits = {
@@ -74,12 +84,11 @@ export class MultipartReader {
         headers: this.#headers,
         limits,
       });
-      let promiseQueue: Promise<any> = Promise.resolve();
 
       b.on('file', (name, file, filename, transferEncoding, mimeType) => {
         // We need to invoke `controller.push` immediately to ensure the order of the entries,
         // but we need to wait for previous work to complete before we can handle the file.
-        promiseQueue = promiseQueue.then(() => {
+        this.#promiseQueue = this.#promiseQueue.then(() => {
           return controller.push(
             fileHandler.saveMultipartFile(name, file, {
               filename,
@@ -99,7 +108,7 @@ export class MultipartReader {
           controller.abort(new MultipartLimitExceededError('Field value size limit exceeded'));
         }
 
-        promiseQueue = promiseQueue.then(() => {
+        this.#promiseQueue = this.#promiseQueue.then(() => {
           return controller.push(
             Promise.resolve({
               type: 'field',
@@ -113,7 +122,7 @@ export class MultipartReader {
       });
 
       b.on('finish', () => {
-        promiseQueue = promiseQueue.then(() => {
+        this.#promiseQueue = this.#promiseQueue.then(() => {
           controller.finish();
         });
       });
@@ -141,5 +150,12 @@ export class MultipartReader {
         }
       });
     });
+  }
+
+  async destroy() {
+    await this.#promiseQueue;
+    if (this.#cleanup) {
+      await this.#cleanup();
+    }
   }
 }
