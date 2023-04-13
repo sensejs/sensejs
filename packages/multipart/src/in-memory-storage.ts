@@ -1,5 +1,4 @@
-import {MultipartFileEntry, MultipartFileStorage, MultipartFileStorageOption} from './types.js';
-import busboy from 'busboy';
+import {MultipartFileEntry, MultipartFileInfo, MultipartFileStorage, MultipartFileStorageOption} from './types.js';
 import {MultipartLimitExceededError} from './error.js';
 
 /**
@@ -42,7 +41,7 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
   saveMultipartFile(
     name: string,
     file: NodeJS.ReadableStream,
-    info: busboy.FileInfo,
+    info: MultipartFileInfo,
   ): Promise<MultipartFileEntry<Buffer>> {
     if (this.#fileCount++ >= this.#fileCountLimit) {
       return Promise.reject(new MultipartLimitExceededError('Too many files'));
@@ -77,6 +76,7 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
           content: buffer,
           size: size,
           mimeType: info.mimeType,
+          transferEncoding: info.transferEncoding,
         });
       });
 

@@ -1,7 +1,6 @@
-import {MultipartFileEntry, MultipartFileStorage, MultipartFileStorageOption} from './types.js';
+import {MultipartFileEntry, MultipartFileInfo, MultipartFileStorage, MultipartFileStorageOption} from './types.js';
 import fsp from 'fs/promises';
 import os from 'os';
-import busboy from 'busboy';
 import path from 'path';
 import {randomUUID} from 'crypto';
 import fs from 'fs';
@@ -50,7 +49,7 @@ export class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.Readab
   async saveMultipartFile(
     name: string,
     file: NodeJS.ReadableStream,
-    info: busboy.FileInfo,
+    info: MultipartFileInfo,
   ): Promise<MultipartFileEntry<NodeJS.ReadableStream>> {
     if (this.#fileCount++ >= this.#fileCountLimit) {
       throw new MultipartLimitExceededError('Too many files');
@@ -81,6 +80,7 @@ export class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.Readab
                   content: file,
                   size: stat.size,
                   mimeType: info.mimeType,
+                  transferEncoding: info.transferEncoding,
                 });
               });
             })

@@ -1,4 +1,4 @@
-import type busboy from 'busboy';
+import type busboy from '@fastify/busboy';
 
 /**
  * A multipart file entry
@@ -22,6 +22,8 @@ export interface MultipartFileEntry<Content> {
    */
   content: Content;
 
+  transferEncoding: string;
+
   mimeType: string;
 
   size: number;
@@ -37,6 +39,18 @@ export interface MultipartFieldEntry {
    * The value of the field
    */
   value: string;
+
+  transferEncoding: string;
+
+  mimeType: string;
+}
+
+export interface MultipartFileInfo {
+  filename: string;
+
+  mimeType: string;
+
+  transferEncoding: string;
 }
 
 export type MultipartEntry<Content> = MultipartFileEntry<Content> | MultipartFieldEntry;
@@ -47,9 +61,9 @@ export abstract class MultipartFileStorage<Content> {
   abstract readonly fileCountLimit: number;
 
   abstract saveMultipartFile(
-    filename: string,
+    name: string,
     file: NodeJS.ReadableStream,
-    info: busboy.FileInfo,
+    info: MultipartFileInfo,
   ): Promise<MultipartFileEntry<Content>>;
 
   abstract clean(): Promise<void>;
