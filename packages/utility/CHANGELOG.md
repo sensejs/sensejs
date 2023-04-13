@@ -1,5 +1,11 @@
 # @sensejs/utility
 
+## 0.11.0-alpha.2
+
+### Patch Changes
+
+- 15025d46: add KeyOf<T> that excludes number to replace keyof T
+
 ## 0.11.0-alpha.1
 
 ### Patch Changes

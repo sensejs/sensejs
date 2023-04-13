@@ -18,12 +18,19 @@
     "@sensejs/testing": "0.10.0",
     "@sensejs/utility": "0.10.0",
     "@sensejs/testing-utility": "0.10.0",
-    "@sensejs/sensejs-doc": "0.0.0"
+    "@sensejs/sensejs-doc": "0.0.0",
+    "@sensejs/multipart": "0.11.0-alpha.1"
   },
   "changesets": [
     "angry-adults-jam",
+    "fifty-turkeys-march",
+    "many-crabs-end",
     "nervous-paws-camp",
+    "pretty-cherries-matter",
+    "shiny-ligers-suffer",
+    "smooth-suns-nail",
     "sweet-moles-clap",
-    "thick-glasses-change"
+    "thick-glasses-change",
+    "wet-tips-float"
   ]
 }

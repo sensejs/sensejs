@@ -252,7 +252,7 @@ importers:
   packages/http-common:
     dependencies:
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0-alpha.2
         version: link:../utility
       tslib:
         specifier: ^2.5.0
@@ -265,7 +265,7 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@sensejs/multipart':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0-alpha.2
         version: link:../multipart
       reflect-metadata:
         specifier: ^0.1.13
@@ -280,7 +280,7 @@ importers:
         specifier: ^12.0.0
         version: 12.0.0
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0-alpha.2
         version: link:../utility
       '@types/koa':
         specifier: ^2.13.5
@@ -326,7 +326,7 @@ importers:
         specifier: workspace:*
         version: link:../http-common
       '@sensejs/multipart':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0-alpha.2
         version: link:../multipart
       '@sensejs/testing-utility':
         specifier: workspace:*

@@ -1,5 +1,23 @@
 # @sensejs/http-common
 
+## 0.11.0-alpha.2
+
+### Minor Changes
+
+- 6f912356: Move impmentation specific config like CORS and trust-proxy setting from
+  `@sensejs/http-common` to `@sensejs/http-koa-platform`.
+- 9e158eea: A new decorator `MultipartBody` was introduced in `@sensejs/http-common`,
+  which requires the request body to be `multipart/formdata`, and an instance
+  of `Multipart` from `@sensejs/multipart` will be injected for handling the
+  request body.
+
+### Patch Changes
+
+- Updated dependencies [78821a2a]
+- Updated dependencies [15025d46]
+  - @sensejs/multipart@0.11.0-alpha.2
+  - @sensejs/utility@0.11.0-alpha.2
+
 ## 0.11.0-alpha.1
 
 ### Patch Changes

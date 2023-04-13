@@ -1,5 +1,24 @@
 # @sensejs/http-koa-platform
 
+## 0.11.0-alpha.2
+
+### Minor Changes
+
+- fbc78aab: Implement multipart body support in `@sensejs/http-koa-platform`.
+- 6f912356: Removed deprecated `createHttpModule`
+- 6f912356: Move impmentation specific config like CORS and trust-proxy setting from
+  `@sensejs/http-common` to `@sensejs/http-koa-platform`.
+
+### Patch Changes
+
+- Updated dependencies [78821a2a]
+- Updated dependencies [6f912356]
+- Updated dependencies [15025d46]
+- Updated dependencies [9e158eea]
+  - @sensejs/multipart@0.11.0-alpha.2
+  - @sensejs/http-common@0.11.0-alpha.2
+  - @sensejs/utility@0.11.0-alpha.2
+
 ## 0.11.0-alpha.1
 
 ### Patch Changes

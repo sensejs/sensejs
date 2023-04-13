@@ -1,4 +1,78 @@
 
+## 2023-04-13
+
+
+### Releases
+
+
+| Package | Released Version | Released Type |
+|---------|------------------|---------------|
+| `@sensejs/multipart` | `0.11.0-alpha.2 ` | minor |
+| `@sensejs/http-koa-platform` | `0.11.0-alpha.2 ` | minor |
+| `@sensejs/http-common` | `0.11.0-alpha.2 ` | minor |
+| `@sensejs/utility` | `0.11.0-alpha.2 ` | minor |
+
+
+
+### Notable Changes
+
+- **Summary**: 
+
+  Introduce experimental multipart support
+  
+  This change introduce a new package `@sensejs/multipart` that based on
+  `@fastify/busboy` to provide a high level multipart body handling with
+  custom storage provider support and back pressure support.
+  
+  This package does not depends on the other part of SenseJS, and can be
+  used standalong with any other HTTP framwork.
+
+  **Affected packages**: 
+   - Major changes: 
+     - `@sensejs/multipart`
+- **Summary**: 
+
+  Implement multipart body support in `@sensejs/http-koa-platform`.
+
+  **Affected packages**: 
+   - Major changes: 
+     - `@sensejs/http-koa-platform`
+- **Summary**: 
+
+  Removed deprecated `createHttpModule`
+
+  **Affected packages**: 
+   - Major changes: 
+     - `@sensejs/http-koa-platform`
+- **Summary**: 
+
+  Move impmentation specific config like CORS and trust-proxy setting from
+  `@sensejs/http-common` to `@sensejs/http-koa-platform`.
+
+  **Affected packages**: 
+   - Major changes: 
+     - `@sensejs/http-common`
+     - `@sensejs/http-koa-platform`
+- **Summary**: 
+
+  add KeyOf<T> that excludes number to replace keyof T
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/utility`
+- **Summary**: 
+
+  A new decorator `MultipartBody` was introduced in `@sensejs/http-common`,
+  which requires the request body to be `multipart/formdata`, and an instance
+  of `Multipart` from `@sensejs/multipart` will be injected for handling the
+  request body.
+
+  **Affected packages**: 
+   - Major changes: 
+     - `@sensejs/http-common`
+
+
+
 ## 2023-04-10
 
 
