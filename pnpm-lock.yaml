@@ -264,6 +264,9 @@ importers:
       '@sensejs/core':
         specifier: workspace:*
         version: link:../core
+      '@sensejs/multipart':
+        specifier: workspace:^0.11.0-alpha.1
+        version: link:../multipart
       reflect-metadata:
         specifier: ^0.1.13
         version: 0.1.13
@@ -322,6 +325,9 @@ importers:
       '@sensejs/http-common':
         specifier: workspace:*
         version: link:../http-common
+      '@sensejs/multipart':
+        specifier: workspace:^0.11.0-alpha.1
+        version: link:../multipart
       '@sensejs/testing-utility':
         specifier: workspace:*
         version: link:../../tools/testing-utility

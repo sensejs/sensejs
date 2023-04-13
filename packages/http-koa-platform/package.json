@@ -47,12 +47,14 @@
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
     "@sensejs/http-common": "workspace:*",
-    "@sensejs/testing-utility": "workspace:*"
+    "@sensejs/testing-utility": "workspace:*",
+    "@sensejs/multipart": "workspace:^0.11.0-alpha.1"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0-alpha.1",
     "@sensejs/core": "workspace:^0.11.0-alpha.1",
     "@sensejs/http-common": "workspace:^0.11.0-alpha.1",
+    "@sensejs/multipart": "workspace:^0.11.0-alpha.1",
     "reflect-metadata": "^0.1.13"
   },
   "author": "LAN Xingcan",

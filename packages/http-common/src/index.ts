@@ -16,6 +16,7 @@ import {IncomingHttpHeaders, RequestListener} from 'http';
 import {Container, Middleware} from '@sensejs/container';
 import http from 'http';
 import {promisify} from 'util';
+import {MultipartReader} from '@sensejs/multipart';
 
 export enum HttpMethod {
   GET = 'get',
@@ -32,6 +33,7 @@ export enum HttpParamType {
   BODY,
   PATH,
   HEADER,
+  MULTIPART_BODY,
 }
 
 export interface QueryParamMappingMetadata {
@@ -40,6 +42,9 @@ export interface QueryParamMappingMetadata {
 
 export interface BodyParamMappingMetadata {
   type: HttpParamType.BODY;
+}
+export interface MultipartBodyParamMappingMetadata {
+  type: HttpParamType.MULTIPART_BODY;
 }
 
 export interface PathParamMappingMetadata {
@@ -55,12 +60,11 @@ export interface HeaderParamMappingMetadata {
 export type ParamMappingMetadata =
   | QueryParamMappingMetadata
   | BodyParamMappingMetadata
+  | MultipartBodyParamMappingMetadata
   | PathParamMappingMetadata
   | HeaderParamMappingMetadata;
 
 export interface FunctionParamMappingMeta {
-  method?: HttpMethod;
-  path?: string;
   params: Map<number, ParamMappingMetadata>;
 }
 
@@ -89,6 +93,7 @@ export interface RequestMappingMetadata {
   middlewares?: Constructor<Middleware>[];
   httpMethod: HttpMethod;
   path: string;
+  multipartBody: boolean;
 }
 
 export interface RequestMappingOption {
@@ -161,11 +166,10 @@ export abstract class HttpContext {
 export interface MethodRouteSpec<T extends {} = any> {
   path: string;
   httpMethod: HttpMethod;
-
   middlewares: Constructor<Middleware>[];
-  // interceptProviders: Constructor<AsyncInterceptProvider>[];
   targetConstructor: Constructor<T>;
   targetMethod: keyof T;
+  multipartBody: boolean;
 }
 
 export interface ControllerRouteSpec {
@@ -218,7 +222,7 @@ export abstract class AbstractHttpApplicationBuilder {
       return;
     }
 
-    const {httpMethod, path, middlewares = []} = requestMappingMetadata;
+    const {httpMethod, path, middlewares = [], multipartBody} = requestMappingMetadata;
 
     methodRoutSpecs.push({
       path,
@@ -226,6 +230,7 @@ export abstract class AbstractHttpApplicationBuilder {
       middlewares: [...this.middlewares, ...controllerMetadata.middlewares, ...middlewares],
       targetConstructor: controllerMetadata.target,
       targetMethod: method,
+      multipartBody,
     });
   }
 }
@@ -312,6 +317,24 @@ export function Path(name: string, transform: Transformer = noop): InstanceMetho
   };
 }
 
+/**
+ * Inject a multipart body reader
+ *
+ * This explicitly requires the body must be a multipart form data, and implementations should check the content type
+ * and provides an instance of `MultipartReader` from "@sensejs/multipart" to read the body.
+ */
+export function MultipartBody(): InstanceMethodParamDecorator {
+  return (prototype, key, idx) => {
+    if (Reflect.getMetadata('design:paramtypes', prototype, key)[idx] !== MultipartReader) {
+      throw new Error(
+        '@MultipartBody() can only be applied to a param of type `MultipartReader` from "@sensejs/multipart"',
+      );
+    }
+    Inject(MultipartReader)(prototype, key, idx);
+    decorateParam({type: HttpParamType.MULTIPART_BODY})(prototype, key, idx);
+  };
+}
+
 export function Body(transform: Transformer = noop): InstanceMethodParamDecorator {
   return (prototype, key, pd) => {
     Inject(HttpContext, {
@@ -380,14 +403,16 @@ export function RequestMapping(
   option: RequestMappingOption = {},
 ): RequestMappingDecorator {
   return <T extends {}>(prototype: T, method: keyof T): void => {
+    const metadata = ensureMetadataOnMethod(prototype, method, {params: new Map()});
+    const paramMetadata = Array.from(metadata.params.entries());
+    const hasMultipartParam =
+      paramMetadata.filter(([idx, metadata]) => metadata.type === HttpParamType.MULTIPART_BODY).length > 0;
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,
       middlewares: option.middlewares ?? [],
+      multipartBody: hasMultipartParam,
     });
-    const metadata = ensureMetadataOnMethod(prototype, method, {params: new Map()});
-    metadata.path = path;
-    metadata.method = httpMethod;
   };
 }
 

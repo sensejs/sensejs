@@ -12,6 +12,7 @@ import {
   Header,
   HttpMethod,
   HttpParamType,
+  MultipartBody,
   PATCH,
   Path,
   POST,
@@ -21,6 +22,7 @@ import {
 import {Container, Inject, Middleware} from '@sensejs/container';
 import {RequestListener} from 'http';
 import {Component, Module, EntryModule, ProcessManager} from '@sensejs/core';
+import {MultipartReader} from '@sensejs/multipart';
 
 describe('Http annotations', () => {
   test('metadata', () => {
@@ -58,6 +60,9 @@ describe('Http annotations', () => {
 
       @PATCH('/')
       handlePatch() {}
+
+      @POST('multipart')
+      handleMultipart(@MultipartBody() body: MultipartReader) {}
     }
 
     const cm = getHttpControllerMetadata(FooController);
@@ -81,14 +86,10 @@ describe('Http annotations', () => {
 
     const metadata = ensureMetadataOnPrototype(FooController.prototype);
     expect(metadata.get('handleGet')).toEqual({
-      method: HttpMethod.GET,
-      path: '/get',
       params: expect.any(Map),
     });
     const postMetadata = metadata.get('handlePost');
     expect(postMetadata).toEqual({
-      method: HttpMethod.POST,
-      path: '/:id',
       params: expect.any(Map),
     });
 
@@ -98,19 +99,31 @@ describe('Http annotations', () => {
     expect(postMetadata!.params.get(3)).toEqual(expect.objectContaining({type: HttpParamType.HEADER, name: 'cookie'}));
 
     expect(metadata.get('handleDelete')).toEqual({
-      method: HttpMethod.DELETE,
-      path: '/:id',
       params: expect.objectContaining({}),
     });
     expect(metadata.get(handlePut)).toEqual({
-      method: HttpMethod.PUT,
-      path: '/:id',
       params: expect.objectContaining({}),
     });
     expect(metadata.get('handlePatch')).toEqual({
-      method: HttpMethod.PATCH,
-      path: '/',
       params: expect.objectContaining({}),
+    });
+  });
+
+  describe('@MultipartBody', () => {
+    test('throws when parameter type is not MultipartReader', () => {
+      expect(() => {
+        class Test {
+          @POST('/multipart')
+          handleMultipart(@MultipartBody() body: any) {}
+        }
+      }).toThrowError();
+
+      expect(() => {
+        class Test {
+          @POST('/multipart')
+          handleMultipart(@MultipartBody() body: object) {}
+        }
+      }).toThrowError();
     });
   });
 });
