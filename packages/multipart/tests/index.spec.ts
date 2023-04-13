@@ -3,6 +3,7 @@ import {Readable} from 'stream';
 import http from 'http';
 import * as net from 'net';
 import FormData from 'form-data';
+import {jest, describe, test} from '@jest/globals';
 
 describe('MultipartReader', () => {
   test('should works', async () => {
