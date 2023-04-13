@@ -44,7 +44,7 @@ async function streamToString(stream: stream.Readable) {
 describe('MultipartReader', () => {
   const stub = jest.fn();
   const serverPromise = createStubHttpServer(async (req, res) => {
-    const multipart = new Multipart(req, req.headers, {
+    const [multipart, cleanup] = Multipart.from(req, req.headers, {
       fieldCountLimit: 4,
       fieldSizeLimit: 16,
       partCountLimit: 5,
@@ -71,7 +71,7 @@ describe('MultipartReader', () => {
       res.end(String(err));
       return;
     } finally {
-      await multipart.destroy();
+      await cleanup();
     }
     res.statusCode = 200;
     res.end('OK');

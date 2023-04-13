@@ -47,7 +47,11 @@ export class Multipart {
   #promiseQueue: Promise<any> = Promise.resolve();
   #cleanup: (() => Promise<void>) | null = null;
 
-  constructor(inputStream: stream.Readable, headers: http.IncomingHttpHeaders, option: MultipartOptions = {}) {
+  protected constructor(
+    inputStream: stream.Readable,
+    headers: http.IncomingHttpHeaders,
+    option: MultipartOptions = {},
+  ) {
     this.#inputStream = inputStream;
     if (typeof headers['content-type'] !== 'string') {
       throw new InvalidMultipartBodyError('Missing Content-Type header');
@@ -61,6 +65,27 @@ export class Multipart {
     // media-type = type "/" subtype *( OWS ";" OWS parameter )
     // We need to take care about optional whitespace around semicolon
     return /^multipart\/form-data(\s*;.+)?$/i.test(contentType);
+  }
+
+  /**
+   * Create a Multipart instance and associated cleanup function for a given http body stream and headers
+   *
+   * The cleanup function must be called when the multipart instance is no longer needed, otherwise leaks will occur.
+   * The reason not to make the cleanup function part of the Multipart instance is to make it possible to for a
+   * framework not to exposes it to end user to prevent from misuse.
+   *
+   * @param inputStream
+   * @param headers
+   * @param option
+   */
+  static from(
+    inputStream: stream.Readable,
+    headers: http.IncomingHttpHeaders,
+    option: MultipartOptions = {},
+  ): [Multipart, () => Promise<void>] {
+    const multipart = new Multipart(inputStream, headers, option);
+    const cleanup = multipart.#destroy.bind(multipart);
+    return [multipart, cleanup];
   }
 
   read(): Promise<Record<string, MultipartEntry<any>>>;
@@ -170,7 +195,7 @@ export class Multipart {
     });
   }
 
-  async destroy() {
+  async #destroy() {
     await this.#promiseQueue;
     if (this.#cleanup) {
       await this.#cleanup();
