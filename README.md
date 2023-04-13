@@ -1,8 +1,7 @@
 SenseJS
 =======
-
-[![Code Quality](https://app.codacy.com/project/badge/Grade/2dcf1c5c1a0b4681bc9641194122bde9)](https://app.codacy.com/gh/sensejs/sensejs/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-[![Code Coverage](https://app.codacy.com/project/badge/Coverage/2dcf1c5c1a0b4681bc9641194122bde9)](https://app.codacy.com/gh/sensejs/sensejs/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_coverage)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/651f7b2bb58759ba7a87/test_coverage)](https://codeclimate.com/github/sensejs/sensejs/test_coverage)
+[![Maintainability](https://api.codeclimate.com/v1/badges/651f7b2bb58759ba7a87/maintainability)](https://codeclimate.com/github/sensejs/sensejs/maintainability)
 
 SenseJS is a flexible IoC Framework.
 
