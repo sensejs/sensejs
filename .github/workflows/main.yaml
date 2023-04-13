@@ -1,4 +1,7 @@
 on: [push]
+env:
+  IMAGE_TAG: sensejs/workspace:test
+
 jobs:
   building:
 
@@ -19,26 +22,25 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - run: |-
-          docker-compose pull
+          docker-compose pull kafka-1 kafka-2 kafka-3
           docker-compose up -d kafka-1 kafka-2 kafka-3
 
       - name: BuildAndPush
         uses: docker/build-push-action@v4
-        env:
-          NODE_VERSION: ${{ matrix.node-version }}
         with:
           context: .
-          push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: NODE_VERSION=${{ matrix.node-version }}
-          tags: workspace-test
+          load: true
+          tags: ${{ env.IMAGE_TAG }}
 
       - name: Test
         env:
           NODE_VERSION: ${{ matrix.node-version }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |-
-          docker-compose run workspace-test
+          docker-compose run test-workspace
 
       - name: Upload Coverage info to CodeClimate
         uses: paambaati/codeclimate-action@v3.2.0

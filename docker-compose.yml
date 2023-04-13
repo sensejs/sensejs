@@ -88,7 +88,20 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO"
       KAFKA_HEAP_OPTS: '-Xmx256M -Xms16M'
 
-  workspace-test:
+  test-workspace:
+    image: ${IMAGE_TAG}
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    environment:
+      END_TO_END_TEST: 'true'
+    volumes:
+      - ./coverage:/opt/sensejs/coverage
+    command: ['pnpm', 'run', 'test', '--coverage', '--runInBand']
+
+
+  build-and-test-workspace:
     build:
       context: .
       args:
