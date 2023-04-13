@@ -24,7 +24,7 @@ const releasesDetail =
 | Package | Released Version | Released Type |
 |---------|------------------|---------------|
 ${
-  statusJson.releases.map((release) => {
+  statusJson.releases.filter(r=>r.type !== 'none').map((release) => {
     return `| \`${release.name}\` | \`${release.newVersion} \` | ${release.type} |\n`
   }).join('')
 }
