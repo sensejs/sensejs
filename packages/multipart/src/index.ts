@@ -63,11 +63,22 @@ export class Multipart {
     return /^multipart\/form-data(\s*;.+)?$/i.test(contentType);
   }
 
-  read(): AsyncIterable<MultipartEntry<Buffer>>;
-  read<Content>(handler: MultipartFileStorage<Content>): AsyncIterable<MultipartEntry<Content>>;
+  read(): Promise<Record<string, MultipartEntry<any>>>;
+  read<Content>(handler: MultipartFileStorage<Content>): Promise<Record<string, MultipartEntry<any>>>;
+
+  async read(handler?: MultipartFileStorage<any>): Promise<Record<string, MultipartEntry<any>>> {
+    const result: Record<string, MultipartEntry<any>> = {};
+    for await (const entry of this.entries()) {
+      result[entry.name] = entry;
+    }
+    return result;
+  }
+
+  entries(): AsyncIterable<MultipartEntry<Buffer>>;
+  entries<Content>(handler: MultipartFileStorage<Content>): AsyncIterable<MultipartEntry<Content>>;
 
   // read(): Promise<AsyncIterator<MultipartEntry<Buffer>>>;
-  read(multipartFileHandler?: MultipartFileStorage<any>): AsyncIterable<MultipartEntry<any>> {
+  entries(multipartFileHandler?: MultipartFileStorage<any>): AsyncIterable<MultipartEntry<any>> {
     if (this.#cleanup) {
       throw new Error('Cannot read multipart body twice');
     }
