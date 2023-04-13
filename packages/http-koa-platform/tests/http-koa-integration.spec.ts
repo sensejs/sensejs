@@ -2,7 +2,7 @@ import '@sensejs/testing-utility/lib/mock-console';
 import {jest} from '@jest/globals';
 import {Constructor, Inject} from '@sensejs/core';
 import {Container, Middleware} from '@sensejs/container';
-import {MultipartReader} from '@sensejs/multipart';
+import {Multipart} from '@sensejs/multipart';
 import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/index.js';
 import {
@@ -170,8 +170,8 @@ describe('KoaHttpApplicationBuilder', () => {
       }
 
       @POST('multipart')
-      async postMultipart(@MultipartBody() multipart: MultipartReader) {
-        expect(multipart).toBeInstanceOf(MultipartReader);
+      async postMultipart(@MultipartBody() multipart: Multipart) {
+        expect(multipart).toBeInstanceOf(Multipart);
         stubForMultipartPost();
         return 'ok';
       }

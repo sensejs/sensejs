@@ -11,7 +11,7 @@ export * from './in-memory-storage.js';
 export * from './disk-storage.js';
 export * from './types.js';
 
-export interface MultipartReaderOptions {
+export interface MultipartOptions {
   /**
    * The maximum size of a file, in bytes.
    * Note this is only implemented for x-www-form-urlencoded, and for multipart/form-data it's noop.
@@ -36,18 +36,18 @@ export interface MultipartReaderOptions {
   partCountLimit?: number;
 }
 
-export class MultipartReader {
+export class Multipart {
   static readonly maxFileSize = 16 * 1024 * 1024;
   static readonly maxFileCount = 5;
 
   // #fileHandler: MultipartFileStorage = new MultipartFileMemoryHandler(MultipartReader.maxFileSize);
   readonly #inputStream: stream.Readable;
   readonly #headers: busboy.BusboyHeaders;
-  readonly #options: MultipartReaderOptions;
+  readonly #options: MultipartOptions;
   #promiseQueue: Promise<any> = Promise.resolve();
   #cleanup: (() => Promise<void>) | null = null;
 
-  constructor(inputStream: stream.Readable, headers: http.IncomingHttpHeaders, option: MultipartReaderOptions = {}) {
+  constructor(inputStream: stream.Readable, headers: http.IncomingHttpHeaders, option: MultipartOptions = {}) {
     this.#inputStream = inputStream;
     if (typeof headers['content-type'] !== 'string') {
       throw new InvalidMultipartBodyError('Missing Content-Type header');

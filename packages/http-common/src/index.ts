@@ -16,7 +16,7 @@ import {IncomingHttpHeaders, RequestListener} from 'http';
 import {Container, Middleware} from '@sensejs/container';
 import http from 'http';
 import {promisify} from 'util';
-import {MultipartReader} from '@sensejs/multipart';
+import {Multipart} from '@sensejs/multipart';
 
 export enum HttpMethod {
   GET = 'get',
@@ -325,12 +325,12 @@ export function Path(name: string, transform: Transformer = noop): InstanceMetho
  */
 export function MultipartBody(): InstanceMethodParamDecorator {
   return (prototype, key, idx) => {
-    if (Reflect.getMetadata('design:paramtypes', prototype, key)[idx] !== MultipartReader) {
+    if (Reflect.getMetadata('design:paramtypes', prototype, key)[idx] !== Multipart) {
       throw new Error(
         '@MultipartBody() can only be applied to a param of type `MultipartReader` from "@sensejs/multipart"',
       );
     }
-    Inject(MultipartReader)(prototype, key, idx);
+    Inject(Multipart)(prototype, key, idx);
     decorateParam({type: HttpParamType.MULTIPART_BODY})(prototype, key, idx);
   };
 }

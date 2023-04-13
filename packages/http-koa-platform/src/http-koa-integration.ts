@@ -13,7 +13,7 @@ import {
   HttpResponse,
   MethodRouteSpec,
 } from '@sensejs/http-common';
-import {MultipartReader} from '@sensejs/multipart';
+import {Multipart} from '@sensejs/multipart';
 
 export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
 export type CrossOriginResourceShareOption = KoaCors.Options;
@@ -189,12 +189,12 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
         targetMethod,
         middlewares,
         HttpContext,
-        MultipartReader,
+        Multipart,
       );
 
       controllerRouter[httpMethod](path, async (ctx) => {
         const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
-        const multipartReader = new MultipartReader(ctx.req, ctx.headers);
+        const multipartReader = new Multipart(ctx.req, ctx.headers);
         try {
           const result = await invoker.createInvokeSession().invokeTargetMethod(context, multipartReader);
 

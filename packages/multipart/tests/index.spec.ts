@@ -1,4 +1,4 @@
-import {MultipartFileInMemoryStorage, MultipartLimitExceededError, MultipartReader} from '../src/index.js';
+import {MultipartFileInMemoryStorage, MultipartLimitExceededError, Multipart} from '../src/index.js';
 import stream from 'stream';
 import http from 'http';
 import * as net from 'net';
@@ -44,7 +44,7 @@ async function streamToString(stream: stream.Readable) {
 describe('MultipartReader', () => {
   const stub = jest.fn();
   const serverPromise = createStubHttpServer(async (req, res) => {
-    const reader = new MultipartReader(req, req.headers, {
+    const reader = new Multipart(req, req.headers, {
       fieldCountLimit: 4,
       fieldSizeLimit: 16,
       partCountLimit: 5,
@@ -228,11 +228,11 @@ describe('MultipartReader', () => {
   });
 
   test('Detect content type', () => {
-    expect(MultipartReader.testContentType('application/x-www-form-urlencoded')).toBeFalsy();
-    expect(MultipartReader.testContentType('multipart/form-data')).toBeTruthy();
-    expect(MultipartReader.testContentType('multipart/form-data; boundary=aBoundaryString')).toBeTruthy();
-    expect(MultipartReader.testContentType('multipart/form-data;boundary=aBoundaryString')).toBeTruthy();
-    expect(MultipartReader.testContentType('multipart/form-data ;boundary=aBoundaryString')).toBeTruthy();
-    expect(MultipartReader.testContentType('multipart/form-data ; boundary=aBoundaryString')).toBeTruthy();
+    expect(Multipart.testContentType('application/x-www-form-urlencoded')).toBeFalsy();
+    expect(Multipart.testContentType('multipart/form-data')).toBeTruthy();
+    expect(Multipart.testContentType('multipart/form-data; boundary=aBoundaryString')).toBeTruthy();
+    expect(Multipart.testContentType('multipart/form-data;boundary=aBoundaryString')).toBeTruthy();
+    expect(Multipart.testContentType('multipart/form-data ;boundary=aBoundaryString')).toBeTruthy();
+    expect(Multipart.testContentType('multipart/form-data ; boundary=aBoundaryString')).toBeTruthy();
   });
 });

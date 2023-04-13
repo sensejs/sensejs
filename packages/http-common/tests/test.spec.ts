@@ -22,7 +22,7 @@ import {
 import {Container, Inject, Middleware} from '@sensejs/container';
 import {RequestListener} from 'http';
 import {Component, Module, EntryModule, ProcessManager} from '@sensejs/core';
-import {MultipartReader} from '@sensejs/multipart';
+import {Multipart} from '@sensejs/multipart';
 
 describe('Http annotations', () => {
   test('metadata', () => {
@@ -62,7 +62,7 @@ describe('Http annotations', () => {
       handlePatch() {}
 
       @POST('multipart')
-      handleMultipart(@MultipartBody() body: MultipartReader) {}
+      handleMultipart(@MultipartBody() body: Multipart) {}
     }
 
     const cm = getHttpControllerMetadata(FooController);
