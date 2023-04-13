@@ -1,4 +1,4 @@
-import {Decorator, DecoratorBuilder} from '../src/index.js';
+import {Decorator, DecoratorBuilder, StaticMethodDecorator} from '../src/index.js';
 
 function noop() {}
 
@@ -172,5 +172,17 @@ describe('ParameterDecoratorDiscriminator', () => {
         }
       });
     });
+  });
+
+  test('playground', () => {
+    const Decorator = () =>
+      new DecoratorBuilder('foo', true)
+        .whenApplyToStaticMethod((target, propertyKey, descriptor) => {})
+        .build<StaticMethodDecorator>();
+
+    class M {
+      @Decorator()
+      static other() {}
+    }
   });
 });

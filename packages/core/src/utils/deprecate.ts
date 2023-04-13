@@ -68,7 +68,11 @@ function makeDeprecateConstructorProxy(option: DeprecateOption) {
 }
 
 function makeDeprecatedMethodProxy(option: DeprecateOption | DeprecateSymbolMethodOption) {
-  return <T extends Function, R extends Function | {}>(target: R, name: keyof R, pd: TypedPropertyDescriptor<T>) => {
+  return <T extends Function, R extends Function | {}>(
+    target: R,
+    name: string | symbol,
+    pd: TypedPropertyDescriptor<T>,
+  ) => {
     const origin = pd.value;
     if (!origin) {
       throw new Error('Deprecated target is not a function');
