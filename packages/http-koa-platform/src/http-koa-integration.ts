@@ -8,14 +8,16 @@ import KoaCors from '@koa/cors';
 import koaQs from 'koa-qs';
 import {
   AbstractHttpApplicationBuilder,
-  CrossOriginResourceShareOption,
   HttpContext,
   HttpRequest,
   HttpResponse,
   MethodRouteSpec,
 } from '@sensejs/http-common';
+import {Multipart} from '@sensejs/multipart';
 
 export type QueryStringParsingMode = 'simple' | 'extended' | 'strict' | 'first';
+export type CrossOriginResourceShareOption = KoaCors.Options;
+export type BodyParserOption = KoaBodyParserOption;
 
 class KoaHttpRequest implements HttpRequest {
   get query() {
@@ -181,19 +183,48 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
     container: Container,
   ): void {
     const {httpMethod, path, targetConstructor, targetMethod, middlewares} = methodRouteSpec;
-    const invoker = container.createMethodInvoker(targetConstructor, targetMethod, middlewares, HttpContext);
+    if (methodRouteSpec.multipartBody) {
+      const invoker = container.createMethodInvoker(
+        targetConstructor,
+        targetMethod,
+        middlewares,
+        HttpContext,
+        Multipart,
+      );
 
-    controllerRouter[httpMethod](path, async (ctx) => {
-      const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
-      const result = await invoker.createInvokeSession().invokeTargetMethod(context);
+      controllerRouter[httpMethod](path, async (ctx) => {
+        const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
+        const [multipart, cleanup] = Multipart.from(ctx.req, ctx.headers);
+        try {
+          const result = await invoker.createInvokeSession().invokeTargetMethod(context, multipart);
 
-      ctx.response.body = context.response.data ?? result;
-      if (typeof context.response.statusCode === 'number') {
-        ctx.response.status = context.response.statusCode;
-      }
-      context.response.headerSet.forEach((value, key) => {
-        ctx.response.set(key, value);
+          ctx.response.body = context.response.data ?? result;
+          if (typeof context.response.statusCode === 'number') {
+            ctx.response.status = context.response.statusCode;
+          }
+          context.response.headerSet.forEach((value, key) => {
+            ctx.response.set(key, value);
+          });
+        } finally {
+          await cleanup();
+        }
       });
-    });
+      return;
+    } else {
+      const invoker = container.createMethodInvoker(targetConstructor, targetMethod, middlewares, HttpContext);
+
+      controllerRouter[httpMethod](path, async (ctx) => {
+        const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
+        const result = await invoker.createInvokeSession().invokeTargetMethod(context);
+
+        ctx.response.body = context.response.data ?? result;
+        if (typeof context.response.statusCode === 'number') {
+          ctx.response.status = context.response.statusCode;
+        }
+        context.response.headerSet.forEach((value, key) => {
+          ctx.response.set(key, value);
+        });
+      });
+    }
   }
 }

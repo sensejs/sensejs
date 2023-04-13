@@ -2,6 +2,7 @@ import '@sensejs/testing-utility/lib/mock-console';
 import {jest} from '@jest/globals';
 import {Constructor, Inject} from '@sensejs/core';
 import {Container, Middleware} from '@sensejs/container';
+import {Multipart} from '@sensejs/multipart';
 import supertest from 'supertest';
 import {KoaHttpApplicationBuilder, KoaHttpContext} from '../src/index.js';
 import {
@@ -17,6 +18,7 @@ import {
   HttpContext,
   Controller,
   getHttpControllerMetadata,
+  MultipartBody,
 } from '@sensejs/http-common';
 
 describe('KoaHttpApplicationBuilder', () => {
@@ -126,6 +128,7 @@ describe('KoaHttpApplicationBuilder', () => {
     const stubForGet = jest.fn(),
       stubForGetStar = jest.fn(),
       stubForPost = jest.fn(),
+      stubForMultipartPost = jest.fn(),
       stubForDelete = jest.fn(),
       stubForPatch = jest.fn(),
       stubForPut = jest.fn();
@@ -145,7 +148,7 @@ describe('KoaHttpApplicationBuilder', () => {
     class FooController {
       unusedMethod() {}
 
-      @GET('/')
+      @GET('')
       get(
         @Inject(HttpContext) ctx: HttpContext,
         @Inject(symbolA) numberA: number,
@@ -161,22 +164,29 @@ describe('KoaHttpApplicationBuilder', () => {
         Object.entries(query).forEach(([key, value]) => ctx.response.set(key, value));
       }
 
-      @POST('/')
+      @POST('')
       post() {
         stubForPost();
       }
 
-      @DELETE('/')
+      @POST('multipart')
+      async postMultipart(@MultipartBody() multipart: Multipart) {
+        expect(multipart).toBeInstanceOf(Multipart);
+        stubForMultipartPost();
+        return 'ok';
+      }
+
+      @DELETE('')
       delete() {
         stubForDelete();
       }
 
-      @PATCH('/')
+      @PATCH('')
       patch() {
         stubForPatch();
       }
 
-      @PUT('/')
+      @PUT('')
       put() {
         stubForPut();
       }
@@ -197,6 +207,7 @@ describe('KoaHttpApplicationBuilder', () => {
     await testClient.delete('/');
     await testClient.put('/');
     await testClient.patch('/');
+    await testClient.post('/multipart').attach('file', Buffer.from('hello'), 'hello.txt').expect(200);
     expect(stubForGet).toBeCalledWith(expect.any(KoaHttpContext));
     expect(stubForGetStar).toBeCalledWith(
       expect.objectContaining({
@@ -209,6 +220,7 @@ describe('KoaHttpApplicationBuilder', () => {
       }),
     );
     expect(stubForPost).toBeCalled();
+    expect(stubForMultipartPost).toBeCalled();
     expect(stubForDelete).toBeCalled();
     expect(stubForPut).toBeCalled();
     expect(stubForPost).toBeCalled();

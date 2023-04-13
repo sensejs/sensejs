@@ -16,6 +16,7 @@ import {IncomingHttpHeaders, RequestListener} from 'http';
 import {Container, Middleware} from '@sensejs/container';
 import http from 'http';
 import {promisify} from 'util';
+import {Multipart} from '@sensejs/multipart';
 
 export enum HttpMethod {
   GET = 'get',
@@ -32,6 +33,7 @@ export enum HttpParamType {
   BODY,
   PATH,
   HEADER,
+  MULTIPART_BODY,
 }
 
 export interface QueryParamMappingMetadata {
@@ -40,6 +42,9 @@ export interface QueryParamMappingMetadata {
 
 export interface BodyParamMappingMetadata {
   type: HttpParamType.BODY;
+}
+export interface MultipartBodyParamMappingMetadata {
+  type: HttpParamType.MULTIPART_BODY;
 }
 
 export interface PathParamMappingMetadata {
@@ -55,12 +60,11 @@ export interface HeaderParamMappingMetadata {
 export type ParamMappingMetadata =
   | QueryParamMappingMetadata
   | BodyParamMappingMetadata
+  | MultipartBodyParamMappingMetadata
   | PathParamMappingMetadata
   | HeaderParamMappingMetadata;
 
 export interface FunctionParamMappingMeta {
-  method?: HttpMethod;
-  path?: string;
   params: Map<number, ParamMappingMetadata>;
 }
 
@@ -78,7 +82,6 @@ export interface ControllerOption {
 }
 
 export interface ControllerMetadata<T extends {} = {}> {
-  /** @deprecated */
   path: string;
   target: Constructor;
   prototype: object;
@@ -86,25 +89,11 @@ export interface ControllerMetadata<T extends {} = {}> {
   labels: Set<string | symbol>;
 }
 
-export interface CrossOriginResourceShareOption {
-  origin?: string | ((origin: string) => boolean);
-  allowedMethods?: string | string[];
-  exposeHeaders?: string | string[];
-  allowedHeaders?: string | string[];
-  maxAge?: number;
-  credentials?: boolean;
-  keepHeadersOnError?: boolean;
-}
-
-export interface HttpApplicationOption {
-  trustProxy?: boolean;
-  corsOption?: CrossOriginResourceShareOption;
-}
-
 export interface RequestMappingMetadata {
   middlewares?: Constructor<Middleware>[];
   httpMethod: HttpMethod;
   path: string;
+  multipartBody: boolean;
 }
 
 export interface RequestMappingOption {
@@ -177,11 +166,10 @@ export abstract class HttpContext {
 export interface MethodRouteSpec<T extends {} = any> {
   path: string;
   httpMethod: HttpMethod;
-
   middlewares: Constructor<Middleware>[];
-  // interceptProviders: Constructor<AsyncInterceptProvider>[];
   targetConstructor: Constructor<T>;
   targetMethod: keyof T;
+  multipartBody: boolean;
 }
 
 export interface ControllerRouteSpec {
@@ -190,16 +178,11 @@ export interface ControllerRouteSpec {
 }
 
 export abstract class AbstractHttpApplicationBuilder {
-  // private readonly globalInterceptProviders: Constructor<AsyncInterceptProvider>[] = [];
   private readonly middlewares: Constructor<Middleware>[] = [];
   protected readonly controllerRouteSpecs: ControllerRouteSpec[] = [];
   protected errorHandler?: (e: unknown) => any;
 
   abstract build(container: Container): RequestListener;
-
-  abstract setTrustProxy(trustProxy: boolean): this;
-
-  abstract setCorsOption(corsOption: CrossOriginResourceShareOption): this;
 
   addControllerWithMetadata(controllerMetadata: ControllerMetadata): this {
     const controllerRouteSpec: ControllerRouteSpec = {
@@ -239,7 +222,7 @@ export abstract class AbstractHttpApplicationBuilder {
       return;
     }
 
-    const {httpMethod, path, middlewares = []} = requestMappingMetadata;
+    const {httpMethod, path, middlewares = [], multipartBody} = requestMappingMetadata;
 
     methodRoutSpecs.push({
       path,
@@ -247,6 +230,7 @@ export abstract class AbstractHttpApplicationBuilder {
       middlewares: [...this.middlewares, ...controllerMetadata.middlewares, ...middlewares],
       targetConstructor: controllerMetadata.target,
       targetMethod: method,
+      multipartBody,
     });
   }
 }
@@ -268,7 +252,7 @@ const HTTP_PARAM_MAPPING_KEY = Symbol();
 /**
  * Ensure Http mapping metadata on target prototype
  * @param target - on which metadata need to be ensured
- * @param defaultValue - Default value that will set to target, if not provided, this function will throws Error
+ * @param defaultValue - Default value that will set to target, if not provided, this function will throw Error
  * if target has no metadata
  */
 export function ensureMetadataOnPrototype<T extends {}>(
@@ -291,7 +275,7 @@ export function ensureMetadataOnPrototype<T extends {}>(
  * Ensure Http mapping metadata on target prototype method
  * @param prototype - on which the method is attached
  * @param name - name of the function
- * @param defaultValue - Default value that will set to target, if not provided, this function will throws Error
+ * @param defaultValue - Default value that will set to target, if not provided, this function will throw Error
  * if target has no metadata
  */
 export function ensureMetadataOnMethod<T extends {}>(
@@ -330,6 +314,24 @@ export function Path(name: string, transform: Transformer = noop): InstanceMetho
       transform: (ctx: HttpContext) => transform(ctx.request.params[name]),
     })(prototype, key, pd);
     decorateParam({type: HttpParamType.PATH, name})(prototype, key, pd);
+  };
+}
+
+/**
+ * Inject a multipart body reader
+ *
+ * This explicitly requires the body must be a multipart form data, and implementations should check the content type
+ * and provides an instance of `MultipartReader` from "@sensejs/multipart" to read the body.
+ */
+export function MultipartBody(): InstanceMethodParamDecorator {
+  return (prototype, key, idx) => {
+    if (Reflect.getMetadata('design:paramtypes', prototype, key)[idx] !== Multipart) {
+      throw new Error(
+        '@MultipartBody() can only be applied to a param of type `MultipartReader` from "@sensejs/multipart"',
+      );
+    }
+    Inject(Multipart)(prototype, key, idx);
+    decorateParam({type: HttpParamType.MULTIPART_BODY})(prototype, key, idx);
   };
 }
 
@@ -400,15 +402,17 @@ export function RequestMapping(
   path: string,
   option: RequestMappingOption = {},
 ): RequestMappingDecorator {
-  return <T extends {}>(prototype: T, method: keyof T, pd: TypedPropertyDescriptor<any>): void => {
+  return <T extends {}>(prototype: T, method: keyof T): void => {
+    const metadata = ensureMetadataOnMethod(prototype, method, {params: new Map()});
+    const paramMetadata = Array.from(metadata.params.entries());
+    const hasMultipartParam =
+      paramMetadata.filter(([idx, metadata]) => metadata.type === HttpParamType.MULTIPART_BODY).length > 0;
     setRequestMappingMetadata(prototype, method, {
       httpMethod,
       path,
       middlewares: option.middlewares ?? [],
+      multipartBody: hasMultipartParam,
     });
-    const metadata = ensureMetadataOnMethod(prototype, method, {params: new Map()});
-    metadata.path = path;
-    metadata.method = httpMethod;
   };
 }
 
@@ -481,10 +485,9 @@ export function Controller(path: string, controllerOption: ControllerOption = {}
   };
 }
 
-export interface HttpOption extends HttpApplicationOption {
+export interface HttpOption {
   listenAddress?: string;
   listenPort: number;
-  trustProxy?: boolean;
 }
 
 const defaultHttpConfig = {

@@ -4,7 +4,6 @@ import {
   AbstractHttpModule,
   Body,
   Controller,
-  CrossOriginResourceShareOption,
   DELETE,
   ensureMetadataOnPrototype,
   GET,
@@ -13,6 +12,7 @@ import {
   Header,
   HttpMethod,
   HttpParamType,
+  MultipartBody,
   PATCH,
   Path,
   POST,
@@ -22,6 +22,7 @@ import {
 import {Container, Inject, Middleware} from '@sensejs/container';
 import {RequestListener} from 'http';
 import {Component, Module, EntryModule, ProcessManager} from '@sensejs/core';
+import {Multipart} from '@sensejs/multipart';
 
 describe('Http annotations', () => {
   test('metadata', () => {
@@ -29,12 +30,12 @@ describe('Http annotations', () => {
 
     @Middleware()
     class I1 {
-      async handle(cb: () => Promise<void>) {}
+      async handle() {}
     }
 
     @Middleware()
     class I2 {
-      async handle(cb: () => Promise<void>) {}
+      async handle() {}
     }
     const L1 = Symbol();
 
@@ -59,6 +60,9 @@ describe('Http annotations', () => {
 
       @PATCH('/')
       handlePatch() {}
+
+      @POST('multipart')
+      handleMultipart(@MultipartBody() body: Multipart) {}
     }
 
     const cm = getHttpControllerMetadata(FooController);
@@ -82,14 +86,10 @@ describe('Http annotations', () => {
 
     const metadata = ensureMetadataOnPrototype(FooController.prototype);
     expect(metadata.get('handleGet')).toEqual({
-      method: HttpMethod.GET,
-      path: '/get',
       params: expect.any(Map),
     });
     const postMetadata = metadata.get('handlePost');
     expect(postMetadata).toEqual({
-      method: HttpMethod.POST,
-      path: '/:id',
       params: expect.any(Map),
     });
 
@@ -99,19 +99,31 @@ describe('Http annotations', () => {
     expect(postMetadata!.params.get(3)).toEqual(expect.objectContaining({type: HttpParamType.HEADER, name: 'cookie'}));
 
     expect(metadata.get('handleDelete')).toEqual({
-      method: HttpMethod.DELETE,
-      path: '/:id',
       params: expect.objectContaining({}),
     });
     expect(metadata.get(handlePut)).toEqual({
-      method: HttpMethod.PUT,
-      path: '/:id',
       params: expect.objectContaining({}),
     });
     expect(metadata.get('handlePatch')).toEqual({
-      method: HttpMethod.PATCH,
-      path: '/',
       params: expect.objectContaining({}),
+    });
+  });
+
+  describe('@MultipartBody', () => {
+    test('throws when parameter type is not MultipartReader', () => {
+      expect(() => {
+        class Test {
+          @POST('/multipart')
+          handleMultipart(@MultipartBody() body: any) {}
+        }
+      }).toThrowError();
+
+      expect(() => {
+        class Test {
+          @POST('/multipart')
+          handleMultipart(@MultipartBody() body: object) {}
+        }
+      }).toThrowError();
     });
   });
 });
@@ -119,17 +131,9 @@ describe('Http annotations', () => {
 test('Adaptor and abstract module', async () => {
   class TestAdaptor extends AbstractHttpApplicationBuilder {
     build(container: Container): RequestListener {
-      return (req, res) => {
+      return () => {
         throw new Error();
       };
-    }
-
-    setCorsOption(corsOption: CrossOriginResourceShareOption): this {
-      return this;
-    }
-
-    setTrustProxy(trustProxy: boolean): this {
-      return this;
     }
   }
 
@@ -160,7 +164,6 @@ test('Adaptor and abstract module', async () => {
 
   @Component()
   class NonController {}
-
   @Module({
     components: [TestController, Test1Controller, NonController],
   })

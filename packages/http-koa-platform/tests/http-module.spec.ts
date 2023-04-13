@@ -58,6 +58,8 @@ test('HttpModule', async () => {
           listenAddress: '0.0.0.0',
           corsOption: {},
           queryStringParsingMode: 'extended',
+          bodyParserOption: {},
+          trustProxy: true,
         },
       }),
     ],
