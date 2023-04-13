@@ -15,7 +15,7 @@ describe('MultipartFileDiskStorage', () => {
     expect(
       await storage.saveMultipartFile('file', Readable.from([Buffer.from('Hello '), Buffer.from('World!')]), {
         filename: 'test.txt',
-        encoding: 'utf-8',
+        transferEncoding: '7bit',
         mimeType: 'text/plain',
       }),
     ).toEqual(
@@ -38,7 +38,7 @@ describe('MultipartFileDiskStorage', () => {
     expect(
       await storage.saveMultipartFile('file', Readable.from([input]), {
         filename: 'test.txt',
-        encoding: 'utf-8',
+        transferEncoding: '7bit',
         mimeType: 'text/plain',
       }),
     ).toEqual(
@@ -55,7 +55,7 @@ describe('MultipartFileDiskStorage', () => {
     await expect(
       storage.saveMultipartFile('file', Readable.from([input]), {
         filename: 'test.txt',
-        encoding: 'utf-8',
+        transferEncoding: '7bit',
         mimeType: 'text/plain',
       }),
     ).rejects.toBeInstanceOf(MultipartLimitExceededError);
@@ -77,7 +77,7 @@ describe('MultipartFileDiskStorage', () => {
         ),
         {
           filename: 'test.txt',
-          encoding: 'utf-8',
+          transferEncoding: '7bit',
           mimeType: 'text/plain',
         },
       ),

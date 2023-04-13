@@ -91,7 +91,6 @@ export class MultipartReader {
       });
 
       b.on('field', (name, value, fieldNameTruncated, valueTruncated, transferEncoding, mimeType) => {
-        console.log(name, value, fieldNameTruncated, valueTruncated, transferEncoding, mimeType);
         if (fieldNameTruncated) {
           controller.abort(new MultipartLimitExceededError('Field name size limit exceeded'));
         }
@@ -114,7 +113,9 @@ export class MultipartReader {
       });
 
       b.on('finish', () => {
-        controller.finish();
+        promiseQueue = promiseQueue.then(() => {
+          controller.finish();
+        });
       });
 
       b.on('partsLimit', () => {
