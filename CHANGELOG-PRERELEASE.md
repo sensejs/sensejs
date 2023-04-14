@@ -245,7 +245,7 @@
           // implementations
         }
       }
-      @MiddlewareClass({
+      @Middleware({
         provides: [InjectableA, InjectableB]
       })
       class MiddlewareProvidesInjetables {

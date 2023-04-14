@@ -63,7 +63,7 @@ allows breaking changes happens on minor change in pre-1.0 versions.
         // implementations
       }
     }
-    @MiddlewareClass({
+    @Middleware({
       provides: [InjectableA, InjectableB]
     })
     class MiddlewareProvidesInjetables {
