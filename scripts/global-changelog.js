@@ -21,8 +21,8 @@ const title = `## ${new Date().toISOString().replace(/T.+$/, '')}\n`;
 
 const releasesDetail =
 `
-| Package | Released Version | Released Type |
-|---------|------------------|---------------|
+| Package | Release Version | Release Type |
+|---------|-----------------|--------------|
 ${
   statusJson.releases.filter(r=>r.type !== 'none').map((release) => {
     return `| \`${release.name}\` | \`${release.newVersion} \` | ${release.type} |\n`
@@ -47,7 +47,7 @@ const changeDetail = changesets.reduce((changelog, changeset) => {
     ? '   - Major changes: \n' + majorChangesTo.map(change => '     - ' + change).join('\n') + '\n'
     : '';
   const minorAffectedPackages= minorChangesTo.length > 0
-    ? '   - Major changes: \n' + minorChangesTo.map(change => '     - ' + change).join('\n') + '\n'
+    ? '   - Minor changes: \n' + minorChangesTo.map(change => '     - ' + change).join('\n') + '\n'
     : '';
   const patchAffectedPackages = patchChangesTo.length > 0
     ? '   - Patch changes: \n' + patchChangesTo.map(change => '     - ' + change).join('\n') + '\n'
