@@ -9,7 +9,7 @@ SenseJS framework provides an advanced injection framework, which features
 
 -  Constructor parameters injection, which is exactly what your expected for a common IoC framework
 
--  Interceptors provided injectable support, which is the most powerful and elegant part of SenseJs. In this article,
+-  Middleware provided injectable support, which is the most powerful and elegant part of SenseJs. In this article,
    we'll show you that it's very useful when combining with a traceable logger.
 
 -  Method parameters injection, based on which the `@sensejs/http` and `@sensejs/kafka` handle requests and messages,
@@ -27,7 +27,7 @@ This example we separate the code into three parts.
 -  `random-number.ts`: contains a simple component `RandomNumberGenerator` and a controller `RandomNumberController` for querying or mutating the state
    of `RandomNumberGenerator`, and exporting it as a module `RandomNumberModule`.
 
--  `http.ts`: containing the code for setting up an HTTP server, including all interceptors.
+-  `http.ts`: containing the code for setting up an HTTP server, including all middleware
 
 
 ### `RandomNumberModule`
@@ -108,7 +108,7 @@ injectable to method parameters just like constructor parameter injection. They 
 controller is declared in singleton scope, while method parameter injection always happens on request scope.
 
 Also note that `@InjectLogger()` is actually injecting a `LoggerBuilder` and transformed to a logger. We'll later
-override `LoggerBuilder` in an interceptor in this example
+override `LoggerBuilder` in a middleware in this example
 
 Finally, we package them into a module and export it.
 
@@ -123,7 +123,7 @@ export const RandomNumberModule = createModule({
 
 In this section we focused on another file `./src/http.ts`.
 
-As mentioned above, we'll show you how interceptors works in this example.
+As mentioned above, we'll show you how middleware works in this example.
 
 First we intercept all requests and assign each of them with a request id
 
@@ -135,7 +135,7 @@ const REQUEST_ID = Symbol('REQUEST_ID');
 @Middleware({
   provides: [REQUEST_ID]
 })
-class RequestIdProviderInterceptor {
+class RequestIdMiddleware {
 
   async intercept(next: (requestId: string) => Promise<void>) {
     const requestId = randomUUID();
@@ -151,7 +151,7 @@ And then we'll attach the request id to a traceable logger,
 @Middleware({
   provides: [LoggerBuilder]
 })
-class ContextualLoggingInterceptProvider {
+class ContextualLoggingMiddleware {
 
   constructor(
     // It'll be injected with value provided by previous interceptor
@@ -176,10 +176,10 @@ export const HttpModule = createKoaHttpModule({
   // We need list RandomNumberModule here, so that RandomNumberController can be discovered
   requires: [SenseLogModule, RandomNumberModule],
 
-  // The order must not be changed, since REQUEST_ID is not a valid injetable before RequestIdProviderInterceptor
-  globalInterceptProviders: [
-    RequestIdProviderInterceptor,
-    ContextualLoggingInterceptProvider
+  // The order must not be changed, since REQUEST_ID is not a valid injetable before RequestIdMiddleware
+  middlewares: [
+    RequestIdMiddleware,
+    ContextualLoggingMiddleware
   ],
 
   httpOption: {
@@ -238,15 +238,15 @@ curl http://localhost:8080/next -XPOST
 On the application log, you'll see something like
 
 ```
-+ 16:51:05.494 ContextualLoggingInterceptor - | Associate LoggerBuilder with requestId=25c469ea-2c9f-4ade-9d1f-a2603e509402
-+ 16:51:09.609 ContextualLoggingInterceptor - | Associate LoggerBuilder with requestId=19ad7258-08b6-4fec-8d0b-042067fa5bf8
++ 16:51:05.494 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=25c469ea-2c9f-4ade-9d1f-a2603e509402
++ 16:51:09.609 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=19ad7258-08b6-4fec-8d0b-042067fa5bf8
 + 16:51:09.609 RandomNumberController 19ad7258-08b6-4fec-8d0b-042067fa5bf8 | Generated random number:  2405846925
-+ 16:51:11.922 ContextualLoggingInterceptor - | Associate LoggerBuilder with requestId=9b9c909b-ba79-48f2-8fa4-febd39dc781f
++ 16:51:11.922 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=9b9c909b-ba79-48f2-8fa4-febd39dc781f
 + 16:51:11.923 RandomNumberController 9b9c909b-ba79-48f2-8fa4-febd39dc781f | Generated random number:  1207935726
-+ 16:51:16.972 ContextualLoggingInterceptor - | Associate LoggerBuilder with requestId=fa3c6df8-ccca-48d4-85ba-88520ca98986
-+ 16:51:20.076 ContextualLoggingInterceptor - | Associate LoggerBuilder with requestId=7d840e09-f95d-48e2-b398-e60cf192e801
++ 16:51:16.972 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=fa3c6df8-ccca-48d4-85ba-88520ca98986
++ 16:51:20.076 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=7d840e09-f95d-48e2-b398-e60cf192e801
 + 16:51:20.077 RandomNumberController 7d840e09-f95d-48e2-b398-e60cf192e801 | Invalid seed NaN, ignored
-+ 16:51:22.194 ContextualLoggingInterceptor - | Associate LoggerBuilder with requestId=67ce037b-5d64-4a16-a57d-fba78ceed8f8
++ 16:51:22.194 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=67ce037b-5d64-4a16-a57d-fba78ceed8f8
 + 16:51:22.194 RandomNumberController 67ce037b-5d64-4a16-a57d-fba78ceed8f8 | Generated random number:  72046864
 ```
 
