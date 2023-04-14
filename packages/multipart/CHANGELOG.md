@@ -1,5 +1,12 @@
 # @sensejs/multipart
 
+## 0.11.0-alpha.3
+
+### Patch Changes
+
+- f426f008: Add missing package.json in dist-cjs and dist-mjs folder
+- f3e8daf7: Fix README
+
 ## 0.11.0-alpha.2
 
 ### Minor Changes

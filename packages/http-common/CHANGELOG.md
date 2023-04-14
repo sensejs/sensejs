@@ -1,5 +1,13 @@
 # @sensejs/http-common
 
+## 0.11.0-alpha.3
+
+### Patch Changes
+
+- Updated dependencies [f426f008]
+- Updated dependencies [f3e8daf7]
+  - @sensejs/multipart@0.11.0-alpha.3
+
 ## 0.11.0-alpha.2
 
 ### Minor Changes
