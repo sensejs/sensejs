@@ -68,7 +68,7 @@
   request body.
 
   **Affected packages**:
-   - Major changes:
+   - Minor changes:
      - `@sensejs/http-common`
 
 
