@@ -41,23 +41,23 @@ export class Multipart {
   static readonly maxFileCount = 5;
 
   // #fileHandler: MultipartFileStorage = new MultipartFileMemoryHandler(MultipartReader.maxFileSize);
-  readonly #inputStream: stream.Readable;
-  readonly #headers: busboy.BusboyHeaders;
-  readonly #options: MultipartOptions;
-  #promiseQueue: Promise<any> = Promise.resolve();
-  #cleanup: (() => Promise<void>) | null = null;
+  private readonly inputStream: stream.Readable;
+  private readonly headers: busboy.BusboyHeaders;
+  private readonly options: MultipartOptions;
+  private promiseQueue: Promise<any> = Promise.resolve();
+  private cleanup: (() => Promise<void>) | null = null;
 
   protected constructor(
     inputStream: stream.Readable,
     headers: http.IncomingHttpHeaders,
     option: MultipartOptions = {},
   ) {
-    this.#inputStream = inputStream;
+    this.inputStream = inputStream;
     if (typeof headers['content-type'] !== 'string') {
       throw new InvalidMultipartBodyError('Missing Content-Type header');
     }
-    this.#headers = headers as busboy.BusboyHeaders;
-    this.#options = option;
+    this.headers = headers as busboy.BusboyHeaders;
+    this.options = option;
   }
 
   static testContentType(contentType: string) {
@@ -84,7 +84,7 @@ export class Multipart {
     option: MultipartOptions = {},
   ): [Multipart, () => Promise<void>] {
     const multipart = new Multipart(inputStream, headers, option);
-    const cleanup = multipart.#destroy.bind(multipart);
+    const cleanup = multipart.destroy.bind(multipart);
     return [multipart, cleanup];
   }
 
@@ -104,34 +104,34 @@ export class Multipart {
 
   // read(): Promise<AsyncIterator<MultipartEntry<Buffer>>>;
   entries(multipartFileHandler?: MultipartFileStorage<any>): AsyncIterable<MultipartEntry<any>> {
-    if (this.#cleanup) {
+    if (this.cleanup) {
       throw new Error('Cannot read multipart body twice');
     }
 
     const fileHandler = multipartFileHandler ?? new MultipartFileInMemoryStorage();
 
-    this.#cleanup = () => {
+    this.cleanup = () => {
       return fileHandler.clean();
     };
 
     return backpressureAsyncIterator((controller) => {
       const limits = {
-        fieldNameSize: this.#options.fieldNameLimit,
+        fieldNameSize: this.options.fieldNameLimit,
         files: fileHandler.fileCountLimit,
         fileSize: fileHandler.fileSizeLimit,
-        fields: this.#options.fieldCountLimit,
-        fieldSize: this.#options.fieldSizeLimit,
-        parts: this.#options.partCountLimit,
+        fields: this.options.fieldCountLimit,
+        fieldSize: this.options.fieldSizeLimit,
+        parts: this.options.partCountLimit,
       };
       const b = busboy.default({
-        headers: this.#headers,
+        headers: this.headers,
         limits,
       });
 
       b.on('file', (name, file, filename, transferEncoding, mimeType) => {
         // We need to invoke `controller.push` immediately to ensure the order of the entries,
         // but we need to wait for previous work to complete before we can handle the file.
-        this.#promiseQueue = this.#promiseQueue.then(() => {
+        this.promiseQueue = this.promiseQueue.then(() => {
           return controller.push(
             fileHandler.saveMultipartFile(name, file, {
               filename,
@@ -151,7 +151,7 @@ export class Multipart {
           controller.abort(new MultipartLimitExceededError('Field value size limit exceeded'));
         }
 
-        this.#promiseQueue = this.#promiseQueue.then(() => {
+        this.promiseQueue = this.promiseQueue.then(() => {
           return controller.push(
             Promise.resolve({
               type: 'field',
@@ -165,7 +165,7 @@ export class Multipart {
       });
 
       b.on('finish', () => {
-        this.#promiseQueue = this.#promiseQueue.then(() => {
+        this.promiseQueue = this.promiseQueue.then(() => {
           controller.finish();
         });
       });
@@ -186,7 +186,7 @@ export class Multipart {
         controller.abort(new InvalidMultipartBodyError(String(e)));
       });
 
-      stream.pipeline(this.#inputStream, b, (err) => {
+      stream.pipeline(this.inputStream, b, (err) => {
         if (err) {
           controller.abort(err);
           return;
@@ -195,10 +195,10 @@ export class Multipart {
     });
   }
 
-  async #destroy() {
-    await this.#promiseQueue;
-    if (this.#cleanup) {
-      await this.#cleanup();
+  private async destroy() {
+    await this.promiseQueue;
+    if (this.cleanup) {
+      await this.cleanup();
     }
   }
 }
