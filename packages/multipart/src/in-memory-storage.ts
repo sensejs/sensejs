@@ -7,9 +7,9 @@ import {MultipartLimitExceededError} from './error.js';
 export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
   static readonly fileSizeLimit = 32 * 1024 * 1024;
   static readonly fileCountLimit = 1;
-  readonly fileSizeLimit: number;
-  readonly fileCountLimit: number;
-  private fileCount = 0;
+  readonly #fileSizeLimit: number;
+  readonly #fileCountLimit: number;
+  #fileCount = 0;
 
   /**
    * Create a new in-memory storage
@@ -22,8 +22,16 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
    */
   constructor(option: MultipartFileStorageOption = {}) {
     super();
-    this.fileSizeLimit = option.fileSizeLimit ?? MultipartFileInMemoryStorage.fileSizeLimit;
-    this.fileCountLimit = option.fileCountLimit ?? MultipartFileInMemoryStorage.fileCountLimit;
+    this.#fileSizeLimit = option.fileSizeLimit ?? MultipartFileInMemoryStorage.fileSizeLimit;
+    this.#fileCountLimit = option.fileCountLimit ?? MultipartFileInMemoryStorage.fileCountLimit;
+  }
+
+  get fileSizeLimit() {
+    return this.#fileSizeLimit;
+  }
+
+  get fileCountLimit() {
+    return this.#fileCountLimit;
   }
 
   async clean() {
@@ -35,21 +43,21 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
     file: NodeJS.ReadableStream,
     info: MultipartFileInfo,
   ): Promise<MultipartFileEntry<Buffer>> {
-    if (this.fileCount++ >= this.fileCountLimit) {
+    if (this.#fileCount++ >= this.#fileCountLimit) {
       return Promise.reject(new MultipartLimitExceededError('Too many files'));
     }
     return new Promise<MultipartFileEntry<Buffer>>((resolve, reject) => {
       let lastBufferCapacity = 16;
-      let buffer: Buffer = Buffer.alloc(Math.min(this.fileSizeLimit, lastBufferCapacity * 2));
+      let buffer: Buffer = Buffer.alloc(Math.min(this.#fileSizeLimit, lastBufferCapacity * 2));
       let size = 0;
       file.on('data', (chunk: Buffer) => {
-        if (size + chunk.length > this.fileSizeLimit) {
+        if (size + chunk.length > this.#fileSizeLimit) {
           reject(new MultipartLimitExceededError('File too large'));
           return;
         }
         if (size + chunk.length > buffer.length) {
           // Grows the buffer capacity with a fibonacci sequence
-          const newCapacity = Math.min(this.fileSizeLimit, buffer.length + lastBufferCapacity);
+          const newCapacity = Math.min(this.#fileSizeLimit, buffer.length + lastBufferCapacity);
           lastBufferCapacity = buffer.length;
           const newBuffers = Buffer.alloc(newCapacity);
           buffer.copy(newBuffers);
