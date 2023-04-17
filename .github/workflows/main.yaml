@@ -1,4 +1,8 @@
 on: [push]
+
+env:
+  IMAGE_TAG: sensejs/workspace:test
+
 jobs:
   building:
 
@@ -12,31 +16,34 @@ jobs:
           - 18
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
 
-      - run: |-
-          docker-compose pull
+      - name: Set up E2E Test Environment
+        run: |-
+          docker-compose pull kafka-1 kafka-2 kafka-3
           docker-compose up -d kafka-1 kafka-2 kafka-3
 
-      - uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
-
       - name: Build
-        env:
-          NODE_VERSION: ${{ matrix.node-version }}
-        run: |-
-          echo "Building docker image for workspace with NODE_VERSION=${NODE_VERSION}"
-          docker-compose build --build-arg=NODE_VERSION=$NODE_VERSION workspace-test
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          cache-from: type=gha,scope=node-v${{ matrix.node-version }}
+          cache-to: type=gha,mode=max,scope=node-v${{ matrix.node-version }}
+          build-args: NODE_VERSION=${{ matrix.node-version }}
+          load: true
+          tags: ${{ env.IMAGE_TAG }}
 
       - name: Test
         env:
           NODE_VERSION: ${{ matrix.node-version }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |-
-          docker-compose run workspace-test
+          docker-compose run test-workspace
 
       - name: Upload Coverage info to CodeClimate
         uses: paambaati/codeclimate-action@v3.2.0
@@ -45,6 +52,7 @@ jobs:
         with:
           coverageLocations: coverage/lcov.info:lcov
           debug: true
+
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
