@@ -196,8 +196,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
         const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
         const [multipart, cleanup] = Multipart.from(ctx.req, ctx.headers);
         try {
-          const result = await invoker.createInvokeSession().invokeTargetMethod(context, multipart);
-
+          const result = await invoker.invoke(context, multipart);
           ctx.response.body = context.response.data ?? result;
           if (typeof context.response.statusCode === 'number') {
             ctx.response.status = context.response.statusCode;
@@ -215,7 +214,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
 
       controllerRouter[httpMethod](path, async (ctx) => {
         const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
-        const result = await invoker.createInvokeSession().invokeTargetMethod(context);
+        const result = await invoker.invoke(context);
 
         ctx.response.body = context.response.data ?? result;
         if (typeof context.response.statusCode === 'number') {

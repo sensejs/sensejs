@@ -13,7 +13,7 @@ import {
   provideOptionInjector,
   ServiceIdentifier,
 } from '@sensejs/core';
-import {MiddlewareClass, Container, Middleware} from '@sensejs/container';
+import {Container, Middleware} from '@sensejs/container';
 import {
   KafkaBatchConsumeMessageParam,
   KafkaLogAdapterOption,
@@ -93,7 +93,7 @@ function getSimpleConsumeCallback<T extends {}>(
   );
   return async (message: KafkaReceivedMessage) => {
     const context = new SimpleMessageConsumeContext(target, method, consumerGroupId, message);
-    await invoker.createInvokeSession().invokeTargetMethod(context, context);
+    await invoker.invoke(context, context);
   };
 }
 
@@ -113,7 +113,7 @@ function getBatchedConsumeCallback<T extends {}>(
   );
   return async (message: KafkaBatchConsumeMessageParam) => {
     const context = new BatchedMessageConsumeContext(target, method, consumerGroupId, message);
-    await invoker.createInvokeSession().invokeTargetMethod(context, context);
+    await invoker.invoke(context, context);
   };
 }
 
