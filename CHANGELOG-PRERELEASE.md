@@ -1,4 +1,41 @@
 
+## 2023-04-17
+
+
+### Releases
+
+
+| Package | Release Version | Release Type |
+|---------|-----------------|--------------|
+| `@sensejs/http-koa-platform` | `0.11.0-alpha.4 ` | minor |
+| `@sensejs/container` | `0.11.0-alpha.4 ` | minor |
+| `@sensejs/kafkajs` | `0.11.0-alpha.4 ` | minor |
+| `@sensejs/core` | `0.11.0-alpha.4 ` | minor |
+| `@sensejs/config` | `0.11.0-alpha.4 ` | minor |
+| `@sensejs/http-common` | `0.11.0-alpha.4 ` | minor |
+| `@sensejs/logger` | `0.11.0-alpha.4 ` | minor |
+| `@sensejs/testing` | `0.11.0-alpha.4 ` | minor |
+
+
+
+### Notable Changes
+
+- **Summary**: 
+
+  Furthur optimize the MethodInvoker of `@sensejs/container`, though this has to
+  be a breaking change, it make the MethodInvoker interface simpler, and gains
+  abount 5% performance improvement.
+
+  **Affected packages**: 
+   - Minor changes: 
+     - `@sensejs/container`
+   - Patch changes: 
+     - `@sensejs/core`
+     - `@sensejs/http-koa-platform`
+     - `@sensejs/kafkajs`
+
+
+
 ## 2023-04-14
 
 

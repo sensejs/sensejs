@@ -1,5 +1,13 @@
 # @sensejs/config
 
+## 0.11.0-alpha.4
+
+### Patch Changes
+
+- Updated dependencies [f7584735]
+  - @sensejs/container@0.11.0-alpha.4
+  - @sensejs/core@0.11.0-alpha.4
+
 ## 0.11.0-alpha.1
 
 ### Patch Changes

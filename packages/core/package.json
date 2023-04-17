@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/core",
-  "version": "0.11.0-alpha.1",
+  "version": "0.11.0-alpha.4",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -42,7 +42,7 @@
     "@types/uuid": "^8.3.4"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.11.0-alpha.1",
+    "@sensejs/container": "workspace:^0.11.0-alpha.4",
     "reflect-metadata": "^0.1.13"
   }
 }

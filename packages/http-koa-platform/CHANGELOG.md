@@ -1,5 +1,17 @@
 # @sensejs/http-koa-platform
 
+## 0.11.0-alpha.4
+
+### Patch Changes
+
+- f7584735: Furthur optimize the MethodInvoker of `@sensejs/container`, though this has to
+  be a breaking change, it make the MethodInvoker interface simpler, and gains
+  abount 5% performance improvement.
+- Updated dependencies [f7584735]
+  - @sensejs/container@0.11.0-alpha.4
+  - @sensejs/core@0.11.0-alpha.4
+  - @sensejs/http-common@0.11.0-alpha.4
+
 ## 0.11.0-alpha.3
 
 ### Patch Changes

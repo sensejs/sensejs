@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/http-koa-platform",
-  "version": "0.11.0-alpha.3",
+  "version": "0.11.0-alpha.4",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -51,9 +51,9 @@
     "@sensejs/multipart": "workspace:^0.11.0-alpha.3"
   },
   "peerDependencies": {
-    "@sensejs/container": "workspace:^0.11.0-alpha.1",
-    "@sensejs/core": "workspace:^0.11.0-alpha.1",
-    "@sensejs/http-common": "workspace:^0.11.0-alpha.3",
+    "@sensejs/container": "workspace:^0.11.0-alpha.4",
+    "@sensejs/core": "workspace:^0.11.0-alpha.4",
+    "@sensejs/http-common": "workspace:^0.11.0-alpha.4",
     "@sensejs/multipart": "workspace:^0.11.0-alpha.3",
     "reflect-metadata": "^0.1.13"
   },
