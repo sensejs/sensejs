@@ -1,7 +1,7 @@
 import busboy from '@fastify/busboy';
 import stream from 'stream';
 import type http from 'http';
-import {backpressureAsyncIterator} from './backpressure-async-iterator.js';
+import {AsyncIterableQueue} from '@sensejs/utility';
 import {InvalidMultipartBodyError, MultipartLimitExceededError} from './error.js';
 import {MultipartEntry, MultipartFileStorage} from './types.js';
 import {MultipartFileInMemoryStorage} from './in-memory-storage.js';
@@ -113,86 +113,86 @@ export class Multipart {
     this.cleanup = () => {
       return fileHandler.clean();
     };
+    const queue = new AsyncIterableQueue<MultipartEntry<any>>();
 
-    return backpressureAsyncIterator((controller) => {
-      const limits = {
-        fieldNameSize: this.options.fieldNameLimit,
-        files: fileHandler.fileCountLimit,
-        fileSize: fileHandler.fileSizeLimit,
-        fields: this.options.fieldCountLimit,
-        fieldSize: this.options.fieldSizeLimit,
-        parts: this.options.partCountLimit,
-      };
-      const b = busboy.default({
-        headers: this.headers,
-        limits,
-      });
+    const limits = {
+      fieldNameSize: this.options.fieldNameLimit,
+      files: fileHandler.fileCountLimit,
+      fileSize: fileHandler.fileSizeLimit,
+      fields: this.options.fieldCountLimit,
+      fieldSize: this.options.fieldSizeLimit,
+      parts: this.options.partCountLimit,
+    };
+    const b = busboy.default({
+      headers: this.headers,
+      limits,
+    });
 
-      b.on('file', (name, file, filename, transferEncoding, mimeType) => {
-        // We need to invoke `controller.push` immediately to ensure the order of the entries,
-        // but we need to wait for previous work to complete before we can handle the file.
-        this.promiseQueue = this.promiseQueue.then(() => {
-          return controller.push(
-            fileHandler.saveMultipartFile(name, file, {
-              filename,
-              transferEncoding,
-              mimeType,
-            }),
-          );
-        });
-      });
-
-      b.on('field', (name, value, fieldNameTruncated, valueTruncated, transferEncoding, mimeType) => {
-        if (fieldNameTruncated) {
-          controller.abort(new MultipartLimitExceededError('Field name size limit exceeded'));
-        }
-
-        if (valueTruncated) {
-          controller.abort(new MultipartLimitExceededError('Field value size limit exceeded'));
-        }
-
-        this.promiseQueue = this.promiseQueue.then(() => {
-          return controller.push(
-            Promise.resolve({
-              type: 'field',
-              name,
-              value,
-              transferEncoding,
-              mimeType,
-            }),
-          );
-        });
-      });
-
-      b.on('finish', () => {
-        this.promiseQueue = this.promiseQueue.then(() => {
-          controller.finish();
-        });
-      });
-
-      b.on('partsLimit', () => {
-        controller.abort(new MultipartLimitExceededError('Too many parts'));
-      });
-
-      b.on('filesLimit', () => {
-        controller.abort(new MultipartLimitExceededError('Too many file parts'));
-      });
-
-      b.on('fieldsLimit', () => {
-        controller.abort(new MultipartLimitExceededError('Too many field parts'));
-      });
-
-      b.on('error', (e) => {
-        controller.abort(new InvalidMultipartBodyError(String(e)));
-      });
-
-      stream.pipeline(this.inputStream, b, (err) => {
-        if (err) {
-          controller.abort(err);
-          return;
-        }
+    b.on('file', (name, file, filename, transferEncoding, mimeType) => {
+      // We need to invoke `controller.push` immediately to ensure the order of the entries,
+      // but we need to wait for previous work to complete before we can handle the file.
+      this.promiseQueue = this.promiseQueue.then(() => {
+        return queue.push(
+          fileHandler.saveMultipartFile(name, file, {
+            filename,
+            transferEncoding,
+            mimeType,
+          }),
+        );
       });
     });
+
+    b.on('field', (name, value, fieldNameTruncated, valueTruncated, transferEncoding, mimeType) => {
+      if (fieldNameTruncated) {
+        queue.abort(new MultipartLimitExceededError('Field name size limit exceeded'));
+      }
+
+      if (valueTruncated) {
+        queue.abort(new MultipartLimitExceededError('Field value size limit exceeded'));
+      }
+
+      this.promiseQueue = this.promiseQueue.then(() => {
+        return queue.push(
+          Promise.resolve({
+            type: 'field',
+            name,
+            value,
+            transferEncoding,
+            mimeType,
+          }),
+        );
+      });
+    });
+
+    b.on('finish', () => {
+      this.promiseQueue = this.promiseQueue.then(() => {
+        queue.finish();
+      });
+    });
+
+    b.on('partsLimit', () => {
+      queue.abort(new MultipartLimitExceededError('Too many parts'));
+    });
+
+    b.on('filesLimit', () => {
+      queue.abort(new MultipartLimitExceededError('Too many file parts'));
+    });
+
+    b.on('fieldsLimit', () => {
+      queue.abort(new MultipartLimitExceededError('Too many field parts'));
+    });
+
+    b.on('error', (e) => {
+      queue.abort(new InvalidMultipartBodyError(String(e)));
+    });
+
+    stream.pipeline(this.inputStream, b, (err) => {
+      if (err) {
+        queue.abort(err);
+        return;
+      }
+    });
+    return queue;
   }
 
   private async destroy() {

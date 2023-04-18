@@ -3,8 +3,8 @@ import stream from 'stream';
 import http from 'http';
 import * as net from 'net';
 import FormData from 'form-data';
+import {AsyncIterableQueue} from '@sensejs/utility';
 import {jest, describe, test} from '@jest/globals';
-import {EventIterator} from 'event-iterator';
 
 async function createStubHttpServer(cb: http.RequestListener) {
   return new Promise<http.Server>((resolve, reject) => {
@@ -18,17 +18,20 @@ async function createStubHttpServer(cb: http.RequestListener) {
 }
 
 async function iterateRequests(httpServer: http.Server) {
-  return new EventIterator<{req: http.IncomingMessage; res: http.ServerResponse}>((queue) => {
-    httpServer.on('request', (req, res) => {
-      queue.push({
+  const queue = new AsyncIterableQueue<{req: http.IncomingMessage; res: http.ServerResponse}>();
+  httpServer.on('request', (req, res) => {
+    queue.push(
+      Promise.resolve({
         req,
         res,
-      });
-    });
-    httpServer.on('close', () => {
-      queue.stop();
-    });
+      }),
+    );
   });
+  httpServer.on('close', () => {
+    queue.finish();
+  });
+
+  return queue;
 }
 async function streamToString(stream: stream.Readable) {
   // lets have a ReadableStream as a stream variable
