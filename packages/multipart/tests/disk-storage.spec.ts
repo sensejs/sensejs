@@ -1,7 +1,7 @@
 import {MultipartFileDiskStorage} from '../src/disk-storage.js';
 import {Readable} from 'stream';
 import {MultipartLimitExceededError} from '../src/index.js';
-import {EventIterator} from 'event-iterator';
+import {AsyncIterableQueue} from '@sensejs/utility';
 
 describe('MultipartFileDiskStorage', () => {
   test('options', async () => {
@@ -64,23 +64,18 @@ describe('MultipartFileDiskStorage', () => {
   test('file error', async () => {
     const storage = new MultipartFileDiskStorage({fileCountLimit: 1});
     class CustomError extends Error {}
+    const queue = new AsyncIterableQueue<Buffer>();
+    const readable = Readable.from(queue);
+    setImmediate(() => {
+      queue.abort(new CustomError());
+    });
 
     await expect(
-      storage.saveMultipartFile(
-        'file',
-        Readable.from(
-          new EventIterator<Buffer>((queue) => {
-            setTimeout(() => {
-              queue.fail(new CustomError('test'));
-            }, 10);
-          }),
-        ),
-        {
-          filename: 'test.txt',
-          transferEncoding: '7bit',
-          mimeType: 'text/plain',
-        },
-      ),
+      storage.saveMultipartFile('file', readable, {
+        filename: 'test.txt',
+        transferEncoding: '7bit',
+        mimeType: 'text/plain',
+      }),
     ).rejects.toBeInstanceOf(CustomError);
   });
 });
