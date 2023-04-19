@@ -224,7 +224,7 @@ importers:
   packages/core:
     dependencies:
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0
         version: link:../utility
       reflect-metadata:
         specifier: ^0.1.13
@@ -252,7 +252,7 @@ importers:
   packages/http-common:
     dependencies:
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.2
+        specifier: workspace:^0.11.0
         version: link:../utility
       tslib:
         specifier: ^2.5.0
@@ -265,7 +265,7 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@sensejs/multipart':
-        specifier: workspace:^0.11.0-alpha.3
+        specifier: workspace:^0.11.0
         version: link:../multipart
       reflect-metadata:
         specifier: ^0.1.13
@@ -280,7 +280,7 @@ importers:
         specifier: ^12.0.0
         version: 12.0.0
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.2
+        specifier: workspace:^0.11.0
         version: link:../utility
       '@types/koa':
         specifier: ^2.13.5
@@ -326,7 +326,7 @@ importers:
         specifier: workspace:*
         version: link:../http-common
       '@sensejs/multipart':
-        specifier: workspace:^0.11.0-alpha.3
+        specifier: workspace:^0.11.0
         version: link:../multipart
       '@sensejs/testing-utility':
         specifier: workspace:*
@@ -335,10 +335,10 @@ importers:
   packages/kafkajs:
     dependencies:
       '@sensejs/kafkajs-standalone':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0
         version: link:../kafkajs-standalone
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0
         version: link:../utility
       kafkajs:
         specifier: ^1.16.0 || ^2.0.2
@@ -369,7 +369,7 @@ importers:
   packages/kafkajs-standalone:
     dependencies:
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.1
+        specifier: workspace:^0.11.0
         version: link:../utility
       kafkajs:
         specifier: ^2.0.2
@@ -432,7 +432,7 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1
       '@sensejs/utility':
-        specifier: workspace:^0.11.0-alpha.2
+        specifier: workspace:^0.11.0
         version: link:../utility
       tslib:
         specifier: ^2.5.0

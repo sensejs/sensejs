@@ -1,6 +1,6 @@
 {
   "name": "@sensejs/multipart",
-  "version": "0.11.0-alpha.3",
+  "version": "0.11.0",
   "description": "",
   "files": [
     "dist-cjs/**/!(*.tsbuildinfo)",
@@ -31,7 +31,7 @@
   "dependencies": {
     "@fastify/busboy": "^1.2.1",
     "tslib": "^2.5.0",
-    "@sensejs/utility": "workspace:^0.11.0-alpha.2"
+    "@sensejs/utility": "workspace:^0.11.0"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
