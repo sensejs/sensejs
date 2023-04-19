@@ -8,4 +8,4 @@ cd `dirname $0`/..
 changeset version
 
 # Keep lockfile up to date
-pnpm -r install
+pnpm -r --prefer-offline install

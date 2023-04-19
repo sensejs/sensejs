@@ -79,12 +79,13 @@ ${changeDetail}
 const prereleaseChangeLogFilePath =path.join(__dirname, '..', 'CHANGELOG-PRERELEASE.md')
 const releaseChangeLogFilePath = path.join(__dirname, '..', 'CHANGELOG.md');;
 
+const isPrerelease = (statusJson.preState && statusJson.preState.mode !== 'exit');
 
-const changeLogFilePath = statusJson.preState
+const changeLogFilePath = isPrerelease
   ? prereleaseChangeLogFilePath
   : releaseChangeLogFilePath
 
-if (!statusJson.preState) {
+if (!isPrerelease) {
   fs.rmSync(prereleaseChangeLogFilePath, {force: true});
 }
 
