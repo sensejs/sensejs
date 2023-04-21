@@ -3,8 +3,8 @@ import fsp from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import {randomUUID} from 'crypto';
-import fs from 'fs';
 import stream from 'stream';
+import {promisify} from 'util';
 import {MultipartLimitExceededError} from './error.js';
 
 export interface DiskStorageOption extends MultipartFileStorageOption {
@@ -55,39 +55,60 @@ export class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.Readab
       throw new MultipartLimitExceededError('Too many files');
     }
     const filePath = path.join(await this.#ensureTempDir(), randomUUID());
-    return new Promise<MultipartFileEntry<NodeJS.ReadableStream>>((resolve, reject) => {
-      const diskFile = fs.createWriteStream(filePath);
-      diskFile.on('error', reject);
-
-      diskFile.on('open', () => {
-        diskFile.removeListener('error', reject);
-        stream.pipeline(file, diskFile, (err) => {
-          if (err) {
-            reject(err);
-          }
-          fsp
-            .open(filePath, 'r')
-            .then((fd) => {
-              this.#fileEntries.push({fd, filePath});
-              return fd.stat().then((stat) => {
-                const file = fs.createReadStream(filePath, {
-                  fd: fd.fd,
-                });
-                resolve({
-                  type: 'file',
-                  name,
-                  filename: info.filename,
-                  content: file,
-                  size: stat.size,
-                  mimeType: info.mimeType,
-                  transferEncoding: info.transferEncoding,
-                });
-              });
-            })
-            .catch(reject);
-        });
+    let fdForClose: fsp.FileHandle | null = null;
+    try {
+      const fd = await fsp.open(filePath, 'wx+');
+      fdForClose = fd;
+      let size = 0;
+      await promisify(stream.pipeline)(
+        file,
+        new stream.Writable({
+          write(chunk, encoding, callback) {
+            fd.write(chunk, null, encoding).then(() => {
+              size += chunk.length;
+              callback();
+            }, callback);
+          },
+        }),
+      );
+      // Once we successfully write the file, we need to prevent it from being closed here, instead, it should be added
+      // to the fileEntries then it will be closed on cleaning up
+      fdForClose = null;
+      this.#fileEntries.push({fd, filePath});
+      let offset = 0;
+      const readable = new stream.Readable({
+        read(size) {
+          const buffer = Buffer.allocUnsafe(size);
+          fd.read(buffer, 0, buffer.length, offset).then(
+            ({bytesRead}) => {
+              offset += bytesRead;
+              if (bytesRead === 0) {
+                this.push(null);
+              } else {
+                this.push(buffer.slice(0, bytesRead));
+              }
+            },
+            (e) => {
+              this.destroy(e);
+            },
+          );
+        },
       });
-    });
+      return {
+        type: 'file',
+        name,
+        filename: info.filename,
+        content: readable,
+        size,
+        mimeType: info.mimeType,
+        transferEncoding: info.transferEncoding,
+      };
+    } finally {
+      if (fdForClose !== null) {
+        await fdForClose.close();
+        await fsp.rm(filePath);
+      }
+    }
   }
 
   async clean() {
