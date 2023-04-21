@@ -33,16 +33,19 @@ export interface PooledProducerModuleOption extends ModuleOption {
 }
 
 class AbstractProducerModuleBase {
-  constructor(private producer: MessageProducerProvider) {}
+  readonly #producer;
+  constructor(producer: MessageProducerProvider) {
+    this.#producer = producer;
+  }
 
   @OnModuleCreate()
   async onModuleCreate(@Inject(DynamicModuleLoader) loader: DynamicModuleLoader) {
-    loader.addConstant({provide: MessageProducerProvider, value: this.producer});
+    loader.addConstant({provide: MessageProducerProvider, value: this.#producer});
   }
 
   @OnModuleDestroy()
   async onModuleDestroy() {
-    await this.producer.destroy();
+    await this.#producer.destroy();
   }
 }
 

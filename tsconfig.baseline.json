@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "moduleResolution": "NodeNext",
+    "target": "ES2022",
     "esModuleInterop": true,
+    "moduleResolution": "NodeNext",
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictNullChecks": true,
@@ -13,7 +13,7 @@
     "noEmitHelpers": true,
     "importHelpers": true,
     "sourceMap": true,
-    "lib": ["es2018"],
+    "lib": ["ES2022"],
     "types": ["node", "reflect-metadata"],
     "skipLibCheck": true,
     "noEmit": true,

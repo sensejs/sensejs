@@ -22,10 +22,10 @@ interface AcknowledgeAwareEventMessenger extends EventMessenger {
 @Component()
 @Scope(InjectScope.SINGLETON)
 class EventBusImplement {
-  private channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger>> = new Map();
+  #channels: Map<ServiceIdentifier, Subject<AcknowledgeAwareEventMessenger>> = new Map();
 
   async announceEvent<T extends {}, Context>(channel: ServiceIdentifier, payload: any): Promise<void> {
-    const subject = this.ensureEventChannel(channel);
+    const subject = this.#ensureEventChannel(channel);
     const consumePromises: Promise<unknown>[] = [];
     subject.next({
       payload,
@@ -38,18 +38,18 @@ class EventBusImplement {
     target: ServiceIdentifier<T>,
     callback: (payload: AcknowledgeAwareEventMessenger) => void,
   ): EventChannelSubscription {
-    return this.ensureEventChannel(target).subscribe({
+    return this.#ensureEventChannel(target).subscribe({
       next: callback,
     });
   }
 
-  private ensureEventChannel<T>(target: ServiceIdentifier<T>): Subject<AcknowledgeAwareEventMessenger> {
-    let channel = this.channels.get(target);
+  #ensureEventChannel<T>(target: ServiceIdentifier<T>): Subject<AcknowledgeAwareEventMessenger> {
+    let channel = this.#channels.get(target);
     if (typeof channel !== 'undefined') {
       return channel;
     }
     channel = new Subject<AcknowledgeAwareEventMessenger>();
-    this.channels.set(target, channel);
+    this.#channels.set(target, channel);
     return channel;
   }
 }
@@ -231,11 +231,11 @@ export function createEventSubscriptionModule(option: EventSubscriptionModuleOpt
         .filter((value): value is SubscribeEventMetadata => typeof value !== 'undefined');
 
       subscribeEventMetadataList.forEach((subscribeEventMetadata) => {
-        this.setupEventSubscription(constructor, metadata, subscribeEventMetadata);
+        this.#setupEventSubscription(constructor, metadata, subscribeEventMetadata);
       });
     }
 
-    private setupEventSubscription(
+    #setupEventSubscription(
       constructor: Constructor,
       controllerMetadata: SubscribeEventControllerMetadata,
       subscribeEventMetadata: SubscribeEventMetadata,

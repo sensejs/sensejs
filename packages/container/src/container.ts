@@ -13,17 +13,17 @@ import {Middleware} from './middleware.js';
 import {compileParamInjectInstruction, internalValidateDependencies} from './utils.js';
 
 export class Container {
-  private validatedBindings: Set<ServiceId> = new Set();
-  private bindingMap: Map<ServiceId, Binding<any>> = new Map();
-  private compiledInstructionMap: Map<ServiceId, Instruction[]> = new Map();
-  private singletonCache: Map<ServiceId, any> = new Map();
+  #validatedBindings: Set<ServiceId> = new Set();
+  #bindingMap: Map<ServiceId, Binding<any>> = new Map();
+  #compiledInstructionMap: Map<ServiceId, Instruction[]> = new Map();
+  #singletonCache: Map<ServiceId, any> = new Map();
 
   createResolveSession(): ResolveSession {
     return new ResolveSession(
-      this.bindingMap,
-      this.compiledInstructionMap,
-      this.singletonCache,
-      this.validatedBindings,
+      this.#bindingMap,
+      this.#compiledInstructionMap,
+      this.#singletonCache,
+      this.#validatedBindings,
     );
   }
 
@@ -35,10 +35,10 @@ export class Container {
   ): MethodInvoker<T, K, ServiceIds> {
     this.validate();
     return new MethodInvoker(
-      this.bindingMap,
-      this.compiledInstructionMap,
-      this.singletonCache,
-      this.validatedBindings,
+      this.#bindingMap,
+      this.#compiledInstructionMap,
+      this.#singletonCache,
+      this.#validatedBindings,
       targetConstructor,
       targetMethod,
       middlewares,
@@ -73,16 +73,16 @@ export class Container {
 
   addBinding<T>(binding: Binding<T>): this {
     const id = binding.id;
-    if (this.bindingMap.has(id)) {
+    if (this.#bindingMap.has(id)) {
       throw new DuplicatedBindingError(id);
     }
-    this.bindingMap.set(id, binding);
+    this.#bindingMap.set(id, binding);
     switch (binding.type) {
       case BindingType.FACTORY:
-        this.compileFactoryBinding(binding);
+        this.#compileFactoryBinding(binding);
         break;
       case BindingType.INSTANCE:
-        this.compileInstanceBinding(binding);
+        this.#compileInstanceBinding(binding);
         break;
     }
 
@@ -94,15 +94,15 @@ export class Container {
   }
 
   validate(): this {
-    for (const [id] of this.bindingMap) {
-      internalValidateDependencies(id, this.bindingMap, [], this.validatedBindings);
+    for (const [id] of this.#bindingMap) {
+      internalValidateDependencies(id, this.#bindingMap, [], this.#validatedBindings);
     }
     return this;
   }
 
-  private compileFactoryBinding<T>(binding: FactoryBinding<T>) {
+  #compileFactoryBinding<T>(binding: FactoryBinding<T>) {
     const {scope, paramInjectionMetadata, factory, id} = binding;
-    this.compiledInstructionMap.set(id, [
+    this.#compiledInstructionMap.set(id, [
       {
         cacheScope: scope,
         code: InstructionCode.BUILD,
@@ -114,9 +114,9 @@ export class Container {
     ]);
   }
 
-  private compileInstanceBinding<T extends {}>(binding: InstanceBinding<T>) {
+  #compileInstanceBinding<T extends {}>(binding: InstanceBinding<T>) {
     const {scope, paramInjectionMetadata, constructor, id} = binding;
-    this.compiledInstructionMap.set(id, [
+    this.#compiledInstructionMap.set(id, [
       {
         cacheScope: scope,
         code: InstructionCode.BUILD,

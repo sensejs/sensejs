@@ -20,46 +20,49 @@ export type CrossOriginResourceShareOption = KoaCors.Options;
 export type BodyParserOption = KoaBodyParserOption;
 
 class KoaHttpRequest implements HttpRequest {
+  #context;
   get query() {
-    return this.context.nativeContext.query;
+    return this.#context.nativeContext.query;
   }
 
   get body() {
-    return this.context.nativeContext.request.body;
+    return this.#context.nativeContext.request.body;
   }
 
   get rawBody() {
-    return this.context.nativeContext.request.rawBody;
+    return this.#context.nativeContext.request.rawBody;
   }
   get protocol() {
-    return this.context.nativeContext.protocol;
+    return this.#context.nativeContext.protocol;
   }
   get url() {
-    return this.context.nativeContext.url;
+    return this.#context.nativeContext.url;
   }
   get path() {
-    return this.context.nativeContext.request.path;
+    return this.#context.nativeContext.request.path;
   }
   get search() {
-    return this.context.nativeContext.request.search;
+    return this.#context.nativeContext.request.search;
   }
   get method() {
-    return this.context.nativeContext.request.method;
+    return this.#context.nativeContext.request.method;
   }
   get address() {
-    return this.context.nativeContext.request.ip;
+    return this.#context.nativeContext.request.ip;
   }
   get params() {
-    return this.context.nativeContext.params;
+    return this.#context.nativeContext.params;
   }
   get headers() {
-    return this.context.nativeContext.headers;
+    return this.#context.nativeContext.headers;
   }
   get hostname() {
-    return this.context.nativeContext.hostname;
+    return this.#context.nativeContext.hostname;
   }
 
-  constructor(private context: KoaHttpContext) {}
+  constructor(context: KoaHttpContext) {
+    this.#context = context;
+  }
 }
 
 class KoaHttpResponse implements HttpResponse {
@@ -69,7 +72,7 @@ class KoaHttpResponse implements HttpResponse {
 
   readonly headerSet: Map<string, string> = new Map();
 
-  constructor(private koaHttpContext: KoaHttpContext) {}
+  constructor(koaHttpContext: KoaHttpContext) {}
 
   set(key: string, value: string): void {
     this.headerSet.set(key, value);
@@ -99,52 +102,52 @@ export class KoaHttpContext extends HttpContext {
 }
 
 export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
-  private middlewareList: Koa.Middleware[] = [];
-  private bodyParserOption?: KoaBodyParserOption;
-  private queryStringParsingMode: QueryStringParsingMode = 'simple';
-  private trustProxy = false;
-  private corsOption?: CrossOriginResourceShareOption;
+  #middlewareList: Koa.Middleware[] = [];
+  #bodyParserOption?: KoaBodyParserOption;
+  #queryStringParsingMode: QueryStringParsingMode = 'simple';
+  #trustProxy = false;
+  #corsOption?: CrossOriginResourceShareOption;
 
   clearMiddleware(): this {
-    this.middlewareList = [];
+    this.#middlewareList = [];
     return this;
   }
 
   addMiddleware(middleware: Koa.Middleware): this {
-    this.middlewareList.push(middleware);
+    this.#middlewareList.push(middleware);
     return this;
   }
 
   setQueryStringParsingMode(mode: QueryStringParsingMode): this {
-    this.queryStringParsingMode = mode;
+    this.#queryStringParsingMode = mode;
     return this;
   }
 
   setKoaBodyParserOption(option: KoaBodyParserOption): this {
-    this.bodyParserOption = option;
+    this.#bodyParserOption = option;
     return this;
   }
 
   setCorsOption(corsOption: CrossOriginResourceShareOption): this {
-    this.corsOption = corsOption;
+    this.#corsOption = corsOption;
     return this;
   }
 
   setTrustProxy(trustProxy: boolean): this {
-    this.trustProxy = trustProxy;
+    this.#trustProxy = trustProxy;
     return this;
   }
 
   build(container: Container): RequestListener {
-    const koa = this.createKoaInstance();
+    const koa = this.#createKoaInstance();
     const errorHandler = this.errorHandler;
-    koa.proxy = this.trustProxy;
+    koa.proxy = this.#trustProxy;
 
-    if (this.corsOption) {
-      koa.use(KoaCors(this.corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
+    if (this.#corsOption) {
+      koa.use(KoaCors(this.#corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
     }
-    koa.use(koaBodyParser(this.bodyParserOption));
-    for (const middleware of this.middlewareList) {
+    koa.use(koaBodyParser(this.#bodyParserOption));
+    for (const middleware of this.#middlewareList) {
       koa.use(middleware);
     }
     const router = this.createGlobalRouter(container);
@@ -156,13 +159,13 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
     return koa.callback();
   }
 
-  private createKoaInstance() {
+  #createKoaInstance() {
     const koa = new Koa();
-    if (this.queryStringParsingMode === 'simple') {
+    if (this.#queryStringParsingMode === 'simple') {
       return koa;
     }
 
-    return koaQs(koa, this.queryStringParsingMode);
+    return koaQs(koa, this.#queryStringParsingMode);
   }
 
   protected createGlobalRouter(container: Container): KoaRouter {

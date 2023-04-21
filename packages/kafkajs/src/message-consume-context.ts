@@ -12,55 +12,80 @@ export abstract class MessageConsumeContext {
   abstract readonly lastOffset: string;
 }
 export class SimpleMessageConsumeContext extends MessageConsumeContext {
-  readonly topic: string;
-  readonly partition: number;
-  readonly offset: string;
-  readonly firstOffset: string;
-  readonly lastOffset: string;
+  #message: KafkaReceivedMessage;
+  get topic() {
+    return this.#message.topic;
+  }
+
+  get partition() {
+    return this.#message.partition;
+  }
+
+  get offset() {
+    return this.#message.offset;
+  }
+
+  get firstOffset() {
+    return this.#message.offset;
+  }
+
+  get lastOffset() {
+    return this.#message.offset;
+  }
+
   constructor(
     readonly targetConstructor: Constructor,
     readonly targetMethodKey: keyof any,
     readonly consumerGroup: string,
-    readonly message: KafkaReceivedMessage,
+    message: KafkaReceivedMessage,
   ) {
     super();
-    this.topic = message.topic;
-    this.partition = message.partition;
-    this.offset = message.offset;
-    this.firstOffset = message.offset;
-    this.lastOffset = message.offset;
+    this.#message = message;
   }
 }
 
 export class BatchedMessageConsumeContext extends MessageConsumeContext {
-  readonly topic: string;
-  readonly partition: number;
-  readonly offset: string;
-  readonly firstOffset: string | null;
-  readonly lastOffset: string;
+  #batchedConsumeParam;
+
+  get topic() {
+    return this.#batchedConsumeParam.batch.topic;
+  }
+
+  get partition() {
+    return this.#batchedConsumeParam.batch.partition;
+  }
+
+  get offset() {
+    return this.#batchedConsumeParam.batch.lastOffset();
+  }
+
+  get firstOffset() {
+    return this.#batchedConsumeParam.batch.firstOffset() ?? null;
+  }
+
+  get lastOffset() {
+    return this.#batchedConsumeParam.batch.lastOffset();
+  }
+
   constructor(
     readonly targetConstructor: Constructor,
     readonly targetMethodKey: keyof any,
     readonly consumerGroup: string,
-    private batchedConsumeParam: KafkaBatchConsumeMessageParam,
+    batchedConsumeParam: KafkaBatchConsumeMessageParam,
   ) {
     super();
-    this.topic = this.batchedConsumeParam.batch.topic;
-    this.partition = this.batchedConsumeParam.batch.partition;
-    this.offset = this.batchedConsumeParam.batch.lastOffset();
-    this.firstOffset = this.batchedConsumeParam.batch.firstOffset() ?? null;
-    this.lastOffset = this.batchedConsumeParam.batch.lastOffset();
+    this.#batchedConsumeParam = batchedConsumeParam;
   }
 
   heartbeat() {
-    return this.batchedConsumeParam.heartbeat();
+    return this.#batchedConsumeParam.heartbeat();
   }
 
   messageInfo(): Batch {
-    return this.batchedConsumeParam.batch;
+    return this.#batchedConsumeParam.batch;
   }
 
   resolveOffset(offset: string) {
-    return this.batchedConsumeParam.resolveOffset(offset);
+    return this.#batchedConsumeParam.resolveOffset(offset);
   }
 }

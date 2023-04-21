@@ -1,11 +1,11 @@
 import {Entity, Property} from '@mikro-orm/core';
 import {BookEntity} from './book.entity.js';
-import crypto from 'crypto';
+import {randomUUID} from 'crypto';
 
 @Entity()
 export class AuthorEntity {
   @Property({primary: true})
-  id: string = crypto.randomUUID();
+  id: string = randomUUID();
 
   @Property()
   name: string;

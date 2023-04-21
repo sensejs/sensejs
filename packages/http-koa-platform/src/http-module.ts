@@ -65,31 +65,32 @@ export function createKoaHttpModule(option: CreateKoaHttpModuleOption = {}): Con
     requires,
   })
   class KoaHttpModule extends AbstractHttpModule {
-    constructor(
-      @InjectLogger() private logger: Logger,
-      @Inject(optionProvider.provide) private httpOption: KoaHttpOption,
-    ) {
+    #logger;
+    #httpOption;
+    constructor(@InjectLogger() logger: Logger, @Inject(optionProvider.provide) httpOption: KoaHttpOption) {
       super({
         httpOption,
         ...rest,
       });
+      this.#logger = logger;
+      this.#httpOption = httpOption;
     }
 
     protected getAdaptor(): AbstractHttpApplicationBuilder {
       const builder = new KoaHttpApplicationBuilder().setErrorHandler((e) => {
-        this.logger.error('Error occurred when handling http request: ', e);
+        this.#logger.error('Error occurred when handling http request: ', e);
       });
-      if (typeof this.httpOption.queryStringParsingMode !== 'undefined') {
-        builder.setQueryStringParsingMode(this.httpOption.queryStringParsingMode);
+      if (this.#httpOption.queryStringParsingMode) {
+        builder.setQueryStringParsingMode(this.#httpOption.queryStringParsingMode);
       }
-      if (typeof this.httpOption.bodyParserOption !== 'undefined') {
-        builder.setKoaBodyParserOption(this.httpOption.bodyParserOption);
+      if (typeof this.#httpOption.bodyParserOption !== 'undefined') {
+        builder.setKoaBodyParserOption(this.#httpOption.bodyParserOption);
       }
-      if (typeof this.httpOption.corsOption !== 'undefined') {
-        builder.setCorsOption(this.httpOption.corsOption);
+      if (typeof this.#httpOption.corsOption !== 'undefined') {
+        builder.setCorsOption(this.#httpOption.corsOption);
       }
-      if (typeof this.httpOption.trustProxy !== 'undefined') {
-        builder.setTrustProxy(this.httpOption.trustProxy);
+      if (typeof this.#httpOption.trustProxy !== 'undefined') {
+        builder.setTrustProxy(this.#httpOption.trustProxy);
       }
       return builder;
     }
