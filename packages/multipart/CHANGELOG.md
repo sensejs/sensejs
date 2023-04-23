@@ -1,5 +1,11 @@
 # @sensejs/multipart
 
+## 0.11.1
+
+### Patch Changes
+
+- d027c77: Fix a bug that the files not removed on clean up if orror occurred
+
 ## 0.11.0
 
 ### Minor Changes
