@@ -12,10 +12,24 @@ export interface RemoteStorageOption {
    * The maximum partition size can be uploaded using `RemoteStorageAdaptor.uploadPartition`
    */
   partitionedUploadBufferSize?: number;
+
   fileCountLimit?: number;
+
   fileSizeLimit?: number;
 }
 
+/**
+ * Remote storage for multipart file upload
+ *
+ * The HTTP multipart file upload does not give a way to know the size of the file until it's fully uploaded,
+ * so we have to buffer the content and decide whether to perform a partitioned upload or a simple upload when there
+ * is enough content buffered.
+ *
+ * The overall strategy is, allocating a buffer with size of `max(maxSimpleUploadSize, maxPartitionedUploadSize)`,
+ * and then fill the buffer until end of stream or the buffer is full. If the file ended before the buffer is full,
+ * just perform a simple upload, otherwise we have to perform a partitioned upload.
+ *
+ */
 export class RemoteStorage implements MultipartFileStorage<() => NodeJS.ReadableStream> {
   private readonly adaptor: RemoteStorageAdaptor<any, any>;
   private saveFilePromise: Promise<void> | null = null;
@@ -57,8 +71,12 @@ export class RemoteStorage implements MultipartFileStorage<() => NodeJS.Readable
     info: MultipartFileInfo,
   ): Promise<MultipartFileEntry<() => NodeJS.ReadableStream>> {
     return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const writable = new UploadStream(this.adaptor, name, info, resolve, reject);
-      pipeline(file, writable);
+      const writable = new UploadStream(this.adaptor, name, info, resolve);
+      pipeline(file, writable, (e) => {
+        if (e) {
+          return reject(e);
+        }
+      });
     });
   }
 

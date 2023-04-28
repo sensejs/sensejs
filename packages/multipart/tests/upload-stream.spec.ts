@@ -26,7 +26,7 @@ async function pipeUploadStream(input: NodeJS.ReadableStream, adaptor: RemoteSto
     transferEncoding: '7bit',
   };
   return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-    pipeline(input, new UploadStream(adaptor, 'foo.txt', mockFileInfo, resolve, reject), (err) => {
+    pipeline(input, new UploadStream(adaptor, 'foo.txt', mockFileInfo, resolve), (err) => {
       if (err) {
         reject(err);
       }
@@ -272,8 +272,23 @@ describe('UploadStream', () => {
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
+  test('large multipart upload, small upload chunk, slow consume', async () => {
+    const buffers = getFixedBuffers(200, 40);
+    const stream = Readable.from(buffers);
+
+    const adaptor = new MockRemoteStorageAdaptor(50, 5, 1);
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
+
+    expect(result).toMatchObject({
+      size: Buffer.concat(buffers).length,
+    });
+
+    const content = await readStreamAsBuffer(result.content());
+    expect(content).toEqual(Buffer.concat(buffers));
+  });
+
   test('large multipart upload, maxSimpleUploadSize=50,, maxPartitionedUploadSize=15', async () => {
-    const buffers = getFixedBuffers(20);
+    const buffers = getFixedBuffers(200);
     const stream = Readable.from(buffers);
 
     const adaptor = new MockRemoteStorageAdaptor(50, 15);
@@ -288,7 +303,7 @@ describe('UploadStream', () => {
   });
 
   test('large multipart upload, maxSimpleUploadSize=50, maxPartitionedUploadSize=18', async () => {
-    const buffers = getFixedBuffers(20);
+    const buffers = getFixedBuffers(200);
     const stream = Readable.from(buffers);
 
     const adaptor = new MockRemoteStorageAdaptor(50, 18);
@@ -361,8 +376,8 @@ describe('UploadStream', () => {
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
-  test.skip('fuzzy test', async () => {
-    for (let size = 1; size < 1000; size += 5) {
+  test('quick fuzzy test', async () => {
+    for (let size = 1; size < 256; size += 5) {
       const buffers = getRandomInputBuffers(size);
 
       const stream = Readable.from(buffers);
