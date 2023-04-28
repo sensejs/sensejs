@@ -11,6 +11,22 @@ async function readStreamAsBuffer(input: NodeJS.ReadableStream) {
   }
   return Buffer.concat(buffers);
 }
+const mockFileInfo: MultipartFileInfo = {
+  filename: 'bar.txt',
+  mimeType: 'text/plain',
+  transferEncoding: '7bit',
+};
+
+async function pipeUploadStream(input: NodeJS.ReadableStream, adaptor: RemoteStorageAdaptor<any, any>, name: string) {
+  const info = {
+    filename: 'bar.txt',
+    mimeType: 'text/plain',
+    transferEncoding: '7bit',
+  };
+  return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
+    pipeline(input, new UploadStream(adaptor, 'foo.txt', mockFileInfo, resolve, reject), (err) => {});
+  });
+}
 
 class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
   readonly fileCountLimit: number = 10;
@@ -45,7 +61,9 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
 
   async uploadPartition(pud: string, readable: Readable, size: number): Promise<void> {
     const buffers = this.partitionUploads.get(pud);
-    if (!buffers) throw new Error('Invalid pud');
+    if (!buffers) {
+      throw new Error('Invalid pud');
+    }
     const chunks: Buffer[] = [];
     if (this.consumeDelay > 0) {
       await new Promise((resolve) => setTimeout(resolve, this.consumeDelay));
@@ -61,7 +79,9 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
 
   async finishPartitionedUpload(partition: string): Promise<string> {
     const buffers = this.partitionUploads.get(partition);
-    if (!buffers) throw new Error('Invalid pud');
+    if (!buffers) {
+      throw new Error('Invalid pud');
+    }
     const id = randomUUID();
     this.files.set(id, buffers);
     return id;
@@ -73,7 +93,9 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
 
   createReadStream(fileKey: string): NodeJS.ReadableStream {
     const buffers = this.files.get(fileKey);
-    if (!buffers) throw new Error('Invalid file key');
+    if (!buffers) {
+      throw new Error('Invalid file key');
+    }
 
     const readable = stream.Readable.from(buffers);
     let opened = this.openedFile.get(fileKey);
@@ -139,26 +161,12 @@ describe('UploadStream', () => {
     const stream = Readable.from(['hello', 'world', '1234567890', '1234567890']);
 
     const adaptor = new MockRemoteStorageAdaptor();
-    const result = await new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const uploadStream = new UploadStream(
-        adaptor,
-        'foo',
-        {
-          filename: 'bar.txt',
-          mimeType: 'text/plain',
-          transferEncoding: '7bit',
-        },
-        resolve,
-        reject,
-      );
-
-      pipeline(stream, uploadStream, () => {});
-    });
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
 
     expect(result).toMatchObject({
-      filename: 'bar.txt',
-      mimeType: 'text/plain',
-      transferEncoding: '7bit',
+      filename: mockFileInfo.filename,
+      mimeType: mockFileInfo.mimeType,
+      transferEncoding: mockFileInfo.transferEncoding,
       size: 30,
     });
 
@@ -170,26 +178,12 @@ describe('UploadStream', () => {
     const stream = Readable.from(['hello', 'world', '1234567890', '1234567890', '1234567890', '1234567890']);
 
     const adaptor = new MockRemoteStorageAdaptor();
-    const result = await new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const uploadStream = new UploadStream(
-        adaptor,
-        'foo',
-        {
-          filename: 'bar.txt',
-          mimeType: 'text/plain',
-          transferEncoding: '7bit',
-        },
-        resolve,
-        reject,
-      );
-
-      pipeline(stream, uploadStream, () => {});
-    });
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
 
     expect(result).toMatchObject({
-      filename: 'bar.txt',
-      mimeType: 'text/plain',
-      transferEncoding: '7bit',
+      filename: mockFileInfo.filename,
+      mimeType: mockFileInfo.mimeType,
+      transferEncoding: mockFileInfo.transferEncoding,
       size: 50,
     });
 
@@ -202,62 +196,28 @@ describe('UploadStream', () => {
     const stream = Readable.from(buffers);
 
     const adaptor = new MockRemoteStorageAdaptor();
-    const result = await new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const uploadStream = new UploadStream(
-        adaptor,
-        'foo',
-        {
-          filename: 'bar.txt',
-          mimeType: 'text/plain',
-          transferEncoding: '7bit',
-        },
-        resolve,
-        reject,
-      );
-
-      pipeline(stream, uploadStream, () => {});
-    });
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
 
     expect(result).toMatchObject({
-      filename: 'bar.txt',
-      mimeType: 'text/plain',
-      transferEncoding: '7bit',
       size: Buffer.concat(buffers).length,
     });
 
     const content = await readStreamAsBuffer(result.content());
-    expect(content.toString()).toBe(Buffer.concat(buffers).toString());
+    expect(content).toEqual(Buffer.concat(buffers));
   });
   test('large multipart upload, maxSimpleUploadSize=50,, maxPartitionedUploadSize=15', async () => {
     const buffers = getLargeInputBuffers();
     const stream = Readable.from(buffers);
 
     const adaptor = new MockRemoteStorageAdaptor(50, 15);
-    const result = await new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const uploadStream = new UploadStream(
-        adaptor,
-        'foo',
-        {
-          filename: 'bar.txt',
-          mimeType: 'text/plain',
-          transferEncoding: '7bit',
-        },
-        resolve,
-        reject,
-      );
-
-      pipeline(stream, uploadStream, () => {});
-    });
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
 
     expect(result).toMatchObject({
-      filename: 'bar.txt',
-      mimeType: 'text/plain',
-      transferEncoding: '7bit',
       size: Buffer.concat(buffers).length,
     });
 
     const content = await readStreamAsBuffer(result.content());
-    expect(content.toString()).toBe(Buffer.concat(buffers).toString());
+    expect(content).toEqual(Buffer.concat(buffers));
   });
 
   test('large multipart upload, maxSimpleUploadSize=50, maxPartitionedUploadSize=12', async () => {
@@ -265,31 +225,14 @@ describe('UploadStream', () => {
     const stream = Readable.from(buffers);
 
     const adaptor = new MockRemoteStorageAdaptor(50, 12);
-    const result = await new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const uploadStream = new UploadStream(
-        adaptor,
-        'foo',
-        {
-          filename: 'bar.txt',
-          mimeType: 'text/plain',
-          transferEncoding: '7bit',
-        },
-        resolve,
-        reject,
-      );
-
-      pipeline(stream, uploadStream, () => {});
-    });
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
 
     expect(result).toMatchObject({
-      filename: 'bar.txt',
-      mimeType: 'text/plain',
-      transferEncoding: '7bit',
       size: Buffer.concat(buffers).length,
     });
 
     const content = await readStreamAsBuffer(result.content());
-    expect(content.toString()).toBe(Buffer.concat(buffers).toString());
+    expect(content).toEqual(Buffer.concat(buffers));
   });
 
   test('large multipart upload, slow consume, maxSimpleUploadSize=50, maxPartitionedUploadSize=15', async () => {
@@ -297,31 +240,14 @@ describe('UploadStream', () => {
     const stream = Readable.from(buffers);
 
     const adaptor = new MockRemoteStorageAdaptor(50, 15, 1);
-    const result = await new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const uploadStream = new UploadStream(
-        adaptor,
-        'foo',
-        {
-          filename: 'bar.txt',
-          mimeType: 'text/plain',
-          transferEncoding: '7bit',
-        },
-        resolve,
-        reject,
-      );
-
-      pipeline(stream, uploadStream, () => {});
-    });
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
 
     expect(result).toMatchObject({
-      filename: 'bar.txt',
-      mimeType: 'text/plain',
-      transferEncoding: '7bit',
       size: Buffer.concat(buffers).length,
     });
 
     const content = await readStreamAsBuffer(result.content());
-    expect(content.toString()).toBe(Buffer.concat(buffers).toString());
+    expect(content).toEqual(Buffer.concat(buffers));
   });
 
   test('large multipart upload, slow input, maxSimpleUploadSize=50, maxPartitionedUploadSize=15', async () => {
@@ -329,30 +255,13 @@ describe('UploadStream', () => {
     const stream = Readable.from(getLargeSlowInputBuffers());
 
     const adaptor = new MockRemoteStorageAdaptor(50, 15);
-    const result = await new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const uploadStream = new UploadStream(
-        adaptor,
-        'foo',
-        {
-          filename: 'bar.txt',
-          mimeType: 'text/plain',
-          transferEncoding: '7bit',
-        },
-        resolve,
-        reject,
-      );
-
-      pipeline(stream, uploadStream, () => {});
-    });
+    const result = await pipeUploadStream(stream, adaptor, 'foo');
 
     expect(result).toMatchObject({
-      filename: 'bar.txt',
-      mimeType: 'text/plain',
-      transferEncoding: '7bit',
       size: Buffer.concat(buffers).length,
     });
 
     const content = await readStreamAsBuffer(result.content());
-    expect(content.toString()).toBe(Buffer.concat(buffers).toString());
+    expect(content).toEqual(Buffer.concat(buffers));
   });
 });
