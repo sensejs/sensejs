@@ -260,7 +260,7 @@ describe('UploadStream', () => {
     expect(content.toString()).toBe(Buffer.concat(buffers).toString());
   });
 
-  test('large multipart upload, maxSimpleUploadSize=50,, maxPartitionedUploadSize=15', async () => {
+  test('large multipart upload, maxSimpleUploadSize=50, maxPartitionedUploadSize=12', async () => {
     const buffers = getLargeInputBuffers();
     const stream = Readable.from(buffers);
 
