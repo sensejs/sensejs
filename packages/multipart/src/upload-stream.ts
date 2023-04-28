@@ -8,8 +8,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
    * buffer layout:
    *
    *
-   * When buffer is empty, tailIdx = headIdx, and should be normalized to
-   * headIdx = 0
+   * When buffer is empty, tailIdx = headIdx
    *
    *     0                                                         length
    *     ----------------------------------------------------------------
@@ -17,49 +16,59 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
    *     |
    *     head = tail = 0
    *
+   * or
+   *     0                   x                                     length
+   *     ----------------------------------------------------------------
+   *                         ^
+   *                         |
+   *                         head = tail = x
+   *
    * When there is x bytes in the buffer and the tail index is not yet wrapped,
-   * tailIdx = headIdx + x + 1
+   * tailIdx = headIdx + x
    *
    *     0                                       x                 length
    *     ========================================------------------------
    *     ^                                       ^
    *     |                                       |
-   *     head                                    tail = x+1
+   *     head                                    tail = x
+   *
+   * or
+   *
+   *     0   t                                      x+t            length
+   *     ----========================================--------------------
+   *         ^                                      ^
+   *         |                                      |
+   *         head = t                               tail = x + t
    *
    * When there is z bytes in the buffer and tail index is wrapped so that
    * the content split into two parts, where the one from headIdx to the end
    * has x bytes, and the one from the beginning to tailIdx has y bytes,
    * satisfying that z = x + y, in such situation, headIdx = tail - x, and
-   * tailIdx = y - 1 (IMPORTANT! it need to minus 1 to distinguish an empty
-   * buffer from a full buffer).
+   * tailIdx = y + length
    *
-   *     0                    y            x                        length
-   *     ======================------------==============================
-   *                          ^            ^
-   *                          |            |
-   *                          tail = x     head
+   *     0                    y                      x             length
+   *     ======================----------------------====================
+   *                          ^                      ^
+   *                          |                      |
+   *                          tail = y+length        head  = x
    *
    *
-   * When the buffer is full:
-   * either the headIdx is 0 and the tailIdx is equal to the length, when
-   * data written from the beginning of the buffer to the end of the buffer
+   * When the buffer is full, tail - head = length
    *
    *     0                                                         length
    *     ================================================================
-   *     ^                                                               ^
-   *     |                                                               |
+   *     ^                                                              ^
+   *     |                                                              |
    *     head                                                 tail = length
    *
-   * or headIdx is equal to tailIdx-1 when headIdx is not 0, for the case that
-   * data is written from headIdx to the end of buffer and then from the
-   * beginning of the buffer to tailIdx
+   * or
    *
-   *     0                                                         length
+   *     0          x                                              length
    *     ================================================================
-   *                ^^
-   *                ||
-   *                |tail
-   *                head
+   *                ^
+   *                |
+   *                |tail = x + length
+   *                |head = x
    *
    *
    */
@@ -114,21 +123,23 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     if (this.initMultipartUploadPromise) {
       // We've started a partitioned upload, wait for it to finish
 
+      this.uploadIfNecessary(this.initMultipartUploadPromise);
       const initMultipartUploadPromise = this.initMultipartUploadPromise;
       this.promiseQueue = this.promiseQueue
         .then(async () => {
-          assert(this.uploadIdx == this.headIdx);
           const p = await initMultipartUploadPromise;
-          if (this.headIdx < this.tailIdx) {
-            const remaining = this.tailIdx - this.headIdx;
-            assert(remaining < this.adaptor.maxPartitionedUploadSize);
-            const readable = Readable.from(this.buffer.slice(this.headIdx, this.tailIdx));
-            await this.adaptor.uploadPartition(p, readable, this.tailIdx - this.headIdx);
-          } else if (this.headIdx > this.tailIdx) {
-            const remaining = this.buffer.length - this.headIdx + this.tailIdx + 1;
-            assert(remaining < this.adaptor.maxPartitionedUploadSize);
-            const readable = Readable.from([this.buffer.slice(this.headIdx), this.buffer.slice(0, this.tailIdx + 1)]);
-            await this.adaptor.uploadPartition(p, readable, this.tailIdx - this.headIdx);
+          const remaining = this.tailIdx - this.headIdx;
+          if (remaining > 0) {
+            if (this.tailIdx <= this.buffer.length) {
+              const readable = Readable.from(this.buffer.slice(this.headIdx, this.tailIdx));
+              await this.adaptor.uploadPartition(p, readable, remaining);
+            } else {
+              const readable = Readable.from([
+                this.buffer.slice(this.headIdx),
+                this.buffer.slice(0, this.tailIdx - this.buffer.length),
+              ]);
+              await this.adaptor.uploadPartition(p, readable, remaining);
+            }
           }
 
           const result = await this.adaptor.finishPartitionedUpload(p);
@@ -165,158 +176,77 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     }
   }
 
-  private partitionedUpload(pud: Promise<P>, chunk: Buffer, callback: (error?: Error | null) => void) {
-    if (this.headIdx <= this.tailIdx) {
-      if (this.tailIdx !== this.buffer.length) {
-        // The tailIdx is not yet wrapped around
+  private partitionedUpload(pudPromise: Promise<P>, chunk: Buffer, callback: (error?: Error | null) => void) {
+    // Check if it should perform a partitioned upload first
+    this.uploadIfNecessary(pudPromise);
+    if (chunk.length > 0 && this.tailIdx - this.headIdx < this.buffer.length) {
+      // First try to fill the buffer to the end
+      if (this.tailIdx < this.buffer.length) {
         const chunkLength = Math.min(this.buffer.length - this.tailIdx, chunk.length);
         chunk.copy(this.buffer, this.tailIdx, 0, chunkLength);
         chunk = chunk.slice(chunkLength);
         this.tailIdx += chunkLength;
       }
-      if (chunk.length > 0 && this.headIdx > 0) {
-        const chunkLength = Math.min(this.headIdx, chunk.length);
-        chunk.copy(this.buffer, 0, 0, chunkLength);
+
+      // Then try to fill the buffer from the beginning
+      if (chunk.length > 0 && this.tailIdx - this.headIdx < this.buffer.length) {
+        const chunkLength = Math.min(
+          // // the space available in the buffer
+          this.buffer.length - this.tailIdx + this.headIdx,
+          // we must ensure that the headIdx is never greater than length of the buffer
+          2 * this.buffer.length - this.tailIdx,
+          chunk.length,
+        );
+        chunk.copy(this.buffer, this.tailIdx - this.buffer.length, 0, chunkLength);
         chunk = chunk.slice(chunkLength);
-        this.tailIdx = chunkLength - 1;
-      }
-    } else if (this.headIdx > this.tailIdx + 1) {
-      // The tailIdx is wrapped around
-      const chunkLength = Math.min(this.headIdx - this.tailIdx - 1, chunk.length);
-      chunk.copy(this.buffer, this.tailIdx + 1, 0, chunkLength);
-      chunk = chunk.slice(chunkLength);
-      this.tailIdx += chunkLength;
-    } else if ((this.headIdx === 0 && this.tailIdx === this.buffer.length) || this.tailIdx + 1 === this.headIdx) {
-      // The buffer is full, wait for the upload to finish and try again
-      // Just return directly, no need to schedule upload partitions as nothing has been written into the buffer
-      // for this try
-      return this.sink(chunk, callback, pud);
-    }
-
-    // The data has been written into the buffer, check the uploadIdx to see if we can upload the data
-    if (this.headIdx <= this.tailIdx) {
-      for (;;) {
-        assert(this.uploadIdx <= this.tailIdx);
-        assert(this.headIdx <= this.uploadIdx);
-        const pendingSize = this.tailIdx - this.uploadIdx;
-        if (pendingSize < this.adaptor.maxPartitionedUploadSize) {
-          break;
-        }
-        // There's enough data to upload
-        const data = this.buffer.slice(this.uploadIdx, this.uploadIdx + this.adaptor.maxPartitionedUploadSize);
-        const currentUploadIdx = (this.uploadIdx += this.adaptor.maxPartitionedUploadSize);
-        this.promiseQueue = this.promiseQueue.then(() => {
-          return pud.then((p) => {
-            return this.adaptor.uploadPartition(p, Readable.from([data]), this.adaptor.maxPartitionedUploadSize).then(
-              () => {
-                if (currentUploadIdx === this.tailIdx) {
-                  this.uploadIdx = this.headIdx = this.tailIdx = 0;
-                } else {
-                  this.uploadIdx = this.headIdx = currentUploadIdx === this.buffer.length ? 0 : currentUploadIdx;
-                }
-              },
-              (e) => this.destroy(e),
-            );
-          });
-        });
-      }
-    } else {
-      for (;;) {
-        assert(this.tailIdx <= this.uploadIdx || this.uploadIdx <= this.headIdx);
-        if (this.uploadIdx >= this.headIdx) {
-          let pendingSize = this.buffer.length - this.uploadIdx;
-          if (pendingSize >= this.adaptor.maxPartitionedUploadSize) {
-            // There's enough data to upload
-            const readable = Readable.from([
-              this.buffer.slice(this.uploadIdx, this.uploadIdx + this.adaptor.maxPartitionedUploadSize),
-            ]);
-            const currentUploadIdx = (this.uploadIdx += this.adaptor.maxPartitionedUploadSize);
-            this.promiseQueue = this.promiseQueue.then(() => {
-              return pud.then((p) => {
-                return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(
-                  () => {
-                    if (currentUploadIdx === this.tailIdx) {
-                      this.uploadIdx = this.headIdx = this.tailIdx = 0;
-                    } else {
-                      if (this.uploadIdx === this.buffer.length) {
-                        this.uploadIdx = this.headIdx = 0;
-                        this.tailIdx += 1;
-                      } else {
-                        this.uploadIdx = this.headIdx = currentUploadIdx;
-                      }
-                    }
-                  },
-                  (e) => this.destroy(e),
-                );
-              });
-            });
-            continue;
-          }
-          pendingSize += this.tailIdx + 1;
-
-          if (pendingSize >= this.adaptor.maxPartitionedUploadSize) {
-            const tailBuffer = this.buffer.slice(this.uploadIdx);
-            const currentUploadIdx = (this.uploadIdx = this.adaptor.maxPartitionedUploadSize - tailBuffer.length);
-            const headBuffer = this.buffer.slice(0, currentUploadIdx);
-
-            // There's enough data to upload
-            const readable = Readable.from([tailBuffer, headBuffer]);
-            this.promiseQueue = this.promiseQueue.then(() => {
-              return pud.then((p) => {
-                return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(
-                  () => {
-                    if (currentUploadIdx === this.tailIdx) {
-                      this.uploadIdx = this.headIdx = this.tailIdx = 0;
-                    } else {
-                      this.uploadIdx = this.headIdx = currentUploadIdx; // === this.buffer.length ? 0 : currentUploadIdx;
-                      // Important: the buffer is become continuous again, so we need to adjust the tailIdx
-                      this.tailIdx += 1;
-                    }
-                  },
-                  (e) => this.destroy(e),
-                );
-              });
-            });
-            continue;
-          }
-          break;
-        } else {
-          const pendingSize = this.tailIdx - this.uploadIdx;
-          if (pendingSize < this.adaptor.maxPartitionedUploadSize) {
-            break;
-          }
-          // There's enough data to upload
-          const readable = Readable.from([
-            this.buffer.slice(this.uploadIdx, this.uploadIdx + this.adaptor.maxPartitionedUploadSize),
-          ]);
-          const currentUploadIdx = (this.uploadIdx += this.adaptor.maxPartitionedUploadSize);
-          this.promiseQueue = this.promiseQueue.then(() => {
-            return pud.then((p) => {
-              return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(
-                () => {
-                  if (currentUploadIdx === this.tailIdx) {
-                    this.uploadIdx = this.headIdx = this.tailIdx = 0;
-                  } else {
-                    this.uploadIdx = this.headIdx = currentUploadIdx === this.buffer.length ? 0 : currentUploadIdx;
-                  }
-                },
-                (e) => this.destroy(e),
-              );
-            });
-          });
-        }
+        this.tailIdx += chunkLength;
       }
     }
-    this.sink(chunk, callback, pud);
-  }
 
-  private sink(chunk: Buffer, callback: (error?: Error | null) => void, pud: Promise<P>) {
+    this.uploadIfNecessary(pudPromise);
+
     if (chunk.length === 0) {
       setImmediate(callback);
     } else {
       this.promiseQueue = this.promiseQueue.then(() => {
-        this.partitionedUpload(pud, chunk, callback);
+        this.partitionedUpload(pudPromise, chunk, callback);
       }, callback);
+    }
+  }
+
+  private uploadIfNecessary(pudPromise: Promise<P>) {
+    while (this.tailIdx - this.uploadIdx >= this.adaptor.maxPartitionedUploadSize) {
+      const prevUploadIdx = this.uploadIdx;
+      const currentUploadIdx = this.uploadIdx + this.adaptor.maxPartitionedUploadSize;
+      const buffers: Buffer[] = [];
+      if (this.uploadIdx > this.buffer.length) {
+        buffers.push(this.buffer.slice(this.uploadIdx - this.buffer.length, currentUploadIdx - this.buffer.length));
+      } else if (currentUploadIdx < this.buffer.length) {
+        buffers.push(this.buffer.slice(this.uploadIdx, currentUploadIdx));
+      } else {
+        buffers.push(this.buffer.slice(this.uploadIdx));
+        buffers.push(this.buffer.slice(0, currentUploadIdx - this.buffer.length));
+      }
+      const readable = Readable.from(buffers);
+
+      this.uploadIdx = currentUploadIdx;
+      this.promiseQueue = this.promiseQueue
+        .then(() => pudPromise)
+        .then((p) => {
+          return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(() => {
+            // It's possible that the currentUploadIdx is greater than the buffer length, and we need to keep
+            // headIdx < buffer.length
+            this.headIdx =
+              currentUploadIdx > this.buffer.length ? currentUploadIdx - this.buffer.length : currentUploadIdx;
+
+            // When and only when the head index is just wrapped around, we can adjust them by minus the buffer length
+            if (currentUploadIdx >= this.buffer.length && prevUploadIdx < this.buffer.length) {
+              this.headIdx = currentUploadIdx - this.buffer.length;
+              this.tailIdx -= this.buffer.length;
+              this.uploadIdx -= this.buffer.length;
+            }
+          }, this.destroy.bind(this));
+        });
     }
   }
 
@@ -330,7 +260,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     if (this.initMultipartUploadPromise) {
       return this.initMultipartUploadPromise;
     }
-    this.initMultipartUploadPromise = this.promiseQueue.then(() =>
+    this.initMultipartUploadPromise = this.promiseQueue = this.promiseQueue.then(() =>
       this.adaptor.beginPartitionedUpload(this.name, this.info),
     );
     return this.initMultipartUploadPromise;
