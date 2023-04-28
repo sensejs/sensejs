@@ -114,7 +114,11 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   _destroy(error: Error | null, callback: (error?: Error | null) => void) {
     if (error) {
-      this.reject(error);
+      if (this.initMultipartUploadPromise) {
+        this.initMultipartUploadPromise.then((p) => this.adaptor.abortPartitionedUpload(p));
+      }
+      setImmediate(callback, error);
+      // this.reject(error);
     }
   }
 
@@ -210,7 +214,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     } else {
       this.promiseQueue = this.promiseQueue.then(() => {
         this.partitionedUpload(pudPromise, chunk, callback);
-      }, callback);
+      }, this.destroy.bind(this));
     }
   }
 
@@ -233,19 +237,25 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
       this.promiseQueue = this.promiseQueue
         .then(() => pudPromise)
         .then((p) => {
-          return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(() => {
-            // It's possible that the currentUploadIdx is greater than the buffer length, and we need to keep
-            // headIdx < buffer.length
-            this.headIdx =
-              currentUploadIdx > this.buffer.length ? currentUploadIdx - this.buffer.length : currentUploadIdx;
+          return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(
+            () => {
+              // It's possible that the currentUploadIdx is greater than the buffer length, and we need to keep
+              // headIdx < buffer.length
+              this.headIdx =
+                currentUploadIdx > this.buffer.length ? currentUploadIdx - this.buffer.length : currentUploadIdx;
 
-            // When and only when the head index is just wrapped around, we can adjust them by minus the buffer length
-            if (currentUploadIdx >= this.buffer.length && prevUploadIdx < this.buffer.length) {
-              this.headIdx = currentUploadIdx - this.buffer.length;
-              this.tailIdx -= this.buffer.length;
-              this.uploadIdx -= this.buffer.length;
-            }
-          }, this.destroy.bind(this));
+              // When and only when the head index is just wrapped around, we can adjust them by minus the buffer length
+              if (currentUploadIdx >= this.buffer.length && prevUploadIdx < this.buffer.length) {
+                this.headIdx = currentUploadIdx - this.buffer.length;
+                this.tailIdx -= this.buffer.length;
+                this.uploadIdx -= this.buffer.length;
+              }
+            },
+            (e) => {
+              this.destroy(e);
+              throw e;
+            },
+          );
         });
     }
   }
@@ -261,7 +271,9 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
       return this.initMultipartUploadPromise;
     }
     this.initMultipartUploadPromise = this.promiseQueue = this.promiseQueue.then(() =>
-      this.adaptor.beginPartitionedUpload(this.name, this.info),
+      this.adaptor.beginPartitionedUpload(this.name, this.info).catch((e) => {
+        this.destroy(e);
+      }),
     );
     return this.initMultipartUploadPromise;
   }
