@@ -1,78 +1,80 @@
 import {Readable, Writable} from 'stream';
 import {MultipartFileEntry, MultipartFileInfo} from './types.js';
-import assert from 'assert';
 import {RemoteStorageAdaptor} from './remote-storage-adaptor.js';
 
-export class UploadStream<F extends {}, P extends {}> extends Writable {
-  /*
-   * buffer layout:
-   *
-   *
-   * When buffer is empty, tailIdx = headIdx
-   *
-   *     0                                                         length
-   *     ----------------------------------------------------------------
-   *     ^
-   *     |
-   *     head = tail = 0
-   *
-   * or
-   *     0                   x                                     length
-   *     ----------------------------------------------------------------
-   *                         ^
-   *                         |
-   *                         head = tail = x
-   *
-   * When there is x bytes in the buffer and the tail index is not yet wrapped,
-   * tailIdx = headIdx + x
-   *
-   *     0                                       x                 length
-   *     ========================================------------------------
-   *     ^                                       ^
-   *     |                                       |
-   *     head                                    tail = x
-   *
-   * or
-   *
-   *     0   t                                      x+t            length
-   *     ----========================================--------------------
-   *         ^                                      ^
-   *         |                                      |
-   *         head = t                               tail = x + t
-   *
-   * When there is z bytes in the buffer and tail index is wrapped so that
-   * the content split into two parts, where the one from headIdx to the end
-   * has x bytes, and the one from the beginning to tailIdx has y bytes,
-   * satisfying that z = x + y, in such situation, headIdx = tail - x, and
-   * tailIdx = y + length
-   *
-   *     0                    y                      x             length
-   *     ======================----------------------====================
-   *                          ^                      ^
-   *                          |                      |
-   *                          tail = y+length        head  = x
-   *
-   *
-   * When the buffer is full, tail - head = length
-   *
-   *     0                                                         length
-   *     ================================================================
-   *     ^                                                              ^
-   *     |                                                              |
-   *     head                                                 tail = length
-   *
-   * or
-   *
-   *     0          x                                              length
-   *     ================================================================
-   *                ^
-   *                |
-   *                |tail = x + length
-   *                |head = x
-   *
-   *
-   */
+/*
+ * This class wraps a remote storage adaptor and provides a writable stream for
+ * handling multipart upload.
 
+ *
+ * buffer layout:
+ *
+ *
+ * When buffer is empty, tailIdx = headIdx
+ *
+ *     0                                                         length
+ *     ----------------------------------------------------------------
+ *     ^
+ *     |
+ *     head = tail = 0
+ *
+ * or
+ *     0                   x                                     length
+ *     ----------------------------------------------------------------
+ *                         ^
+ *                         |
+ *                         head = tail = x
+ *
+ * When there is x bytes in the buffer and the tail index is not yet wrapped,
+ * tailIdx = headIdx + x
+ *
+ *     0                                       x                 length
+ *     ========================================------------------------
+ *     ^                                       ^
+ *     |                                       |
+ *     head                                    tail = x
+ *
+ * or
+ *
+ *     0   t                                      x+t            length
+ *     ----========================================--------------------
+ *         ^                                      ^
+ *         |                                      |
+ *         head = t                               tail = x + t
+ *
+ * When there is z bytes in the buffer and tail index is wrapped so that
+ * the content split into two parts, where the one from headIdx to the end
+ * has x bytes, and the one from the beginning to tailIdx has y bytes,
+ * satisfying that z = x + y, in such situation, headIdx = tail - x, and
+ * tailIdx = y + length
+ *
+ *     0                    y                      x             length
+ *     ======================----------------------====================
+ *                          ^                      ^
+ *                          |                      |
+ *                          tail = y+length        head  = x
+ *
+ *
+ * When the buffer is full, tail - head = length
+ *
+ *     0                                                         length
+ *     ================================================================
+ *     ^                                                              ^
+ *     |                                                              |
+ *     head                                                 tail = length
+ *
+ * or
+ *
+ *     0          x                                              length
+ *     ================================================================
+ *                ^
+ *                |
+ *                |tail = x + length
+ *                |head = x
+ *
+ *
+ */
+export class UploadStream<F extends {}, P extends {}> extends Writable {
   private readonly buffer: Buffer;
   private headIdx = 0;
   private tailIdx = 0;
@@ -86,7 +88,6 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     private name: string,
     private info: MultipartFileInfo,
     private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void,
-    private reject: (err?: any) => void,
   ) {
     super();
     this.buffer = Buffer.allocUnsafe(Math.max(adaptor.maxSimpleUploadSize, adaptor.maxPartitionedUploadSize));
@@ -100,7 +101,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     if (this.fileSize > this.buffer.length) {
       // If the file size already exceeds the limit of both simple upload and partitioned upload,
       // initiate a partitioned upload immediately
-      pudPromise = this.initMultipartUpload();
+      pudPromise = this.initMultipartUploadIfNecessary();
       this.partitionedUpload(pudPromise, chunk, callback);
       return;
     }
@@ -108,18 +109,20 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     // If the file size is less than the limit of simple upload, just write the data into the buffer
     chunk.copy(this.buffer, this.tailIdx);
     this.tailIdx += chunk.length;
-    setImmediate(callback);
+    process.nextTick(callback);
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   _destroy(error: Error | null, callback: (error?: Error | null) => void) {
     if (error) {
       if (this.initMultipartUploadPromise) {
-        this.initMultipartUploadPromise.then((p) => this.adaptor.abortPartitionedUpload(p));
+        this.initMultipartUploadPromise
+          .then((p) => this.adaptor.abortPartitionedUpload(p))
+          .then(() => callback(), callback);
+        return;
       }
-      setImmediate(callback, error);
-      // this.reject(error);
     }
+    process.nextTick(callback);
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -180,9 +183,20 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     }
   }
 
+  /**
+   * Buffer the data in memory, and upload them using partitioned upload when necessary
+   *
+   * @param pudPromise A promise that resolves to a partitioned upload descriptor
+   * @param chunk The incoming data need to be buffered or uploaded
+   * @param callback The callback function
+   * @private
+   */
   private partitionedUpload(pudPromise: Promise<P>, chunk: Buffer, callback: (error?: Error | null) => void) {
-    // Check if it should perform a partitioned upload first
-    this.uploadIfNecessary(pudPromise);
+    // The overall strategy is to first fill the buffer, when the size of buffered content exceeds the limit of
+    // a partitioned upload, perform a partitioned upload, then continue to fill the buffer.
+    // While creating the stream immediately and fill the stream when new chunk comes is more efficient, it's not always
+    // possible because some remote storage services requires the size of each partition to be known in advance.
+
     if (chunk.length > 0 && this.tailIdx - this.headIdx < this.buffer.length) {
       // First try to fill the buffer to the end
       if (this.tailIdx < this.buffer.length) {
@@ -209,15 +223,21 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
 
     this.uploadIfNecessary(pudPromise);
 
-    if (chunk.length === 0) {
-      setImmediate(callback);
-    } else {
-      this.promiseQueue = this.promiseQueue.then(() => {
+    this.promiseQueue = this.promiseQueue.then(() => {
+      if (chunk.length === 0) {
+        callback();
+      } else {
         this.partitionedUpload(pudPromise, chunk, callback);
-      }, this.destroy.bind(this));
-    }
+      }
+    }, callback);
   }
 
+  /**
+   * Upload the content in the buffer via partitioned upload if necessary
+   *
+   * @param pudPromise A promise that resolves to a partitioned upload descriptor
+   * @private
+   */
   private uploadIfNecessary(pudPromise: Promise<P>) {
     while (this.tailIdx - this.uploadIdx >= this.adaptor.maxPartitionedUploadSize) {
       const prevUploadIdx = this.uploadIdx;
@@ -237,25 +257,19 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
       this.promiseQueue = this.promiseQueue
         .then(() => pudPromise)
         .then((p) => {
-          return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(
-            () => {
-              // It's possible that the currentUploadIdx is greater than the buffer length, and we need to keep
-              // headIdx < buffer.length
-              this.headIdx =
-                currentUploadIdx > this.buffer.length ? currentUploadIdx - this.buffer.length : currentUploadIdx;
+          return this.adaptor.uploadPartition(p, readable, this.adaptor.maxPartitionedUploadSize).then(() => {
+            // It's possible that the currentUploadIdx is greater than the buffer length, and we need to keep
+            // headIdx < buffer.length
+            this.headIdx =
+              currentUploadIdx > this.buffer.length ? currentUploadIdx - this.buffer.length : currentUploadIdx;
 
-              // When and only when the head index is just wrapped around, we can adjust them by minus the buffer length
-              if (currentUploadIdx >= this.buffer.length && prevUploadIdx < this.buffer.length) {
-                this.headIdx = currentUploadIdx - this.buffer.length;
-                this.tailIdx -= this.buffer.length;
-                this.uploadIdx -= this.buffer.length;
-              }
-            },
-            (e) => {
-              this.destroy(e);
-              throw e;
-            },
-          );
+            // When and only when the head index is just wrapped around, we can adjust them by minus the buffer length
+            if (currentUploadIdx >= this.buffer.length && prevUploadIdx < this.buffer.length) {
+              this.headIdx = currentUploadIdx - this.buffer.length;
+              this.tailIdx -= this.buffer.length;
+              this.uploadIdx -= this.buffer.length;
+            }
+          });
         });
     }
   }
@@ -266,14 +280,12 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
    * Multiple calls to this method will return the same promise
    * @private
    */
-  private initMultipartUpload(): Promise<P> {
+  private initMultipartUploadIfNecessary(): Promise<P> {
     if (this.initMultipartUploadPromise) {
       return this.initMultipartUploadPromise;
     }
-    this.initMultipartUploadPromise = this.promiseQueue = this.promiseQueue.then(() =>
-      this.adaptor.beginPartitionedUpload(this.name, this.info).catch((e) => {
-        this.destroy(e);
-      }),
+    this.initMultipartUploadPromise = this.promiseQueue.then(() =>
+      this.adaptor.beginPartitionedUpload(this.name, this.info),
     );
     return this.initMultipartUploadPromise;
   }
