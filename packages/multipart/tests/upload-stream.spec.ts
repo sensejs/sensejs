@@ -3,6 +3,7 @@ import {MultipartFileEntry, MultipartFileInfo} from '../src/index.js';
 import stream, {pipeline, Readable} from 'stream';
 import crypto, {randomUUID} from 'crypto';
 import {UploadStream} from '../src/upload-stream.js';
+import {jest} from '@jest/globals';
 
 async function readStreamAsBuffer(input: NodeJS.ReadableStream) {
   const buffers: Buffer[] = [];
