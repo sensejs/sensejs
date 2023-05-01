@@ -87,7 +87,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     private readonly adaptor: RemoteStorageAdaptor<F, P>,
     private name: string,
     private info: MultipartFileInfo,
-    private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void,
+    private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void, // private reject: (err?: unknown) => void,
   ) {
     super();
     this.buffer = Buffer.allocUnsafe(Math.max(adaptor.maxSimpleUploadSize, adaptor.maxPartitionedUploadSize));
@@ -115,10 +115,15 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   _destroy(error: Error | null, callback: (error?: Error | null) => void) {
     if (error) {
+      // It needs to be emitted immediately, otherwise it could be overridden by a NodeError("Premature close")
+      // when using in a pipeline, on Node.js prior to v18
+      this.emit('error', error);
       if (this.initMultipartUploadPromise) {
         this.initMultipartUploadPromise
           .then((p) => this.adaptor.abortPartitionedUpload(p))
-          .then(() => callback(), callback);
+          .then(() => {
+            callback();
+          }, callback);
         return;
       }
     }
