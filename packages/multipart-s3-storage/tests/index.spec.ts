@@ -5,13 +5,6 @@ import {randomBytes, randomUUID} from 'crypto';
 import {MultipartFileRemoteStorage} from '@sensejs/multipart';
 import {S3StorageAdaptor} from '../src/index.js';
 import {Readable} from 'stream';
-import * as fs from 'fs';
-import * as module from 'node:module';
-
-const require = module.default.createRequire(import.meta.url);
-
-const corsConfig = require.resolve('s3rver/example/cors.xml');
-const websiteConfig = require.resolve('s3rver/example/website.xml');
 
 describe('MultipartS3Storage', () => {
   let port = 0;
@@ -33,7 +26,6 @@ describe('MultipartS3Storage', () => {
         directory: os.tmpdir(),
         port: 0,
         vhostBuckets: true,
-        configureBuckets: [{name: bucket, configs: [fs.readFileSync(corsConfig), fs.readFileSync(websiteConfig)]}],
         silent: true,
       });
       mockS3Server.run().then((address) => {
