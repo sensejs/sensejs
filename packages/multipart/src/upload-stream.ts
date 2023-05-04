@@ -141,65 +141,11 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
         .then(async () => {
           const p = await initMultipartUploadPromise;
           const remaining = this.tailIdx - this.headIdx;
-          if (remaining === 0) {
-            const result = await this.adaptor.finishPartitionedUpload(p);
-            this.resolve({
-              type: 'file',
-              name: this.name,
-              size: this.fileSize,
-              content: () => this.adaptor.createReadStream(result),
-              mimeType: this.info.mimeType,
-              filename: this.info.filename,
-              transferEncoding: this.info.transferEncoding,
-            });
-            return;
+          if (remaining > 0) {
+            const readable = this.createStreamForPartitionedUpload(remaining);
+            await this.adaptor.uploadPartition(p, readable, remaining);
           }
-          const chunkIndexes: [number, number][] = [];
-          let currentUploadIdx = this.headIdx;
-          const end = this.tailIdx;
-          while (currentUploadIdx < end && currentUploadIdx < this.buffer.length) {
-            const nextUploadIdx = Math.min(
-              currentUploadIdx + this.adaptor.partitionedUploadChunkLimit,
-              end,
-              this.tailIdx,
-              this.buffer.length,
-            );
-            chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-            currentUploadIdx = nextUploadIdx;
-          }
-
-          while (currentUploadIdx < end && currentUploadIdx >= this.buffer.length) {
-            const nextUploadIdx = Math.min(
-              currentUploadIdx + this.adaptor.partitionedUploadChunkLimit,
-              end,
-              this.tailIdx,
-            );
-            chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-            currentUploadIdx = nextUploadIdx;
-          }
-          const readable = Readable.from(
-            async function* (this: UploadStream<F, P>) {
-              for (const [start, end] of chunkIndexes) {
-                if (end < this.buffer.length) {
-                  yield this.buffer.slice(start, end);
-                  this.headIdx = end;
-                } else if (end > this.buffer.length) {
-                  yield this.buffer.slice(start - this.buffer.length, end - this.buffer.length);
-                  this.headIdx = end - this.buffer.length;
-                } else if (end === this.buffer.length) {
-                  yield this.buffer.slice(start);
-                  this.headIdx = 0;
-                  this.tailIdx -= this.buffer.length;
-                  this.uploadIdx -= this.buffer.length;
-                }
-              }
-            }.apply(this),
-          );
-
-          await this.adaptor.uploadPartition(p, readable, remaining);
-
           const result = await this.adaptor.finishPartitionedUpload(p);
-
           this.resolve({
             type: 'file',
             name: this.name,
@@ -209,6 +155,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
             filename: this.info.filename,
             transferEncoding: this.info.transferEncoding,
           });
+          return;
         })
         .then(() => {
           callback();
@@ -228,6 +175,51 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
         callback();
       }, callback);
     }
+  }
+
+  private createStreamForPartitionedUpload(size: number = this.adaptor.partitionedUploadSizeLimit) {
+    let currentUploadIdx = this.uploadIdx;
+    const chunkIndexes: [number, number][] = [];
+    const end = this.uploadIdx + size;
+    while (currentUploadIdx < end && currentUploadIdx < this.buffer.length) {
+      const nextUploadIdx = Math.min(
+        currentUploadIdx + this.adaptor.partitionedUploadChunkLimit,
+        end,
+        this.tailIdx,
+        this.buffer.length,
+      );
+      chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
+      currentUploadIdx = nextUploadIdx;
+    }
+
+    while (currentUploadIdx < end && currentUploadIdx >= this.buffer.length) {
+      const nextUploadIdx = Math.min(currentUploadIdx + size, end, this.tailIdx);
+      chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
+      currentUploadIdx = nextUploadIdx;
+    }
+    this.uploadIdx = currentUploadIdx;
+
+    const readable = Readable.from(
+      async function* (this: UploadStream<F, P>) {
+        for (const [start, end] of chunkIndexes) {
+          if (end < this.buffer.length) {
+            yield this.buffer.slice(start, end);
+            this.headIdx = end;
+          } else if (end > this.buffer.length) {
+            yield this.buffer.slice(start - this.buffer.length, end - this.buffer.length);
+            this.headIdx = end - this.buffer.length;
+          } else if (end === this.buffer.length) {
+            yield this.buffer.slice(start);
+            this.headIdx = 0;
+            this.tailIdx -= this.buffer.length;
+            this.uploadIdx -= this.buffer.length;
+          }
+        }
+      }.apply(this),
+    );
+
+    this.uploadIdx = currentUploadIdx;
+    return readable;
   }
 
   /**
@@ -289,47 +281,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
    */
   private uploadIfNecessary(pudPromise: Promise<P>) {
     while (this.tailIdx - this.uploadIdx >= this.adaptor.partitionedUploadSizeLimit) {
-      let currentUploadIdx = this.uploadIdx;
-      const chunkIndexes: [number, number][] = [];
-      const end = this.uploadIdx + this.adaptor.partitionedUploadChunkLimit;
-      while (currentUploadIdx < end && currentUploadIdx < this.buffer.length) {
-        const nextUploadIdx = Math.min(
-          currentUploadIdx + this.adaptor.partitionedUploadChunkLimit,
-          end,
-          this.tailIdx,
-          this.buffer.length,
-        );
-        chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-        currentUploadIdx = nextUploadIdx;
-      }
-
-      while (currentUploadIdx < end && currentUploadIdx >= this.buffer.length) {
-        const nextUploadIdx = Math.min(currentUploadIdx + this.adaptor.partitionedUploadChunkLimit, end, this.tailIdx);
-        chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-        currentUploadIdx = nextUploadIdx;
-      }
-      this.uploadIdx = currentUploadIdx;
-
-      const readable = Readable.from(
-        async function* (this: UploadStream<F, P>) {
-          for (const [start, end] of chunkIndexes) {
-            if (end < this.buffer.length) {
-              yield this.buffer.slice(start, end);
-              this.headIdx = end;
-            } else if (end > this.buffer.length) {
-              yield this.buffer.slice(start - this.buffer.length, end - this.buffer.length);
-              this.headIdx = end - this.buffer.length;
-            } else if (end === this.buffer.length) {
-              yield this.buffer.slice(start);
-              this.headIdx = 0;
-              this.tailIdx -= this.buffer.length;
-              this.uploadIdx -= this.buffer.length;
-            }
-          }
-        }.apply(this),
-      );
-
-      this.uploadIdx = currentUploadIdx;
+      const readable = this.createStreamForPartitionedUpload();
       this.promiseQueue = this.promiseQueue
         .then(() => pudPromise)
         .then((p) => {
