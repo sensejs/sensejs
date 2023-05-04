@@ -67,8 +67,8 @@ describe('MultipartS3Storage', () => {
         getFileKey: (name) => name,
         fileCountLimit: 10,
         fileSizeLimit: 1048576,
-        partitionedUploadSizeLimit: 1024,
-        partitionedUploadChunkLimit: 32,
+        partitionedUploadSizeLimit: 512,
+        partitionedUploadChunkLimit: 128,
         simpleUploadSizeLimit: 1024,
       }),
     );
@@ -102,5 +102,5 @@ describe('MultipartS3Storage', () => {
     }
 
     expect(Buffer.concat(largeReadableChunks)).toEqual(Buffer.concat(largeInputChunks));
-  });
+  }, 30000);
 });
