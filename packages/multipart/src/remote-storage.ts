@@ -10,7 +10,7 @@ import {RemoteStorageAdaptor} from './remote-storage-adaptor.js';
  * so we have to buffer the content and decide whether to perform a partitioned upload or a simple upload when there
  * is enough content buffered.
  *
- * The overall strategy is, allocating a buffer with size of `max(maxSimpleUploadSize, maxPartitionedUploadSize)`,
+ * The overall strategy is, allocating a buffer with size of `max(simpleUploadSizeLimit, partitionedUploadSizeLimit)`,
  * and then fill the buffer until end of stream or the buffer is full. If the file ended before the buffer is full,
  * just perform a simple upload, otherwise we have to perform a partitioned upload.
  *
@@ -19,19 +19,19 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
   private readonly adaptor: RemoteStorageAdaptor<any, any>;
   public readonly fileCountLimit: number;
   public readonly fileSizeLimit: number;
-  private readonly maxSimpleUploadSize;
-  private readonly maxPartitionedUploadSize;
+  private readonly simpleUploadSizeLimit;
+  private readonly partitionedUploadSizeLimit;
 
   constructor(adaptor: RemoteStorageAdaptor<any, any>) {
     this.adaptor = adaptor;
-    this.maxSimpleUploadSize = adaptor.maxSimpleUploadSize;
-    if (this.maxSimpleUploadSize <= 0) {
+    this.simpleUploadSizeLimit = adaptor.simpleUploadSizeLimit;
+    if (this.simpleUploadSizeLimit <= 0) {
       throw new Error('Illegal max simple upload size, must be a positive integer');
     }
 
-    this.maxPartitionedUploadSize = adaptor.maxPartitionedUploadSize;
+    this.partitionedUploadSizeLimit = adaptor.partitionedUploadSizeLimit;
 
-    if (this.maxPartitionedUploadSize <= 0) {
+    if (this.partitionedUploadSizeLimit <= 0) {
       throw new Error('Illegal max partitioned upload size, must be a positive integer');
     }
 

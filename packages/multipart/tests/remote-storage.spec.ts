@@ -15,8 +15,9 @@ import path from 'path';
 class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHandle> {
   fileCountLimit: number = 10;
   fileSizeLimit: number = 1024;
-  maxPartitionedUploadSize: number = 1024;
-  maxSimpleUploadSize: number = 1024;
+  partitionedUploadChunkLimit: number = 128;
+  partitionedUploadSizeLimit: number = 1024;
+  simpleUploadSizeLimit: number = 1024;
 
   private filenameToPathMap: Map<string, string> = new Map(); // filename -> filepath
   private fileHandleToPathMap: WeakMap<fsp.FileHandle, string> = new WeakMap();
@@ -85,10 +86,10 @@ describe('RemoteStorage', () => {
     badAdapter.fileSizeLimit = 0;
     expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
     badAdapter.fileSizeLimit = 1024;
-    badAdapter.maxPartitionedUploadSize = 0;
+    badAdapter.partitionedUploadSizeLimit = 0;
     expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
-    badAdapter.maxPartitionedUploadSize = 1024;
-    badAdapter.maxSimpleUploadSize = 0;
+    badAdapter.partitionedUploadSizeLimit = 1024;
+    badAdapter.simpleUploadSizeLimit = 0;
     expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
   });
   test('upload', async () => {
