@@ -445,7 +445,7 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
 
-  packages/multipart-s3-storage:
+  packages/multipart-s3-adaptor:
     dependencies:
       '@aws-sdk/client-s3':
         specifier: ^3.326.0
