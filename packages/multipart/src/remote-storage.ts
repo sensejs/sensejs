@@ -3,21 +3,6 @@ import {pipeline} from 'stream';
 import {UploadStream} from './upload-stream.js';
 import {RemoteStorageAdaptor} from './remote-storage-adaptor.js';
 
-export interface RemoteStorageOption {
-  /**
-   * The maximum file size can be uploaded using `RemoteStorageAdaptor.upload`
-   */
-  maxSimpleUploadFileSize?: number;
-  /**
-   * The maximum partition size can be uploaded using `RemoteStorageAdaptor.uploadPartition`
-   */
-  partitionedUploadBufferSize?: number;
-
-  fileCountLimit?: number;
-
-  fileSizeLimit?: number;
-}
-
 /**
  * Remote storage for multipart file upload
  *
@@ -30,16 +15,14 @@ export interface RemoteStorageOption {
  * just perform a simple upload, otherwise we have to perform a partitioned upload.
  *
  */
-export class RemoteStorage implements MultipartFileStorage<() => NodeJS.ReadableStream> {
+export class MultipartFileRemoteStorage implements MultipartFileStorage<() => NodeJS.ReadableStream> {
   private readonly adaptor: RemoteStorageAdaptor<any, any>;
-  private saveFilePromise: Promise<void> | null = null;
   public readonly fileCountLimit: number;
   public readonly fileSizeLimit: number;
   private readonly maxSimpleUploadSize;
   private readonly maxPartitionedUploadSize;
-  private fileCount = 0;
 
-  constructor(adaptor: RemoteStorageAdaptor<any, any>, option: RemoteStorageOption = {}) {
+  constructor(adaptor: RemoteStorageAdaptor<any, any>) {
     this.adaptor = adaptor;
     this.maxSimpleUploadSize = adaptor.maxSimpleUploadSize;
     if (this.maxSimpleUploadSize <= 0) {
@@ -74,6 +57,7 @@ export class RemoteStorage implements MultipartFileStorage<() => NodeJS.Readable
       const writable = new UploadStream(this.adaptor, name, info, resolve);
       pipeline(file, writable, (e) => {
         if (e) {
+          // istanbul ignore next
           return reject(e);
         }
       });
