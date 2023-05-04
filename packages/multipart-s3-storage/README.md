@@ -1,10 +1,8 @@
 
-# High-level Multipart Body Parser
+# The S3 Storage Adaptor for `@sensejs/multipart` (experimental)
 
-This package, `@sensejs/multipart`, provides a high-level multipart body parser
-based on `@fastify/busboy` that supports custom storage provider and back
-pressure. It does not depend on any other part of SenseJS, and can be used
-standalone with any other HTTP framework.
+This package, `@sensejs/multipart-s3-adaptor`, provides an experimental S3 storage adaptor
+for `@sensejs/multipart`, based on the official AWS SDK v3 for Javascript.
 
 
 ## Usage
@@ -26,50 +24,18 @@ you can just call `await multipart.read()` instead, which will by default to
 an instance of `MultipartFileMemoryStorage` that stores files in memory.
 
 If you want to handle large files and persist them on a remote storage, you should
-implement a custom storage provider that implements `MultipartFileStorage`, and
-it may look like this:
+implement a custom storage adaptor that derives from `RemoteStorageAdaptor`, and
+use it with `MultipartFileRemoteStorage`.
 
 ```typescript
 
+const [multipart, cleanup] = Multipart.from(req, req.headers);
 
-class RemoteStorage implements MultipartFileStorage<() => Promise<stream.Readable>> {
-  async saveMultipartFile(name: string,
-                          file: NodeJS.ReadableStream,
-                          info: MultipartFileInfo): Promise<MultipartFileEntry<()=> Promsie<NodeJS.ReadableStream>>> {
-
-    // Upload file to a remote storage, e.g.. S3
-    const storageId = await uploadToRemoteStorageSomehow(file);
-    return {
-      // Unlike memory storage or disk storage that save content on local, creating a readable stream
-      // for it can be expensive, so it would be better to provide a lazy loading function instead.
-      content: async () => {
-        // Creating a readable stream on demand
-        const yourStream = await createRemoteStorageStreamSomeHow(storageId);
-
-        // Don't forget to add such stream to cleanup list, it would be better not to rely on
-        // end user to do cleanup
-        this.cleanupList.push(yourStream);
-
-        return yourStream;
-      },
-      type: 'file',
-      name,
-      filename: info.filename,
-
-      size: someSize,
-      mimeType: info.mimeType,
-      transferEncoding: info.transferEncoding,
-    };
-  }
-  async cleanup(file: MultipartFile): Promise<void> {
-
-    // Cleanup all streams created by this storage, otherwises they will leak
-    for (const stream of this.cleanupList) {
-      stream.destroy();
-    }
-
-  }
+try {
+  const records = await multipart.read(new MultipartFileRemoteStorage(new YourRemoteStorageAdaptor()));
+} finally {
+  // It will invoke the cleanup method provided by your adaptor
+  await cleanup();
 }
-
 ```
 

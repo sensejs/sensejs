@@ -6,15 +6,57 @@ import {CreateMultipartUploadCommandOutput, S3, S3ClientConfig} from '@aws-sdk/c
 const DEFAULT_SIMPLE_UPLOAD_SIZE_LIMIT = 32 * 1024 * 1024;
 const DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT = 16 * 1024 * 1024;
 const DEFAULT_PARTITIONED_UPLOAD_CHUNK_LIMIT = 4096;
+const DEFAULT_FILE_COUNT_LIMIT = 1024;
+const S3_MULTIPART_UPLOAD_PART_COUNT_LIMIT = 10000;
 
 export interface S3StorageAdaptorOptions {
   s3Config: S3ClientConfig;
   s3Bucket: string;
-  fileCountLimit: number;
-  fileSizeLimit: number;
+  /**
+   * Maximum number of files allowed to upload allowed per request
+   */
+  fileCountLimit?: number;
+  /**
+   * Maximum size of a file
+   *
+   * Default to 10000 * partitionedUploadSizeLimit(default to 16MB) = 160GB,
+   * where 10000 is the maximum number of parts allowed by a S3 multipart upload.
+   */
+  fileSizeLimit?: number;
+
+  /**
+   * Maximum size of a file that will be uploaded using simple upload
+   *
+   * @default 32 * 1024 * 1024
+   *
+   * A file larger than this size will be uploaded using partitioned upload
+   */
   simpleUploadSizeLimit?: number;
+
+  /**
+   * Maximum partition size
+   *
+   * @default 16 * 1024 * 1024
+   */
   partitionedUploadSizeLimit?: number;
+  /**
+   * Maximum chunk of buffer that will be written to the partitioned upload stream
+   *
+   * When writing data into the partitioned upload stream, the data will be
+   * split into chunks of this size. To avoid additional memory allocation,
+   * the space of each chunk will be reused immediately after it's written to
+   * the partitioned upload stream, instead of waiting for the whole partition
+   * to be uploaded, which may stuck the writing side for a long time.
+   *
+   * The default value is 4096.
+   */
   partitionedUploadChunkLimit?: number;
+
+  /**
+   * The function to generate the key of the file to be uploaded
+   * @param name
+   * @param fileInfo
+   */
   getFileKey: (name: string, fileInfo: MultipartFileInfo) => string;
 }
 
@@ -40,11 +82,12 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
 
   constructor(options: S3StorageAdaptorOptions) {
     super();
-    this.fileCountLimit = options.fileCountLimit;
-    this.fileSizeLimit = options.fileSizeLimit;
     this.simpleUploadSizeLimit = options.simpleUploadSizeLimit ?? DEFAULT_SIMPLE_UPLOAD_SIZE_LIMIT;
     this.partitionedUploadSizeLimit = options.partitionedUploadChunkLimit ?? DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT;
     this.partitionedUploadChunkLimit = options.partitionedUploadChunkLimit ?? DEFAULT_PARTITIONED_UPLOAD_CHUNK_LIMIT;
+    this.fileCountLimit = options.fileCountLimit ?? DEFAULT_FILE_COUNT_LIMIT;
+    this.fileSizeLimit =
+      options.fileSizeLimit ?? S3_MULTIPART_UPLOAD_PART_COUNT_LIMIT * this.partitionedUploadSizeLimit;
     this.s3Config = options.s3Config;
     this.s3Bucket = options.s3Bucket;
     this.getFileKey = options.getFileKey;
