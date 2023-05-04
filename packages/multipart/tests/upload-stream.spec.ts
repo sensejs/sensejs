@@ -54,9 +54,10 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
   readonly finishPartitionedUploadStub = jest.fn();
 
   constructor(
-    readonly maxSimpleUploadSize: number = 32,
-    readonly maxPartitionedUploadSize: number = 16,
+    readonly simpleUploadSizeLimit: number = 32,
+    readonly partitionedUploadSizeLimit: number = 16,
     private consumeDelay: number = 0,
+    readonly partitionedUploadChunkLimit: number = 8,
   ) {
     super();
   }

@@ -3,13 +3,18 @@ import * as stream from 'stream';
 import {Readable} from 'stream';
 import {CreateMultipartUploadCommandOutput, S3, S3ClientConfig} from '@aws-sdk/client-s3';
 
+const DEFAULT_SIMPLE_UPLOAD_SIZE_LIMIT = 32 * 1024 * 1024;
+const DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT = 16 * 1024 * 1024;
+const DEFAULT_PARTITIONED_UPLOAD_CHUNK_LIMIT = 4096;
+
 export interface S3StorageAdaptorOptions {
   s3Config: S3ClientConfig;
   s3Bucket: string;
   fileCountLimit: number;
   fileSizeLimit: number;
-  maxSimpleUploadSize: number;
-  maxPartitionedUploadSize: number;
+  simpleUploadSizeLimit?: number;
+  partitionedUploadSizeLimit?: number;
+  partitionedUploadChunkLimit?: number;
   getFileKey: (name: string, fileInfo: MultipartFileInfo) => string;
 }
 
@@ -24,8 +29,9 @@ interface S3MultipartUploadState {
 export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUploadState> {
   readonly fileCountLimit: number;
   readonly fileSizeLimit: number;
-  readonly maxPartitionedUploadSize: number;
-  readonly maxSimpleUploadSize: number;
+  readonly partitionedUploadSizeLimit: number;
+  readonly partitionedUploadChunkLimit: number;
+  readonly simpleUploadSizeLimit: number;
   private readonly s3Client: S3;
   private readonly s3Config: S3ClientConfig;
   private readonly s3Bucket: string;
@@ -36,8 +42,9 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     super();
     this.fileCountLimit = options.fileCountLimit;
     this.fileSizeLimit = options.fileSizeLimit;
-    this.maxSimpleUploadSize = options.maxSimpleUploadSize;
-    this.maxPartitionedUploadSize = options.maxPartitionedUploadSize;
+    this.simpleUploadSizeLimit = options.simpleUploadSizeLimit ?? DEFAULT_SIMPLE_UPLOAD_SIZE_LIMIT;
+    this.partitionedUploadSizeLimit = options.partitionedUploadChunkLimit ?? DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT;
+    this.partitionedUploadChunkLimit = options.partitionedUploadChunkLimit ?? DEFAULT_PARTITIONED_UPLOAD_CHUNK_LIMIT;
     this.s3Config = options.s3Config;
     this.s3Bucket = options.s3Bucket;
     this.getFileKey = options.getFileKey;
