@@ -178,6 +178,7 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
       PartNumber: partNumber,
       ContentLength: size,
     });
+    // eslint-disable-next-line
     pud.eTags.push(result.ETag!);
   }
 }
