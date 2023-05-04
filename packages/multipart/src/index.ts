@@ -11,6 +11,7 @@ export * from './in-memory-storage.js';
 export * from './disk-storage.js';
 export * from './types.js';
 export * from './remote-storage.js';
+export * from './remote-storage-adaptor.js';
 
 export interface MultipartOptions {
   /**

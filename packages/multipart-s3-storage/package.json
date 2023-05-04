@@ -1,0 +1,45 @@
+{
+  "name": "@sensejs/multipart-s3-storage",
+  "version": "0.11.0",
+  "description": "",
+  "files": [
+    "dist-cjs/**/!(*.tsbuildinfo)",
+    "dist-esm/**/!(*.tsbuildinfo)",
+    "dist-dts/**/!(*.tsbuildinfo)",
+    "src/**/*.ts",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "type": "module",
+  "types": "./dist-dts/lib/index.d.ts",
+  "main": "./dist-cjs/lib/index.js",
+  "module": "./dist-esm/lib/index.js",
+  "exports": {
+    "types": "./dist-dts/index.d.ts",
+    "import": "./dist-esm/lib/index.js",
+    "require": "./dist-cjs/lib/index.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "build": "tsc -p tsconfig.build-cjs.json && tsc -p tsconfig.build-esm.json && tsc -p tsconfig.build-dts.json",
+    "prepublishOnly": "npm run clean && npm run build",
+    "clean": "rm -rf ./dist-esm/lib dist-cjs/lib dist-dts"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.326.0"
+  },
+  "peerDependencies": {
+    "@sensejs/multipart": "workspace:^"
+  },
+  "devDependencies": {
+    "@sensejs/multipart": "workspace:^",
+    "@sensejs/testing-utility": "workspace:*",
+    "@types/s3rver": "^3.7.0",
+    "s3rver": "^3.7.1"
+  },
+  "author": "LAN Xingcan",
+  "license": "ISC"
+}
