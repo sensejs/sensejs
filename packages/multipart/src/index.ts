@@ -42,7 +42,6 @@ export class Multipart {
   static readonly maxFileSize = 16 * 1024 * 1024;
   static readonly maxFileCount = 5;
 
-  // #fileHandler: MultipartFileStorage = new MultipartFileMemoryHandler(MultipartReader.maxFileSize);
   private readonly inputStream: stream.Readable;
   private readonly headers: busboy.BusboyHeaders;
   private readonly options: MultipartOptions;
