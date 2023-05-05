@@ -1,10 +1,9 @@
-import {describe, jest, test} from '@jest/globals';
-import {RemoteStorageAdaptor} from '../src/remote-storage-adaptor.js';
+import {describe, expect, test} from '@jest/globals';
 import fsp from 'fs/promises';
-import {MultipartFileInfo, MultipartFileRemoteStorage} from '../src/index.js';
+import {MultipartFileInfo, MultipartFileRemoteStorage, RemoteStorageAdaptor} from '../src/index.js';
 import {Readable} from 'stream';
 import fs from 'fs';
-import crypto, {randomUUID} from 'crypto';
+import crypto, {Hash, randomUUID} from 'crypto';
 import os from 'os';
 import path from 'path';
 
@@ -30,6 +29,10 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
     if (filePath) {
       await fsp.rm(filePath);
     }
+  }
+
+  createChecksumCalculator(): Hash | null {
+    return crypto.createHash('crc32c');
   }
 
   async beginPartitionedUpload(name: string, info: MultipartFileInfo): Promise<fsp.FileHandle> {
@@ -70,10 +73,20 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
     return filePath;
   }
 
-  async uploadPartition(pud: fsp.FileHandle, readable: Readable, size: number): Promise<void> {
+  async uploadPartition(
+    pud: fsp.FileHandle,
+    readable: Readable,
+    size: number,
+    checksumCalculator: Hash | null,
+  ): Promise<void> {
+    const precalculatedChecksum = checksumCalculator?.digest('base64') ?? null;
+    const checksumCalculator2 = this.createChecksumCalculator();
     for await (const chunk of readable) {
+      checksumCalculator2?.update(chunk);
       await pud.write(chunk);
     }
+    const checksum = checksumCalculator2?.digest('base64') ?? null;
+    expect(checksum).toEqual(precalculatedChecksum);
   }
 }
 
