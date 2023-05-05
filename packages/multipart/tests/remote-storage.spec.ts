@@ -1,4 +1,4 @@
-import {describe, jest, test} from '@jest/globals';
+import {describe, expect, test} from '@jest/globals';
 import fsp from 'fs/promises';
 import {MultipartFileInfo, MultipartFileRemoteStorage, RemoteStorageAdaptor} from '../src/index.js';
 import {Readable} from 'stream';
@@ -73,10 +73,20 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
     return filePath;
   }
 
-  async uploadPartition(pud: fsp.FileHandle, readable: Readable, size: number): Promise<void> {
+  async uploadPartition(
+    pud: fsp.FileHandle,
+    readable: Readable,
+    size: number,
+    checksumCalculator: Hash | null,
+  ): Promise<void> {
+    const precalculatedChecksum = checksumCalculator?.digest('base64') ?? null;
+    const checksumCalculator2 = this.createChecksumCalculator();
     for await (const chunk of readable) {
+      checksumCalculator2?.update(chunk);
       await pud.write(chunk);
     }
+    const checksum = checksumCalculator2?.digest('base64') ?? null;
+    expect(checksum).toEqual(precalculatedChecksum);
   }
 }
 

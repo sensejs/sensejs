@@ -183,31 +183,38 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     let currentUploadIdx = this.uploadIdx;
     const chunkIndexes: [number, number][] = [];
     const end = this.uploadIdx + size;
-    while (currentUploadIdx < end && currentUploadIdx < this.buffer.length) {
-      const nextUploadIdx = Math.min(
-        currentUploadIdx + this.adaptor.partitionedUploadChunkLimit,
-        end,
-        this.tailIdx,
-        this.buffer.length,
-      );
+    if (currentUploadIdx < this.buffer.length) {
       if (checksumCalculator !== null) {
-        checksumCalculator.update(this.buffer.slice(currentUploadIdx, nextUploadIdx));
+        checksumCalculator.update(this.buffer.slice(currentUploadIdx, Math.min(end, this.buffer.length)));
       }
-      chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-      currentUploadIdx = nextUploadIdx;
+      while (currentUploadIdx < end && currentUploadIdx < this.buffer.length) {
+        const nextUploadIdx = Math.min(
+          currentUploadIdx + this.adaptor.partitionedUploadChunkLimit,
+          end,
+          this.tailIdx,
+          this.buffer.length,
+        );
+        chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
+        currentUploadIdx = nextUploadIdx;
+      }
     }
 
-    while (currentUploadIdx < end && currentUploadIdx >= this.buffer.length) {
-      const nextUploadIdx = Math.min(currentUploadIdx + size, end, this.tailIdx);
+    if (currentUploadIdx >= this.buffer.length) {
       if (checksumCalculator !== null) {
-        checksumCalculator.update(this.buffer.slice(currentUploadIdx, nextUploadIdx));
+        checksumCalculator.update(this.buffer.slice(currentUploadIdx - this.buffer.length, end - this.buffer.length));
       }
-      chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-      currentUploadIdx = nextUploadIdx;
+      while (currentUploadIdx < end && currentUploadIdx >= this.buffer.length) {
+        const nextUploadIdx = Math.min(currentUploadIdx + size, end, this.tailIdx);
+        chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
+        currentUploadIdx = nextUploadIdx;
+      }
     }
     this.uploadIdx = currentUploadIdx;
+    return this.createReadableFromChunkIndexes(chunkIndexes);
+  }
 
-    const readable = Readable.from(
+  private createReadableFromChunkIndexes(chunkIndexes: [number, number][]) {
+    return Readable.from(
       async function* (this: UploadStream<F, P>) {
         for (const [start, end] of chunkIndexes) {
           if (end < this.buffer.length) {
@@ -225,9 +232,6 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
         }
       }.apply(this),
     );
-
-    this.uploadIdx = currentUploadIdx;
-    return readable;
   }
 
   /**
