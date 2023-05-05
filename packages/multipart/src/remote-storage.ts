@@ -2,6 +2,7 @@ import {MultipartFileEntry, MultipartFileInfo, MultipartFileStorage} from './typ
 import {pipeline} from 'stream';
 import {UploadStream} from './upload-stream.js';
 import {RemoteStorageAdaptor} from './remote-storage-adaptor.js';
+import {MultipartLimitExceededError} from './error.js';
 
 /**
  * Remote storage for multipart file upload
@@ -21,6 +22,7 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
   public readonly fileSizeLimit: number;
   private readonly simpleUploadSizeLimit;
   private readonly partitionedUploadSizeLimit;
+  private fileCount = 0;
 
   constructor(adaptor: RemoteStorageAdaptor<any, any>) {
     this.adaptor = adaptor;
@@ -53,6 +55,9 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
     file: NodeJS.ReadableStream,
     info: MultipartFileInfo,
   ): Promise<MultipartFileEntry<() => NodeJS.ReadableStream>> {
+    if (this.fileCount >= this.fileCountLimit) {
+      throw new MultipartLimitExceededError('File count limit exceeded');
+    }
     return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
       const writable = new UploadStream(this.adaptor, name, info, resolve);
       pipeline(file, writable, (e) => {
