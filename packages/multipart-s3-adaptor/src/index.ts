@@ -97,7 +97,11 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
 
   async beginPartitionedUpload(name: string, info: MultipartFileInfo): Promise<S3MultipartUploadState> {
     const fileKey = this.getFileKey(name, info);
-    const multipartOutput = await this.s3Client.createMultipartUpload({Bucket: this.s3Bucket, Key: fileKey});
+    const multipartOutput = await this.s3Client.createMultipartUpload({
+      Bucket: this.s3Bucket,
+      Key: fileKey,
+      ContentType: info.mimeType,
+    });
 
     return {
       fileKey,
