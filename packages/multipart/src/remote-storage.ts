@@ -20,22 +20,10 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
   private readonly adaptor: RemoteStorageAdaptor<any, any>;
   public readonly fileCountLimit: number;
   public readonly fileSizeLimit: number;
-  private readonly simpleUploadSizeLimit;
-  private readonly partitionedUploadSizeLimit;
   private fileCount = 0;
 
   constructor(adaptor: RemoteStorageAdaptor<any, any>) {
     this.adaptor = adaptor;
-    this.simpleUploadSizeLimit = adaptor.simpleUploadSizeLimit;
-    if (this.simpleUploadSizeLimit <= 0) {
-      throw new Error('Illegal max simple upload size, must be a positive integer');
-    }
-
-    this.partitionedUploadSizeLimit = adaptor.partitionedUploadSizeLimit;
-
-    if (this.partitionedUploadSizeLimit <= 0) {
-      throw new Error('Illegal max partitioned upload size, must be a positive integer');
-    }
 
     this.fileCountLimit = adaptor.fileSizeLimit;
 
