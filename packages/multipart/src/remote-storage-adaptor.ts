@@ -21,11 +21,6 @@ export abstract class RemoteStorageAdaptor<F extends {}, P extends {}> {
   abstract readonly partitionedUploadSizeLimit: number;
 
   /**
-   * THe maximum size of chunk for the readable stream that upload content to remote storage
-   */
-  abstract readonly partitionedUploadChunkLimit: number;
-
-  /**
    * The maximum number of files can be uploaded for each instance of `RemoteStorageAdaptor`
    */
   abstract readonly fileCountLimit: number;

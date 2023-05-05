@@ -195,30 +195,22 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     const chunkIndexes: [number, number][] = [];
     const end = this.uploadIdx + size;
     if (currentUploadIdx < this.buffer.length) {
+      const nextUploadIdx = Math.min(end, this.buffer.length);
+      const slice = this.buffer.slice(currentUploadIdx, nextUploadIdx);
       if (checksumCalculator !== null) {
-        checksumCalculator.update(this.buffer.slice(currentUploadIdx, Math.min(end, this.buffer.length)));
+        checksumCalculator.update(slice);
       }
-      while (currentUploadIdx < end && currentUploadIdx < this.buffer.length) {
-        const nextUploadIdx = Math.min(
-          currentUploadIdx + this.adaptor.partitionedUploadChunkLimit,
-          end,
-          this.tailIdx,
-          this.buffer.length,
-        );
-        chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-        currentUploadIdx = nextUploadIdx;
-      }
+      chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
+      currentUploadIdx = nextUploadIdx;
     }
 
-    if (currentUploadIdx >= this.buffer.length) {
+    if (currentUploadIdx >= this.buffer.length && currentUploadIdx < end) {
+      const slice = this.buffer.slice(currentUploadIdx - this.buffer.length, end - this.buffer.length);
       if (checksumCalculator !== null) {
-        checksumCalculator.update(this.buffer.slice(currentUploadIdx - this.buffer.length, end - this.buffer.length));
+        checksumCalculator.update(slice);
       }
-      while (currentUploadIdx < end && currentUploadIdx >= this.buffer.length) {
-        const nextUploadIdx = Math.min(currentUploadIdx + size, end, this.tailIdx);
-        chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
-        currentUploadIdx = nextUploadIdx;
-      }
+      chunkIndexes.push([currentUploadIdx, end]);
+      currentUploadIdx = end;
     }
     this.uploadIdx = currentUploadIdx;
     return this.createReadableFromChunkIndexes(chunkIndexes);

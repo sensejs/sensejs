@@ -68,7 +68,6 @@ describe('MultipartS3Storage', () => {
         fileCountLimit: 10,
         fileSizeLimit: 1048576,
         partitionedUploadSizeLimit: 512,
-        partitionedUploadChunkLimit: 128,
         simpleUploadSizeLimit: 1024,
       }),
     );
