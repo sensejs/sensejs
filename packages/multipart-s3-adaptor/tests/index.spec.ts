@@ -3,8 +3,9 @@ import * as os from 'os';
 import {S3} from '@aws-sdk/client-s3';
 import {randomBytes, randomUUID} from 'crypto';
 import {MultipartFileRemoteStorage} from '@sensejs/multipart';
-import {S3StorageAdaptor} from '../src/index.js';
+import {S3StorageAdaptor, S3StorageAdaptorOptions} from '../src/index.js';
 import {Readable} from 'stream';
+import * as crypto from 'crypto';
 
 describe('MultipartS3Storage', () => {
   let port = 0;
@@ -18,6 +19,22 @@ describe('MultipartS3Storage', () => {
       },
     };
   };
+
+  function getRemoteStorage(option: Partial<S3StorageAdaptorOptions>) {
+    return new MultipartFileRemoteStorage(
+      new S3StorageAdaptor({
+        s3Bucket: bucket,
+        s3Config: getS3Config(),
+        getFileKey: (name) => name,
+        fileCountLimit: 10,
+        fileSizeLimit: 1048576,
+        partitionedUploadSizeLimit: 1024,
+        simpleUploadSizeLimit: 2048,
+        ...option,
+      }),
+    );
+  }
+
   let mockS3Server: S3MockServer | null = null;
   const bucket = randomUUID();
   beforeAll(() => {
@@ -59,47 +76,58 @@ describe('MultipartS3Storage', () => {
     });
   });
 
-  test('upload', async () => {
-    const storage = new MultipartFileRemoteStorage(
-      new S3StorageAdaptor({
-        s3Bucket: bucket,
-        s3Config: getS3Config(),
-        getFileKey: (name) => name,
-        fileCountLimit: 10,
-        fileSizeLimit: 1048576,
-        partitionedUploadSizeLimit: 512,
-        simpleUploadSizeLimit: 1024,
-      }),
-    );
+  async function testSimpleUploadAndDownload(option: Partial<S3StorageAdaptorOptions>) {
+    const content = randomBytes(1024);
+    const md5 = crypto.createHash('md5').update(content).digest('base64');
+    const storage = getRemoteStorage(option);
+    try {
+      const result = await storage.saveMultipartFile(md5, Readable.from([content]), {
+        filename: md5,
+        transferEncoding: '7bit',
+        mimeType: 'application/octet-stream',
+      });
 
-    const smallInput = randomBytes(1024);
-    const largeInputChunks: Buffer[] = new Array(100).fill(randomBytes(1024));
+      const downloadBuffer = [];
 
-    const smallFileUploadResult = await storage.saveMultipartFile('small', Readable.from([smallInput]), {
-      filename: 'small.bin',
-      transferEncoding: '7bit',
-      mimeType: 'application/octet-stream',
-    });
-
-    const smallReadableChunks = [];
-
-    for await (const chunk of smallFileUploadResult.content()) {
-      smallReadableChunks.push(Buffer.from(chunk));
+      for await (const chunk of result.content()) {
+        downloadBuffer.push(Buffer.from(chunk));
+      }
+      expect(Buffer.concat(downloadBuffer)).toEqual(content);
+    } finally {
+      await storage.clean();
     }
+  }
 
-    expect(Buffer.concat(smallReadableChunks)).toEqual(smallInput);
+  async function testPartitionUploadAndDownload(option: Partial<S3StorageAdaptorOptions>) {
+    const chunk = randomBytes(1024);
+    const chunks = new Array(3).fill(null).map(() => chunk);
+    const content = Buffer.concat(chunks);
+    const md5 = crypto.createHash('md5').update(content).digest('base64');
+    const storage = getRemoteStorage(option);
+    try {
+      const result = await storage.saveMultipartFile(md5, Readable.from(chunks), {
+        filename: md5,
+        transferEncoding: '7bit',
+        mimeType: 'application/octet-stream',
+      });
+      const downloadBuffer = [];
 
-    const largeFileUploadResult = await storage.saveMultipartFile('big', Readable.from(largeInputChunks), {
-      filename: 'large.bin',
-      transferEncoding: '7bit',
-      mimeType: 'application/octet-stream',
-    });
+      for await (const chunk of result.content()) {
+        downloadBuffer.push(Buffer.from(chunk));
+      }
 
-    const largeReadableChunks = [];
-    for await (const chunk of largeFileUploadResult.content()) {
-      largeReadableChunks.push(Buffer.from(chunk));
+      expect(Buffer.concat(downloadBuffer).length).toEqual(content.length);
+      expect(Buffer.concat(downloadBuffer)).toEqual(content);
+    } finally {
+      await storage.clean();
     }
+  }
 
-    expect(Buffer.concat(largeReadableChunks)).toEqual(Buffer.concat(largeInputChunks));
-  }, 30000);
+  test('simple upload', async () => {
+    await testSimpleUploadAndDownload({});
+  });
+
+  test('partition upload', async () => {
+    await testPartitionUploadAndDownload({});
+  });
 });

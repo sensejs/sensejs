@@ -32,7 +32,7 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
   }
 
   createChecksumCalculator(): Hash | null {
-    return crypto.createHash('crc32c');
+    return crypto.createHash('SHA1');
   }
 
   async beginPartitionedUpload(name: string, info: MultipartFileInfo): Promise<fsp.FileHandle> {
