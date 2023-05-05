@@ -5,7 +5,7 @@ import {CreateMultipartUploadCommandOutput, S3, S3ClientConfig, type ChecksumAlg
 import * as crypto from 'crypto';
 
 const DEFAULT_SIMPLE_UPLOAD_SIZE_LIMIT = 32 * 1024 * 1024;
-const DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT = 16 * 1024 * 1024;
+const DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT = 32 * 1024 * 1024;
 const DEFAULT_PARTITIONED_UPLOAD_CHUNK_LIMIT = 4096;
 const DEFAULT_FILE_COUNT_LIMIT = 1024;
 const S3_MULTIPART_UPLOAD_PART_COUNT_LIMIT = 10000;
@@ -23,7 +23,7 @@ export interface S3StorageAdaptorOptions {
   /**
    * Maximum size of a file
    *
-   * Default to 10000 * partitionedUploadSizeLimit(default to 16MB) = 160GB,
+   * Default to 10000 * partitionedUploadSizeLimit(default to 32MB)
    * where 10000 is the maximum number of parts allowed by a S3 multipart upload.
    */
   fileSizeLimit?: number;
@@ -40,7 +40,7 @@ export interface S3StorageAdaptorOptions {
   /**
    * Maximum partition size
    *
-   * @default 16 * 1024 * 1024
+   * @default 32 * 1024 * 1024
    */
   partitionedUploadSizeLimit?: number;
   /**

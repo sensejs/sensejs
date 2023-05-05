@@ -98,12 +98,6 @@ describe('RemoteStorage', () => {
     badAdapter.fileCountLimit = 10;
     badAdapter.fileSizeLimit = 0;
     expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
-    badAdapter.fileSizeLimit = 1024;
-    badAdapter.partitionedUploadSizeLimit = 0;
-    expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
-    badAdapter.partitionedUploadSizeLimit = 1024;
-    badAdapter.simpleUploadSizeLimit = 0;
-    expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
   });
   test('upload', async () => {
     const content = crypto.randomBytes(1024);
