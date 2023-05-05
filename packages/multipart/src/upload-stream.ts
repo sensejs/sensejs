@@ -2,6 +2,7 @@ import stream, {Readable, Writable} from 'stream';
 import {MultipartFileEntry, MultipartFileInfo} from './types.js';
 import {RemoteStorageAdaptor} from './remote-storage-adaptor.js';
 import {Hash} from 'crypto';
+import {MultipartLimitExceededError} from './error.js';
 
 /*
  * This class wraps a remote storage adaptor and provides a writable stream for
@@ -96,6 +97,9 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   _write(chunk: Buffer, encoding: string, callback: (error?: Error | null) => void): void {
+    if (this.fileSize + chunk.length > this.adaptor.fileSizeLimit) {
+      return callback(new MultipartLimitExceededError('file size limit exceeded'));
+    }
     this.fileSize += chunk.length;
     let pudPromise: Promise<P> | null = null;
 
