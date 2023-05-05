@@ -89,14 +89,14 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     private readonly adaptor: RemoteStorageAdaptor<F, P>,
     private name: string,
     private info: MultipartFileInfo,
-    private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void, // private reject: (err?: unknown) => void,
+    private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void,
   ) {
     super();
     this.buffer = Buffer.allocUnsafe(Math.max(adaptor.simpleUploadSizeLimit, adaptor.partitionedUploadSizeLimit));
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  _write(chunk: Buffer, encoding: string, callback: (error?: Error | null) => void): void {
+  override _write(chunk: Buffer, encoding: string, callback: (error?: Error | null) => void): void {
     if (this.fileSize + chunk.length > this.adaptor.fileSizeLimit) {
       return callback(new MultipartLimitExceededError('file size limit exceeded'));
     }
@@ -118,7 +118,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  _destroy(error: Error | null, callback: (error?: Error | null) => void) {
+  override _destroy(error: Error | null, callback: (error?: Error | null) => void) {
     if (error) {
       // It needs to be emitted immediately, otherwise it could be overridden by a NodeError("Premature close")
       // when using in a pipeline, on Node.js prior to v18
@@ -136,7 +136,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  _final(callback: (error?: Error | null) => void) {
+  override _final(callback: (error?: Error | null) => void) {
     if (this.initMultipartUploadPromise) {
       // We've started a partitioned upload, wait for it to finish
 
@@ -183,6 +183,13 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     }
   }
 
+  /**
+   * Create a stream for partitioned upload
+   * @param size The size of the stream
+   * @param checksumCalculator The checksum calculator to which the data of the whole partition will be filled in for
+   * calculating checksum
+   * @private
+   */
   private createStreamForPartitionedUpload(size: number, checksumCalculator: Hash | null): stream.Readable {
     let currentUploadIdx = this.uploadIdx;
     const chunkIndexes: [number, number][] = [];
@@ -217,6 +224,11 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     return this.createReadableFromChunkIndexes(chunkIndexes);
   }
 
+  /**
+   * Create a readable stream from chunk indexes
+   * @param chunkIndexes
+   * @private
+   */
   private createReadableFromChunkIndexes(chunkIndexes: [number, number][]) {
     return Readable.from(
       async function* (this: UploadStream<F, P>) {
