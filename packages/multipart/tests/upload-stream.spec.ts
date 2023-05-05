@@ -1,7 +1,6 @@
-import {RemoteStorageAdaptor} from '../src/remote-storage-adaptor.js';
-import {MultipartFileEntry, MultipartFileInfo} from '../src/index.js';
+import {MultipartFileEntry, MultipartFileInfo, RemoteStorageAdaptor} from '../src/index.js';
 import stream, {pipeline, Readable} from 'stream';
-import crypto, {randomUUID} from 'crypto';
+import crypto, {Hash, randomUUID} from 'crypto';
 import {UploadStream} from '../src/upload-stream.js';
 import {jest} from '@jest/globals';
 
@@ -60,6 +59,10 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
     readonly partitionedUploadChunkLimit: number = 8,
   ) {
     super();
+  }
+
+  createChecksumCalculator(): Hash | null {
+    return null;
   }
 
   async upload(name: string, buffer: Buffer, info: MultipartFileInfo): Promise<string> {

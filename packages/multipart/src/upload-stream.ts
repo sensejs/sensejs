@@ -1,6 +1,7 @@
-import {Readable, Writable} from 'stream';
+import stream, {Readable, Writable} from 'stream';
 import {MultipartFileEntry, MultipartFileInfo} from './types.js';
 import {RemoteStorageAdaptor} from './remote-storage-adaptor.js';
+import {Hash} from 'crypto';
 
 /*
  * This class wraps a remote storage adaptor and provides a writable stream for
@@ -142,8 +143,9 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
           const p = await initMultipartUploadPromise;
           const remaining = this.tailIdx - this.headIdx;
           if (remaining > 0) {
-            const readable = this.createStreamForPartitionedUpload(remaining);
-            await this.adaptor.uploadPartition(p, readable, remaining);
+            const checksumCalculator = this.adaptor.createChecksumCalculator();
+            const readable = this.createStreamForPartitionedUpload(remaining, checksumCalculator);
+            await this.adaptor.uploadPartition(p, readable, remaining, checksumCalculator);
           }
           const result = await this.adaptor.finishPartitionedUpload(p);
           this.resolve({
@@ -177,7 +179,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
     }
   }
 
-  private createStreamForPartitionedUpload(size: number = this.adaptor.partitionedUploadSizeLimit) {
+  private createStreamForPartitionedUpload(size: number, checksumCalculator: Hash | null): stream.Readable {
     let currentUploadIdx = this.uploadIdx;
     const chunkIndexes: [number, number][] = [];
     const end = this.uploadIdx + size;
@@ -188,12 +190,18 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
         this.tailIdx,
         this.buffer.length,
       );
+      if (checksumCalculator !== null) {
+        checksumCalculator.update(this.buffer.slice(currentUploadIdx, nextUploadIdx));
+      }
       chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
       currentUploadIdx = nextUploadIdx;
     }
 
     while (currentUploadIdx < end && currentUploadIdx >= this.buffer.length) {
       const nextUploadIdx = Math.min(currentUploadIdx + size, end, this.tailIdx);
+      if (checksumCalculator !== null) {
+        checksumCalculator.update(this.buffer.slice(currentUploadIdx, nextUploadIdx));
+      }
       chunkIndexes.push([currentUploadIdx, nextUploadIdx]);
       currentUploadIdx = nextUploadIdx;
     }
@@ -281,11 +289,15 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
    */
   private uploadIfNecessary(pudPromise: Promise<P>) {
     while (this.tailIdx - this.uploadIdx >= this.adaptor.partitionedUploadSizeLimit) {
-      const readable = this.createStreamForPartitionedUpload();
+      const checksumCalculator = this.adaptor.createChecksumCalculator();
+      const readable = this.createStreamForPartitionedUpload(
+        this.adaptor.partitionedUploadSizeLimit,
+        checksumCalculator,
+      );
       this.promiseQueue = this.promiseQueue
         .then(() => pudPromise)
         .then((p) => {
-          return this.adaptor.uploadPartition(p, readable, this.adaptor.partitionedUploadSizeLimit);
+          return this.adaptor.uploadPartition(p, readable, this.adaptor.partitionedUploadSizeLimit, checksumCalculator);
         });
     }
   }

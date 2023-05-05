@@ -1,10 +1,9 @@
 import {describe, jest, test} from '@jest/globals';
-import {RemoteStorageAdaptor} from '../src/remote-storage-adaptor.js';
 import fsp from 'fs/promises';
-import {MultipartFileInfo, MultipartFileRemoteStorage} from '../src/index.js';
+import {MultipartFileInfo, MultipartFileRemoteStorage, RemoteStorageAdaptor} from '../src/index.js';
 import {Readable} from 'stream';
 import fs from 'fs';
-import crypto, {randomUUID} from 'crypto';
+import crypto, {Hash, randomUUID} from 'crypto';
 import os from 'os';
 import path from 'path';
 
@@ -30,6 +29,10 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
     if (filePath) {
       await fsp.rm(filePath);
     }
+  }
+
+  createChecksumCalculator(): Hash | null {
+    return crypto.createHash('crc32c');
   }
 
   async beginPartitionedUpload(name: string, info: MultipartFileInfo): Promise<fsp.FileHandle> {
