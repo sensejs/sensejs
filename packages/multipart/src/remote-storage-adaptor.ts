@@ -1,6 +1,10 @@
 import {MultipartFileInfo} from './types.js';
 import {Readable} from 'stream';
-import {Hash} from 'crypto';
+
+export interface ChecksumCalculator {
+  update(buffer: Buffer): this;
+  digest(): Buffer;
+}
 
 /**
  * A remote storage adaptor
@@ -46,7 +50,7 @@ export abstract class RemoteStorageAdaptor<F extends {}, P extends {}> {
    *
    * @returns a Hash object if checksum is enabled, otherwise null
    */
-  abstract createChecksumCalculator(): Hash | null;
+  abstract createChecksumCalculator(): ChecksumCalculator | null;
 
   /**
    * Initiate a partitioned upload for a file
@@ -62,7 +66,12 @@ export abstract class RemoteStorageAdaptor<F extends {}, P extends {}> {
    * @param size The size of this partition
    * @param checksumCalculator The checksum returned by `createChecksumCalculator`, filled with the data of this partition
    */
-  abstract uploadPartition(pud: P, readable: Readable, size: number, checksumCalculator: Hash | null): Promise<void>;
+  abstract uploadPartition(
+    pud: P,
+    readable: Readable,
+    size: number,
+    checksumCalculator: ChecksumCalculator | null,
+  ): Promise<void>;
 
   /**
    * Finish a partitioned upload

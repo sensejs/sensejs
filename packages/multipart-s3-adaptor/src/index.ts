@@ -1,7 +1,7 @@
-import {MultipartFileInfo, RemoteStorageAdaptor} from '@sensejs/multipart';
+import {MultipartFileInfo, RemoteStorageAdaptor, ChecksumCalculator} from '@sensejs/multipart';
 import * as stream from 'stream';
 import {Readable} from 'stream';
-import {CreateMultipartUploadCommandOutput, S3, S3ClientConfig, type ChecksumAlgorithm} from '@aws-sdk/client-s3';
+import {CreateMultipartUploadCommandOutput, S3, S3ClientConfig} from '@aws-sdk/client-s3';
 import * as crypto from 'crypto';
 
 const DEFAULT_SIMPLE_UPLOAD_SIZE_LIMIT = 32 * 1024 * 1024;
@@ -9,12 +9,9 @@ const DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT = 16 * 1024 * 1024;
 const DEFAULT_FILE_COUNT_LIMIT = 1024;
 const S3_MULTIPART_UPLOAD_PART_COUNT_LIMIT = 10000;
 
-export type {ChecksumAlgorithm} from '@aws-sdk/client-s3';
-
 export interface S3StorageAdaptorOptions {
   s3Config: S3ClientConfig;
   s3Bucket: string;
-  checksumAlgorithm?: ChecksumAlgorithm;
   /**
    * Maximum number of files allowed to upload allowed per request
    */
@@ -69,7 +66,6 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
   private readonly s3Bucket: string;
   private readonly getFileKey: (name: string, fileInfo: MultipartFileInfo) => string;
   private readonly openedStreams = new Set<Readable>();
-  private readonly checksumAlgorithm: ChecksumAlgorithm | undefined;
 
   constructor(options: S3StorageAdaptorOptions) {
     super();
@@ -81,7 +77,6 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     this.s3Config = options.s3Config;
     this.s3Bucket = options.s3Bucket;
     this.getFileKey = options.getFileKey;
-    this.checksumAlgorithm = options.checksumAlgorithm;
     this.s3Client = new S3({
       ...options.s3Config,
     });
@@ -113,11 +108,8 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     };
   }
 
-  createChecksumCalculator(): crypto.Hash | null {
-    if (this.checksumAlgorithm) {
-      return crypto.createHash(this.checksumAlgorithm);
-    }
-    return null;
+  createChecksumCalculator(): ChecksumCalculator | null {
+    return crypto.createHash('md5');
   }
 
   async cleanup(): Promise<void> {
@@ -163,15 +155,14 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
   async upload(name: string, buffer: Buffer, info: MultipartFileInfo): Promise<string> {
     const key = this.getFileKey(name, info);
     const checksumCalculator = this.createChecksumCalculator();
-    const checksum = checksumCalculator?.update(buffer).digest('base64') ?? null;
-    const checksumHeader =
-      typeof this.checksumAlgorithm !== 'undefined' && checksum ? {[this.checksumAlgorithm]: checksum} : {};
+    const checksum = checksumCalculator?.update(buffer).digest().toString('base64') ?? null;
+    const checksumOptions = typeof checksum === 'string' ? {ContentMD5: checksum} : {};
     await this.s3Client.putObject({
       Bucket: this.s3Bucket,
       Key: key,
       Body: buffer,
-      ChecksumAlgorithm: this.checksumAlgorithm?.toUpperCase(),
-      ...checksumHeader,
+      ContentLength: buffer.length,
+      ...checksumOptions,
     });
     return key;
   }
@@ -180,13 +171,12 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     pud: S3MultipartUploadState,
     readable: Readable,
     size: number,
-    checksumCalculator: crypto.Hash | null,
+    checksumCalculator: ChecksumCalculator | null,
   ): Promise<void> {
     const partNumber = pud.partNumber++;
 
-    const checksum = checksumCalculator?.digest('base64') ?? null;
-    const checksumHeader =
-      typeof this.checksumAlgorithm !== 'undefined' && checksumCalculator ? {[this.checksumAlgorithm]: checksum} : {};
+    const checksum = checksumCalculator?.digest().toString('base64') ?? null;
+    const checksumOptions = typeof checksum === 'string' ? {ContentMD5: checksum} : {};
     const result = await this.s3Client.uploadPart({
       Bucket: this.s3Bucket,
       Key: pud.fileKey,
@@ -194,7 +184,7 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
       Body: readable,
       PartNumber: partNumber,
       ContentLength: size,
-      ...checksumHeader,
+      ...checksumOptions,
     });
     // eslint-disable-next-line
     pud.eTags.push(result.ETag!);
