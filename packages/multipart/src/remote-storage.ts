@@ -19,10 +19,10 @@ import {MultipartLimitExceededError} from './error.js';
 export class MultipartFileRemoteStorage implements MultipartFileStorage<() => NodeJS.ReadableStream> {
   public readonly fileCountLimit: number;
   public readonly fileSizeLimit: number;
-  readonly #adaptor: RemoteStorageAdaptor<any, any>;
+  readonly #adaptor: RemoteStorageAdaptor<any, any, any>;
   #fileCount = 0;
 
-  constructor(adaptor: RemoteStorageAdaptor<any, any>) {
+  constructor(adaptor: RemoteStorageAdaptor<any, any, any>) {
     this.#adaptor = adaptor;
 
     this.fileCountLimit = adaptor.fileCountLimit;

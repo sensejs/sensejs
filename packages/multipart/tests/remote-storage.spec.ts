@@ -16,7 +16,7 @@ import path from 'path';
  * We don't want to use a real remote storage in unit test, use a mock implementation
  * that stores files in local filesystem instead.
  */
-class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHandle> {
+class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHandle, crypto.Hash> {
   fileCountLimit: number = 1;
   fileSizeLimit: number = 1024;
   partitionedUploadSizeLimit: number = 1024;
@@ -35,7 +35,7 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
     }
   }
 
-  createChecksumCalculator(): Hash | null {
+  createChecksumCalculator(): Hash {
     return crypto.createHash('SHA1');
   }
 
@@ -81,7 +81,7 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
     pud: fsp.FileHandle,
     readable: Readable,
     size: number,
-    checksumCalculator: Hash | null,
+    checksumCalculator: Hash,
   ): Promise<void> {
     const precalculatedChecksum = checksumCalculator?.digest('base64') ?? null;
     const checksumCalculator2 = this.createChecksumCalculator();

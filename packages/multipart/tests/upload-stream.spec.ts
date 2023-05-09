@@ -1,4 +1,4 @@
-import {MultipartFileEntry, MultipartFileInfo, RemoteStorageAdaptor} from '../src/index.js';
+import {MultipartFileEntry, MultipartFileInfo, RemoteStorageAdaptor, ChecksumCalculator} from '../src/index.js';
 import stream, {pipeline, Readable} from 'stream';
 import crypto, {Hash, randomUUID} from 'crypto';
 import {UploadStream} from '../src/upload-stream.js';
@@ -18,7 +18,21 @@ const mockFileInfo: MultipartFileInfo = {
   transferEncoding: '7bit',
 };
 
-async function pipeUploadStream(input: NodeJS.ReadableStream, adaptor: RemoteStorageAdaptor<any, any>, name: string) {
+class NoopChecksum implements ChecksumCalculator<null> {
+  update(chunk: Buffer): this {
+    return this;
+  }
+
+  digest(): null {
+    return null;
+  }
+}
+
+async function pipeUploadStream(
+  input: NodeJS.ReadableStream,
+  adaptor: RemoteStorageAdaptor<any, any, NoopChecksum>,
+  name: string,
+) {
   const info = {
     filename: 'bar.txt',
     mimeType: 'text/plain',
@@ -33,7 +47,7 @@ async function pipeUploadStream(input: NodeJS.ReadableStream, adaptor: RemoteSto
   });
 }
 
-class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
+class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string, NoopChecksum> {
   readonly fileCountLimit: number = 10;
 
   readonly fileSizeLimit: number = 1024;
@@ -61,8 +75,8 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string> {
     super();
   }
 
-  createChecksumCalculator(): Hash | null {
-    return null;
+  createChecksumCalculator(): NoopChecksum {
+    return new NoopChecksum();
   }
 
   async upload(name: string, buffer: Buffer, info: MultipartFileInfo): Promise<string> {

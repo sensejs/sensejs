@@ -75,7 +75,7 @@ import {MultipartLimitExceededError} from './error.js';
  *
  *
  */
-export class UploadStream<F extends {}, P extends {}> extends Writable {
+export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculator<unknown>> extends Writable {
   readonly #buffer: Buffer;
   #headIdx = 0;
   #tailIdx = 0;
@@ -85,7 +85,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
   #initMultipartUploadPromise: Promise<P> | null = null;
 
   constructor(
-    private readonly adaptor: RemoteStorageAdaptor<F, P>,
+    private readonly adaptor: RemoteStorageAdaptor<F, P, C>,
     private name: string,
     private info: MultipartFileInfo,
     private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void,
@@ -189,7 +189,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
    * calculating checksum
    * @private
    */
-  #createStreamForPartitionedUpload(size: number, checksumCalculator: ChecksumCalculator | null): stream.Readable {
+  #createStreamForPartitionedUpload(size: number, checksumCalculator: C): stream.Readable {
     let currentUploadIdx = this.#uploadIdx;
     const chunkIndexes: [number, number][] = [];
     const end = this.#uploadIdx + size;
@@ -222,7 +222,7 @@ export class UploadStream<F extends {}, P extends {}> extends Writable {
    */
   #createReadableFromChunkIndexes(chunkIndexes: [number, number][]) {
     return Readable.from(
-      async function* (this: UploadStream<F, P>) {
+      async function* (this: UploadStream<F, P, C>) {
         for (const [start, end] of chunkIndexes) {
           if (end < this.#buffer.length) {
             yield this.#buffer.slice(start, end);
