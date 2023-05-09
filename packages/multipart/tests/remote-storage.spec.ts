@@ -1,6 +1,11 @@
 import {describe, expect, test} from '@jest/globals';
 import fsp from 'fs/promises';
-import {MultipartFileInfo, MultipartFileRemoteStorage, RemoteStorageAdaptor} from '../src/index.js';
+import {
+  MultipartFileInfo,
+  MultipartFileRemoteStorage,
+  MultipartLimitExceededError,
+  RemoteStorageAdaptor,
+} from '../src/index.js';
 import {Readable} from 'stream';
 import fs from 'fs';
 import crypto, {Hash, randomUUID} from 'crypto';
@@ -12,9 +17,8 @@ import path from 'path';
  * that stores files in local filesystem instead.
  */
 class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHandle> {
-  fileCountLimit: number = 10;
+  fileCountLimit: number = 1;
   fileSizeLimit: number = 1024;
-  partitionedUploadChunkLimit: number = 128;
   partitionedUploadSizeLimit: number = 1024;
   simpleUploadSizeLimit: number = 1024;
 
@@ -104,11 +108,12 @@ describe('RemoteStorage', () => {
     const input = [content.slice(0, 256), content.slice(256, 512), content.slice(512, 768), content.slice(768, 1024)];
 
     const storage = new MultipartFileRemoteStorage(new MockRemoteStorageAdaptor());
-    const result = await storage.saveMultipartFile('file', Readable.from(input), {
+    const fileInfo = {
       filename: 'test.txt',
       transferEncoding: '7bit',
       mimeType: 'text/plain',
-    });
+    };
+    const result = await storage.saveMultipartFile('file', Readable.from(input), fileInfo);
     expect(result).toEqual(
       expect.objectContaining({
         type: 'file',
@@ -119,6 +124,9 @@ describe('RemoteStorage', () => {
         mimeType: 'text/plain',
       }),
     );
+    await expect(() => {
+      return storage.saveMultipartFile('file2', Readable.from(input), fileInfo);
+    }).rejects.toBeInstanceOf(MultipartLimitExceededError);
     const chunks: Buffer[] = [];
     for await (const chunk of result.content()) {
       chunks.push(Buffer.from(chunk));
