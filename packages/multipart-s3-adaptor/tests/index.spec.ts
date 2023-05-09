@@ -1,6 +1,6 @@
 import S3MockServer from 's3rver';
 import * as os from 'os';
-import {S3} from '@aws-sdk/client-s3';
+import {S3, S3ServiceException} from '@aws-sdk/client-s3';
 import {randomBytes, randomUUID} from 'crypto';
 import {MultipartFileRemoteStorage} from '@sensejs/multipart';
 import {S3StorageAdaptor, S3StorageAdaptorOptions} from '../src/index.js';
@@ -93,6 +93,11 @@ describe('MultipartS3Storage', () => {
         downloadBuffer.push(Buffer.from(chunk));
       }
       expect(Buffer.concat(downloadBuffer)).toEqual(content);
+    } catch (e) {
+      if (e instanceof S3ServiceException) {
+        console.error(e.name, e.$response, e.$fault, e.$metadata);
+      }
+      throw e;
     } finally {
       await storage.clean();
     }
@@ -118,6 +123,11 @@ describe('MultipartS3Storage', () => {
 
       expect(Buffer.concat(downloadBuffer).length).toEqual(content.length);
       expect(Buffer.concat(downloadBuffer)).toEqual(content);
+    } catch (e) {
+      if (e instanceof S3ServiceException) {
+        console.error(e.name, e.$response, e.$fault, e.$metadata);
+      }
+      throw e;
     } finally {
       await storage.clean();
     }
