@@ -19,11 +19,11 @@ import {MultipartLimitExceededError} from './error.js';
 export class MultipartFileRemoteStorage implements MultipartFileStorage<() => NodeJS.ReadableStream> {
   public readonly fileCountLimit: number;
   public readonly fileSizeLimit: number;
-  private readonly adaptor: RemoteStorageAdaptor<any, any>;
-  private fileCount = 0;
+  readonly #adaptor: RemoteStorageAdaptor<any, any>;
+  #fileCount = 0;
 
   constructor(adaptor: RemoteStorageAdaptor<any, any>) {
-    this.adaptor = adaptor;
+    this.#adaptor = adaptor;
 
     this.fileCountLimit = adaptor.fileCountLimit;
 
@@ -43,12 +43,12 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
     file: NodeJS.ReadableStream,
     info: MultipartFileInfo,
   ): Promise<MultipartFileEntry<() => NodeJS.ReadableStream>> {
-    if (this.fileCount >= this.fileCountLimit) {
+    if (this.#fileCount >= this.fileCountLimit) {
       throw new MultipartLimitExceededError('File count limit exceeded');
     }
-    this.fileCount += 1;
+    this.#fileCount += 1;
     return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
-      const writable = new UploadStream(this.adaptor, name, info, resolve);
+      const writable = new UploadStream(this.#adaptor, name, info, resolve);
       pipeline(file, writable, (e) => {
         if (e) {
           // istanbul ignore next
@@ -59,6 +59,6 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
   }
 
   async clean() {
-    return this.adaptor.cleanup();
+    return this.#adaptor.cleanup();
   }
 }
