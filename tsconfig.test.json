@@ -4,6 +4,8 @@
     "types": ["node", "jest", "reflect-metadata"],
     "module": "ESNext",
     "incremental": false,
+    "noEmitHelpers": false,
+    "importHelpers": false,
     "paths": {
       "@sensejs/*": [
         "./packages/*/src",

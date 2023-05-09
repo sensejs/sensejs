@@ -1,10 +1,8 @@
 
-# High-level Multipart Body Parser
+# The S3 Storage Adaptor for `@sensejs/multipart` (experimental)
 
-This package, `@sensejs/multipart`, provides a high-level multipart body parser
-based on `@fastify/busboy` that supports custom storage provider and back
-pressure. It does not depend on any other part of SenseJS, and can be used
-standalone with any other HTTP framework.
+This package, `@sensejs/multipart-s3-adaptor`, provides an experimental S3 storage adaptor
+for `@sensejs/multipart`, based on the official AWS SDK v3 for Javascript.
 
 
 ## Usage
