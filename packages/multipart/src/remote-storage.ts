@@ -17,21 +17,21 @@ import {MultipartLimitExceededError} from './error.js';
  *
  */
 export class MultipartFileRemoteStorage implements MultipartFileStorage<() => NodeJS.ReadableStream> {
-  private readonly adaptor: RemoteStorageAdaptor<any, any>;
   public readonly fileCountLimit: number;
   public readonly fileSizeLimit: number;
+  private readonly adaptor: RemoteStorageAdaptor<any, any>;
   private fileCount = 0;
 
   constructor(adaptor: RemoteStorageAdaptor<any, any>) {
     this.adaptor = adaptor;
 
-    this.fileCountLimit = adaptor.fileSizeLimit;
+    this.fileCountLimit = adaptor.fileCountLimit;
 
     if (this.fileCountLimit <= 0) {
       throw new Error('Illegal file count limit, must be a positive integer');
     }
 
-    this.fileSizeLimit = adaptor.fileCountLimit;
+    this.fileSizeLimit = adaptor.fileSizeLimit;
 
     if (this.fileSizeLimit <= 0) {
       throw new Error('Illegal file size limit, must be a positive integer');
@@ -46,6 +46,7 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
     if (this.fileCount >= this.fileCountLimit) {
       throw new MultipartLimitExceededError('File count limit exceeded');
     }
+    this.fileCount += 1;
     return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
       const writable = new UploadStream(this.adaptor, name, info, resolve);
       pipeline(file, writable, (e) => {
