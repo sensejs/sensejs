@@ -1,4 +1,5 @@
 {
+  "root": true,
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "./tsconfig.baseline.json"
@@ -107,6 +108,7 @@
       {
         "selector": "typeLike",
         "format": ["PascalCase"]
-      }]
+      }
+    ]
   }
 }

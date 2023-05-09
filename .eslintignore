@@ -1,3 +1,6 @@
 node_modules/
+dist-cjs/
+dist-esm/
+dist-dts/
 *.js
 *.d.ts
