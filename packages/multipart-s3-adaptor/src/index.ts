@@ -1,4 +1,4 @@
-import {MultipartFileInfo, RemoteStorageAdaptor, ChecksumCalculator} from '@sensejs/multipart';
+import {MultipartFileInfo, RemoteStorageAdaptor} from '@sensejs/multipart';
 import * as stream from 'stream';
 import {Readable} from 'stream';
 import {CreateMultipartUploadCommandOutput, S3, S3ClientConfig} from '@aws-sdk/client-s3';
@@ -56,16 +56,16 @@ interface S3MultipartUploadState {
   eTags: string[];
 }
 
-export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUploadState> {
+export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUploadState, crypto.Hash> {
   readonly fileCountLimit: number;
   readonly fileSizeLimit: number;
   readonly partitionedUploadSizeLimit: number;
   readonly simpleUploadSizeLimit: number;
-  private readonly s3Client: S3;
-  private readonly s3Config: S3ClientConfig;
-  private readonly s3Bucket: string;
-  private readonly getFileKey: (name: string, fileInfo: MultipartFileInfo) => string;
-  private readonly openedStreams = new Set<Readable>();
+  readonly #s3Client: S3;
+  readonly #s3Config: S3ClientConfig;
+  readonly #s3Bucket: string;
+  readonly #getFileKey: (name: string, fileInfo: MultipartFileInfo) => string;
+  readonly #openedStreams = new Set<Readable>();
 
   constructor(options: S3StorageAdaptorOptions) {
     super();
@@ -74,26 +74,26 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     this.fileCountLimit = options.fileCountLimit ?? DEFAULT_FILE_COUNT_LIMIT;
     this.fileSizeLimit =
       options.fileSizeLimit ?? S3_MULTIPART_UPLOAD_PART_COUNT_LIMIT * this.partitionedUploadSizeLimit;
-    this.s3Config = options.s3Config;
-    this.s3Bucket = options.s3Bucket;
-    this.getFileKey = options.getFileKey;
-    this.s3Client = new S3({
+    this.#s3Config = options.s3Config;
+    this.#s3Bucket = options.s3Bucket;
+    this.#getFileKey = options.getFileKey;
+    this.#s3Client = new S3({
       ...options.s3Config,
     });
   }
 
   async abortPartitionedUpload(pud: S3MultipartUploadState): Promise<void> {
-    await this.s3Client.abortMultipartUpload({
-      Bucket: this.s3Bucket,
+    await this.#s3Client.abortMultipartUpload({
+      Bucket: this.#s3Bucket,
       Key: pud.fileKey,
       UploadId: pud.uploadId,
     });
   }
 
   async beginPartitionedUpload(name: string, info: MultipartFileInfo): Promise<S3MultipartUploadState> {
-    const fileKey = this.getFileKey(name, info);
-    const multipartOutput = await this.s3Client.createMultipartUpload({
-      Bucket: this.s3Bucket,
+    const fileKey = this.#getFileKey(name, info);
+    const multipartOutput = await this.#s3Client.createMultipartUpload({
+      Bucket: this.#s3Bucket,
       Key: fileKey,
       ContentType: info.mimeType,
     });
@@ -108,20 +108,20 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     };
   }
 
-  createChecksumCalculator(): ChecksumCalculator | null {
+  createChecksumCalculator(): crypto.Hash {
     return crypto.createHash('md5');
   }
 
   async cleanup(): Promise<void> {
-    for (const stream of this.openedStreams) {
+    for (const stream of this.#openedStreams) {
       stream.destroy();
     }
-    this.s3Client.destroy();
+    this.#s3Client.destroy();
   }
 
   createReadStream(key: string): NodeJS.ReadableStream {
     const result = new stream.PassThrough();
-    this.s3Client.getObject({Bucket: this.s3Bucket, Key: key}).then(
+    this.#s3Client.getObject({Bucket: this.#s3Bucket, Key: key}).then(
       (response) => {
         stream.pipeline(response.Body as stream.Readable, result, (err) => {
           if (err) {
@@ -133,13 +133,13 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
         result.destroy(e);
       },
     );
-    this.openedStreams.add(result);
+    this.#openedStreams.add(result);
     return result;
   }
 
   async finishPartitionedUpload(pud: S3MultipartUploadState): Promise<string> {
-    await this.s3Client.completeMultipartUpload({
-      Bucket: this.s3Bucket,
+    await this.#s3Client.completeMultipartUpload({
+      Bucket: this.#s3Bucket,
       Key: pud.fileKey,
       UploadId: pud.uploadId,
       MultipartUpload: {
@@ -153,12 +153,12 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
   }
 
   async upload(name: string, buffer: Buffer, info: MultipartFileInfo): Promise<string> {
-    const key = this.getFileKey(name, info);
+    const key = this.#getFileKey(name, info);
     const checksumCalculator = this.createChecksumCalculator();
     const checksum = checksumCalculator?.update(buffer).digest().toString('base64') ?? null;
     const checksumOptions = typeof checksum === 'string' ? {ContentMD5: checksum} : {};
-    await this.s3Client.putObject({
-      Bucket: this.s3Bucket,
+    await this.#s3Client.putObject({
+      Bucket: this.#s3Bucket,
       Key: key,
       Body: buffer,
       ContentLength: buffer.length,
@@ -171,20 +171,19 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     pud: S3MultipartUploadState,
     readable: Readable,
     size: number,
-    checksumCalculator: ChecksumCalculator | null,
+    checksumCalculator: crypto.Hash,
   ): Promise<void> {
     const partNumber = pud.partNumber++;
 
-    const checksum = checksumCalculator?.digest().toString('base64') ?? null;
-    const checksumOptions = typeof checksum === 'string' ? {ContentMD5: checksum} : {};
-    const result = await this.s3Client.uploadPart({
-      Bucket: this.s3Bucket,
+    const checksum = checksumCalculator.digest().toString('base64');
+    const result = await this.#s3Client.uploadPart({
+      Bucket: this.#s3Bucket,
       Key: pud.fileKey,
       UploadId: pud.uploadId,
       Body: readable,
       PartNumber: partNumber,
       ContentLength: size,
-      ...checksumOptions,
+      ContentMD5: checksum,
     });
     // eslint-disable-next-line
     pud.eTags.push(result.ETag!);

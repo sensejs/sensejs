@@ -1,9 +1,10 @@
 import {MultipartFileInfo} from './types.js';
 import {Readable} from 'stream';
 
-export interface ChecksumCalculator {
+export interface ChecksumCalculator<Result = Buffer> {
   update(buffer: Buffer): this;
-  digest(): Buffer;
+  //
+  digest(): Result;
 }
 
 /**
@@ -11,8 +12,9 @@ export interface ChecksumCalculator {
  *
  * @template F The file descriptor type for uploaded file
  * @template P The partition descriptor type for partitioned upload
+ * @template C The checksum type
  */
-export abstract class RemoteStorageAdaptor<F extends {}, P extends {}> {
+export abstract class RemoteStorageAdaptor<F extends {}, P extends {}, C extends ChecksumCalculator<unknown>> {
   /**
    * The maximum file size can be uploaded using `RemoteStorageAdaptor.upload`,
    * file larger than this size must be uploaded using partitioned upload
@@ -46,11 +48,9 @@ export abstract class RemoteStorageAdaptor<F extends {}, P extends {}> {
   abstract upload(name: string, buffer: Buffer, info: MultipartFileInfo): Promise<F>;
 
   /**
-   * Create a hash object for calculating checksum if checksum is enabled
-   *
-   * @returns a Hash object if checksum is enabled, otherwise null
+   * Create a hash object for calculating checksum
    */
-  abstract createChecksumCalculator(): ChecksumCalculator | null;
+  abstract createChecksumCalculator(): C;
 
   /**
    * Initiate a partitioned upload for a file
@@ -66,12 +66,7 @@ export abstract class RemoteStorageAdaptor<F extends {}, P extends {}> {
    * @param size The size of this partition
    * @param checksumCalculator The checksum returned by `createChecksumCalculator`, filled with the data of this partition
    */
-  abstract uploadPartition(
-    pud: P,
-    readable: Readable,
-    size: number,
-    checksumCalculator: ChecksumCalculator | null,
-  ): Promise<void>;
+  abstract uploadPartition(pud: P, readable: Readable, size: number, checksumCalculator: C): Promise<void>;
 
   /**
    * Finish a partitioned upload
