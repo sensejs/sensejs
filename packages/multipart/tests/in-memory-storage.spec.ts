@@ -2,26 +2,32 @@ import {MultipartFileInMemoryStorage, MultipartLimitExceededError} from '../src/
 import {describe, test} from '@jest/globals';
 import {Readable} from 'stream';
 import {AsyncIterableQueue} from '@sensejs/utility';
+import {readStreamToBuffer} from './common.js';
 
 describe('MultipartFileInMemoryStorage', () => {
   test('should works', async () => {
     const storage = new MultipartFileInMemoryStorage();
-    expect(
-      await storage.saveMultipartFile('file', Readable.from([Buffer.from('Hello '), Buffer.from('World!')]), {
+    const result = await storage.saveMultipartFile(
+      'file',
+      Readable.from([Buffer.from('Hello '), Buffer.from('World!')]),
+      {
         filename: 'test.txt',
         transferEncoding: '7bit',
         mimeType: 'text/plain',
-      }),
-    ).toEqual(
+      },
+    );
+    expect(result).toEqual(
       expect.objectContaining({
         type: 'file',
         name: 'file',
         filename: 'test.txt',
-        content: Buffer.from('Hello World!'),
+        // content: Buffer.from('Hello World!'),
         size: 12,
         mimeType: 'text/plain',
       }),
     );
+    expect(result.content).toEqual(Buffer.from('Hello World!'));
+    expect(await readStreamToBuffer(result.body(), result.size)).toEqual(Buffer.from('Hello World!'));
   });
 
   test('large input', async () => {

@@ -38,7 +38,7 @@ async function pipeUploadStream(
     mimeType: 'text/plain',
     transferEncoding: '7bit',
   };
-  return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
+  return new Promise<MultipartFileEntry>((resolve, reject) => {
     pipeline(input, new UploadStream(adaptor, 'foo.txt', mockFileInfo, resolve), (err) => {
       if (err) {
         reject(err);
@@ -130,7 +130,7 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string, Noop
     this.partitionUploads.delete(partition);
   }
 
-  createReadStream(fileKey: string): NodeJS.ReadableStream {
+  createReadStream(fileKey: string): Readable {
     const buffers = this.files.get(fileKey);
     if (!buffers) {
       throw new Error('Invalid file key');
@@ -200,7 +200,7 @@ describe('UploadStream', () => {
       size: 30,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content.toString()).toBe('helloworld12345678901234567890');
   });
 
@@ -221,7 +221,7 @@ describe('UploadStream', () => {
       size: 50,
     });
 
-    expect(await readStreamAsBuffer(result.content())).toEqual(resultBuffer);
+    expect(await readStreamAsBuffer(result.body())).toEqual(resultBuffer);
 
     const slowStream = Readable.from(toSlowStreamChunks(buffers));
     const slowConsumeAdaptor = new MockRemoteStorageAdaptor(45, 40, 1);
@@ -234,7 +234,7 @@ describe('UploadStream', () => {
       size: 50,
     });
 
-    expect(await readStreamAsBuffer(slowResult.content())).toEqual(resultBuffer);
+    expect(await readStreamAsBuffer(slowResult.body())).toEqual(resultBuffer);
   });
 
   test('simple upload error', async () => {
@@ -289,7 +289,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
@@ -304,7 +304,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
@@ -319,7 +319,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
@@ -334,7 +334,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
@@ -349,7 +349,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
@@ -364,7 +364,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
@@ -379,7 +379,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
   test('large multipart upload, slow input and consume, maxSimpleUploadSize=50, maxPartitionedUploadSize=24', async () => {
@@ -393,7 +393,7 @@ describe('UploadStream', () => {
       size: Buffer.concat(buffers).length,
     });
 
-    const content = await readStreamAsBuffer(result.content());
+    const content = await readStreamAsBuffer(result.body());
     expect(content).toEqual(Buffer.concat(buffers));
   });
 
@@ -410,7 +410,7 @@ describe('UploadStream', () => {
         size: Buffer.concat(buffers).length,
       });
 
-      const content = await readStreamAsBuffer(result.content());
+      const content = await readStreamAsBuffer(result.body());
       expect(content).toEqual(Buffer.concat(buffers));
     }
   });

@@ -130,7 +130,7 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     this.#s3Client.destroy();
   }
 
-  createReadStream(key: string): NodeJS.ReadableStream {
+  createReadStream(key: string): Readable {
     const result = new stream.PassThrough();
     this.#s3Client.getObject({Bucket: this.#s3Bucket, Key: key}).then(
       (response) => {

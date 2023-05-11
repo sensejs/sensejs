@@ -1,10 +1,14 @@
 import {MultipartFileEntry, MultipartFileInfo, MultipartFileStorage, MultipartFileStorageOption} from './types.js';
 import {MultipartLimitExceededError} from './error.js';
+import {Readable} from 'stream';
 
+export interface InMemoryMultipartFileEntry extends MultipartFileEntry {
+  content: Buffer;
+}
 /**
  *
  */
-export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
+export class MultipartFileInMemoryStorage extends MultipartFileStorage<InMemoryMultipartFileEntry> {
   static readonly fileSizeLimit = 32 * 1024 * 1024;
   static readonly fileCountLimit = 1;
   readonly #fileSizeLimit: number;
@@ -35,18 +39,18 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
   }
 
   async clean() {
-    // for an in-memory storage, there is nothing to clean
+    // for an in-memory storage, there is nothing needs to be cleaned
   }
 
   saveMultipartFile(
     name: string,
     file: NodeJS.ReadableStream,
     info: MultipartFileInfo,
-  ): Promise<MultipartFileEntry<Buffer>> {
+  ): Promise<InMemoryMultipartFileEntry> {
     if (this.#fileCount++ >= this.#fileCountLimit) {
       return Promise.reject(new MultipartLimitExceededError('Too many files'));
     }
-    return new Promise<MultipartFileEntry<Buffer>>((resolve, reject) => {
+    return new Promise<InMemoryMultipartFileEntry>((resolve, reject) => {
       let lastBufferCapacity = 16;
       let buffer: Buffer = Buffer.alloc(Math.min(this.#fileSizeLimit, lastBufferCapacity * 2));
       let size = 0;
@@ -74,6 +78,7 @@ export class MultipartFileInMemoryStorage extends MultipartFileStorage<Buffer> {
           name,
           filename: info.filename,
           content: buffer,
+          body: () => Readable.from([buffer]),
           size: size,
           mimeType: info.mimeType,
           transferEncoding: info.transferEncoding,

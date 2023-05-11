@@ -57,7 +57,7 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
     }
   }
 
-  createReadStream(file: string): NodeJS.ReadableStream {
+  createReadStream(file: string): Readable {
     const stream = fs.createReadStream(file);
     this.openedFiles.add(stream);
     return stream;
@@ -129,7 +129,7 @@ describe('RemoteStorage', () => {
       return storage.saveMultipartFile('file2', Readable.from(input), fileInfo);
     }).rejects.toBeInstanceOf(MultipartLimitExceededError);
     const chunks: Buffer[] = [];
-    for await (const chunk of result.content()) {
+    for await (const chunk of result.body()) {
       chunks.push(Buffer.from(chunk));
     }
     expect(Buffer.concat(chunks)).toEqual(content);
