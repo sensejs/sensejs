@@ -27,6 +27,14 @@ export abstract class RemoteStorageAdaptor<F extends {}, P extends {}, C extends
   abstract readonly partitionedUploadSizeLimit: number;
 
   /**
+   * The size of buffer used to sponge the file content. It should be greater than
+   * `max(simpleUploadSizeLimit, partitionedUploadSizeLimit)`, otherwise it's ignored
+   * and the `max(simpleUploadSizeLimit, partitionedUploadSizeLimit)` is used.
+   *
+   */
+  abstract readonly bufferSizeLimit: number;
+
+  /**
    * The maximum number of files can be uploaded for each instance of `RemoteStorageAdaptor`
    */
   abstract readonly fileCountLimit: number;

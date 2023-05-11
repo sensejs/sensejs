@@ -66,6 +66,8 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string, Noop
 
   readonly finishPartitionedUploadStub = jest.fn();
 
+  readonly bufferSizeLimit;
+
   constructor(
     readonly simpleUploadSizeLimit: number = 32,
     readonly partitionedUploadSizeLimit: number = 16,
@@ -73,6 +75,7 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, string, Noop
     readonly partitionedUploadChunkLimit: number = 8,
   ) {
     super();
+    this.bufferSizeLimit = simpleUploadSizeLimit + partitionedUploadSizeLimit;
   }
 
   createChecksumCalculator(): NoopChecksum {

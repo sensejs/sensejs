@@ -83,26 +83,36 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
   #fileSize = 0;
   #promiseQueue: Promise<any> = Promise.resolve();
   #initMultipartUploadPromise: Promise<P> | null = null;
+  readonly #adaptor: RemoteStorageAdaptor<F, P, C>;
 
   constructor(
-    private readonly adaptor: RemoteStorageAdaptor<F, P, C>,
+    adaptor: RemoteStorageAdaptor<F, P, C>,
     private name: string,
     private info: MultipartFileInfo,
     private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void,
   ) {
     super();
-    this.#buffer = Buffer.allocUnsafe(Math.max(adaptor.simpleUploadSizeLimit, adaptor.partitionedUploadSizeLimit));
+    this.#adaptor = adaptor;
+    this.#buffer = Buffer.allocUnsafe(
+      Math.max(
+        this.#adaptor.bufferSizeLimit,
+        Math.max(adaptor.simpleUploadSizeLimit, adaptor.partitionedUploadSizeLimit),
+      ),
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   override _write(chunk: Buffer, encoding: string, callback: (error?: Error | null) => void): void {
-    if (this.#fileSize + chunk.length > this.adaptor.fileSizeLimit) {
+    if (this.#fileSize + chunk.length > this.#adaptor.fileSizeLimit) {
       return callback(new MultipartLimitExceededError('file size limit exceeded'));
     }
     this.#fileSize += chunk.length;
     let pudPromise: Promise<P> | null = null;
 
-    if (this.#fileSize > this.#buffer.length) {
+    if (
+      this.#fileSize > this.#adaptor.simpleUploadSizeLimit &&
+      this.#fileSize > this.#adaptor.partitionedUploadSizeLimit
+    ) {
       // If the file size already exceeds the limit of both simple upload and partitioned upload,
       // initiate a partitioned upload immediately
       pudPromise = this.#initMultipartUploadIfNecessary();
@@ -124,7 +134,7 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
       this.emit('error', error);
       if (this.#initMultipartUploadPromise) {
         this.#initMultipartUploadPromise
-          .then((p) => this.adaptor.abortPartitionedUpload(p))
+          .then((p) => this.#adaptor.abortPartitionedUpload(p))
           .then(() => {
             callback();
           }, callback);
@@ -146,16 +156,16 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
           const p = await initMultipartUploadPromise;
           const remaining = this.#tailIdx - this.#headIdx;
           if (remaining > 0) {
-            const checksumCalculator = this.adaptor.createChecksumCalculator();
+            const checksumCalculator = this.#adaptor.createChecksumCalculator();
             const readable = this.#createStreamForPartitionedUpload(remaining, checksumCalculator);
-            await this.adaptor.uploadPartition(p, readable, remaining, checksumCalculator);
+            await this.#adaptor.uploadPartition(p, readable, remaining, checksumCalculator);
           }
-          const result = await this.adaptor.finishPartitionedUpload(p);
+          const result = await this.#adaptor.finishPartitionedUpload(p);
           this.resolve({
             type: 'file',
             name: this.name,
             size: this.#fileSize,
-            content: () => this.adaptor.createReadStream(result),
+            content: () => this.#adaptor.createReadStream(result),
             mimeType: this.info.mimeType,
             filename: this.info.filename,
             transferEncoding: this.info.transferEncoding,
@@ -167,11 +177,11 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
         }, callback);
     } else {
       // We haven't started a partitioned upload, upload the content in the buffer using simple upload
-      this.adaptor.upload(this.name, this.#buffer.slice(0, this.#tailIdx), this.info).then((result) => {
+      this.#adaptor.upload(this.name, this.#buffer.slice(0, this.#tailIdx), this.info).then((result) => {
         this.resolve({
           name: this.name,
           size: this.#fileSize,
-          content: () => this.adaptor.createReadStream(result),
+          content: () => this.#adaptor.createReadStream(result),
           mimeType: this.info.mimeType,
           filename: this.info.filename,
           transferEncoding: this.info.transferEncoding,
@@ -299,16 +309,21 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
    * @private
    */
   #uploadIfNecessary(pudPromise: Promise<P>) {
-    while (this.#tailIdx - this.#uploadIdx >= this.adaptor.partitionedUploadSizeLimit) {
-      const checksumCalculator = this.adaptor.createChecksumCalculator();
+    while (this.#tailIdx - this.#uploadIdx >= this.#adaptor.partitionedUploadSizeLimit) {
+      const checksumCalculator = this.#adaptor.createChecksumCalculator();
       const readable = this.#createStreamForPartitionedUpload(
-        this.adaptor.partitionedUploadSizeLimit,
+        this.#adaptor.partitionedUploadSizeLimit,
         checksumCalculator,
       );
       this.#promiseQueue = this.#promiseQueue
         .then(() => pudPromise)
         .then((p) => {
-          return this.adaptor.uploadPartition(p, readable, this.adaptor.partitionedUploadSizeLimit, checksumCalculator);
+          return this.#adaptor.uploadPartition(
+            p,
+            readable,
+            this.#adaptor.partitionedUploadSizeLimit,
+            checksumCalculator,
+          );
         });
     }
   }
@@ -324,7 +339,7 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
       return this.#initMultipartUploadPromise;
     }
     this.#initMultipartUploadPromise = this.#promiseQueue.then(() =>
-      this.adaptor.beginPartitionedUpload(this.name, this.info),
+      this.#adaptor.beginPartitionedUpload(this.name, this.info),
     );
     return this.#initMultipartUploadPromise;
   }
