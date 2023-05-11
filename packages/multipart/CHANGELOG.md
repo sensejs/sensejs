@@ -1,5 +1,18 @@
 # @sensejs/multipart
 
+## 0.11.2
+
+### Patch Changes
+
+- 201a479: Introduce `MultipartFileRemoteStorage` and `RemoteStorageAdaptor`.
+- eb45ba5: Redesign the shape of MultipartFileEntry.
+
+  It now has a new function member `body()` that returns a Readable;
+  for MultipartFileInMemoryStorage an additional content field is
+  presented for accessing the buffer directly, while for
+  MultipartFileDiskStorage, the content field is deprecated and
+  will be removed in 0.12
+
 ## 0.11.1
 
 ### Patch Changes

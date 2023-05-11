@@ -1,4 +1,49 @@
 
+## 2023-05-11
+
+
+### Releases
+
+
+| Package | Release Version | Release Type |
+|---------|-----------------|--------------|
+| `@sensejs/multipart-s3-adaptor` | `0.11.1 ` | patch |
+| `@sensejs/multipart` | `0.11.2 ` | patch |
+
+
+
+### Notable Changes
+
+- **Summary**: 
+
+  Introuce `@sensejs/multipart-s3-adaptor` that provides an experimental S3 remote storage adaptor
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/multipart-s3-adaptor`
+- **Summary**: 
+
+  Introduce `MultipartFileRemoteStorage` and `RemoteStorageAdaptor`.
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/multipart`
+- **Summary**: 
+
+  Redesign the shape of MultipartFileEntry.
+  
+  It now has a new function member `body()` that returns a Readable;
+  for MultipartFileInMemoryStorage an additional content field is
+  presented for accessing the buffer directly, while for
+  MultipartFileDiskStorage, the content field is deprecated and
+  will be removed in 0.12
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/multipart`
+
+
+
 ## 2023-04-23
 
 
