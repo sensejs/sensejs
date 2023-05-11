@@ -3,8 +3,8 @@ import stream from 'stream';
 import type http from 'http';
 import {AsyncIterableQueue} from '@sensejs/utility';
 import {InvalidMultipartBodyError, MultipartLimitExceededError} from './error.js';
-import {MultipartEntry, MultipartFileStorage} from './types.js';
-import {MultipartFileInMemoryStorage} from './in-memory-storage.js';
+import {MultipartEntry, MultipartFileEntry, MultipartFileStorage} from './types.js';
+import {InMemoryMultipartFileEntry, MultipartFileInMemoryStorage} from './in-memory-storage.js';
 
 export * from './error.js';
 export * from './in-memory-storage.js';
@@ -89,8 +89,8 @@ export class Multipart {
     return [multipart, cleanup];
   }
 
-  read(): Promise<Record<string, MultipartEntry<any>>>;
-  read<Content>(handler: MultipartFileStorage<Content>): Promise<Record<string, MultipartEntry<any>>>;
+  read(): Promise<Record<string, MultipartEntry<MultipartFileEntry>>>;
+  read<F extends MultipartFileEntry>(handler: MultipartFileStorage<F>): Promise<Record<string, MultipartEntry<F>>>;
 
   async read(handler?: MultipartFileStorage<any>): Promise<Record<string, MultipartEntry<any>>> {
     const result: Record<string, MultipartEntry<any>> = {};
@@ -100,8 +100,8 @@ export class Multipart {
     return result;
   }
 
-  entries(): AsyncIterable<MultipartEntry<Buffer>>;
-  entries<Content>(handler: MultipartFileStorage<Content>): AsyncIterable<MultipartEntry<Content>>;
+  entries(): AsyncIterable<MultipartEntry<InMemoryMultipartFileEntry>>;
+  entries<F extends MultipartFileEntry>(handler: MultipartFileStorage<F>): AsyncIterable<MultipartEntry<F>>;
 
   // read(): Promise<AsyncIterator<MultipartEntry<Buffer>>>;
   entries(multipartFileHandler?: MultipartFileStorage<any>): AsyncIterable<MultipartEntry<any>> {

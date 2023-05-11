@@ -4,6 +4,7 @@ import {MultipartLimitExceededError} from '../src/index.js';
 import {AsyncIterableQueue} from '@sensejs/utility';
 import crypto from 'crypto';
 import {expect} from '@jest/globals';
+import {readStreamToBuffer} from './common.js';
 
 describe('MultipartFileDiskStorage', () => {
   test('options', async () => {
@@ -35,20 +36,8 @@ describe('MultipartFileDiskStorage', () => {
       }),
     );
 
-    const readable = result.content;
-    let offset = 0;
-    const content = Buffer.allocUnsafe(result.size);
-    await new Promise<void>((resolve, reject) => {
-      readable.on('data', (chunk) => {
-        chunk.copy(content, offset);
-        offset += chunk.length;
-      });
-      readable.on('end', () => {
-        expect(offset).toBe(result.size);
-        resolve();
-      });
-      readable.on('error', reject);
-    });
+    const readable = result.body();
+    const content = await readStreamToBuffer(readable, result.size);
 
     expect(content).toEqual(Buffer.concat([input1, input2]));
 
@@ -70,7 +59,6 @@ describe('MultipartFileDiskStorage', () => {
         type: 'file',
         name: 'file',
         filename: 'test.txt',
-        content: expect.any(Readable),
         size: 1024,
         mimeType: 'text/plain',
       }),
