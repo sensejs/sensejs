@@ -91,7 +91,12 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
     private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void,
   ) {
     super();
-    this.buffer = Buffer.allocUnsafe(Math.max(adaptor.simpleUploadSizeLimit, adaptor.partitionedUploadSizeLimit));
+    this.buffer = Buffer.allocUnsafe(
+      Math.max(
+        this.adaptor.bufferSizeLimit,
+        Math.max(adaptor.simpleUploadSizeLimit, adaptor.partitionedUploadSizeLimit),
+      ),
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -102,7 +107,7 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
     this.fileSize += chunk.length;
     let pudPromise: Promise<P> | null = null;
 
-    if (this.fileSize > this.buffer.length) {
+    if (this.fileSize > this.adaptor.simpleUploadSizeLimit && this.fileSize > this.adaptor.partitionedUploadSizeLimit) {
       // If the file size already exceeds the limit of both simple upload and partitioned upload,
       // initiate a partitioned upload immediately
       pudPromise = this.initMultipartUploadIfNecessary();

@@ -21,6 +21,7 @@ class MockRemoteStorageAdaptor extends RemoteStorageAdaptor<string, fsp.FileHand
   fileSizeLimit: number = 1024;
   partitionedUploadSizeLimit: number = 1024;
   simpleUploadSizeLimit: number = 1024;
+  bufferSizeLimit = 1024;
 
   private filenameToPathMap: Map<string, string> = new Map(); // filename -> filepath
   private fileHandleToPathMap: WeakMap<fsp.FileHandle, string> = new WeakMap();

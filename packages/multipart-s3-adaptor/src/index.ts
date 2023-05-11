@@ -41,6 +41,14 @@ export interface S3StorageAdaptorOptions {
   partitionedUploadSizeLimit?: number;
 
   /**
+   * Size of buffer used to sponge the file content, should be greater than
+   * `max(simpleUploadSizeLimit, partitionedUploadSizeLimit)`
+   *
+   * @default 40 * 1024 * 1024
+   */
+  bufferSizeLimit?: number;
+
+  /**
    * The function to generate the key of the file to be uploaded
    * @param name
    * @param fileInfo
@@ -59,6 +67,7 @@ interface S3MultipartUploadState {
 export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUploadState, crypto.Hash> {
   readonly fileCountLimit: number;
   readonly fileSizeLimit: number;
+  readonly bufferSizeLimit: number;
   readonly partitionedUploadSizeLimit: number;
   readonly simpleUploadSizeLimit: number;
   readonly #s3Client: S3;
@@ -71,6 +80,8 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     super();
     this.simpleUploadSizeLimit = options.simpleUploadSizeLimit ?? DEFAULT_SIMPLE_UPLOAD_SIZE_LIMIT;
     this.partitionedUploadSizeLimit = options.partitionedUploadSizeLimit ?? DEFAULT_PARTITIONED_UPLOAD_SIZE_LIMIT;
+    this.bufferSizeLimit =
+      options.bufferSizeLimit ?? Math.max(this.simpleUploadSizeLimit, this.partitionedUploadSizeLimit);
     this.fileCountLimit = options.fileCountLimit ?? DEFAULT_FILE_COUNT_LIMIT;
     this.fileSizeLimit =
       options.fileSizeLimit ?? S3_MULTIPART_UPLOAD_PART_COUNT_LIMIT * this.partitionedUploadSizeLimit;
