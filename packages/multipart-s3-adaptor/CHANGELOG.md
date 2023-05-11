@@ -1,5 +1,11 @@
 # @sensejs/multipart-s3-adaptor
 
+## 0.11.2
+
+### Patch Changes
+
+- ea9b845: Fix README
+
 ## 0.11.1
 
 ### Patch Changes

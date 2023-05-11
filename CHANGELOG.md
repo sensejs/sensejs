@@ -7,6 +7,30 @@
 
 | Package | Release Version | Release Type |
 |---------|-----------------|--------------|
+| `@sensejs/multipart-s3-adaptor` | `0.11.2 ` | patch |
+
+
+
+### Notable Changes
+
+- **Summary**: 
+
+  Fix README
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/multipart-s3-adaptor`
+
+
+
+## 2023-05-11
+
+
+### Releases
+
+
+| Package | Release Version | Release Type |
+|---------|-----------------|--------------|
 | `@sensejs/multipart-s3-adaptor` | `0.11.1 ` | patch |
 | `@sensejs/multipart` | `0.11.2 ` | patch |
 
