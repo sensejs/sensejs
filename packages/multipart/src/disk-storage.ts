@@ -19,7 +19,7 @@ export interface DiskStorageOption extends MultipartFileStorageOption {
   removeFilesOnClean?: boolean;
 }
 
-export class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.ReadableStream> {
+export class MultipartFileDiskStorage extends MultipartFileStorage {
   static readonly fileSizeLimit = 32 * 1024 * 1024;
   static readonly fileCountLimit = 128;
   readonly #fileSizeLimit: number;
@@ -50,7 +50,7 @@ export class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.Readab
     name: string,
     file: NodeJS.ReadableStream,
     info: MultipartFileInfo,
-  ): Promise<MultipartFileEntry<NodeJS.ReadableStream>> {
+  ): Promise<MultipartFileEntry> {
     if (this.#fileCount++ >= this.#fileCountLimit) {
       throw new MultipartLimitExceededError('Too many files');
     }
@@ -98,7 +98,7 @@ export class MultipartFileDiskStorage extends MultipartFileStorage<NodeJS.Readab
         type: 'file',
         name,
         filename: info.filename,
-        content: readable,
+        body: () => readable,
         size,
         mimeType: info.mimeType,
         transferEncoding: info.transferEncoding,

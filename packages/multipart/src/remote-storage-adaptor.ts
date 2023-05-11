@@ -88,7 +88,7 @@ export abstract class RemoteStorageAdaptor<F extends {}, P extends {}, C extends
    */
   abstract abortPartitionedUpload(pud: P): Promise<void>;
 
-  abstract createReadStream(file: F): NodeJS.ReadableStream;
+  abstract createReadStream(file: F): Readable;
 
   abstract cleanup(): Promise<void>;
 }

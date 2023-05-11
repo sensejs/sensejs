@@ -89,7 +89,7 @@ describe('MultipartS3Storage', () => {
 
       const downloadBuffer = [];
 
-      for await (const chunk of result.content()) {
+      for await (const chunk of result.body()) {
         downloadBuffer.push(Buffer.from(chunk));
       }
       expect(Buffer.concat(downloadBuffer)).toEqual(content);
@@ -117,7 +117,7 @@ describe('MultipartS3Storage', () => {
       });
       const downloadBuffer = [];
 
-      for await (const chunk of result.content()) {
+      for await (const chunk of result.body()) {
         downloadBuffer.push(Buffer.from(chunk));
       }
 

@@ -16,7 +16,7 @@ import {MultipartLimitExceededError} from './error.js';
  * just perform a simple upload, otherwise we have to perform a partitioned upload.
  *
  */
-export class MultipartFileRemoteStorage implements MultipartFileStorage<() => NodeJS.ReadableStream> {
+export class MultipartFileRemoteStorage implements MultipartFileStorage {
   public readonly fileCountLimit: number;
   public readonly fileSizeLimit: number;
   readonly #adaptor: RemoteStorageAdaptor<any, any, any>;
@@ -42,12 +42,12 @@ export class MultipartFileRemoteStorage implements MultipartFileStorage<() => No
     name: string,
     file: NodeJS.ReadableStream,
     info: MultipartFileInfo,
-  ): Promise<MultipartFileEntry<() => NodeJS.ReadableStream>> {
+  ): Promise<MultipartFileEntry> {
     if (this.#fileCount >= this.fileCountLimit) {
       throw new MultipartLimitExceededError('File count limit exceeded');
     }
     this.#fileCount += 1;
-    return new Promise<MultipartFileEntry<() => NodeJS.ReadableStream>>((resolve, reject) => {
+    return new Promise<MultipartFileEntry>((resolve, reject) => {
       const writable = new UploadStream(this.#adaptor, name, info, resolve);
       pipeline(file, writable, (e) => {
         if (e) {
