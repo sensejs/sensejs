@@ -88,7 +88,7 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
     private readonly adaptor: RemoteStorageAdaptor<F, P, C>,
     private name: string,
     private info: MultipartFileInfo,
-    private resolve: (file: MultipartFileEntry<() => NodeJS.ReadableStream>) => void,
+    private resolve: (file: MultipartFileEntry) => void,
   ) {
     super();
     this.buffer = Buffer.allocUnsafe(
@@ -160,7 +160,7 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
             type: 'file',
             name: this.name,
             size: this.fileSize,
-            content: () => this.adaptor.createReadStream(result),
+            body: () => this.adaptor.createReadStream(result),
             mimeType: this.info.mimeType,
             filename: this.info.filename,
             transferEncoding: this.info.transferEncoding,
@@ -176,7 +176,7 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
         this.resolve({
           name: this.name,
           size: this.fileSize,
-          content: () => this.adaptor.createReadStream(result),
+          body: () => this.adaptor.createReadStream(result),
           mimeType: this.info.mimeType,
           filename: this.info.filename,
           transferEncoding: this.info.transferEncoding,
