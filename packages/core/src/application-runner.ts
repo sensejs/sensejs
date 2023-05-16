@@ -135,6 +135,7 @@ export class ApplicationRunner {
       throw new Error('run() or runModule() ApplicationRunner can only be executed once in a process');
     }
     const stoppedPromise = firstValueFrom(this.#stoppedSubject);
+
     @Module({
       requires: [entryModuleConstructor],
     })
@@ -157,7 +158,7 @@ export class ApplicationRunner {
       map(() => runOption.errorExitOption),
     );
 
-    const warningSubscriber = this.getWarningSubscriber(runOption);
+    const warningSubscriber = this.#getWarningSubscriber(runOption);
     const exitSignalObservables = this.getExitSignalObservables(runOption);
     const exitSignalObservable = merge(...exitSignalObservables).pipe(
       first(),
@@ -180,8 +181,8 @@ export class ApplicationRunner {
       exitSignalObservable,
       concat(
         startAllModules
-          ? this.getStartupObservable(entryModule, runOption)
-          : this.getBoostrapObservable(entryModule, runOption),
+          ? this.#getStartupObservable(entryModule, runOption)
+          : this.#getBoostrapObservable(entryModule, runOption),
         defer(async () => entryModule.run('main')).pipe(
           map(() => runOption.normalExitOption),
           catchError((e) => {
@@ -195,7 +196,7 @@ export class ApplicationRunner {
       first(),
       tap(() => {}),
     );
-    const shutdownObservable = this.getShutdownObservable(runningObservable, entryModule, runOption);
+    const shutdownObservable = this.#getShutdownObservable(runningObservable, entryModule, runOption);
 
     this.#runSubscription = merge(shutdownObservable, forcedExitSignalObservable)
       .pipe(
@@ -225,7 +226,7 @@ export class ApplicationRunner {
     });
   }
 
-  private getBoostrapObservable<M extends {}, T>(
+  #getBoostrapObservable<M extends {}, T>(
     moduleRoot: EntryModule<M>,
     runOption: RunnerOption<T>,
   ): Observable<ExitOption> {
@@ -237,7 +238,7 @@ export class ApplicationRunner {
     );
   }
 
-  private getStartupObservable<M extends {}, T>(
+  #getStartupObservable<M extends {}, T>(
     moduleRoot: EntryModule<M>,
     runOption: RunnerOption<T>,
   ): Observable<ExitOption> {
@@ -250,11 +251,7 @@ export class ApplicationRunner {
     );
   }
 
-  private performShutdown<M extends {}, T>(
-    moduleRoot: EntryModule<M>,
-    exitOption: ExitOption,
-    runOption: RunnerOption<T>,
-  ) {
+  #performShutdown<M extends {}, T>(moduleRoot: EntryModule<M>, exitOption: ExitOption, runOption: RunnerOption<T>) {
     return merge(
       from(moduleRoot.shutdown()).pipe(
         map(() => exitOption.exitCode),
@@ -268,7 +265,7 @@ export class ApplicationRunner {
     ).pipe(first());
   }
 
-  private getShutdownObservable<M extends {}, T>(
+  #getShutdownObservable<M extends {}, T>(
     runningProcessObservable: Observable<ExitOption>,
     moduleRoot: EntryModule<M>,
     runOption: RunnerOption<T>,
@@ -276,12 +273,12 @@ export class ApplicationRunner {
     return runningProcessObservable.pipe(
       first(),
       mergeMap((exitOption) => {
-        return concat(this.performShutdown(moduleRoot, exitOption, runOption), of(exitOption.exitCode));
+        return concat(this.#performShutdown(moduleRoot, exitOption, runOption), of(exitOption.exitCode));
       }),
     );
   }
 
-  private getWarningSubscriber<T>(runOption: RunnerOption<T>) {
+  #getWarningSubscriber<T>(runOption: RunnerOption<T>) {
     return fromEvent(this.process, 'warning').subscribe({
       next: (e) => {
         if (runOption.printWarning) {
