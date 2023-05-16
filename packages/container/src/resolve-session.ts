@@ -104,14 +104,14 @@ export class ResolveSession {
      * Middlewares may directly put something into session cache, we need to
      * check the cache first, otherwise a BindingNotFoundError may be thrown
      */
-    if (this.resolveFromCache(target)) {
+    if (this.#resolveFromCache(target)) {
       return;
     }
-    const binding = this.getBindingForPlan(target, optional, allowUnbound, allowTemporary);
+    const binding = this.#getBindingForPlan(target, optional, allowUnbound, allowTemporary);
     if (!binding) {
       return;
     }
-    if (this.resolveFromCache(binding.id)) {
+    if (this.#resolveFromCache(binding.id)) {
       return;
     }
     switch (binding.type) {
@@ -137,7 +137,7 @@ export class ResolveSession {
    * @param allowTemporary
    * @private
    */
-  private internalGetBinding(target: ServiceId, allowTemporary: boolean) {
+  #internalGetBinding(target: ServiceId, allowTemporary: boolean) {
     for (;;) {
       if (allowTemporary) {
         const temporaryBinding = this.#temporaryBinding.get(target);
@@ -156,7 +156,7 @@ export class ResolveSession {
     }
   }
 
-  private resolveFromCache(target: ServiceId) {
+  #resolveFromCache(target: ServiceId) {
     if (this.#globalCache.has(target)) {
       this.#stack.push(this.#globalCache.get(target));
       return true;
@@ -167,16 +167,11 @@ export class ResolveSession {
     return false;
   }
 
-  private getBindingForPlan(
-    target: ServiceId,
-    optionalInject: boolean,
-    allowUnbound: boolean,
-    allowTemporary: boolean,
-  ) {
+  #getBindingForPlan(target: ServiceId, optionalInject: boolean, allowUnbound: boolean, allowTemporary: boolean) {
     if (!this.#validatedSet) {
       internalValidateDependencies(target, this.#bindingMap, [], this.#validatedSet);
     }
-    const binding = this.internalGetBinding(target, allowTemporary);
+    const binding = this.#internalGetBinding(target, allowTemporary);
     if (binding) {
       return binding;
     }
