@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@fastify/busboy": "^1.2.1",
-    "tslib": "^2.5.0",
-    "@sensejs/utility": "workspace:^0.11.0"
+    "@sensejs/utility": "workspace:^",
+    "tslib": "^2.5.3"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",

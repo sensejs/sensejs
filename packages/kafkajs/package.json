@@ -31,10 +31,12 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/kafkajs-standalone": "workspace:^0.11.0",
-    "@sensejs/utility": "workspace:^0.11.0",
+    "@sensejs/kafkajs-standalone": "workspace:^",
+    "@sensejs/utility": "workspace:^",
+    "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
-    "tslib": "^2.5.0"
+    "reflect-metadata": "^0.1.13",
+    "tslib": "^2.5.3"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",
