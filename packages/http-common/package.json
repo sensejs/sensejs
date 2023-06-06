@@ -29,14 +29,14 @@
     "access": "public"
   },
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.11.0",
-    "tslib": "^2.5.0"
+    "@sensejs/utility": "workspace:^",
+    "tslib": "^2.5.3"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
-    "reflect-metadata": "^0.1.13",
-    "@sensejs/multipart": "workspace:^0.11.0"
+    "@sensejs/multipart": "workspace:^",
+    "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",

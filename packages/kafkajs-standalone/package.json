@@ -31,11 +31,12 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.11.0",
+    "@sensejs/utility": "workspace:^",
+    "kafkajs": "^2.2.4",
     "lightning-pool": "^4.2.1",
     "long": "^4.0.0",
-    "rxjs": "^7.8.0",
-    "tslib": "^2.5.0"
+    "rxjs": "^7.8.1",
+    "tslib": "^2.5.3"
   },
   "peerDependencies": {
     "kafkajs": "^2.0.2"

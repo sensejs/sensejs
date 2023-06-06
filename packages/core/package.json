@@ -31,9 +31,10 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "@sensejs/utility": "workspace:^0.11.0",
-    "rxjs": "^7.8.0",
-    "tslib": "^2.5.0",
+    "@sensejs/utility": "workspace:^",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1",
+    "tslib": "^2.5.3",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
