@@ -1,6 +1,6 @@
 const projectName = 'sensejs';
 const organizationName = 'sensejs';
-const projectGithubUrl = 'https://github.com/sensejs/sensejs'
+const projectGithubUrl = 'https://github.com/sensejs/sensejs';
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
       items: [
         {
           type: 'doc',
-          docId: 'overview/introduction',
+          docId: 'introduction/introduction',
           position: 'left',
           label: 'Tutorial',
         },
@@ -88,13 +88,11 @@ module.exports = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl:
-            `${projectGithubUrl}/edit/master/website/`,
+          editUrl: `${projectGithubUrl}/edit/master/website/`,
         },
         blog: {
           showReadingTime: true,
-          editUrl:
-            `${projectGithubUrl}/edit/master/website/blog/`,
+          editUrl: `${projectGithubUrl}/edit/master/website/blog/`,
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
