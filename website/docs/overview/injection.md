@@ -7,19 +7,20 @@ sidebar_position: 3
 
 SenseJS framework provides an advanced injection framework, which features
 
--  Constructor parameters injection, which is exactly what your expected for a common IoC framework
+-  Constructor parameters injection, which is exactly what your expected for a dependency injection framework
 
--  Middleware provided injectable support, which is the most powerful and elegant part of SenseJs. In this article,
+-  Injectables provided by middlewares, which is the most powerful and elegant part of SenseJs. In this article,
    we'll show you that it's very useful when combining with a traceable logger.
 
--  Method invocation framework, based on which the `@sensejs/http` and `@sensejs/kafka` handle requests and messages,
-   and such ability can also be useful when you're integrating some protocol other than HTTP and Kafka.
+-  Method invocation framework, based on which the `@sensejs/http` handles requests, where the request parameters
+   are provided as an injectable and bound to the parameters of the target method. It can also be useful if you need
+   to integrate other RPC frameworks with SenseJS.
 
 ## Example
 
 We'll show you all the powerful features in an example.
 
-The code of ths example can be found at the directory [./examples/injection](
+The code of this example can be found at the directory [./examples/injection](
 https://github.com/sensejs/sensejs/tree/master/examples/injection) in the [SenseJs repository].
 
 This example we separate the code into three parts.
@@ -27,7 +28,10 @@ This example we separate the code into three parts.
 -  `random-number.ts`: contains a simple component `RandomNumberGenerator` and a controller `RandomNumberController` for querying or mutating the state
    of `RandomNumberGenerator`, and exporting it as a module `RandomNumberModule`.
 
--  `http.ts`: containing the code for setting up an HTTP server, including all middleware
+-  `http.module.ts`: containing the code for setting up an HTTP server, including all middleware
+
+-  `index.ts`: the entry point of the application, which imports `RandomNumberModule` and `HttpModule` and start the
+   application.
 
 
 ### `RandomNumberModule`
@@ -57,15 +61,22 @@ class RandomNumberGenerator {
 }
 ```
 
-In addition to `@Component()`, it's also decorated with `@Scope(Scope.SINGLETON)` as we want to ensure that there is
-only one instance of `RandomNumberGenerator` exists.
+As you see, the class `RandomNumberGenerator` is decorated with `@Component()`, which make it an injectable component.
 
-In addition to the `SINGLETON` scope, a component can also be marked as`REQUEST` scope or `TRANSIENT` scope (which is
+In addition to `@Component()`, it's also decorated with `@Scope(Scope.SINGLETON)` as we want to ensure that there is
+only one instance of `RandomNumberGenerator` exists in the whole dependency injection context, note that it does not
+prevent you from creating multiple instances of `RandomNumberGenerator` manually.
+
+In addition to the `SINGLETON` scope, a component can also be marked as `SESSION` scope or `TRANSIENT` scope (which is
 the default). The differences between them are explained below:
 
-- `SINGLETON`: Only instantiated once during the application lifetime.
-- `REQUEST`: Only instantiated once each time when the IoC Container is requested to instantiate it or its dependents.
-- `TRANSIENT`:  Create instances each time for each param that needs such a component.
+-  `SINGLETON`: Only instantiated once during the application lifetime.
+
+-  `SESSION`: Only instantiated once in each dependency injection session, which is usually the lifetime of a request.
+   It is also the default scope of a component if unspecified
+
+-  `TRANSIENT`:  Create instances each time for each param that needs such a component, if more than one param needs
+   such a component, multiple instances will be created.
 
 Then we define the controller `RandomNumberController`
 
@@ -121,56 +132,16 @@ export const RandomNumberModule = createModule({
 
 ### Handling and intercepting an HTTP request
 
-In this section we focused on another file `./src/http.ts`.
+In this section we focused on another file `./src/http.module.ts`.
 
-As mentioned above, we'll show you how middleware works in this example.
+We'll explain th content of this file in reverse order.
 
-First we intercept all requests and assign each of them with a request id
 
-```typescript
-import {randomUUID} from 'crypto';
+#### Http module
 
-const REQUEST_ID = Symbol('REQUEST_ID');
+In the end of this file, we'll create an HTTP module and export it, just like what we did in the hello world example,
+but this time we'll add some middlewares.
 
-@Middleware({
-  provides: [REQUEST_ID]
-})
-class RequestIdMiddleware {
-
-  async intercept(next: (requestId: string) => Promise<void>) {
-    const requestId = randomUUID();
-    await next(requestId);
-  }
-}
-```
-
-And then we'll attach the request id to a traceable logger,
-
-```typescript
-
-@Middleware({
-  provides: [LoggerBuilder]
-})
-class ContextualLoggingMiddleware {
-
-  constructor(
-    // It'll be injected with value provided by previous interceptor
-    @Inject(REQUEST_ID) private requestId: string,
-    // It'll be injected with globally defined LoggerBuilder
-    @InjectLogger() private logger: Logger
-  ) {}
-
-  async intercept(next: (lb: LoggerBuilder) => Promise<void>) {
-    this.logger.debug('Associate LoggerBuilder with requestId=%s', this.requestId);
-    const slb = defaultLoggerBuilder.setTraceId(this.requestId);
-    await next(slb);
-  }
-
-}
-
-```
-
-And finally we combine the dependencies and the above interceptors to create an HTTP module and export it.
 ```typescript
 export const HttpModule = createKoaHttpModule({
   // We need list RandomNumberModule here, so that RandomNumberController can be discovered
@@ -190,9 +161,65 @@ export const HttpModule = createKoaHttpModule({
 
 ```
 
+
+#### Middlewares
+
+The middlewares are defined prior to the HTTP module.
+
+The first one, `RequestIdMiddleware` assigns a request id to each request, and bound it to a symbol `REQUEST_ID`:
+
+```typescript
+import {randomUUID} from 'crypto';
+
+const REQUEST_ID = Symbol('REQUEST_ID');
+
+@Middleware({
+  provides: [REQUEST_ID]
+})
+class RequestIdMiddleware {
+
+  async intercept(next: (requestId: string) => Promise<void>) {
+    const requestId = randomUUID();
+    // The parameter passed to next() will be bound to REQUEST_ID
+    await next(requestId);
+  }
+}
+```
+
+The second one, `ContextualLoggingMiddleware` injects the request id bound in previous middleware and attach it to a
+logger builder, so that all logger build from it will log with the request id. This is very useful when you want to
+distinguish logs from concurrent requests.
+
+```typescript
+
+@Middleware({
+  provides: [LoggerBuilder]
+})
+class ContextualLoggingMiddleware {
+
+  constructor(
+    // It'll be injected with value provided by previous interceptor
+    @Inject(REQUEST_ID) private requestId: string,
+    // It'll be injected with globally defined LoggerBuilder
+    @InjectLogger() private logger: Logger
+  ) {}
+
+  async intercept(next: (lb: LoggerBuilder) => Promise<void>) {
+    this.logger.debug('Associate LoggerBuilder with requestId=%s', this.requestId);
+    const slb = defaultLoggerBuilder.setTraceId(this.requestId);
+    // The parameter passed to next() will be bound to LoggerBuilder
+    await next(slb);
+  }
+
+}
+
+```
+
 ### Entrypoint
 
-Before create a module and mark it as entry point, we need to import `"reflect-metadat"` at first place.
+In the entry file we need to import `"reflect-metadata"` at first place. Then we just create a module and mark it as
+entrypoint.
+
 
 ```typescript
 import 'reflect-metadata';
@@ -209,6 +236,8 @@ class App {
 }
 
 ```
+
+That's it.
 
 
 ## Running
@@ -249,9 +278,6 @@ On the application log, you'll see something like
 + 16:51:22.194 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=67ce037b-5d64-4a16-a57d-fba78ceed8f8
 + 16:51:22.194 RandomNumberController 67ce037b-5d64-4a16-a57d-fba78ceed8f8 | Generated random number:  72046864
 ```
-
-The above log is contains the request id in the log, which is very useful when logs from concurrent requests
-interleaves together.
 
 ## More ways to define injectable
 

@@ -14,6 +14,7 @@ const REQUEST_ID = Symbol('REQUEST_ID');
 class RequestIdProviderMiddleware {
   async handle(next: (requestId: string) => Promise<void>) {
     const requestId = randomUUID();
+    // The parameter passed to next() will be bound to REQUEST_ID
     await next(requestId);
   }
 }
@@ -32,6 +33,7 @@ class ContextualLoggingMiddleware {
   async handle(next: (lb: LoggerBuilder) => Promise<void>) {
     this.logger.debug('Associate LoggerBuilder with requestId=%s', this.requestId);
     const slb = defaultLoggerBuilder.setTraceId(this.requestId);
+    // The parameter passed to next() will be bound to LoggerBuilder
     await next(slb);
   }
 }

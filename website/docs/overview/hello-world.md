@@ -23,9 +23,9 @@ pnpm i -r
 to install the dependencies.
 
 However, if you would like to write the code from scratch, you need to set up a Node.js project with the following
-package installed.
+packages installed.
 
-- `reflect-metadata`, `@sensejs/http`, `@sensejs/core`. These package are required by this demo.
+- `reflect-metadata`, `@sensejs/http`, `@sensejs/core`. These packages are required to run this example.
 
 - `typescript`, it should be the dev dependency of your project unless you have it installed globally.
 
@@ -76,7 +76,7 @@ class HelloWorldApp {
 ApplicationRunner.instance.start(HelloWorldApp);
 ```
 
-The above code create a simple hello world http service that will listen at `localhost:8080`.
+The above code is a simple hello world http service that will listen at `localhost:8080`.
 
 Each time we send http request to `http://localhost:8080/`, an instance of `HelloWorldController` will be instantiated
 and the method `helloWorld` will be invoked.
@@ -89,7 +89,13 @@ Then you can run this simple http service via
 ts-node main.ts
 ```
 
-After starting it, you shall be able to visit `http://localhost:8080/` to see the greeting from this app.
+After starting it, you shall be able to visit `http://localhost:8080/` with an HTTP client, e.g. curl, to see the
+output from this app.
+
+```
+$ curl localhost:8080
+hello world
+```
 
 ## What's next
 

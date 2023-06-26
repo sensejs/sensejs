@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import {EntryPoint, Module} from '@sensejs/core';
-import {HttpModule} from './http.js';
+import {HttpModule} from './http.module.js';
 
 @EntryPoint()
 @Module({
