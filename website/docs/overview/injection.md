@@ -3,7 +3,7 @@ id: injection
 sidebar_position: 3
 ---
 
-# Injection
+# Dependency Injection
 
 SenseJS framework provides an advanced injection framework, which features
 
@@ -12,7 +12,7 @@ SenseJS framework provides an advanced injection framework, which features
 -  Middleware provided injectable support, which is the most powerful and elegant part of SenseJs. In this article,
    we'll show you that it's very useful when combining with a traceable logger.
 
--  Method parameters injection, based on which the `@sensejs/http` and `@sensejs/kafka` handle requests and messages,
+-  Method invocation framework, based on which the `@sensejs/http` and `@sensejs/kafka` handle requests and messages,
    and such ability can also be useful when you're integrating some protocol other than HTTP and Kafka.
 
 ## Example
