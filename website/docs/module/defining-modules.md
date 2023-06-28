@@ -108,8 +108,7 @@ hooks are automatically injected by the framework.
     This pair of hooks is different from `OnModuleCreated`/`OnModuleDestroy`,
 
     Note that `OnModuleStart`/`OnModuleStop` hooks will be triggered only when the module is started by
-    `ApplicationRunner.start`(see
-    [EntryPointModules](./entry-point))
+    `ApplicationRunner.start`(see [EntryPointModules](./entry-point.md))
 
 ## Inter-module dependency
 
