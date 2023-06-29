@@ -4,11 +4,11 @@ sidebar_pos: 2
 ---
 # Entry point
 
-Every application has an entry point, in SenseJS, an entry point is defined as a module.
+Every application has an entry point, in SenseJS, an entry point is a module.
 
-Applications can be divided into two categories: one is utility applications that run once and exits when the job is
-done or failed; the other is long-running applications that keep running and waiting for requests, a.k.a. daemons or
-servers.
+Usually, applications can be divided into two categories: one is utility applications that run once and exits when
+the job is done or failed; the other is long-running applications that keep running and waiting for requests,
+a.k.a. daemons or servers.
 
 
 ## Utility applications
@@ -44,6 +44,23 @@ class MyApp {
     }
 }
 ApplicationRunner.instance.start(MyApp);
+```
+
+or through decorators:
+
+```typescript
+@Entrypoint()
+@Module({ requires: [OtherModules] })
+class MyApp {
+  @OnModuleStart()
+  onModuleStart() {
+    // Start listening for requests
+  }
+  @OnModuleStop()
+  onModuleStop() {
+    // Stop listening for requests
+  }
+}
 ```
 
 In addition to the `@OnModuleCreated`/`@OnModuleDestroyed` hooks, applications running in this way will also invoke

@@ -9,24 +9,25 @@ The most simple way to define a module is to call `createModule` function.
 
 ```typescript
 const MyModule = createModule({
-  requires: [],
-  components: [],
-  factories: [],
-  constants: [],
+  requires: [],   // Other modules that are required by this module
+  components: [], // Component injectable provided by this module
+  factories: [],  // Dynamic injectable provided by this module
+  constants: [],  // Constant injectables provided by this module
 });
 ````
 
 Usually, you define a module in this way when it only exports injectables.
 
 
-When you need to use some advanced features, such as lifecycle hooks, you need to define a module with decorator-style.
+When you need to use some advanced features of module, such as lifecycle hooks, you need to define a module with
+decorator-style.
 
 ```typescript
 @Module({
-    requires: [],   // Other modules that are required by this module
-    components: [], // Component injectable provided by this module
-    factories: [],  // Dynamic injectable provided by this module
-    constants: [],  // Constant injectables provided by this module
+    requires: [],
+    components: [],
+    factories: [],
+    constants: [],
 })
 class MyModule {
 
@@ -41,14 +42,13 @@ class MyModule {
 }
 ```
 
-We'll discuss lifecycle hooks in the next section.
 
 ## Lifecycle hooks
 
 SenseJS defined four lifecycle hooks for modules. Just like the module constructor, the parameters of these lifecycle
 hooks are automatically injected by the framework.
 
--   `OnModuleCreated`/`OnModuleStop`: called when the module is created/destroyed, respectively.
+-   `OnModuleCreated`/`OnModuleDestroy`: called when the module is created/destroyed, respectively.
 
     When one of your components needs to be initialized and de-initialized(such component must be singleton scoped),
     it shall be done in the `@OnModuleCreated` and `@OnModuleDestroy` hooks of the module that provides the component.
@@ -102,13 +102,11 @@ hooks are automatically injected by the framework.
       ```
 
     `OnModuleStart` hooks are ensured to be invoked after all `OnModuleCreated` hooks are finished for all modules,
-    while `OnModuleDestroy` hooks are ensured to be invoked before all `OnModuleDestroy` hooks are finished. This is how
-    SenseJS gracefully startup and shut down your app.
-
-    This pair of hooks is different from `OnModuleCreated`/`OnModuleDestroy`,
+    while `OnModuleDestroy` hooks are ensured to be finished before any invocation to `OnModuleDestroy` hooks. This is
+    how SenseJS gracefully startup and shut down your app.
 
     Note that `OnModuleStart`/`OnModuleStop` hooks will be triggered only when the module is started by
-    `ApplicationRunner.start`(see [EntryPointModules](./entry-point.md))
+    `ApplicationRunner.start`.
 
 ## Inter-module dependency
 
@@ -145,6 +143,9 @@ In the above code, `SomeFancyModule` need to inject an instance of `DatabaseConn
 is created or destroyed.
 
 Note that once a module is initialized, any injectable provided by one module will be available to others, even
-components from the other modules that do not list it as a dependency. In other words, the inter-module dependency graph
-only affects the order of initialization and de-initialization but does not restrict you from injecting anything from
-any other module. However, it is still a good practice to carefully consider the relationship between modules.
+components from the other modules that do not list it as a dependency.
+
+In other words, the inter-module dependency graph only affects the order of initialization and de-initialization but
+does not restrict you from injecting anything from any other module.
+
+Anyway, it is a good practice to explicitly specify the relationship between modules.
