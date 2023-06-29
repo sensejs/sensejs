@@ -31,8 +31,8 @@ packages installed.
 - Optionally include `ts-node` in your dev dependencies, we'll use it to run the demo. you can also compile the source file
   manually before running the app.
 
-These steps are also required among all the other examples in this repository, we will not repeat this section in
-the other articles.
+
+Also, you need to configure the `tsconfig.json`, as instructed in [the previous article](./installation.md).
 
 ## Hello world
 
@@ -75,17 +75,14 @@ class HelloWorldApp {
 ApplicationRunner.instance.start(HelloWorldApp);
 ```
 
-The above code is a simple hello world HTTP service that will listen at `localhost:8080`.
 
-Each time we send an HTTP request to `http://localhost:8080/`, an instance of `HelloWorldController` will be instantiated
-and the method `helloWorld` will be invoked.
-
-
-Then you can run this simple http service via
+You can run this simple http service via
 
 ```bash
 ts-node main.ts
 ```
+
+The above code create simple HTTP service that will listen at `localhost:8080`.
 
 After starting it, you shall be able to visit `http://localhost:8080/` with an HTTP client, e.g. curl, to see the
 output from this app.
@@ -95,9 +92,14 @@ $ curl localhost:8080
 hello world
 ```
 
+Each time we send an HTTP request to `http://localhost:8080/`, an instance of `HelloWorldController` will be
+instantiated and the method `helloWorld` will be invoked, and the return value will be sent back to the HTTP client.
+
+
+
 ## Dependency injection
 
-In this example, we will show you how dependency injection works as well as other features of SenseJS.
+In this example, we will show you how dependency injection works.
 
 The code of this example can be found at [./examples/injection](
 https://github.com/sensejs/sensejs/tree/master/examples/injection)
@@ -179,15 +181,22 @@ class RandomNumberController {
 ```
 
 The above class provides an HTTP controller to query or mutate the state of `RandomNumberGenerator`, its constructor
-has two parameters, the first one requires an instance of `RandomNumberGenerator`, which is defined previously,
-and the second one requires an instance of `Logger`. They will be instantiated and injected automatically when the
-controller is instantiated by the framework.
+has two parameters.
+
+-   the first one requires an instance of `RandomNumberGenerator`, which is defined previously,
+-   and the second one requires an instance of `Logger`.
+
+They will be instantiated and injected automatically when the controller is instantiated by the framework.
 
 When handling requests, the framework will instantiate an instance of `RandomNumberController`, and invoke the
-appropriate method, and if the method needs parameters, the framework will inject them automatically, For example,
-when handling, `POST /seed`, the `seed` field from the request body will be injected as the parameter.
+appropriate method, and if the method needs parameters, the framework will inject them automatically based on the
+decorator of each parameter.
 
-Finally, we package them into a module for exporting them for other modules to use.
+For example, when handling, `POST /seed`, the `seed` field from the request body will be injected as the parameter
+toe the `reseed` method.
+
+At the end of this file, `RandomNumberGenerator` and `RandomNumberController` are packaged into a module
+`RandomNumberModule`.
 
 ```typescript
 
@@ -202,8 +211,8 @@ In this section, we focused on another file `./src/http.module.ts`.
 
 We'll explain the content of this file in reverse order.
 
-At the end of this file, we'll create an HTTP module and export it, just like what we did in the hello world example,
-but this time we'll add some middlewares.
+At the end of this file, a module is created by `createKoaHttpModule`, just like what we did in the hello world example,
+but this time two middlewares are added.
 
 ```typescript
 export const HttpModule = createKoaHttpModule({
@@ -247,8 +256,9 @@ class RequestIdMiddleware {
 ```
 
 The second one, `ContextualLoggingMiddleware` injects the request-id bound in previous middleware and attaches it to a
-logger builder, so that all logger built from it will log with the request-id. This is very useful when you want to
-distinguish logs from concurrent requests.
+logger builder, and in fact it overrides the LoggerBuilder in this request, so all logger created in this request will
+share the same request-id, and their output can be grouped by the request-id easily. This is very useful when you want
+to distinguish the logs from different concurrent requests.
 
 ```typescript
 
