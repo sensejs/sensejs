@@ -9,8 +9,9 @@ SenseJS framework provides an advanced injection framework, which features
 
 -  Constructor parameters injection, which is exactly what your expected for a dependency injection framework
 
--  Injectables provided by middlewares, which is the most powerful and elegant part of SenseJS.
+-  Method parameters injection, by the method invocation framework. It
 
--  Method invocation framework, based on which the `@sensejs/http` handles requests, where the request parameters
-   are provided as an injectable and bound to the parameters of the target method. It can also be useful if you
-   need to integrate other RPC frameworks with SenseJS.
+The Method Invoking Framework brings the ability to invoke arbitrary method of a component and enhanced the ability of
+dependency injection that supports injection from contextually bound injectables that provided by middlewares.
+
+It is the most powerful and elegant part of SenseJS. We'll discuss it in another article of this chapter.

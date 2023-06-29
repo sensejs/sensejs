@@ -3,20 +3,18 @@ id: injection-scope
 sidebar_position: 2
 ---
 
-# Injection Scope
+# 依赖注入域
 
-All injectables are defined within a scope. Just like all other dependency injection frameworks, SenseJS provides
-the following injection scopes:
+所有的可注入对象都在某个域中定义，就像其他所有的依赖注入框架一样，SenseJS 提供了以下注入域：
 
--  `SINGLETON`: Injectables within this scope will be instantiated only once during the application lifetime.
+-  `SINGLETON`：在这个域中定义的可注入对象在整个应用的生命周期中只会被实例化一次；
 
--  `SESSION`: Injectables within this scope will be instantiated once in each dependency injection session, which is
-    usually the lifecycle of a request. It is also the default scope of a component if unspecified
+-  `SESSION`：在这个域中定义的可注入对象在每个依赖注入会话中只会被实例化一次，通常是一个请求的生命周期。如果未指定，这是组件的默认域；
 
--  `TRANSIENT`: Injectables within this scope are instantiated each time for each param it bound to; if more than one
-   param bound to such an injectable, multiple instances of it will be created.
+-  `TRANSIENT`：在这个域中定义的可注入对象在每次注入时都会被实例化，如果有多个参数注入了这个可注入对象，那么它将被实例化多次。
 
-To specify the scope of a component, you can use the `@Scope()` decorator, for example:
+
+要指定组件的域，可以使用 `@Scope()` 装饰器，例如：
 
 ```typescript
 
@@ -30,8 +28,7 @@ class SingletonComponent {
 }
 ```
 
-
-For injectables provided by a factory, the scope is specified by their provider:
+对于通过工厂提供的可注入对象，可以通过如下方式指定其所在的域：
 
 ```typescript
 const MyModule = createModule({
@@ -43,4 +40,5 @@ const MyModule = createModule({
 });
 ```
 
-While constant injectables are always `SINGLETON` scoped.
+对于常量可注入对象来说，它们总是在 `SINGLETON` 域中。
+

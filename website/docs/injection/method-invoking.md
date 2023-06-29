@@ -3,7 +3,7 @@ id: method-invoking
 sidebar_position: 3
 ---
 
-# Method invoking
+# Method Invoking Framework
 
 Dependency injections happen during method invoking. The `@sensejs/http` and `@sensejs/kafka` are built on top of the
 method-invoking framework. You can also use it to integrate other RPC frameworks with SenseJS.
