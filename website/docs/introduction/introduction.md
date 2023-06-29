@@ -20,34 +20,17 @@ The module system plays a central role in SenseJS, which
 -   The framework performs graceful startup and shutdown based on the dependency graph among modules.
 
 
-### Powerful method invoke framework
+### Powerful method invoker
 
-SenseJS comes with a powerful method invoke framework with enhanced dependency injection support, which can invoke
+SenseJS comes with a powerful method invoker with enhanced dependency injection support, which can invoke
 arbitrary method of a component, with its parameter injected automatically from:
 
 -   Injectables defined in any module
 
 -   Injectables that are provided contextually by middlewares that intercept the method invocation.
 
-Note that the HTTP part of SenseJS is based on this method invoke framework, but it is also opened to be used for
+Note that the HTTP part of SenseJS is based on this method invoker, but it is also opened to be used for
 integrating any other RPC framework.
-
-
-When
-
-[//]: # (-   )
-
-[//]: # (, which can invoke arbitrary method of a component, with its)
-
-[//]: # (parameter injected automatically from:)
-
-[//]: # ()
-[//]: # (-   Components and providers defined in all modules, which are usually statically defined and initialized when the)
-
-[//]: # (    application starts.)
-
-[//]: # ()
-[//]: # (-   Middlewares that intercept the request, which can provide injectables based on the request context.)
 
 
 
