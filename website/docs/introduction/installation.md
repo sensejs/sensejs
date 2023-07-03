@@ -10,7 +10,7 @@ SenseJS is a collection of packages that can be used independently, the followin
 need to use SenseJS:
 
 -  `reflect-metadata`, based on which the SenseJS framework accesses the decorator metadata.
--  `@sensejs/container`, the IoC container implementation of SenseJS.
+-  `@sensejs/container`, the dependency injection implementation of SenseJS.
 -  `@sensejs/core`, the module system and core functionality of the framework.
 
 In addition to the above packages, you may also need to install the following packages:
