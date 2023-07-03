@@ -3,28 +3,30 @@ id: defining-injectables
 sidebar_position: 1
 ---
 
-# Defining Injectables
+# Provide Injectables
 
 
 ## Components
 
-The most common way to define an injectable is to define a component. A component is a class decorated with
-`@Component`.
+A component is a class decorated with `@Component`.
 
 
 ```typescript
-
 @Component()
-class MyComponent {
+@Scope(ComponentScope.SINGLETON)
+class Timer {
   startTime = Date.now()
 
   getElapsed() {
       return Date.now() - this.startTime;
   }
 }
+const MyModule = createModule({
+  components: [Timer]
+});
 ```
 
-### Constants
+## Provide Constant Injectables
 
 The following example archives almost the same goal by providing `Timer` as a constant, except that the instance of
 `Timer` will be created immediately when the source file is loaded. Also, note that constant injectables are always
@@ -39,10 +41,9 @@ const TimerModule = createModule({
 });
 ```
 
-### Factories
+## Provide Injectable through Factory
 
-You can also define injectables through factories. The following example will archive the same goal by providing `Timer`
-instance through a factory.
+When you need factory pattern, you can also provide injectables in this way:
 
 ```typescript
 class TimerFactory extends ComponentFactory<Timer> {

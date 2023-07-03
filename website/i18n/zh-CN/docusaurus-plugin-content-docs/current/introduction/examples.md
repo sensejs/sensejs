@@ -2,41 +2,45 @@
 id: hello-world
 sidebar_position: 2
 ---
-# Examples
+# 示例
 
-In this article, we will show you what a SenseJS application looks like with two simple examples.
+本文将展示两个 SenseJS 应用作为示例。
 
-The code of the examples in this article can be found at [examples](https://github.com/sensejs/sensejs/tree/master/examples/)
-folder in the [SenseJS repository].
+这些示例的代码可以从 [SenseJS 代码仓库] 中的 [examples](https://github.com/sensejs/sensejs/tree/master/examples/)
+找到。
 
-## Set up
 
-To run the example from the SenseJS repository, you need to install the dependencies first.
+## 配置
 
-Note that the SenseJS repository uses [pnpm](https://pnpm.io/) as the package manager, so you should run the following
+[//]: # (## Set up)
+
+要直接运行代码仓库中的示例，你需要首先安装所有的依赖。
+
+SenseJS 的代码仓库使用 [pnpm](https://pnpm.io/) 包管理器，所以你应当使用下面的命令
+
 
 ```
 pnpm i -r
 ```
 
-to install the dependencies.
+来安装依赖。
 
-However, if you would like to write the code from scratch, you need to set up a Node.js project with the following
-packages installed.
+当然，如果你想要自己从头编写示例代码，你需要配置一个 Node.js 项目并安装如下依赖：
 
-- `reflect-metadata`, `@sensejs/http`, `@sensejs/core`. These packages are required to run this example.
+-  `reflect-metadata`, `@sensejs/http`, `@sensejs/core`。这是示例运行所需要的依赖；
 
-- `typescript`. It should be the dev dependency of your project unless you have it installed globally.
+-  `typescript`. 应当将其作为开发依赖安装到你的示例项目中，除非你将其安装到了全局；
 
-- Optionally include `ts-node` in your dev dependencies, we'll use it to run the demo. you can also compile the source file
-  manually before running the app.
+-  `ts-node`（可选），本文中会通过 `ts-node` 来运行示例代码，你也以将代码编译后运行编译产出的文件。
 
 
-Also, you need to configure the `tsconfig.json`, as instructed in [the previous article](./installation.md).
+同时你需要参考[前文](./installation.md)中的步骤来配置 `tsconfig.json`。
+
 
 ## Hello world
 
-There is only a single file named `main.ts` in this example, with the following content.
+这个示例只有一个名为 `main.ts` 的文件，内容如下：
+
 
 ```typescript
 import 'reflect-metadata';
@@ -75,50 +79,58 @@ class HelloWorldApp {
 ApplicationRunner.instance.start(HelloWorldApp);
 ```
 
-
-You can run this simple http service via
+可以通过如下命令运行这个示例
 
 ```bash
 ts-node main.ts
 ```
 
-The above code create simple HTTP service that will listen at `localhost:8080`.
+上面的代码是创建了一个简单的 HTTP 服务，监听 `localhost:8080`。
 
-After starting it, you shall be able to visit `http://localhost:8080/` with an HTTP client, e.g. curl, to see the
-output from this app.
+启动之后，你可以通过 HTTP 客户端，如 curl，访问 `http://localhost:8080/` 并观察其输出。
 
 ```
 $ curl localhost:8080
 hello world
 ```
 
-Each time we send an HTTP request to `http://localhost:8080/`, an instance of `HelloWorldController` will be
-instantiated and the method `helloWorld` will be invoked, and the return value will be sent back to the HTTP client.
+每次我们发起到 `http://localhost:8080/` 的 HTTP 请求时，`HelloWorldController` 都会被实例化一次，且其 `helloWorld`
+方法将会被调用，并且其返回值将作为响应的内容返回给 HTTP 客户端。
 
 
+## 依赖注入示例
 
-## Dependency injection
+在这个示例中，我们将展示SenseJS框架下依赖注入是怎样进行的。
 
-In this example, we will show you how dependency injection works.
+这个示例的代码可以分为三部分：
 
-The code of this example can be found at [./examples/injection](
-https://github.com/sensejs/sensejs/tree/master/examples/injection)
+-   `random-number.ts`：包含一个简单的组件 `RandomNumberGenerator` 和一个 HTTP 控制器 `RandomNumberController`
+    用来查询或改变前者的状态，它们将会通过 `RandomNumberModule` 向外导出。
+
+-   `http.module.ts`：包含了配置一个 HTTP 服务，及其所需的中间件的代码
+
+-   `index.ts`：这个示例的入口点。
 
 
-In this example, we separate the code into three parts.
+[//]: # (In this example, we separate the code into three parts.)
 
--  `random-number.ts`: contains a simple component `RandomNumberGenerator` and a controller `RandomNumberController` for querying or mutating the state
-   of `RandomNumberGenerator`, and exporting it as a module `RandomNumberModule`.
+[//]: # ()
+[//]: # (-  `random-number.ts`: contains a simple component `RandomNumberGenerator` and a controller `RandomNumberController` for querying or mutating the state)
 
--  `http.module.ts`: containing the code for setting up an HTTP server, including all middleware
+[//]: # (   of `RandomNumberGenerator`, and exporting it as a module `RandomNumberModule`.)
 
--  `index.ts`: the entry point of the application, which imports `RandomNumberModule` and `HttpModule` and start the
-   application.
+[//]: # ()
+[//]: # (-  `http.module.ts`: containing the code for setting up an HTTP server, including all middleware)
+
+[//]: # (TODO: remove "which improts ...")
+[//]: # (-  `index.ts`: the entry point of the application, which imports `RandomNumberModule` and `HttpModule` and start the)
+
+[//]: # (   application.)
 
 
 ### RandomNumberModule
 
-In this section we focused on file `random-number.module.ts`
+这一小节重点关注 `random-number.module.ts`
 
 ```typescript
 @Component()
@@ -143,7 +155,7 @@ class RandomNumberGenerator {
 }
 ```
 
-As you see, the class `RandomNumberGenerator` is decorated with `@Component()`, which makes it an injectable component.
+如你所见，`RandomNumberGenerator` 被装饰器 `@Component()` 装饰，使其成为一个组件并可注入到所需的对象。
 
 ```typescript
 
@@ -180,23 +192,18 @@ class RandomNumberController {
 
 ```
 
-The above class provides an HTTP controller to query or mutate the state of `RandomNumberGenerator`, its constructor
-has two parameters.
+上面的类提供了一个 HTTP 控制器，用来查询或者改变 `RandomNumberGenerator` 的状态，它的构造函数包含了两个参数。
 
--   the first one requires an instance of `RandomNumberGenerator`, which is defined previously,
--   and the second one requires an instance of `Logger`.
+-   第一个参数要求传入前面定义的 `RandomNumberGenerator` 类型的对象
+-   第二个参数要求传入 `Logger` 类型的对象。
 
-They will be instantiated and injected automatically when the controller is instantiated by the framework.
+在框架实例化这个控制器的时候，这些参数也会自动地被实例化并从构造函数参数注入。
 
-When handling requests, the framework will instantiate an instance of `RandomNumberController`, and invoke the
-appropriate method, and if the method needs parameters, the framework will inject them automatically based on the
-decorator of each parameter.
+当收到请求时，框架会实例化 `RandomNumberController`，并调用某个适用的方法；如果这个方法需要参数，同样地，框架也会根据每个参数对应的装饰器所提供的信息，注入这些参数。
 
-For example, when handling, `POST /seed`, the `seed` field from the request body will be injected as the parameter
-toe the `reseed` method.
+比如，在处理 `POST /reseed` 请求时，请求体中的 `seed` 字段将作为 `reseed` 方法的参数被注入。
 
-At the end of this file, `RandomNumberGenerator` and `RandomNumberController` are packaged into a module
-`RandomNumberModule`.
+这个文件的最后, `RandomNumberGenerator` 和 `RandomNumberController` 被打包成一个模块 `RandomNumberModule`。
 
 ```typescript
 
@@ -207,12 +214,11 @@ export const RandomNumberModule = createModule({
 
 ### HttpModules
 
-In this section, we focused on another file `./src/http.module.ts`.
+这一小节我们将关注另外一个文件 `./src/http.module.ts`。
 
-We'll explain the content of this file in reverse order.
+我们会从后往前，解释这个文件的内容。
 
-At the end of this file, a module is created by `createKoaHttpModule`, just like what we did in the hello world example,
-but this time two middlewares are added.
+文件的最后，创建了一个 `createKoaHttpModule` 创建了一个模块，和 Hello World 示例类似，但额外添加了两个中间件。
 
 ```typescript
 export const HttpModule = createKoaHttpModule({
@@ -233,9 +239,9 @@ export const HttpModule = createKoaHttpModule({
 
 ```
 
-There are two middleware defined prior to the HTTP module.
+这两个中间件这个文件的前面定义的。
 
-The first one, `RequestIdMiddleware` assigns a request-id to each request, and bound it to a symbol `REQUEST_ID`:
+第一个中间件，`RequestIdMiddleware` 为每个请求分配一个请求 ID，并将其绑定到一个 symbol 类型的常量 `REQUEST_ID`。
 
 ```typescript
 import {randomUUID} from 'crypto';
@@ -255,10 +261,10 @@ class RequestIdMiddleware {
 }
 ```
 
-The second one, `ContextualLoggingMiddleware` injects the request-id bound in previous middleware and attaches it to a
-logger builder, and in fact it overrides the LoggerBuilder in this request, so all logger created in this request will
-share the same request-id, and their output can be grouped by the request-id easily. This is very useful when you want
-to distinguish the logs from different concurrent requests.
+第二个中间件，`ContextualLoggingMiddleware` 从前一个中间件中注入了请求 ID，并将其关联到一个 logger builder
+上，实际上在本次请求中，它覆盖了全局的 logger builder，所以本次请求中创建的所有 logger 都会共享同一个请求
+ID，而它们输出的日志也可以很容易地根据请求 ID 进行区分。这在你想要区分不同并发请求的产生日志时非常有用。
+
 
 ```typescript
 
@@ -285,11 +291,9 @@ class ContextualLoggingMiddleware {
 
 ```
 
-### Entrypoint
+### 入口点
 
-In the entry file, we need to import `"reflect-metadata"` at the first place. Then we just create a module and mark it
-as an entrypoint.
-
+在程序的入口文件，我们首先要导入 `"reflect-metadata"`，然后创建一个模块并标记它为入口点。
 
 ```typescript
 import 'reflect-metadata';
@@ -307,12 +311,13 @@ class App {
 
 ```
 
-That's it.
+以上。
 
 
-### Running
 
-You can run this app and send requests with curl, you'll see output like this
+### 运行
+
+你可以运行这个示例，并通过 `curl` 命令来访问它，你会看到类似下面的输出。
 
 ```
 % curl http://localhost:8080/state
@@ -334,7 +339,8 @@ curl http://localhost:8080/next -XPOST
 {"value":72046864}
 
 ```
-On the application log, you'll see something like
+
+而应用日志则会输出类似下面的内容。
 
 ```
 + 16:51:05.494 ContextualLoggingMiddleware - | Associate LoggerBuilder with requestId=25c469ea-2c9f-4ade-9d1f-a2603e509402

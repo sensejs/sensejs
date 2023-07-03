@@ -1,0 +1,18 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.tutorialSidebar.category.Introduction": {
+    "message": "简介",
+    "description": "The label for category Introduction in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Injection": {
+    "message": "依赖注入",
+    "description": "The label for category Injection in sidebar tutorialSidebar"
+  },
+  "sidebar.tutorialSidebar.category.Module": {
+    "message": "模块",
+    "description": "The label for category Module in sidebar tutorialSidebar"
+  }
+}

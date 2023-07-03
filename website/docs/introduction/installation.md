@@ -6,26 +6,26 @@ sidebar_position: 1
 # Installation
 
 
-SenseJS is a collection of packages that can be used independently, these packages are the minimum ones you need to use
-SenseJS:
+SenseJS is a collection of packages that can be used independently, the following packages are the minimum ones you
+need to use SenseJS:
 
-- `reflect-metadata`, based on which the SenseJS framework accesses the decorator metadata.
-- `@sensejs/container`, the IoC container implementation of SenseJS.
-- `@sensejs/core`, the module system and core functionality of the framework.
+-  `reflect-metadata`, based on which the SenseJS framework accesses the decorator metadata.
+-  `@sensejs/container`, the IoC container implementation of SenseJS.
+-  `@sensejs/core`, the module system and core functionality of the framework.
 
 In addition to the above packages, you may also need to install the following packages:
 
-- `@sensejs/http-common` and `@sensejs/http-koa-platform`, the former provides decorators that describe the HTTP
-   semantics, the latter is the implementation based on koa ecosystem.
+-  `@sensejs/http-common` and `@sensejs/http-koa-platform`, the former provides decorators that describe the HTTP
+    semantics, the latter is the implementation based on koa ecosystem.
 
-- `@sensejs/kafkajs-standalone` and `@sensejs/kafkajs`, the former is a high-level encapsulation of `kafkajs`,
-   the latter integrates it into the SenseJS framework.
+-  `@sensejs/kafkajs-standalone` and `@sensejs/kafkajs`, the former is a high-level encapsulation of `kafkajs`,
+    the latter integrates it into the SenseJS framework.
 
-- `@sensejs/config`, integrates `config` to SenseJS.
+-  `@sensejs/config`, integrates `config` to SenseJS.
 
 ## tsconfig configuration
 
-You need to enable `experimentalDecorators` and `emitDecoratorMetadata` in `tsconfig.json` of your project.
+To use SenseJS, you need to enable `experimentalDecorators` and `emitDecoratorMetadata` in `tsconfig.json`.
 
 ```json5
 

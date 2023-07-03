@@ -24,6 +24,5 @@ application:
 We'll discuss these topics in this chapter.
 
 
-## Inter-Module dependencies
 
 

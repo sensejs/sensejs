@@ -13,6 +13,10 @@ module.exports = {
   organizationName,
   projectName,
   trailingSlash: false,
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'zh-CN'],
+  },
   themeConfig: {
     navbar: {
       title: 'SenseJS',
@@ -31,6 +35,10 @@ module.exports = {
         {
           href: projectGithubUrl,
           label: 'GitHub',
+          position: 'right',
+        },
+        {
+          type: 'localeDropdown',
           position: 'right',
         },
       ],
