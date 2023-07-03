@@ -269,5 +269,34 @@
   "theme.tags.tagsPageTitle": {
     "message": "标签",
     "description": "The title of the tag list page"
+  },
+  "header.features.1st.title": {
+    "message": "高度灵活可定制",
+    "description": "Feature title flexible and customizable"
+  },
+  "header.features.2nd.title": {
+    "message": "依赖注入快如闪电",
+    "description": "Feature title blazing fast"
+  },
+  "header.features.3rd.title": {
+    "message": "优雅启动退出你的应用",
+    "description": "Feature title graceful start up and shutdown"
+  },
+  "Tutorial": {
+    "message": "教程",
+    "description": "SenseJS Tutorial"
+  },
+  "header.features.1st.description": {
+    "message": "SenseJS 构建于模块化的依赖注入系统之上，一切都由模块打包管理，易于组合和替换"
+  },
+  "header.features.2nd.description": {
+    "message": "为了让依赖注入的性能尽可能快，SenseJS 重头设计开发了依赖注入容器，并针对 SenseJS 应用的使用场景进行了高度优化。"
+  },
+  "header.features.3rd.description": {
+    "message": "SenseJS 将确保应用能够优雅地启动或退出，而这建立在应用的模块间依赖关系之上"
+  },
+  "homepage.title": {
+    "message": "SenseJS 一个面向 Typescript 开发的 Node.js 依赖注入框架",
+    "description": "SenseJS homepage title"
   }
 }

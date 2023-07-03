@@ -4,7 +4,7 @@ const projectGithubUrl = 'https://github.com/sensejs/sensejs';
 
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
-  title: 'SenseJS, a Typescript IoC Framework for Node.js',
+  title: 'SenseJS, a Typescript Dependency Injection Framework for Node.js',
   url: 'https://sensejs.io',
   baseUrl: '/',
   onBrokenLinks: 'throw',
