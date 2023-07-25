@@ -37,27 +37,25 @@ describe('MultipartS3Storage', () => {
 
   let mockS3Server: S3MockServer | null = null;
   const bucket = randomUUID();
-  beforeAll(() => {
-    return new Promise<S3>((resolve, reject) => {
+  beforeAll(async () => {
+    const s3Client = await new Promise<S3>((resolve, reject) => {
       mockS3Server = new S3MockServer({
         directory: os.tmpdir(),
         port: 0,
         vhostBuckets: true,
-        silent: true,
       });
       mockS3Server.run().then((address) => {
         port = address.port;
         resolve(new S3(getS3Config()));
       }, reject);
-    }).then((s3Client) => {
-      return s3Client
-        .createBucket({
-          Bucket: bucket,
-        })
-        .finally(() => {
-          return s3Client.destroy();
-        });
     });
+    try {
+      return await s3Client.createBucket({
+        Bucket: bucket,
+      });
+    } finally {
+      s3Client.destroy();
+    }
   });
 
   afterAll(async () => {
@@ -96,6 +94,8 @@ describe('MultipartS3Storage', () => {
     } catch (e) {
       if (e instanceof S3ServiceException) {
         console.error(e.name, e.$response, e.$fault, e.$metadata);
+      } else {
+        console.error(e);
       }
       throw e;
     } finally {
