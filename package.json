@@ -28,7 +28,7 @@
     "jest-resolve": "^29.5.0",
     "jest-ts-webcompat-resolver": "^1.0.0",
     "kafkajs": "^2.2.4",
-    "lint-staged": "^13.2.2",
+    "lint-staged": "^14.0.0",
     "lodash": "^4.17.21",
     "prettier": "^3.0.0",
     "reflect-metadata": "^0.1.13",
