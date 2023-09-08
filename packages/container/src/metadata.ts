@@ -88,9 +88,7 @@ export function ensureValidatedMethodInvokeProxy<T extends {}, K extends keyof T
   const proxy = ensureMethodInvokeProxy(constructor.prototype, methodKey) as Constructor<MethodInvokeProxy>;
   const cm = convertParamInjectionMetadata(ensureConstructorParamInjectMetadata(proxy));
   ensureValidatedParamInjectMetadata(cm);
-  // Manually annotate fn with unknown type to work around a Typescript 5.1 bug
-  // See: https://github.com/microsoft/TypeScript/issues/54522
-  const fn: unknown = constructor.prototype[methodKey];
+  const fn = constructor.prototype[methodKey];
   if (typeof fn !== 'function') {
     throw new TypeError(`${constructor.name}.${String(methodKey)} is not a function`);
   }
