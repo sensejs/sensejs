@@ -32,6 +32,6 @@
     "suretype": "^3.3.1"
   },
   "devDependencies": {
-    "@types/config": "^3.3.0"
+    "@types/config": "^3.3.1"
   }
 }
