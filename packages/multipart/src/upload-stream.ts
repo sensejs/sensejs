@@ -1,4 +1,4 @@
-import stream, {Readable, Writable} from 'stream';
+import {Readable, Writable} from 'stream';
 import {MultipartFileEntry, MultipartFileInfo} from './types.js';
 import {ChecksumCalculator, RemoteStorageAdaptor} from './remote-storage-adaptor.js';
 import {MultipartLimitExceededError} from './error.js';
@@ -199,7 +199,7 @@ export class UploadStream<F extends {}, P extends {}, C extends ChecksumCalculat
    * calculating checksum
    * @private
    */
-  #createStreamForPartitionedUpload(size: number, checksumCalculator: C): stream.Readable {
+  #createStreamForPartitionedUpload(size: number, checksumCalculator: C): Readable {
     let currentUploadIdx = this.#uploadIdx;
     const chunkIndexes: [number, number][] = [];
     const end = this.#uploadIdx + size;

@@ -1,4 +1,4 @@
-import busboy from '@fastify/busboy';
+import * as busboy from '@fastify/busboy';
 import stream from 'stream';
 import type http from 'http';
 import {AsyncIterableQueue} from '@sensejs/utility';
@@ -124,7 +124,7 @@ export class Multipart {
       fieldSize: this.#options.fieldSizeLimit,
       parts: this.#options.partCountLimit,
     };
-    const b = busboy.default({
+    const b = busboy.Busboy({
       headers: this.#headers,
       limits,
     });

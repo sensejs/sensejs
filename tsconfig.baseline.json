@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node16",
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictNullChecks": true,
