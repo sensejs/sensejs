@@ -11,7 +11,7 @@
     "CHANGELOG.md"
   ],
   "type": "module",
-  "types": "./dist-dts/lib/index.d.ts",
+  "types": "./dist-dts/index.d.ts",
   "main": "./dist-cjs/lib/index.js",
   "module": "./dist-esm/lib/index.js",
   "exports": {
