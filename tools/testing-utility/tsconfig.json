@@ -3,6 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "outDir": "lib",
+    "module": "Node16",
     "types": ["node", "reflect-metadata", "jest"]
   },
   "include": [

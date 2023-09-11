@@ -11,7 +11,7 @@
     "CHANGELOG.md"
   ],
   "type": "module",
-  "types": "./dist-dts/lib/index.d.ts",
+  "types": "./dist-dts/index.d.ts",
   "main": "./dist-cjs/lib/index.js",
   "module": "./dist-esm/lib/index.js",
   "exports": {
@@ -42,7 +42,7 @@
     "koa-qs": "^3.0.0",
     "lodash": "^4.17.21",
     "reflect-metadata": "^0.1.13",
-    "tslib": "^2.6.1"
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",

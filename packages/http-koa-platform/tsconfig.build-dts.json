@@ -2,6 +2,8 @@
   "extends": "./src/tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
+    "moduleResolution": "node",
+    "module": "CommonJS",
     "outDir": "dist-dts",
     "declarationDir": "dist-dts",
     "declaration": true,

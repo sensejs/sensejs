@@ -11,7 +11,7 @@
     "CHANGELOG.md"
   ],
   "type": "module",
-  "types": "./dist-dts/lib/index.d.ts",
+  "types": "./dist-dts/index.d.ts",
   "main": "./dist-cjs/lib/index.js",
   "module": "./dist-esm/lib/index.js",
   "exports": {
@@ -34,7 +34,7 @@
     "@sensejs/utility": "workspace:^",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "tslib": "^2.6.1",
+    "tslib": "^2.6.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
