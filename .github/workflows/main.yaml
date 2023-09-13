@@ -25,8 +25,8 @@ jobs:
 
       - name: Set up E2E Test Environment
         run: |-
-          docker-compose pull kafka-1 kafka-2 kafka-3
-          docker-compose up -d kafka-1 kafka-2 kafka-3
+          docker-compose pull kafka-1 kafka-2 kafka-3 minio
+          docker-compose up -d kafka-1 kafka-2 kafka-3 minio
 
       - name: Build
         uses: docker/build-push-action@v5
