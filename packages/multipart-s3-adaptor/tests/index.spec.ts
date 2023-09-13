@@ -1,6 +1,4 @@
-import S3MockServer from 's3rver';
-import * as os from 'os';
-import {S3, S3ServiceException} from '@aws-sdk/client-s3';
+import {S3, S3ClientConfig, S3ServiceException} from '@aws-sdk/client-s3';
 import {randomBytes, randomUUID} from 'crypto';
 import {MultipartFileRemoteStorage} from '@sensejs/multipart';
 import {S3StorageAdaptor, S3StorageAdaptorOptions} from '../src/index.js';
@@ -8,17 +6,18 @@ import {Readable} from 'stream';
 import * as crypto from 'crypto';
 
 describe('MultipartS3Storage', () => {
-  let port = 0;
-  const getS3Config = () => {
+  const getS3Config = (): S3ClientConfig => {
     return {
-      endpoint: `http://localhost:${port}`,
-      region: 'test',
+      endpoint: 'http://minio:9000',
+      region: 'us-east-1',
       credentials: {
-        accessKeyId: 'S3RVER',
-        secretAccessKey: 'S3RVER',
+        accessKeyId: 'minioadmin',
+        secretAccessKey: 'minioadmin',
       },
+      forcePathStyle: true,
     };
   };
+  const bucket = randomUUID();
 
   function getRemoteStorage(option: Partial<S3StorageAdaptorOptions>) {
     return new MultipartFileRemoteStorage(
@@ -27,57 +26,22 @@ describe('MultipartS3Storage', () => {
         s3Config: getS3Config(),
         getFileKey: (name) => name,
         fileCountLimit: 10,
-        fileSizeLimit: 1048576,
-        partitionedUploadSizeLimit: 1024,
-        simpleUploadSizeLimit: 2048,
+        partitionedUploadSizeLimit: 5 * 1024 * 1024,
+        simpleUploadSizeLimit: 5 * 1024 * 1024,
         ...option,
       }),
     );
   }
 
-  let mockS3Server: S3MockServer | null = null;
-  const bucket = randomUUID();
-  beforeAll(() => {
-    return new Promise<S3>((resolve, reject) => {
-      mockS3Server = new S3MockServer({
-        directory: os.tmpdir(),
-        port: 0,
-        vhostBuckets: true,
-        address: '127.0.0.1',
+  beforeAll(async () => {
+    const s3Client = new S3(getS3Config());
+    try {
+      await s3Client.createBucket({
+        Bucket: bucket,
       });
-      mockS3Server.run().then((address) => {
-        port = address.port;
-        resolve(new S3(getS3Config()));
-      }, reject);
-    })
-      .then((s3Client) => {
-        return s3Client
-          .createBucket({
-            Bucket: bucket,
-          })
-          .finally(() => {
-            return s3Client.destroy();
-          });
-      })
-      .catch((e) => {
-        console.error(e);
-      });
-  });
-
-  afterAll(async () => {
-    return new Promise<void>((resolve, reject) => {
-      if (mockS3Server) {
-        mockS3Server.close((e) => {
-          if (e) {
-            reject(e);
-          } else {
-            resolve();
-          }
-        });
-      } else {
-        resolve();
-      }
-    });
+    } finally {
+      s3Client.destroy();
+    }
   });
 
   async function testSimpleUploadAndDownload(option: Partial<S3StorageAdaptorOptions>) {
@@ -109,24 +73,29 @@ describe('MultipartS3Storage', () => {
 
   async function testPartitionUploadAndDownload(option: Partial<S3StorageAdaptorOptions>) {
     const chunk = randomBytes(1024);
-    const chunks = new Array(3).fill(null).map(() => chunk);
-    const content = Buffer.concat(chunks);
-    const md5 = crypto.createHash('md5').update(content).digest('base64');
+    const chunks = new Array(8 * 1024).fill(null).map(() => chunk);
+    // const content = Buffer.concat(chunks);
+    let md5 = crypto.createHash('md5');
+    for (const chunk of chunks) {
+      md5 = md5.update(chunk);
+    }
+    const originalMd5 = md5.digest('base64url');
+    // const md5 = crypto.createHash('md5').update(content).digest('base64');
     const storage = getRemoteStorage(option);
     try {
-      const result = await storage.saveMultipartFile(md5, Readable.from(chunks), {
-        filename: md5,
+      const result = await storage.saveMultipartFile(originalMd5, Readable.from(chunks), {
+        filename: originalMd5,
         transferEncoding: '7bit',
         mimeType: 'application/octet-stream',
       });
-      const downloadBuffer = [];
+      let md5 = crypto.createHash('md5');
 
       for await (const chunk of result.body()) {
-        downloadBuffer.push(Buffer.from(chunk));
+        md5 = md5.update(chunk);
       }
+      const downloadedMd5 = md5.digest('base64url');
 
-      expect(Buffer.concat(downloadBuffer).length).toEqual(content.length);
-      expect(Buffer.concat(downloadBuffer)).toEqual(content);
+      expect(downloadedMd5).toEqual(originalMd5);
     } catch (e) {
       if (e instanceof S3ServiceException) {
         console.error(e.name, e.$response, e.$fault, e.$metadata);

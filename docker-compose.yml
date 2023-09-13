@@ -1,4 +1,5 @@
 version: '2.4'
+
 services:
   zookeeper:
     image: ghcr.io/arm64-compat/confluentinc/cp-zookeeper:7.1.1
@@ -10,6 +11,25 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+
+  minio:
+    image: minio/minio:latest
+    hostname: '*.minio'
+    ports:
+      - "9000:9000"
+    environment:
+      HOSTNAME: minio
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - data:/data
+      - config:/root/.minio
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    command: server /data
 
   kafka-1:
     image: ghcr.io/arm64-compat/confluentinc/cp-kafka:7.1.1
@@ -115,3 +135,7 @@ services:
     volumes:
       - ./coverage:/opt/sensejs/coverage
     command: ['pnpm', 'run', 'test', '--coverage', '--runInBand']
+
+volumes:
+    data:
+    config:
