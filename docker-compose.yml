@@ -114,6 +114,7 @@ services:
       - kafka-1
       - kafka-2
       - kafka-3
+      - minio
     environment:
       END_TO_END_TEST: 'true'
     volumes:
@@ -130,6 +131,7 @@ services:
       - kafka-1
       - kafka-2
       - kafka-3
+      - minio
     environment:
       END_TO_END_TEST: 'true'
     volumes:
