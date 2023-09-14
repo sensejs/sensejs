@@ -30,19 +30,16 @@ export class ResolveSession {
   readonly #bindingMap: Map<ServiceId, Binding<any>>;
   readonly #compiledInstructionMap: Map<ServiceId, Instruction[]>;
   readonly #globalCache: Map<any, any>;
-  readonly #validatedSet: Set<ServiceId>;
   readonly #stack: any[] = [];
 
   constructor(
     bindingMap: Map<ServiceId, Binding<any>>,
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
     globalCache: Map<any, any>,
-    validatedSet: Set<ServiceId>,
   ) {
     this.#bindingMap = bindingMap;
     this.#compiledInstructionMap = compiledInstructionMap;
     this.#globalCache = globalCache;
-    this.#validatedSet = validatedSet;
   }
 
   invoke<T extends {}, K extends keyof T>(target: Constructor<T>, key: K): InvokeResult<T, K> {
@@ -168,9 +165,6 @@ export class ResolveSession {
   }
 
   #getBindingForPlan(target: ServiceId, optionalInject: boolean, allowUnbound: boolean, allowTemporary: boolean) {
-    if (!this.#validatedSet) {
-      internalValidateDependencies(target, this.#bindingMap, [], this.#validatedSet);
-    }
     const binding = this.#internalGetBinding(target, allowTemporary);
     if (binding) {
       return binding;

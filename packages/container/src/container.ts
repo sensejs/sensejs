@@ -19,12 +19,7 @@ export class Container {
   #singletonCache: Map<ServiceId, any> = new Map();
 
   createResolveSession(): ResolveSession {
-    return new ResolveSession(
-      this.#bindingMap,
-      this.#compiledInstructionMap,
-      this.#singletonCache,
-      this.#validatedBindings,
-    );
+    return new ResolveSession(this.#bindingMap, this.#compiledInstructionMap, this.#singletonCache);
   }
 
   createMethodInvoker<T extends {}, K extends keyof T, ServiceIds extends any[] = []>(
@@ -38,7 +33,6 @@ export class Container {
       this.#bindingMap,
       this.#compiledInstructionMap,
       this.#singletonCache,
-      this.#validatedBindings,
       targetConstructor,
       targetMethod,
       middlewares,
