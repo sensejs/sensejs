@@ -30,19 +30,6 @@ export function Middleware<T extends ServiceId[]>(option?: MiddlewareOption<T>) 
   };
 }
 
-/**
- * @deprecated
- * @param serviceIds
- * @constructor
- */
-export function MiddlewareClass<T extends ServiceId[]>(...serviceIds: T) {
-  return <U extends Constructor<Middleware<ServiceTypeOf<T>>>>(constructor: U): U => {
-    Reflect.defineMetadata(METADATA_KEY, serviceIds, constructor);
-    Injectable()(constructor);
-    return constructor;
-  };
-}
-
 export function getMiddlewareMetadata(constructor: Constructor): ServiceId<Middleware>[] {
   const metadata = Reflect.getOwnMetadata(METADATA_KEY, constructor);
   if (!Array.isArray(metadata)) {
