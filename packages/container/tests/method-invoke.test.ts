@@ -1,17 +1,11 @@
-import {
-  BindingType,
-  Constructor,
-  Container,
-  Inject,
-  Injectable,
-  Middleware,
-  MiddlewareClass,
-  Next,
-} from '../src/index.js';
+import {BindingType, Constructor, Container, Inject, Injectable, Middleware, Next} from '../src/index.js';
 import {jest} from '@jest/globals';
 
 class CustomContext<T extends {} = any, K extends keyof T = any> {
-  constructor(readonly targetConstructor: Constructor<T>, readonly targetMethodKey: K) {}
+  constructor(
+    readonly targetConstructor: Constructor<T>,
+    readonly targetMethodKey: K,
+  ) {}
 }
 
 describe('MethodInvoker', () => {
@@ -180,7 +174,9 @@ test('Performance test', async () => {
       symbol = Symbol(`${index}`);
 
       // Keep using legacy style for coverage
-      @MiddlewareClass(symbol)
+      @Middleware({
+        provides: [symbol],
+      })
       class Interceptor {
         constructor(@Inject(deps) dep: any, @Inject(CustomContext) context: CustomContext) {}
 

@@ -19,12 +19,8 @@ export class Container {
   #singletonCache: Map<ServiceId, any> = new Map();
 
   createResolveSession(): ResolveSession {
-    return new ResolveSession(
-      this.#bindingMap,
-      this.#compiledInstructionMap,
-      this.#singletonCache,
-      this.#validatedBindings,
-    );
+    this.validate();
+    return new ResolveSession(this.#bindingMap, this.#compiledInstructionMap, this.#singletonCache);
   }
 
   createMethodInvoker<T extends {}, K extends keyof T, ServiceIds extends any[] = []>(
@@ -38,7 +34,6 @@ export class Container {
       this.#bindingMap,
       this.#compiledInstructionMap,
       this.#singletonCache,
-      this.#validatedBindings,
       targetConstructor,
       targetMethod,
       middlewares,
@@ -94,6 +89,10 @@ export class Container {
   }
 
   validate(): this {
+    if (this.#validatedBindings.size === this.#bindingMap.size) {
+      return this;
+    }
+
     for (const [id] of this.#bindingMap) {
       internalValidateDependencies(id, this.#bindingMap, [], this.#validatedBindings);
     }

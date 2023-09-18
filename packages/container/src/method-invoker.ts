@@ -32,7 +32,6 @@ function validateParamInjectMetadata(metadata: ParamInjectionMetadata[], name: s
 }
 
 class AsyncMethodInvokeSession<T extends {}, K extends keyof T, ContextIds extends any[] = []> extends ResolveSession {
-
   readonly #resolveCallback: (value: InvokeResult<T, K>) => void;
 
   get resolveCallback() {
@@ -42,12 +41,11 @@ class AsyncMethodInvokeSession<T extends {}, K extends keyof T, ContextIds exten
     bindingMap: Map<ServiceId, Binding<any>>,
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
     globalCache: Map<any, any>,
-    validatedBindings: Set<ServiceId>,
     contextIds: ContextIds,
     context: ServiceTypeOf<ContextIds>,
     resolveCallback: (value: InvokeResult<T, K>) => void,
   ) {
-    super(bindingMap, compiledInstructionMap, globalCache, validatedBindings);
+    super(bindingMap, compiledInstructionMap, globalCache);
     this.#resolveCallback = resolveCallback;
     contextIds.forEach((ctxId, idx) => {
       this.addTemporaryConstantBinding(ctxId, context[idx]);
@@ -101,7 +99,6 @@ function buildInvoker<T extends {}, K extends keyof T, ContextIds extends any[]>
   bindingMap: Map<ServiceId, Binding<any>>,
   compiledInstructionMap: Map<ServiceId, Instruction[]>,
   globalCache: Map<any, any>,
-  validatedBindings: Set<ServiceId>,
   middlewares: Constructor<Middleware>[],
   targetConstructor: Constructor<T>,
   targetMethod: K,
@@ -162,7 +159,6 @@ function buildInvoker<T extends {}, K extends keyof T, ContextIds extends any[]>
           bindingMap,
           compiledInstructionMap,
           globalCache,
-          validatedBindings,
           contextIds,
           ctx,
           (value) => {
@@ -181,7 +177,6 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
     bindingMap: Map<ServiceId, Binding<any>>,
     compiledInstructionMap: Map<ServiceId, Instruction[]>,
     globalCache: Map<ServiceId, any>,
-    validatedSet: Set<ServiceId>,
     targetConstructor: Constructor<T>,
     targetMethod: K,
     middlewares: Constructor<Middleware<any>>[],
@@ -191,7 +186,6 @@ export class MethodInvoker<T extends {}, K extends keyof T, ContextIds extends a
       bindingMap,
       compiledInstructionMap,
       globalCache,
-      validatedSet,
       middlewares,
       targetConstructor,
       targetMethod,
