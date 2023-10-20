@@ -1,4 +1,4 @@
-ARG NODE_VERSION=16
+ARG NODE_VERSION=21
 FROM node:${NODE_VERSION} AS pnpm-installed
 ARG PNPM_VERSION=^8.3.1
 RUN npm install -g pnpm@${PNPM_VERSION}
