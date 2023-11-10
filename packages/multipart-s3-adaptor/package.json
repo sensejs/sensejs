@@ -29,7 +29,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.408.0"
+    "@aws-sdk/client-s3": "^3.445.0"
   },
   "peerDependencies": {
     "@sensejs/multipart": "workspace:^"

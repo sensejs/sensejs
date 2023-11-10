@@ -33,7 +33,7 @@
   "dependencies": {
     "@sensejs/utility": "workspace:^",
     "kafkajs": "^2.2.4",
-    "lightning-pool": "^4.2.1",
+    "lightning-pool": "^4.2.2",
     "long": "^4.0.0",
     "rxjs": "^7.8.1",
     "tslib": "^2.6.2"
