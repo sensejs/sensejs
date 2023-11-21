@@ -358,7 +358,7 @@ curl http://localhost:8080/next -XPOST
 
 
 
-[SenseJS repository]: https://github.com/sensejs/sensejs
+[SenseJS 代码仓库]: https://github.com/sensejs/sensejs
 
 
 
