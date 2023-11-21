@@ -192,8 +192,8 @@ When handling requests, the framework will instantiate an instance of `RandomNum
 appropriate method, and if the method needs parameters, the framework will inject them automatically based on the
 decorator of each parameter.
 
-For example, when handling, `POST /seed`, the `seed` field from the request body will be injected as the parameter
-toe the `reseed` method.
+For example, when handling request of `POST /reseed`, the request body will be injected as the parameter to the
+`reseed` method.
 
 At the end of this file, `RandomNumberGenerator` and `RandomNumberController` are packaged into a module
 `RandomNumberModule`.

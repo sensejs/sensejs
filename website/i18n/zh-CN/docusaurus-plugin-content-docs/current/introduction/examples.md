@@ -201,7 +201,7 @@ class RandomNumberController {
 
 当收到请求时，框架会实例化 `RandomNumberController`，并调用某个适用的方法；如果这个方法需要参数，同样地，框架也会根据每个参数对应的装饰器所提供的信息，注入这些参数。
 
-比如，在处理 `POST /reseed` 请求时，请求体中的 `seed` 字段将作为 `reseed` 方法的参数被注入。
+比如，在处理 `POST /reseed` 请求时，请求体将作为 `reseed` 方法的参数被注入。
 
 这个文件的最后, `RandomNumberGenerator` 和 `RandomNumberController` 被打包成一个模块 `RandomNumberModule`。
 
@@ -358,7 +358,7 @@ curl http://localhost:8080/next -XPOST
 
 
 
-[SenseJS repository]: https://github.com/sensejs/sensejs
+[SenseJS 代码仓库]: https://github.com/sensejs/sensejs
 
 
 

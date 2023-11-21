@@ -42,8 +42,7 @@ SenseJS 包含了一系列可独立安装使用的软件包，以下是使用 Se
 ## 兼容性
 
 SenseJS 0.10.x 支持 Node.js 14 及后续的版本，而 Typescript 的版本推荐使用最新版。
-在随后的 SenseJS 0.11.x 中，Node.js 14 将不再被支持
-The upcoming SenseJS 0.11.x will drop support for Node.js 14 and below.
+在随后的 SenseJS 0.11.x 中，Node.js 14 将不再被支持。
 
 ## ESM 支持
 
