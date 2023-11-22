@@ -495,9 +495,6 @@ importers:
 
   website:
     devDependencies:
-      '@algolia/client-search':
-        specifier: ^4.20.0
-        version: 4.20.0
       '@docusaurus/core':
         specifier: ^3.0.0
         version: 3.0.0(@docusaurus/types@3.0.0)(eslint@8.53.0)(react-dom@18.2.0)(react@18.2.0)(typescript@5.2.2)
@@ -507,27 +504,18 @@ importers:
       '@mdx-js/react':
         specifier: ^3.0.0
         version: 3.0.0(@types/react@18.2.37)(react@18.2.0)
-      '@svgr/webpack':
-        specifier: ^6.5.1
-        version: 6.5.1
       '@types/react':
         specifier: ^18.2.37
         version: 18.2.37
-      file-loader:
-        specifier: ^6.2.0
-        version: 6.2.0(webpack@5.89.0)
+      clsx:
+        specifier: ^1.2.1
+        version: 1.2.1
       react:
         specifier: ^18.2.0
         version: 18.2.0
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
-      url-loader:
-        specifier: ^4.1.1
-        version: 4.1.1(file-loader@6.2.0)(webpack@5.89.0)
-      webpack:
-        specifier: ^5.89.0
-        version: 5.89.0
 
 packages:
 
