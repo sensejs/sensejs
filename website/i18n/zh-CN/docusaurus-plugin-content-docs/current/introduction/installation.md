@@ -8,7 +8,7 @@ sidebar_position: 1
 
 SenseJS 包含了一系列可独立安装使用的软件包，以下是使用 SenseJS 框架所需的最精简的依赖：
 
-- `reflect-metadata`, SenseJS 框架用以访问装饰其袁术其
+- `reflect-metadata`, SenseJS 框架用以访问装饰器元数据
 - `@sensejs/container`, SenseJS 的依赖注入的实现
 - `@sensejs/core`, 实现了 SenseJS 模块系统及相关核心功能
 
