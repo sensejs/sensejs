@@ -381,9 +381,6 @@ importers:
       lightning-pool:
         specifier: ^4.2.2
         version: 4.2.2
-      long:
-        specifier: ^4.0.0
-        version: 4.0.0
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
@@ -10625,10 +10622,6 @@ packages:
       strip-ansi: 7.1.0
       wrap-ansi: 8.1.0
     dev: true
-
-  /long@4.0.0:
-    resolution: {integrity: sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==}
-    dev: false
 
   /longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
