@@ -15,7 +15,7 @@
     "@types/config": "^3.3.3",
     "@types/jest": "^29.5.8",
     "@types/lodash": "^4.14.201",
-    "@types/node": "^16.18.61",
+    "@types/node": "^20.0.0",
     "@types/superagent": "^4.1.21",
     "@types/supertest": "^2.0.16",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
