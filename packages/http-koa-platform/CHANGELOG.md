@@ -1,5 +1,13 @@
 # @sensejs/http-koa-platform
 
+## 0.11.1
+
+### Patch Changes
+
+- 6214fb3: Upgrade @koa/cors to v5 for security concerns
+- Updated dependencies [e7847b1]
+  - @sensejs/multipart@0.11.3
+
 ## 0.11.0
 
 ### Minor Changes

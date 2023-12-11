@@ -1,5 +1,11 @@
 # @sensejs/multipart
 
+## 0.11.3
+
+### Patch Changes
+
+- e7847b1: Update @fastify/busboy
+
 ## 0.11.2
 
 ### Patch Changes

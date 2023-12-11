@@ -1,5 +1,13 @@
 # @sensejs/multipart-s3-adaptor
 
+## 0.11.3
+
+### Patch Changes
+
+- 3080f4e: Update @aws-sdk/client-s3 for security concerns
+- Updated dependencies [e7847b1]
+  - @sensejs/multipart@0.11.3
+
 ## 0.11.2
 
 ### Patch Changes

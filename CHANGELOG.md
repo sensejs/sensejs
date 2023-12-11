@@ -1,4 +1,44 @@
 
+## 2023-12-11
+
+
+### Releases
+
+
+| Package | Release Version | Release Type |
+|---------|-----------------|--------------|
+| `@sensejs/http-koa-platform` | `0.11.1 ` | patch |
+| `@sensejs/multipart-s3-adaptor` | `0.11.3 ` | patch |
+| `@sensejs/multipart` | `0.11.3 ` | patch |
+
+
+
+### Notable Changes
+
+- **Summary**: 
+
+  Upgrade @koa/cors to v5 for security concerns
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/http-koa-platform`
+- **Summary**: 
+
+  Update @aws-sdk/client-s3 for security concerns
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/multipart-s3-adaptor`
+- **Summary**: 
+
+  Update @fastify/busboy
+
+  **Affected packages**: 
+   - Patch changes: 
+     - `@sensejs/multipart`
+
+
+
 ## 2023-05-11
 
 

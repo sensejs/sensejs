@@ -330,7 +330,7 @@ importers:
         specifier: workspace:*
         version: link:../http-common
       '@sensejs/multipart':
-        specifier: workspace:^0.11.0
+        specifier: workspace:^0.11.3
         version: link:../multipart
       '@sensejs/testing-utility':
         specifier: workspace:*
