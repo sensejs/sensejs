@@ -141,7 +141,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
     koa.proxy = this.trustProxy;
 
     if (this.corsOption) {
-      koa.use(KoaCors(this.corsOption as KoaCors.Options)); // There are typing errors on @types/koa__cors
+      koa.use(KoaCors(this.corsOption));
     }
     koa.use(koaBodyParser(this.bodyParserOption));
     for (const middleware of this.middlewareList) {

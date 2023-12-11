@@ -43,21 +43,25 @@ describe('MultipartS3Storage', () => {
         directory: os.tmpdir(),
         port: 0,
         vhostBuckets: true,
-        silent: true,
+        address: '127.0.0.1',
       });
       mockS3Server.run().then((address) => {
         port = address.port;
         resolve(new S3(getS3Config()));
       }, reject);
-    }).then((s3Client) => {
-      return s3Client
-        .createBucket({
-          Bucket: bucket,
-        })
-        .finally(() => {
-          return s3Client.destroy();
-        });
-    });
+    })
+      .then((s3Client) => {
+        return s3Client
+          .createBucket({
+            Bucket: bucket,
+          })
+          .finally(() => {
+            return s3Client.destroy();
+          });
+      })
+      .catch((e) => {
+        console.error(e);
+      });
   });
 
   afterAll(async () => {
