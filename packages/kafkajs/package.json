@@ -45,7 +45,6 @@
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",
     "@sensejs/core": "workspace:^0.11.0",
-    "kafkajs": "^1.16.0 || ^2.0.2",
-    "reflect-metadata": "^0.1.13"
+    "kafkajs": "^1.16.0 || ^2.0.2"
   }
 }
