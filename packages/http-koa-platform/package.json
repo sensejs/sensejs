@@ -54,8 +54,7 @@
     "@sensejs/container": "workspace:^0.11.0",
     "@sensejs/core": "workspace:^0.11.0",
     "@sensejs/http-common": "workspace:^0.11.0",
-    "@sensejs/multipart": "workspace:^0.11.3",
-    "reflect-metadata": "^0.1.13"
+    "@sensejs/multipart": "workspace:^0.11.0"
   },
   "author": "LAN Xingcan",
   "license": "ISC"

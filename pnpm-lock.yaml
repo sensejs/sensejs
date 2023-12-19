@@ -215,7 +215,7 @@ importers:
   packages/container:
     dependencies:
       reflect-metadata:
-        specifier: ^0.1.13
+        specifier: ^0.1.13 || ^0.2.0
         version: 0.1.13
       tslib:
         specifier: ^2.5.0
@@ -231,7 +231,7 @@ importers:
         specifier: workspace:^0.11.0
         version: link:../utility
       reflect-metadata:
-        specifier: ^0.1.13
+        specifier: ^0.1.13 || ^0.2.0
         version: 0.1.13
       rxjs:
         specifier: ^7.8.0
@@ -258,6 +258,9 @@ importers:
       '@sensejs/utility':
         specifier: workspace:^0.11.0
         version: link:../utility
+      reflect-metadata:
+        specifier: ^0.1.13 || ^0.2.0
+        version: 0.1.13
       tslib:
         specifier: ^2.5.0
         version: 2.5.0
@@ -269,11 +272,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       '@sensejs/multipart':
-        specifier: workspace:^0.11.0
+        specifier: workspace:^
         version: link:../multipart
-      reflect-metadata:
-        specifier: ^0.1.13
-        version: 0.1.13
 
   packages/http-koa-platform:
     dependencies:
@@ -313,9 +313,6 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
-      reflect-metadata:
-        specifier: ^0.1.13
-        version: 0.1.13
       tslib:
         specifier: ^2.5.0
         version: 2.5.0
@@ -350,9 +347,6 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
-      reflect-metadata:
-        specifier: ^0.1.13
-        version: 0.1.13
       tslib:
         specifier: ^2.5.0
         version: 2.5.0

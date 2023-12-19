@@ -35,14 +35,13 @@
   "devDependencies": {
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
-    "reflect-metadata": "^0.1.13",
-    "@sensejs/multipart": "workspace:^0.11.0"
+    "@sensejs/multipart": "workspace:^"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",
     "@sensejs/core": "workspace:^0.11.0",
     "@sensejs/multipart": "workspace:^0.11.0",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13 || ^0.2.0"
   },
   "author": "LAN Xingcan",
   "license": "ISC"
