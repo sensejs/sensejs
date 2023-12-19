@@ -36,10 +36,10 @@
   },
   "devDependencies": {
     "@sensejs/multipart": "workspace:^",
-    "@sensejs/testing-utility": "workspace:*",
-    "@types/s3rver": "^3.7.0",
-    "s3rver": "^3.7.1"
+    "@sensejs/testing-utility": "workspace:*"
   },
+  "@types/s3rver": "^3.7.0",
+  "s3rver": "^3.7.1",
   "author": "LAN Xingcan",
   "license": "ISC"
 }
