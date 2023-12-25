@@ -266,6 +266,7 @@ describe('KoaHttpApplicationBuilder', () => {
     });
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build(container);
+
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
 
     await testClient
