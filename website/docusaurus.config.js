@@ -97,10 +97,12 @@ module.exports = {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           editUrl: `${projectGithubUrl}/edit/master/website/`,
+          remarkPlugins: [require('remark-join-cjk-lines')],
         },
         blog: {
           showReadingTime: true,
           editUrl: `${projectGithubUrl}/edit/master/website/blog/`,
+          remarkPlugins: [require('remark-join-cjk-lines')],
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
