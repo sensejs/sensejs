@@ -41,7 +41,7 @@
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
     "@sensejs/testing-utility": "workspace:*",
-    "config": "^3.3.9"
+    "config": "^3.3.11"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",

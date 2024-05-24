@@ -16,11 +16,11 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@sensejs/core": "workspace:*",
     "@sensejs/container": "workspace:*",
+    "@sensejs/core": "workspace:*",
     "@sensejs/http-common": "workspace:*",
-    "@sensejs/logger": "workspace:*",
     "@sensejs/http-koa-platform": "workspace:*",
-    "reflect-metadata": "^0.1.13"
+    "@sensejs/logger": "workspace:*",
+    "reflect-metadata": "^0.1.14"
   }
 }

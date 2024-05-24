@@ -19,6 +19,6 @@
     "@sensejs/core": "workspace:*",
     "@sensejs/http-common": "workspace:*",
     "@sensejs/http-koa-platform": "workspace:*",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.14"
   }
 }

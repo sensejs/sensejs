@@ -42,6 +42,6 @@
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
-    "config": "^3.3.9"
+    "config": "^3.3.11"
   }
 }

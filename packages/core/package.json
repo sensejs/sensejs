@@ -39,7 +39,7 @@
   "devDependencies": {
     "@sensejs/container": "workspace:*",
     "@sensejs/testing-utility": "workspace:*",
-    "@types/uuid": "^9.0.0"
+    "@types/uuid": "^9.0.8"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",

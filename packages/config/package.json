@@ -28,13 +28,13 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "traverse": "^0.6.7",
+    "traverse": "^0.6.9",
     "tslib": "^2.6.2"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
-    "@types/traverse": "^0.6.35"
+    "@types/traverse": "^0.6.36"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",
