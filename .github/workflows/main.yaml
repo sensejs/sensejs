@@ -46,7 +46,7 @@ jobs:
           docker-compose run test-workspace
 
       - name: Upload Coverage info to CodeClimate
-        uses: paambaati/codeclimate-action@v6.0.0
+        uses: paambaati/codeclimate-action@v7.0.0
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         with:
