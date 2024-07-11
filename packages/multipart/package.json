@@ -29,7 +29,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@fastify/busboy": "^2.1.1",
+    "@fastify/busboy": "^3.0.0",
     "@sensejs/utility": "workspace:^",
     "tslib": "^2.6.2"
   },
