@@ -31,7 +31,7 @@
   "dependencies": {
     "@fastify/busboy": "^3.0.0",
     "@sensejs/utility": "workspace:^",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.3"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",

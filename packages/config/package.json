@@ -29,12 +29,12 @@
   "license": "ISC",
   "dependencies": {
     "traverse": "^0.6.9",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.3"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
-    "@types/traverse": "^0.6.36"
+    "@types/traverse": "^0.6.37"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",

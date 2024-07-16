@@ -35,13 +35,13 @@
     "kafkajs": "^2.2.4",
     "lightning-pool": "^4.2.2",
     "rxjs": "^7.8.1",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.3"
   },
   "peerDependencies": {
     "kafkajs": "^2.0.2"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
-    "config": "^3.3.11"
+    "config": "^3.3.12"
   }
 }
