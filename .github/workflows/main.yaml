@@ -25,8 +25,8 @@ jobs:
 
       - name: Set up E2E Test Environment
         run: |-
-          docker-compose pull kafka-1 kafka-2 kafka-3 minio
-          docker-compose up -d kafka-1 kafka-2 kafka-3 minio
+          docker compose pull kafka-1 kafka-2 kafka-3 minio
+          docker compose up -d kafka-1 kafka-2 kafka-3 minio
 
       - name: Build
         uses: docker/build-push-action@v6
@@ -43,7 +43,7 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |-
-          docker-compose run test-workspace
+          docker compose run test-workspace
 
       - name: Upload Coverage info to CodeClimate
         uses: paambaati/codeclimate-action@v8.0.0
