@@ -46,7 +46,7 @@ describe('MultipartS3Storage', () => {
 
   async function testSimpleUploadAndDownload(option: Partial<S3StorageAdaptorOptions>) {
     const content = randomBytes(1024);
-    const md5 = crypto.createHash('md5').update(content).digest('base64');
+    const md5 = crypto.createHash('md5').update(content).digest('hex');
     const storage = getRemoteStorage(option);
     try {
       const result = await storage.saveMultipartFile(md5, Readable.from([content]), {
