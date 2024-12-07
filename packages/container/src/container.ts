@@ -19,7 +19,6 @@ export class Container {
   #singletonCache: Map<ServiceId, any> = new Map();
 
   createResolveSession(): ResolveSession {
-    this.validate();
     return new ResolveSession(this.#bindingMap, this.#compiledInstructionMap, this.#singletonCache);
   }
 
@@ -89,10 +88,6 @@ export class Container {
   }
 
   validate(): this {
-    if (this.#validatedBindings.size === this.#bindingMap.size) {
-      return this;
-    }
-
     for (const [id] of this.#bindingMap) {
       internalValidateDependencies(id, this.#bindingMap, [], this.#validatedBindings);
     }
