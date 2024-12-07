@@ -71,7 +71,6 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
   readonly partitionedUploadSizeLimit: number;
   readonly simpleUploadSizeLimit: number;
   readonly #s3Client: S3;
-  readonly #s3Config: S3ClientConfig;
   readonly #s3Bucket: string;
   readonly #getFileKey: (name: string, fileInfo: MultipartFileInfo) => string;
   readonly #openedStreams = new Set<Readable>();
@@ -85,7 +84,6 @@ export class S3StorageAdaptor extends RemoteStorageAdaptor<string, S3MultipartUp
     this.fileCountLimit = options.fileCountLimit ?? DEFAULT_FILE_COUNT_LIMIT;
     this.fileSizeLimit =
       options.fileSizeLimit ?? S3_MULTIPART_UPLOAD_PART_COUNT_LIMIT * this.partitionedUploadSizeLimit;
-    this.#s3Config = options.s3Config;
     this.#s3Bucket = options.s3Bucket;
     this.#getFileKey = options.getFileKey;
     this.#s3Client = new S3({
