@@ -1,7 +1,7 @@
-import {DynamicModuleLoader, Inject, Module, ModuleScanner, OnModuleCreate, OnModuleDestroy} from '@sensejs/core';
-import {SqliteDriver} from '@mikro-orm/sqlite';
-import {Constructor, EntityManager, MikroORM} from '@mikro-orm/core';
-import {Middleware} from '@sensejs/container';
+import {DynamicModuleLoader, Constructor, Module, ModuleScanner, OnModuleCreate} from '@sensejs/core';
+import {Inject, Middleware} from '@sensejs/container';
+import {BetterSqliteDriver, MikroORM as BetterSqliteMikroORM, SqlEntityManager} from '@mikro-orm/better-sqlite';
+import {EntityManager, MikroORM} from '@mikro-orm/core';
 import PublishingModule from '../example/index.js';
 import {EXPORT_ENTITY} from '../constants.js';
 
@@ -9,10 +9,10 @@ import {EXPORT_ENTITY} from '../constants.js';
   provides: [EntityManager],
 })
 export class DatabaseTransactionMiddleware {
-  constructor(@Inject(EntityManager) private globalEntityManager: EntityManager) {}
+  constructor(@Inject(MikroORM) private globalEntityManager: MikroORM) {}
 
   async handle(next: (em: EntityManager) => Promise<any>) {
-    const em = this.globalEntityManager.fork({clear: true});
+    const em = this.globalEntityManager.em.fork({clear: true});
     await next(em);
     await em.flush();
   }
@@ -40,16 +40,14 @@ export class MikroOrmConnectionModule {
         }
       });
     });
-    const mikroOrm = await MikroORM.init<SqliteDriver>({
-      type: 'sqlite',
+    const mikroOrm = await BetterSqliteMikroORM.init<BetterSqliteDriver>({
       dbName: ':memory:',
       entities,
     });
     await mikroOrm.getSchemaGenerator().createSchema();
     loader.addConstant({provide: MikroORM, value: mikroOrm});
+    loader.addConstant({provide: BetterSqliteMikroORM, value: mikroOrm});
     loader.addConstant({provide: EntityManager, value: mikroOrm.em});
+    loader.addConstant({provide: SqlEntityManager, value: mikroOrm.em});
   }
-
-  @OnModuleDestroy()
-  async onDestroy(): Promise<void> {}
 }
