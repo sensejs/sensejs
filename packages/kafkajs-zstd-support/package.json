@@ -32,7 +32,7 @@
   "license": "ISC",
   "dependencies": {
     "tslib": "^2.6.3",
-    "zstd-napi": "^0.0.8"
+    "zstd-napi": "^0.0.10"
   },
   "devDependencies": {
     "config": "^3.3.12",
