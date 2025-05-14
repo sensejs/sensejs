@@ -364,8 +364,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/testing-utility
       config:
-        specifier: ^3.3.12
-        version: 3.3.12
+        specifier: ^4.0.0
+        version: 4.0.0
 
   packages/kafkajs-standalone:
     dependencies:
@@ -389,8 +389,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/testing-utility
       config:
-        specifier: ^3.3.12
-        version: 3.3.12
+        specifier: ^4.0.0
+        version: 4.0.0
 
   packages/kafkajs-zstd-support:
     dependencies:
@@ -402,8 +402,8 @@ importers:
         version: 0.0.10
     devDependencies:
       config:
-        specifier: ^3.3.12
-        version: 3.3.12
+        specifier: ^4.0.0
+        version: 4.0.0
       kafkajs:
         specifier: ^2.2.4
         version: 2.2.4
@@ -3286,6 +3286,10 @@ packages:
   config@3.3.12:
     resolution: {integrity: sha512-Vmx389R/QVM3foxqBzXO8t2tUikYZP64Q6vQxGrsMpREeJc/aWRnPRERXWsYzOHAumx/AOoILWe6nU3ZJL+6Sw==}
     engines: {node: '>= 10.0.0'}
+
+  config@4.0.0:
+    resolution: {integrity: sha512-zOzfDfcpaBUMRvTH+pbj111Gfb+1BMvCy9EcE5ckuugfAcks3FIQMyt8TRA30dhuGnZNBxfbPBUKtuM03ih/nA==}
+    engines: {node: '>= 20.0.0'}
 
   configstore@6.0.0:
     resolution: {integrity: sha512-cD31W1v3GqUlQvbBCGcXmd2Nj9SvLDOP1oQ0YFuLETufzSPaKp11rYBsSOm7rCsW3OnIRAFM3OxRhceaXNYHkA==}
@@ -12036,6 +12040,10 @@ snapshots:
       proto-list: 1.2.4
 
   config@3.3.12:
+    dependencies:
+      json5: 2.2.3
+
+  config@4.0.0:
     dependencies:
       json5: 2.2.3
 
