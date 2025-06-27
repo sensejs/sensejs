@@ -398,8 +398,8 @@ importers:
         specifier: ^2.6.3
         version: 2.6.3
       zstd-napi:
-        specifier: ^0.0.10
-        version: 0.0.10
+        specifier: ^0.0.12
+        version: 0.0.12
     devDependencies:
       config:
         specifier: ^3.3.12
@@ -7531,8 +7531,8 @@ packages:
     resolution: {integrity: sha512-b4JR1PFR10y1mKjhHY9LaGo6tmrgjit7hxVIeAmyMw3jegXR4dhYqLaQF5zMXZxY7tLpMyJeLjr1C4rLmkVe8g==}
     engines: {node: '>=12.20'}
 
-  zstd-napi@0.0.10:
-    resolution: {integrity: sha512-pwnG+auSiIrD2BNSIpPEUtcRSK33cfYmKo3sJPTohFiPqPci9F4SIRPR7gGeI45Maj4nFoyyxzT2YDxVXIIgzQ==}
+  zstd-napi@0.0.12:
+    resolution: {integrity: sha512-W4qfyNIJAfu8zB1w4TkjKBuXLRvkWa+owH4o32AEep1hRbAzS/bHNErC4fSKN7ls5s15b77bV0yRXbr9h12Wkg==}
     engines: {node: ^12.22.0 || ^14.17.0 || ^15.12.0 || >=16}
 
   zwitch@2.0.4:
@@ -17109,7 +17109,7 @@ snapshots:
 
   yocto-queue@1.1.1: {}
 
-  zstd-napi@0.0.10:
+  zstd-napi@0.0.12:
     dependencies:
       '@types/node': 18.19.39
       node-addon-api: 7.1.1
