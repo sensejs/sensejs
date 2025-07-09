@@ -16,9 +16,9 @@
   "license": "ISC",
   "private": true,
   "dependencies": {
-    "@mikro-orm/core": "^6.4.0",
-    "@mikro-orm/knex": "^6.4.0",
-    "@mikro-orm/better-sqlite": "^6.4.0",
+    "@mikro-orm/better-sqlite": "^6.4.16",
+    "@mikro-orm/core": "^6.4.16",
+    "@mikro-orm/knex": "^6.4.16",
     "@sensejs/config": "workspace:*",
     "@sensejs/container": "workspace:*",
     "@sensejs/core": "workspace:*",
@@ -31,6 +31,6 @@
     "suretype": "^2.4.1"
   },
   "devDependencies": {
-    "@types/config": "^3.3.4"
+    "@types/config": "^3.3.5"
   }
 }

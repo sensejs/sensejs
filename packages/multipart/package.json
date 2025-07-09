@@ -29,13 +29,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@fastify/busboy": "^3.0.0",
+    "@fastify/busboy": "^3.1.1",
     "@sensejs/utility": "workspace:^",
-    "tslib": "^2.6.3"
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
-    "form-data": "^4.0.0"
+    "form-data": "^4.0.3"
   },
   "author": "LAN Xingcan",
   "license": "ISC"

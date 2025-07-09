@@ -35,7 +35,7 @@
     "@sensejs/utility": "workspace:^",
     "kafkajs": "^2.2.4",
     "lodash": "^4.17.21",
-    "tslib": "^2.6.3"
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",
