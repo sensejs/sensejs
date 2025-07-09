@@ -30,7 +30,7 @@ describe('Logger', () => {
     let logger = loggerFactory.build();
 
     const assertTransportLogLevelParams = (level: LogLevel) => {
-      expect(writeSpy).lastCalledWith(
+      expect(writeSpy).toHaveBeenLastCalledWith(
         expect.objectContaining(
           Object.assign(
             {
@@ -58,7 +58,7 @@ describe('Logger', () => {
     assertTransportLogLevelParams(LogLevel.FATAL);
 
     const assertTransportModuleAndTranceID = (label: string, traceId: string) => {
-      expect(writeSpy).lastCalledWith(
+      expect(writeSpy).toHaveBeenLastCalledWith(
         expect.objectContaining({
           timestamp: expect.any(Number),
           label,

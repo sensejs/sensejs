@@ -102,7 +102,7 @@ test('aggregatedPromisify', async () => {
   await expect(aggregatedPromisify(f1)()).resolves.toEqual([42]);
   await expect(aggregatedPromisify(f2)()).rejects.toBeInstanceOf(Error);
 
-  await expect(aggregatedPromisify(g1)(0, '')).resolves.toEqual(expect.objectContaining([42, 43]));
+  await expect(aggregatedPromisify(g1)(0, '')).resolves.toEqual([42, 43]);
   await expect(aggregatedPromisify(g2)(0, '')).rejects.toBeInstanceOf(Error);
   await expect(aggregatedPromisify(g3)(0, '')).resolves.toEqual([]);
 });
@@ -111,7 +111,7 @@ test('promisifiedCall', async () => {
   await expect(aggregatedPromisifiedCall(f1)).resolves.toEqual([42]);
   await expect(aggregatedPromisifiedCall(f2)).rejects.toBeInstanceOf(Error);
 
-  await expect(aggregatedPromisifiedCall(g1, 0, '')).resolves.toEqual(expect.objectContaining([42, 43]));
+  await expect(aggregatedPromisifiedCall(g1, 0, '')).resolves.toEqual([42, 43]);
   await expect(aggregatedPromisifiedCall(g2, 0, '')).rejects.toBeInstanceOf(Error);
   await expect(aggregatedPromisifiedCall(g3, 0, '')).resolves.toEqual([]);
 });

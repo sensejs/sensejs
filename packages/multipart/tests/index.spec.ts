@@ -113,7 +113,7 @@ describe('MultipartReader', () => {
       });
     });
 
-    expect(stub).toBeCalledTimes(3);
+    expect(stub).toHaveBeenCalledTimes(3);
     expect(stub).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({

@@ -116,14 +116,14 @@ describe('Http annotations', () => {
           @POST('/multipart')
           handleMultipart(@MultipartBody() body: any) {}
         }
-      }).toThrowError();
+      }).toThrow();
 
       expect(() => {
         class Test {
           @POST('/multipart')
           handleMultipart(@MultipartBody() body: object) {}
         }
-      }).toThrowError();
+      }).toThrow();
     });
   });
 });

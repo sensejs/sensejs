@@ -103,15 +103,15 @@ describe('Deprecate on class', () => {
     container.add(V);
 
     expect(container.resolve(X)).toBeInstanceOf(X);
-    expect(stub).lastCalledWith(X);
+    expect(stub).toHaveBeenLastCalledWith(X);
     await awaitWarningCalled(warningStub);
 
     expect(container.resolve(Y)).toBeInstanceOf(Y);
-    expect(stub).lastCalledWith(Y);
+    expect(stub).toHaveBeenLastCalledWith(Y);
     await awaitWarningCalled(warningStub);
 
     expect(container.resolve(V)).toBeInstanceOf(V);
-    expect(stub).lastCalledWith(V); // Called With U and V
+    expect(stub).toHaveBeenLastCalledWith(V); // Called With U and V
     await awaitWarningCalled(warningStub);
 
     expect(stub).toHaveBeenCalledTimes(4);

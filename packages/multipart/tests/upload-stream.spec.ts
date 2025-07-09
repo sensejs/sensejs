@@ -245,7 +245,7 @@ describe('UploadStream', () => {
       throw new CustomError('Upload error');
     });
 
-    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrowError(CustomError);
+    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrow(CustomError);
   });
 
   test('multipart upload error', async () => {
@@ -255,7 +255,7 @@ describe('UploadStream', () => {
     adaptor.uploadPartitionStub.mockImplementation(() => {
       throw new CustomError('Upload error');
     });
-    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrowError(CustomError);
+    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrow(CustomError);
   });
 
   test('init multipart upload error', async () => {
@@ -265,7 +265,7 @@ describe('UploadStream', () => {
     adaptor.beginPartitionedUploadStub.mockImplementation(() => {
       throw new CustomError('Upload error');
     });
-    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrowError(CustomError);
+    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrow(CustomError);
   });
 
   test('finish multipart upload error', async () => {
@@ -275,7 +275,7 @@ describe('UploadStream', () => {
     adaptor.finishPartitionedUploadStub.mockImplementation(() => {
       throw new CustomError('Upload error');
     });
-    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrowError(CustomError);
+    await expect(() => pipeUploadStream(stream, adaptor, 'foo')).rejects.toThrow(CustomError);
   });
 
   test('large multipart upload ', async () => {
