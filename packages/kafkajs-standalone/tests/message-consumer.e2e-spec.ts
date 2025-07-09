@@ -42,7 +42,7 @@ test.skip('Handle crash', async () => {
     throw new Error();
   });
   const started = consumer.start();
-  await expect(consumer.wait()).rejects.toThrowError();
+  await expect(consumer.wait()).rejects.toThrow();
   await started;
   await consumer.stop();
   // Workaround bug of kafkajs teardown bug
