@@ -24,7 +24,7 @@ test('EntryPoint decorator', async () => {
     stub.mockImplementation(resolve);
   });
 
-  jest.spyOn(process, 'exit').mockImplementation((exitCode: number = 0): never => {
+  jest.spyOn(process, 'exit').mockImplementation((exitCode: unknown): never => {
     stub(exitCode);
     return void 0 as never;
   });

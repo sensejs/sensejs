@@ -99,10 +99,10 @@ describe('RemoteStorage', () => {
   test('option check', () => {
     const badAdapter = new MockRemoteStorageAdaptor();
     badAdapter.fileCountLimit = 0;
-    expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
+    expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrow();
     badAdapter.fileCountLimit = 10;
     badAdapter.fileSizeLimit = 0;
-    expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrowError();
+    expect(() => new MultipartFileRemoteStorage(badAdapter)).toThrow();
   });
   test('upload', async () => {
     const content = crypto.randomBytes(1024);

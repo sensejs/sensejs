@@ -5,15 +5,14 @@ env:
 
 jobs:
   building:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         node-version:
-          - 18
           - 20
-          - 21
+          - 22
+          - 24
 
     steps:
       - name: Checkout
@@ -62,4 +61,3 @@ jobs:
           coverage-reports: coverage/lcov.info
           # or a comma-separated list for multiple reports
           # coverage-reports: <PATH_TO_REPORT>, <PATH_TO_REPORT>
-

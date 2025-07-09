@@ -199,7 +199,7 @@ describe('KoaHttpApplicationBuilder', () => {
     koaHttpApplicationBuilder.addControllerWithMetadata(getHttpControllerMetadata(FooController)!);
     const koaHttpApplication = koaHttpApplicationBuilder.build(container);
     const testClient = supertest((req: any, res: any) => koaHttpApplication(req, res));
-    await testClient.get('/any?key=value').then((result) => {
+    await testClient.get('/any?key=value').then((result: any) => {
       expect(result.header['key']).toBe('value');
     });
     await testClient.get('/').expect(204);
@@ -208,8 +208,8 @@ describe('KoaHttpApplicationBuilder', () => {
     await testClient.put('/');
     await testClient.patch('/');
     await testClient.post('/multipart').attach('file', Buffer.from('hello'), 'hello.txt').expect(200);
-    expect(stubForGet).toBeCalledWith(expect.any(KoaHttpContext));
-    expect(stubForGetStar).toBeCalledWith(
+    expect(stubForGet).toHaveBeenCalledWith(expect.any(KoaHttpContext));
+    expect(stubForGetStar).toHaveBeenCalledWith(
       expect.objectContaining({
         path: '/any',
         url: '/any?key=value',
@@ -219,17 +219,17 @@ describe('KoaHttpApplicationBuilder', () => {
         hostname: expect.any(String),
       }),
     );
-    expect(stubForPost).toBeCalled();
-    expect(stubForMultipartPost).toBeCalled();
-    expect(stubForDelete).toBeCalled();
-    expect(stubForPut).toBeCalled();
-    expect(stubForPost).toBeCalled();
-    expect(stubForPatch).toBeCalled();
-    expect(stubForA).toBeCalledWith('before');
-    expect(stubForB).toBeCalledWith('before');
+    expect(stubForPost).toHaveBeenCalled();
+    expect(stubForMultipartPost).toHaveBeenCalled();
+    expect(stubForDelete).toHaveBeenCalled();
+    expect(stubForPut).toHaveBeenCalled();
+    expect(stubForPost).toHaveBeenCalled();
+    expect(stubForPatch).toHaveBeenCalled();
+    expect(stubForA).toHaveBeenCalledWith('before');
+    expect(stubForB).toHaveBeenCalledWith('before');
     // expect(stubForC).toBeCalledWith('before');
-    expect(stubForA).toBeCalledWith('after');
-    expect(stubForB).toBeCalledWith('after');
+    expect(stubForA).toHaveBeenCalledWith('after');
+    expect(stubForB).toHaveBeenCalledWith('after');
     // expect(stubForC).toBeCalledWith('after');
   });
 

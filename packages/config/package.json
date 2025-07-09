@@ -28,8 +28,8 @@
   "author": "LAN Xingcan",
   "license": "ISC",
   "dependencies": {
-    "traverse": "^0.6.9",
-    "tslib": "^2.6.3"
+    "traverse": "^0.6.11",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",

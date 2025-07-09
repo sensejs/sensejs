@@ -204,9 +204,9 @@ describe('Subscriber', () => {
     });
     await lastValueFrom(exitSubject, {defaultValue: 0});
 
-    expect(startSpy).toBeCalled();
-    expect(subscribeSpy).toBeCalledTimes(1);
-    expect(subscribeSpy).toBeCalledWith(topic, expect.any(Function), true);
-    expect(stopSpy).toBeCalled();
+    expect(startSpy).toHaveBeenCalled();
+    expect(subscribeSpy).toHaveBeenCalledTimes(1);
+    expect(subscribeSpy).toHaveBeenCalledWith(topic, expect.any(Function), true);
+    expect(stopSpy).toHaveBeenCalled();
   });
 });
