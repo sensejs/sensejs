@@ -398,8 +398,8 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
       zstd-napi:
-        specifier: ^0.0.10
-        version: 0.0.10
+        specifier: ^0.0.12
+        version: 0.0.12
     devDependencies:
       config:
         specifier: ^3.3.12
@@ -7940,8 +7940,8 @@ packages:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
-  zstd-napi@0.0.10:
-    resolution: {integrity: sha512-pwnG+auSiIrD2BNSIpPEUtcRSK33cfYmKo3sJPTohFiPqPci9F4SIRPR7gGeI45Maj4nFoyyxzT2YDxVXIIgzQ==}
+  zstd-napi@0.0.12:
+    resolution: {integrity: sha512-W4qfyNIJAfu8zB1w4TkjKBuXLRvkWa+owH4o32AEep1hRbAzS/bHNErC4fSKN7ls5s15b77bV0yRXbr9h12Wkg==}
     engines: {node: ^12.22.0 || ^14.17.0 || ^15.12.0 || >=16}
 
   zwitch@2.0.4:
@@ -10945,7 +10945,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       '@types/yargs': 17.0.33
       chalk: 4.1.2
 
@@ -11652,22 +11652,22 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/bonjour@3.5.13':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/config@3.3.5': {}
 
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
       '@types/express-serve-static-core': 5.0.7
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/content-disposition@0.5.9': {}
 
@@ -11706,14 +11706,14 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.6':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.5
 
   '@types/express-serve-static-core@5.0.7':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       '@types/qs': 6.14.0
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.5
@@ -11749,7 +11749,7 @@ snapshots:
 
   '@types/http-proxy@1.17.16':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
@@ -11817,7 +11817,7 @@ snapshots:
 
   '@types/node-forge@1.3.12':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/node@12.20.55': {}
 
@@ -11865,12 +11865,12 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 17.0.45
+      '@types/node': 20.19.6
 
   '@types/send@0.17.5':
     dependencies:
       '@types/mime': 1.3.5
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/serve-index@1.9.4':
     dependencies:
@@ -11879,12 +11879,12 @@ snapshots:
   '@types/serve-static@1.15.8':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       '@types/send': 0.17.5
 
   '@types/sockjs@0.3.36':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/stack-utils@2.0.3': {}
 
@@ -11912,7 +11912,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -13488,7 +13488,7 @@ snapshots:
 
   eval@0.1.8:
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       require-like: 0.1.2
 
   eventemitter3@4.0.7: {}
@@ -14741,7 +14741,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -14778,13 +14778,13 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -17991,9 +17991,9 @@ snapshots:
 
   yocto-queue@1.2.1: {}
 
-  zstd-napi@0.0.10:
+  zstd-napi@0.0.12:
     dependencies:
-      '@types/node': 24.0.12
+      '@types/node': 20.19.6
       node-addon-api: 7.1.1
       prebuild-install: 7.1.3
 
