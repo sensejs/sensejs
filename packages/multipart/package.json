@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@sensejs/testing-utility": "workspace:*",
-    "form-data": "^4.0.3"
+    "form-data": "^4.0.4"
   },
   "author": "LAN Xingcan",
   "license": "ISC"
