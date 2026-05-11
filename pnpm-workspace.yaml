@@ -5,4 +5,8 @@ packages:
   - 'examples/*'
   - '.'
 allowBuilds:
+  better-sqlite3: true
+  core-js: true
+  core-js-pure: true
+  unrs-resolver: true
   zstd-napi: false
