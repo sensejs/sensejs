@@ -2,7 +2,7 @@
   "extends": [
     "config:base"
   ],
-  "compatibility": { "pnpm": "^9.15.0" },
+  "compatibility": { "pnpm": "^10.33.4" },
   "lockFileMaintenance": { "enabled": true },
   "rangeStrategy": "replace"
 }
