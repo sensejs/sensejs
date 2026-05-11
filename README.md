@@ -1,7 +1,7 @@
 SenseJS
 =======
-[![Test Coverage](https://api.codeclimate.com/v1/badges/651f7b2bb58759ba7a87/test_coverage)](https://codeclimate.com/github/sensejs/sensejs/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/651f7b2bb58759ba7a87/maintainability)](https://codeclimate.com/github/sensejs/sensejs/maintainability)
+[![Code Coverage](https://qlty.sh/gh/sensejs/projects/sensejs/coverage.svg)](https://qlty.sh/gh/sensejs/projects/sensejs)
+[![Maintainability](https://qlty.sh/gh/sensejs/projects/sensejs/maintainability.svg)](https://qlty.sh/gh/sensejs/projects/sensejs)
 
 SenseJS is a flexible IoC Framework.
 
