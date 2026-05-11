@@ -1,8 +1,8 @@
 {
-  "extends": [
-    "config:base"
-  ],
-  "compatibility": { "pnpm": "^10.33.4" },
+  "extends": ["config:recommended"],
+  "constraints": {
+    "pnpm": "^10.33.4"
+  },
   "lockFileMaintenance": { "enabled": true },
   "rangeStrategy": "replace"
 }
