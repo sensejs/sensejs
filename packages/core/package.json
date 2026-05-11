@@ -38,8 +38,7 @@
   },
   "devDependencies": {
     "@sensejs/container": "workspace:*",
-    "@sensejs/testing-utility": "workspace:*",
-    "@types/uuid": "^11.0.0"
+    "@sensejs/testing-utility": "workspace:*"
   },
   "peerDependencies": {
     "@sensejs/container": "workspace:^0.11.0",
