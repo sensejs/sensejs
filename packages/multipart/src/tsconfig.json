@@ -1,13 +1,5 @@
 {
   "extends": "../../../tsconfig.baseline",
-  "compilerOptions": {
-    "baseUrl": ".."
-  },
-  "include": [
-    "./**/*.ts"
-  ],
-  "exclude": [
-    "./**/*.spec.ts",
-    "./**/*.test.ts"
-  ]
+  "include": ["./**/*.ts"],
+  "exclude": ["./**/*.spec.ts", "./**/*.test.ts"],
 }

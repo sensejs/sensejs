@@ -2,13 +2,15 @@
   "extends": "./src/tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
-    "moduleResolution": "node",
-    "module": "CommonJS",
+    "module": "commonjs",
+    "moduleResolution": "bundler",
     "outDir": "dist-dts",
+    "tsBuildInfoFile": "dist-dts/build-dts.tsbuildinfo",
     "declarationDir": "dist-dts",
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
-    "paths": {}
-  }
+    "rootDir": "src",
+    "paths": {},
+  },
 }

@@ -4,7 +4,6 @@
     "module": "nodenext",
     "noEmit": false,
     "outDir": "lib",
-    "baseUrl": ".",
-    "paths": {}
-  }
+    "paths": {},
+  },
 }

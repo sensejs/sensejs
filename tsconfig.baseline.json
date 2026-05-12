@@ -20,12 +20,9 @@
     "noEmit": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "baseUrl": ".",
     "paths": {
-      "@sensejs/*": [
-        "./packages/*/src"
-      ]
+      "@sensejs/*": ["./packages/*/src"],
     },
-    "useDefineForClassFields": true
-  }
+    "useDefineForClassFields": true,
+  },
 }

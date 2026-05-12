@@ -2,15 +2,13 @@
   "extends": "./tsconfig.baseline",
   "compilerOptions": {
     "types": ["node", "jest", "reflect-metadata"],
-    "module": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "incremental": false,
     "noEmitHelpers": false,
     "importHelpers": false,
     "paths": {
-      "@sensejs/*": [
-        "./packages/*/src",
-        "./tools/*/src"
-      ]
-    }
-  }
+      "@sensejs/*": ["./packages/*/src", "./tools/*/src"],
+    },
+  },
 }

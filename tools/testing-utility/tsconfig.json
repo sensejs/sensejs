@@ -4,9 +4,8 @@
     "noEmit": false,
     "outDir": "lib",
     "module": "Node16",
-    "types": ["node", "reflect-metadata", "jest"]
+    "rootDir": "src",
+    "types": ["node", "reflect-metadata", "jest"],
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"],
 }
