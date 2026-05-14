@@ -5,7 +5,7 @@ import {
   createModule,
   Inject,
   InjectLogger,
-  Logger,
+  type Logger,
   LOGGER_BUILDER_SYMBOL,
   LoggerBuilder,
   Module,

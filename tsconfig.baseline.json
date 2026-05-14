@@ -13,6 +13,7 @@
     "outDir": "lib/",
     "noEmitHelpers": true,
     "importHelpers": true,
+    "isolatedModules": true,
     "sourceMap": true,
     "lib": ["ES2022"],
     "types": ["node", "reflect-metadata"],
@@ -21,8 +22,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "paths": {
-      "@sensejs/*": ["./packages/*/src"],
+      "@sensejs/*": ["./packages/*/src"]
     },
-    "useDefineForClassFields": true,
+    "useDefineForClassFields": true
   },
 }

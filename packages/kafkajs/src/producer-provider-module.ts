@@ -11,13 +11,13 @@ import {
   ServiceIdentifier,
 } from '@sensejs/core';
 import {
-  MessageProducerOption,
+  type MessageProducerOption,
   MessageProducerProvider,
   PooledKafkaJsProducerProvider,
   PooledMessageProducerOption,
 } from '@sensejs/kafkajs-standalone';
 import _ from 'lodash';
-import {Logger} from '@sensejs/utility';
+import type {Logger} from '@sensejs/utility';
 
 export type ConfigurableMessageProducerOption = Exclude<MessageProducerOption, 'logger'>;
 export type ConfigurablePooledMessageProducerOption = Exclude<PooledMessageProducerOption, 'logger'>;

@@ -1,7 +1,9 @@
 {
   "extends": "../../tsconfig.test",
-  "include": [
-    "./src/**/*.ts",
-    "./tests/**/*.ts"
-  ]
+  "compilerOptions": {
+    "rootDir": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+  },
+  "include": ["./src/**/*.ts", "./tests/**/*.ts"],
 }

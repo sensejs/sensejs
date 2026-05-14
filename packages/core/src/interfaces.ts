@@ -1,5 +1,5 @@
 import {InjectScope, Constructor, ClassServiceId, GeneralServiceId, ServiceId} from '@sensejs/container';
-export {Class, Constructor, Transformer, ServiceId as ServiceIdentifier} from '@sensejs/container';
+export type {Class, Constructor, Transformer, ServiceId as ServiceIdentifier} from '@sensejs/container';
 
 export abstract class ComponentFactory<T> {
   abstract build(): T;

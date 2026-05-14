@@ -2,7 +2,7 @@ import {
   Constructor,
   Inject,
   InjectLogger,
-  Logger,
+  type Logger,
   Module,
   ModuleMetadata,
   ModuleOption,

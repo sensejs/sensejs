@@ -8,7 +8,7 @@ import {
   Constructor,
   Inject,
   InjectLogger,
-  Logger,
+  type Logger,
   Module,
   ModuleOption,
   provideOptionInjector,
