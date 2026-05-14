@@ -9,4 +9,4 @@ allowBuilds:
   core-js: true
   core-js-pure: true
   unrs-resolver: true
-  zstd-napi: false
+  zstd-napi: true
