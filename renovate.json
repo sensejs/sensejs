@@ -1,7 +1,7 @@
 {
   "extends": ["config:recommended"],
   "constraints": {
-    "pnpm": "^10.33.4"
+    "pnpm": "^11.0.0"
   },
   "lockFileMaintenance": { "enabled": true },
   "rangeStrategy": "replace"
