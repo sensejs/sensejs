@@ -293,8 +293,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.1
       '@types/koa__router':
-        specifier: ^12.0.4
-        version: 12.0.5
+        specifier: ^15.0.0
+        version: 15.0.0
       koa:
         specifier: ^3.0.0
         version: 3.2.0
@@ -3010,8 +3010,9 @@ packages:
   '@types/koa__cors@5.0.1':
     resolution: {integrity: sha512-xZckuh3B6ycSBAIYnBImG1VDHyBNZsltGAuGb4THuZllccdLgD5DUs4RA7TAUjB58THg00SSZ1e//duQef7WRw==}
 
-  '@types/koa__router@12.0.5':
-    resolution: {integrity: sha512-1HeLxuDn4n5it1yZYCSyOYXo++73zT0ffoviXnPxbwbxLbvDFEvWD9ZzpRiIpK4oKR0pi+K+Mk/ZjyROjW3HSw==}
+  '@types/koa__router@15.0.0':
+    resolution: {integrity: sha512-B7HZ7M32qSQg1Z7VD2G4w1gZvAsd/kuifW0WYbidFqrYzw9RasY/BO64EQYnaZl3KNU9PK2DyeVuSZHY6gqKVQ==}
+    deprecated: This is a stub types definition. @koa/router provides its own type definitions, so you do not need this installed.
 
   '@types/lodash@4.17.24':
     resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
@@ -12437,9 +12438,11 @@ snapshots:
     dependencies:
       '@types/koa': 3.0.2
 
-  '@types/koa__router@12.0.5':
+  '@types/koa__router@15.0.0':
     dependencies:
-      '@types/koa': 3.0.2
+      '@koa/router': 13.1.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@types/lodash@4.17.24': {}
 
