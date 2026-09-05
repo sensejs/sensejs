@@ -1,5 +1,5 @@
 import {Body, Controller, GET, Path, POST, Query} from '@sensejs/http-common';
-import {Inject, InjectLogger, Logger} from '@sensejs/core';
+import {Inject, InjectLogger, type Logger} from '@sensejs/core';
 import {validateCreateAuthorForm, validateCreateBookForm} from './http-validation.js';
 import {PublishingFacade} from '../example/publishing-facade.component.js';
 

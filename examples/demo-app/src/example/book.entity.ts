@@ -1,4 +1,4 @@
-import {Entity, ManyToOne, Property, Rel} from '@mikro-orm/core';
+import {Entity, ManyToOne, Property, type Rel} from '@mikro-orm/core';
 import {AuthorEntity} from './author.entity.js';
 import {randomUUID} from 'crypto';
 

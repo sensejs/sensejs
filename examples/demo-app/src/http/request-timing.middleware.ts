@@ -1,4 +1,4 @@
-import {InjectLogger, Logger} from '@sensejs/core';
+import {InjectLogger, type Logger} from '@sensejs/core';
 import {Middleware} from '@sensejs/container';
 
 @Middleware()

@@ -1,6 +1,6 @@
 import {randomUUID} from 'crypto';
 import {Middleware} from '@sensejs/container';
-import {LoggerBuilder, Inject, InjectLogger, Logger} from '@sensejs/core';
+import {LoggerBuilder, Inject, InjectLogger, type Logger} from '@sensejs/core';
 import {defaultLoggerBuilder} from '@sensejs/logger';
 import {createKoaHttpModule} from '@sensejs/http-koa-platform';
 import {RandomNumberModule} from './random-number.module.js';

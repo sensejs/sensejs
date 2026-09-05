@@ -1,4 +1,4 @@
-import {Inject, InjectLogger, Logger} from '@sensejs/core';
+import {Inject, InjectLogger, type Logger} from '@sensejs/core';
 import {HttpContext} from '@sensejs/http-common';
 import {Middleware} from '@sensejs/container';
 import {HttpError} from './http-error.js';

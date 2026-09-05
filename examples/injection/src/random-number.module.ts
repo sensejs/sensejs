@@ -1,4 +1,4 @@
-import {Component, createModule, Inject, InjectLogger, Logger, Scope} from '@sensejs/core';
+import {Component, createModule, Inject, InjectLogger, type Logger, Scope} from '@sensejs/core';
 import {Body, Controller, GET, POST} from '@sensejs/http-common';
 
 @Component()
