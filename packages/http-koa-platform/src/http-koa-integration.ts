@@ -3,7 +3,7 @@ import {RequestListener} from 'http';
 import {Container} from '@sensejs/container';
 import Koa from 'koa';
 import koaBodyParser, {Options as KoaBodyParserOption} from 'koa-bodyparser';
-import KoaRouter from '@koa/router';
+import KoaRouter, {type RouterContext} from '@koa/router';
 import KoaCors from '@koa/cors';
 import koaQs from 'koa-qs';
 import {
@@ -89,7 +89,7 @@ export class KoaHttpContext extends HttpContext {
   readonly response: KoaHttpResponse;
 
   constructor(
-    readonly nativeContext: KoaRouter.RouterContext,
+    readonly nativeContext: RouterContext,
     public readonly targetConstructor: Constructor,
     public readonly targetMethodKey: keyof any,
   ) {
@@ -186,6 +186,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
     container: Container,
   ): void {
     const {httpMethod, path, targetConstructor, targetMethod, middlewares} = methodRouteSpec;
+    const routePath = path || '/';
     if (methodRouteSpec.multipartBody) {
       const invoker = container.createMethodInvoker(
         targetConstructor,
@@ -195,7 +196,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
         Multipart,
       );
 
-      controllerRouter[httpMethod](path, async (ctx) => {
+      controllerRouter[httpMethod](routePath, async (ctx) => {
         const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
         const [multipart, cleanup] = Multipart.from(ctx.req, ctx.headers);
         try {
@@ -215,7 +216,7 @@ export class KoaHttpApplicationBuilder extends AbstractHttpApplicationBuilder {
     } else {
       const invoker = container.createMethodInvoker(targetConstructor, targetMethod, middlewares, HttpContext);
 
-      controllerRouter[httpMethod](path, async (ctx) => {
+      controllerRouter[httpMethod](routePath, async (ctx) => {
         const context = new KoaHttpContext(ctx, targetConstructor, targetMethod);
         const result = await invoker.invoke(context);
 

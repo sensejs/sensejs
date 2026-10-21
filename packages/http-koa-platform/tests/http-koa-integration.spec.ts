@@ -158,7 +158,7 @@ describe('KoaHttpApplicationBuilder', () => {
         stubForGet(ctx);
       }
 
-      @GET('(.*)')
+      @GET('*path')
       getStar(@Inject(HttpContext) ctx: HttpContext, @Query() query: object) {
         stubForGetStar(ctx.request);
         Object.entries(query).forEach(([key, value]) => ctx.response.set(key, value));
