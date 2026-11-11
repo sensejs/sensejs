@@ -358,8 +358,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/testing-utility
       config:
-        specifier: ^3.3.12
-        version: 3.3.12
+        specifier: ^5.0.0
+        version: 5.0.0
 
   packages/kafkajs-standalone:
     dependencies:
@@ -383,8 +383,8 @@ importers:
         specifier: workspace:*
         version: link:../../tools/testing-utility
       config:
-        specifier: ^3.3.12
-        version: 3.3.12
+        specifier: ^5.0.0
+        version: 5.0.0
 
   packages/kafkajs-zstd-support:
     dependencies:
@@ -396,8 +396,8 @@ importers:
         version: 0.0.13
     devDependencies:
       config:
-        specifier: ^3.3.12
-        version: 3.3.12
+        specifier: ^5.0.0
+        version: 5.0.0
       kafkajs:
         specifier: ^2.2.4
         version: 2.2.4
@@ -2836,6 +2836,9 @@ packages:
   '@smithy/smithy-client@4.12.13':
     resolution: {integrity: sha512-y/Pcj1V9+qG98gyu1gvftHB7rDpdh+7kIBIggs55yGm3JdtBV8GT8IFF3a1qxZ79QnaJHX9GXzvBG6tAd+czJA==}
     engines: {node: '>=18.0.0'}
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with
+        this version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/types@4.14.1':
     resolution: {integrity: sha512-59b5HtSVrVR/eYNei3BUj3DCPKD/G7EtDDe7OEJE7i7FtQFugYo6MxbotS8mVJkLNVf8gYaAlEBwwtJ9HzhWSg==}
@@ -4015,6 +4018,10 @@ packages:
     resolution: {integrity: sha512-Vmx389R/QVM3foxqBzXO8t2tUikYZP64Q6vQxGrsMpREeJc/aWRnPRERXWsYzOHAumx/AOoILWe6nU3ZJL+6Sw==}
     engines: {node: '>= 10.0.0'}
 
+  config@5.0.0:
+    resolution: {integrity: sha512-LaZ/Z113nYJ4YNrH13dWdHvgIehYACiJZPxFVK8ykqO+6CaMAiJ7NkyrxTPAimMJoIKn7qPrvTFzIBPgm4/SLA==}
+    engines: {node: '>= 20.11.0'}
+
   configstore@6.0.0:
     resolution: {integrity: sha512-cD31W1v3GqUlQvbBCGcXmd2Nj9SvLDOP1oQ0YFuLETufzSPaKp11rYBsSOm7rCsW3OnIRAFM3OxRhceaXNYHkA==}
     engines: {node: '>=12'}
@@ -5188,6 +5195,7 @@ packages:
   image-size@2.0.2:
     resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
     engines: {node: '>=16.x'}
+    deprecated: Use latest 2.x please
     hasBin: true
 
   import-fresh@3.3.1:
@@ -13669,6 +13677,10 @@ snapshots:
       proto-list: 1.2.4
 
   config@3.3.12:
+    dependencies:
+      json5: 2.2.3
+
+  config@5.0.0:
     dependencies:
       json5: 2.2.3
 
